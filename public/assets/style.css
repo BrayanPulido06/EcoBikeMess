@@ -1,0 +1,60 @@
+body{
+    background-color: #ffffff;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+nav {
+    background-color: #54a893;
+    color: rgb(0, 0, 0);
+    padding: 10px 100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+div.fondo{
+    background-color: #405874;
+    color: rgb(0, 0, 0);
+    padding: 200px 400px;
+    border-radius: 5px;
+    text-align: center;
+    
+}
+
+div {
+    margin: 20px 0px;
+    padding: 10px;
+    border: 1px solid #fd0000;
+    border-radius: 5px;
+    background-color: #ddd0d0;
+    
+}
+
+.quienes-somos {
+    background-color: #f7aef7;
+    color: rgb(0, 0, 0);
+    padding: 20px;
+    border-radius: 5px;
+    justify-content: space-between;
+    margin: 20px 0;
+    display: inline-flex
+}
+
+
+
+footer {
+    background-color: #aef7f3;
+    color: rgb(0, 0, 0);
+    text-align: center;
+    padding: 10px;
+    position: relative;
+    /*position: fixed;*/
+}
