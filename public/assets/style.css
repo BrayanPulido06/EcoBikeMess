@@ -29,14 +29,14 @@ div.fondo{
     
 }
 
+/*tener en cuenta*/
 div {
     margin: 20px 0px;
     padding: 10px;
     border: 1px solid #fd0000;
     border-radius: 5px;
     background-color: #ddd0d0;
-    
-}
+} 
 
 .quienes-somos {
     background-color: #f7aef7;
@@ -58,3 +58,24 @@ footer {
     position: relative;
     /*position: fixed;*/
 }
+
+
+/* tarifas */
+
+.tarifaemprendedor,.tarifaoportuna,.retornopaquetes,.canceladosDevoluciones,.serviciopacking,.tiempodeespera,.adicionales {    
+    background-color: #f7aef7;
+    text-align: center;
+    display: block;
+}
+
+
+#tarifa1,#tarifa2,#tarifa3,#tarifa4,#tarifa5,#tarifa6,#tarifa7{
+    text-align: center;
+    display: inline-block;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    display: none;
+}
+
+
+
