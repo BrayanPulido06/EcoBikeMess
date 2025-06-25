@@ -62,14 +62,14 @@ footer {
 
 /* tarifas */
 
-.tarifaemprendedor,.tarifaoportuna,.retornopaquetes,.canceladosDevoluciones,.serviciopacking,.tiempodeespera,.adicionales {    
+.tarifaemprendedor,.tarifaoportuna,.retornopaquetes,.canceladosDevoluciones,.serviciopacking,.tiempodeespera,.adicionales, .contraentrega {    
     background-color: #f7aef7;
     text-align: center;
     display: block;
 }
 
 
-#tarifa1,#tarifa2,#tarifa3,#tarifa4,#tarifa5,#tarifa6,#tarifa7{
+#tarifa1,#tarifa2,#tarifa3,#tarifa4,#tarifa5,#tarifa6,#tarifa7, #tarifa8 {
     text-align: center;
     display: inline-block;
     margin-top: 15px;

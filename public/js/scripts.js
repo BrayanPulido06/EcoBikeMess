@@ -1,3 +1,6 @@
+
+//tarifas
+
 //botones mostrar info
 function mostrar1() {
     document.getElementById('tarifa1').style.display = 'block';
@@ -53,4 +56,13 @@ function mostrar7() {
 
 function ocultar7() {
     document.getElementById('tarifa7').style.display = 'none';
+}
+
+
+function mostrar8() {
+    document.getElementById('tarifa8').style.display = 'block';
+}
+
+function ocultar8() {
+    document.getElementById('tarifa8').style.display = 'none';
 }
