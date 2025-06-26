@@ -1,4 +1,4 @@
-body{
+body{;
     background-color: #ffffff;
     font-family: Arial, sans-serif;
     margin: 0;
@@ -23,7 +23,7 @@ nav ul {
 div.fondo{
     background-color: #6799d1;
     color: rgb(0, 0, 0);
-    padding: 200px 400px;
+    padding: 150px 400px;
     border-radius: 5px;
     text-align: center;
     
@@ -38,17 +38,30 @@ div {
     background-color: #ddd0d0;
 } 
 
-.quienes-somos {
+.quienes-somos, .informacion {
     background-color: #f7aef7;
     color: rgb(0, 0, 0);
     padding: 20px;
     border-radius: 5px;
     justify-content: space-between;
     margin: 20px 0;
-    display: inline-flex
+    display: flex;
+}
+.vision, .mision {
+    flex: 1;
+    border-radius: 5px;
+    margin: 0 10px;
+    width: 48%;
+    height: 200px;
 }
 
-
+.servicios, .entrega{
+        flex: 1;
+    border-radius: 5px;
+    margin: 0 10px;
+    width: 48%;
+    height: 200px;
+}
 
 footer {
     background-color: #aef7f3;
@@ -59,6 +72,12 @@ footer {
     /*position: fixed;*/
 }
 
+footer ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    justify-content: center;
+}
 
 /* tarifas */
 
