@@ -1,1 +1,1 @@
-create data base ecobikemess;
+create data base ecobikemess; select database();
