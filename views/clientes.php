@@ -1,20 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoBikeMess</title>
     <link rel="stylesheet" href="../public/assets/style.css">
-    <nav>
-        <img src="../public/img/Sin Fondo_Mesa de trabajo 1.png" alt="" class="logo" width="250" height="250">
-        <ul>
-            <li><a href="inicio.php">Inicio</a></li>
-            <li><a href="tarifas.php">Tarifas</a></li>
-            <li><a href="clientes.php">Clientes</a></li>
-            <li><a href="cobertura.php">Cobertura</a></li>
-        </ul>
-    </nav>
+
+    <div class="navfondo">
+
+        <nav class="nav">
+            <img src="../public/img/logoblanco.png" alt=""class="logo" width="250" height="250">
+            <ul class="navlista">
+                <li><a href="inicio.php">Inicio</a></li>
+                <li><a href="tarifas.php">Tarifas</a></li>
+                <li><a href="clientes.php">Clientes</a></li>
+                <li><a href="cobertura.php">Cobertura</a></li>
+            </ul>
+        </nav>
+    </div>
+    
 </head>
 
 <body>
@@ -42,7 +44,7 @@
     </div>
 </body>
 <footer>
-    <img src="../public/img/Sin Fondo_Mesa de trabajo 1.png" alt="" class="logo" width="250" height="250">
+    <img src="../public/img/logoblanco.png" alt=""class="logo" width="250" height="250">
     <ul>
         <li> <a href="https://wa.link/49g8jg">Teléfono: +57 312 318 06 19</a></li>
         <li> <a href="Eco.BikeMess@gmail.com">Email: Eco.BikeMess@gmail.com</a></li>
