@@ -15,7 +15,7 @@
     <div class="navfondo">
 
         <nav class="nav">
-            <img src="../public/img/logonegro.png" alt=""class="logo" width="250" height="250">
+            <img src="../public/img/logoblanco.png" alt=""class="logo" width="250" height="250">
             <ul class="navlista">
                 <li><a href="inicio.php">Inicio</a></li>
                 <li><a href="tarifas.php">Tarifas</a></li>

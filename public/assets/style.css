@@ -18,7 +18,7 @@ video {
     top: 0;
     left: 0;
     width: 100%;
-    height: 64%;
+    height: 62%;
     object-fit: cover;
 
 }
@@ -28,11 +28,11 @@ video {
     top: 0;
     left: 0;
     width: 100%;
-    height: 64%;
+    height: 62%;
     object-fit: cover;
     background: black;
     opacity: 0.5;
-    mix-blend-mode: overlay;
+    /*mix-blend-mode: overlay; */
 
 
 }
@@ -65,19 +65,25 @@ video {
 }
 
 .navfondo h1 {
-    padding: 100px;
+    padding: 70px;
 }
 
 
 /*tener en cuenta*/
-div .quienes-somos, .vision, .mision, .servicios, .entrega, .informacion {
+div .quienes-somos, .vision, .mision, .servicios, .entrega  {
     margin: 20px 0px;
     padding: 10px;
-    border: 1px solid #000000;
+    border: 2px solid #000000;
     border-radius: 5px;
-    background-color: #ddd0d0;
-    
+    background-color: #ddd0d0; 
 } 
+
+.informacion {
+    margin: 20px 0px;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #ddd0d0; 
+}
 
 .quienes-somos, .informacion {
     background-color: #ffffff;
@@ -85,25 +91,43 @@ div .quienes-somos, .vision, .mision, .servicios, .entrega, .informacion {
     padding: 20px;
     border-radius: 5px;
     justify-content: space-between;
-    margin: 20px 0;
-    display: flex;
+    margin: 20px 0; 
+    display: flex; 
     
 }
 .vision, .mision {
-    flex: 1;
+    flex: 1; 
     border-radius: 5px;
-    margin: 0 10px;
-    width: 48%;
+    margin:  50px;
+    width: 40%;
     height: 200px;
-    
 }
 
+.vision{
+    margin-left: 200px;
+}
+
+.mision{
+    margin-right: 200px;
+}
 .servicios, .entrega{
-        flex: 1;
+    flex: 1; 
+    border-radius: 5px;
+    margin: 50px;
+    width: 38%;
+    height: 200px;
+
+    /*flex: 1;
     border-radius: 5px;
     margin: 0 10px;
     width: 48%;
-    height: 200px;
+    height: 200px;*/
+}
+.servicios {
+    margin-left: 200px;
+}
+.entrega {
+    margin-right: 200px;
 }
 
 footer {
