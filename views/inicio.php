@@ -6,23 +6,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoBikeMess</title>
     <link rel="stylesheet" href="../public/assets/style.css">
-    <nav>
-        <img src="../public/img/Sin Fondo_Mesa de trabajo 1.png" alt=""class="logo" width="250" height="250">
-        <ul>
-            <li><a href="inicio.php">Inicio</a></li>
-            <li><a href="tarifas.php">Tarifas</a></li>
-            <li><a href="clientes.php">Clientes</a></li>
-            <li><a href="cobertura.php">Cobertura</a></li>
-        </ul>
-    </nav>
+
+    <video muted autoplay loop>
+        <source src="../public/video/video.mp4" type="video/mp4">
+    </video>
+    <div class="capa"></div>
+
+    <div class="navfondo">
+
+        <nav class="nav">
+            <img src="../public/img/logonegro.png" alt=""class="logo" width="250" height="250">
+            <ul class="navlista">
+                <li><a href="inicio.php">Inicio</a></li>
+                <li><a href="tarifas.php">Tarifas</a></li>
+                <li><a href="clientes.php">Clientes</a></li>
+                <li><a href="cobertura.php">Cobertura</a></li>
+            </ul>
+        </nav>
+
+        <h1>Elige como distribuir tu paquetería por la ciudad sin contaminar, <br>
+        nosotros lo hacemos posible con nuestro servicio de mensajería ecológica 🍃</h1>
+    </div>
+    
 </head>
 
 <body>
-    <div class="fondo" >
-        
-        <h1>Elige como distribuir tu paquetería por la ciudad sin contaminar, nosotros lo hacemos posible con nuestro
-            servicio de mensajería ecológica 🍃</h1>
-    </div>
 
     <div class="quienes-somos">
 

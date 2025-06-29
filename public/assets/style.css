@@ -1,51 +1,93 @@
-body{;
+body{
     background-color: #ffffff;
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 20px;
 }
 
-nav {
-    background-color: #54a893;
-    color: rgb(0, 0, 0);
-    padding: 10px 100px;
+/* Barra de navegacion */
+div.navfondo{
+    color: rgb(255, 255, 255);
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 64%;
+    object-fit: cover;
+
+}
+
+.capa{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 64%;
+    object-fit: cover;
+    background: black;
+    opacity: 0.5;
+    mix-blend-mode: overlay;
+
+
+}
+
+.nav {
+    font-size: 20px;
+    margin-left: 50px;
+    margin-right: 50px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-}
-nav ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
+    padding: 30px;
 }
 
-div.fondo{
-    background-color: #6799d1;
-    color: rgb(0, 0, 0);
-    padding: 150px 400px;
-    border-radius: 5px;
-    text-align: center;
+.nav img{
+    width: 200px;
+    height: 200px;
+}
+
+.navlista {
+    list-style: none;
+    display: flex;
+    gap: 10px;
     
 }
 
+.navlista li a {
+    text-decoration: none;
+    color: rgb(255, 255, 255);
+}
+
+.navfondo h1 {
+    padding: 100px;
+}
+
+
 /*tener en cuenta*/
-div {
+div .quienes-somos, .vision, .mision, .servicios, .entrega, .informacion {
     margin: 20px 0px;
     padding: 10px;
-    border: 1px solid #fd0000;
+    border: 1px solid #000000;
     border-radius: 5px;
     background-color: #ddd0d0;
+    
 } 
 
 .quienes-somos, .informacion {
-    background-color: #f7aef7;
+    background-color: #ffffff;
     color: rgb(0, 0, 0);
     padding: 20px;
     border-radius: 5px;
     justify-content: space-between;
     margin: 20px 0;
     display: flex;
+    
 }
 .vision, .mision {
     flex: 1;
@@ -53,6 +95,7 @@ div {
     margin: 0 10px;
     width: 48%;
     height: 200px;
+    
 }
 
 .servicios, .entrega{
