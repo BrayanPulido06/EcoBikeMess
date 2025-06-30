@@ -3,6 +3,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoBikeMess</title>
     <link rel="stylesheet" href="../public/assets/style.css">
+    <script src="../public/js/scripts.js"></script>
 
     <div class="navfondo2">
 
@@ -16,36 +17,39 @@
             </ul>
         </nav>
 
-        <div class="titulo">
-            <h1>Nuestros Planes y Precios</h1>
-        </div>
-
     </div>
     
 </head>
 
 <body>
-    <div class="botones">
-        <button id="servicio"> Solicita tu Servicio > </button>
-        <button id="comprobante">comprobante de Entrega > </button>
+    <div class="botonesclientes">
+        <a href="servicio.php"> <button id="servicioboton"> Solicita tu Servicio > </button></a>
+        <a href="comprobante.php"><button id="comprobanteboton">comprobante de Entrega > </button></a>
+
     </div>
 
     <div class="infoclientes">
         <h2>Asi es como gestionamos tu pedido </h2> <br>
-        <br>
-        1. Recolección: <br>
-        Pasaremos por tu ubicación entre 10:00 a.m. y 12:30 p.m. para recoger tu paquete. <br>
-        2. Consolidación: <br>
-        Tu pedido llegará a nuestro centro de acopio en Chapinero alrededor de la 1:00 p.m., donde lo
-        prepararemos para su distribución. <br>
-        3. Distribución: <br>
-        - Los pedidos salen clasificados por zonas alrededor de las 2:00pm <br>
-        - Las entregas se realizan durante el resto del día (el horario exacto puede variar según ubicación y volumen de
-        pedidos). <br>
-        4. Notificación: <br>
-        El cliente final recibirá un aviso por WhatsApp o por llamada antes del mensajero llegar, para
-        asegurar que esté disponible para recibir <br>
-        5. Confirmación: Al cierre del día, te enviaremos el soporte de entrega. <br>
+
+        <ul>Recolección:
+            <li>Pasaremos por tu ubicación entre 10:00 a.m. y 12:30 p.m. para recoger tu paquete.</li>
+        </ul>
+        <ul>Consolidación:
+            <li>Tu pedido llegará a nuestro centro de acopio en Chapinero alrededor de la 1:00 p.m., donde lo
+            prepararemos para su distribución.</li>
+        </ul>
+        <ul>Distribución:
+            <li>Los pedidos salen clasificados por zonas alrededor de las 2:00pm.</li>
+            <li>Las entregas se realizan durante el resto del día (el horario exacto puede variar según ubicación y volumen de pedidos).</li>
+        </ul>
+        <ul>Notificación:
+            <li>El cliente final recibirá un aviso por WhatsApp o por llamada antes del mensajero llegar, para
+            asegurar que esté disponible para recibir.</li>
+        </ul>
+        <ul>Confirmación:
+            <li>Al cierre del día, te enviaremos el soporte de entrega.</li>
+        </ul>
+        
     </div>
 </body>
 <footer>

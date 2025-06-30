@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoBikeMess</title>
     <link rel="stylesheet" href="../public/assets/style.css">
+    <script src="../public/js/scripts.js"></script>
 
     <video muted autoplay loop>
         <source src="../public/video/video.mp4" type="video/mp4">

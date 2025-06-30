@@ -4,7 +4,7 @@ body{
 
 }
 
-/* Barra de navegacion */
+/* Barra de navegacion inicio */
 .navfondo{
     color: rgb(255, 255, 255);
     text-align: center;
@@ -29,8 +29,8 @@ video {
     width: 100%;
     height: 62%;
     object-fit: cover;
-    background: black;
-    opacity: 0.5;
+    background: rgb(0, 0, 0);
+    opacity: 0.7;
     /*mix-blend-mode: overlay; */
 
 
@@ -67,7 +67,7 @@ video {
     padding: 70px;
 }
 
-/*nueva barra de navegacion*/
+/*barra de navegacion demas paginas*/
 
 .navpagina {
     font-size: 20px;
@@ -198,7 +198,7 @@ footer ul li a {
 
 #tarifa1,#tarifa2,#tarifa3,#tarifa4,#tarifa5,#tarifa6,#tarifa7, #tarifa8 {
     background-color: rgb(255, 255, 255);
-    text-align: center;
+    text-align: justify;
     display: inline-block;
     margin: 30px 100px;
     display: none;
@@ -206,7 +206,6 @@ footer ul li a {
     padding: 30px;
 }
 
-/* prueba*/
 .tarifaemprendedor,.tarifaoportuna,.retornopaquetes,.canceladosDevoluciones,.serviciopacking,.tiempodeespera,.adicionales, .contraentrega{
     margin: 20px 300px;
     padding: 10px;
@@ -214,3 +213,108 @@ footer ul li a {
     border-radius: 5px;
 }
 
+h1{
+    text-align: center;
+    padding: 30px;
+}
+
+/* Clientes */
+
+.botonesclientes {
+    background-color: #8f8f8f;
+    display: flex;
+    justify-content: center;
+    margin: 20px 150px;
+    border: 2px solid #000000;
+    border-radius: 5px; 
+    gap: 200px;
+    padding: 30px;
+}
+
+#servicioboton {
+    background-color: #4CAF50; /* Verde */
+    color: white;
+    padding: 100px 200px;
+    border: 2px solid #000000;
+    border-radius: 5px;
+    cursor: pointer;
+    text-transform: capitalize;
+    font-size: 20px;
+}
+
+#comprobanteboton {
+    background-color: #008CBA; /* Azul */
+    color: white;
+    padding: 100px 200px;
+    border: 2px solid #000000;
+    border-radius: 5px;
+    cursor: pointer;
+    text-transform: capitalize;
+    font-size: 20px;
+}
+
+.infoclientes {
+    background-color: rgb(241, 188, 188);
+    color: rgb(0, 0, 0);
+    text-align: center;
+    padding: 20px;
+    margin: 20px 150px;
+    border: 2px solid #000000;
+    border-radius: 5px; 
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Comprobante de Entrega */
+
+.comprobante {
+    background-color: #eb8181;
+    color: #000000;
+    text-align: center;
+    padding: 20px;
+    margin: 20px 150px;
+    border: 2px solid #000000;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Servicio */
+
+.servicio {
+    background-color: #eb8181;
+    color: #000000;
+    text-align: center;
+    padding: 20px;
+    margin: 20px 150px;
+    border: 2px solid #000000;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Cobertura */
+
+.cobertura {
+    background-color: #eb8181;
+    color: #000000;
+    text-align: center;
+    padding: 20px;
+    margin: 20px 150px;
+    border: 2px solid #000000;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+.mapa {
+    background-color: aqua;
+    text-align: center;
+    margin: 20px 150px;
+}
+
+.infocobertura {
+    background-color: #eb8181;
+    color: #000000;
+    text-align: center;
+    padding: 20px;
+    margin: 20px 150px;
+    border: 2px solid #000000;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
