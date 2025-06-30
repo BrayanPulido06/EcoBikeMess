@@ -1,2 +1,4 @@
-create data base ecobikemess; select database();
+CREATE DATABASE IF NOT EXISTS ecobikemess;
 use ecobikemess;
+
+

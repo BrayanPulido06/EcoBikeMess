@@ -23,33 +23,41 @@
 
 <body>
     <div class="botonesclientes">
-        <a href="servicio.php"> <button id="servicioboton"> Solicita tu Servicio > </button></a>
-        <a href="comprobante.php"><button id="comprobanteboton">comprobante de Entrega > </button></a>
+
+        <div class="fondoservicioboton">
+            <a href="servicio.php"> <button id="servicioboton"> Solicita tu Servicio > </button></a>
+        </div>
+        <div class="fondocomprobanteboton">
+            <a href="comprobante.php"><button id="comprobanteboton">comprobante de Entrega > </button></a>
+        </div>
 
     </div>
 
-    <div class="infoclientes">
-        <h2>Asi es como gestionamos tu pedido </h2> <br>
+    <div class="fondoinfoclientes">
 
-        <ul>Recolección:
-            <li>Pasaremos por tu ubicación entre 10:00 a.m. y 12:30 p.m. para recoger tu paquete.</li>
-        </ul>
-        <ul>Consolidación:
-            <li>Tu pedido llegará a nuestro centro de acopio en Chapinero alrededor de la 1:00 p.m., donde lo
-            prepararemos para su distribución.</li>
-        </ul>
-        <ul>Distribución:
-            <li>Los pedidos salen clasificados por zonas alrededor de las 2:00pm.</li>
-            <li>Las entregas se realizan durante el resto del día (el horario exacto puede variar según ubicación y volumen de pedidos).</li>
-        </ul>
-        <ul>Notificación:
-            <li>El cliente final recibirá un aviso por WhatsApp o por llamada antes del mensajero llegar, para
-            asegurar que esté disponible para recibir.</li>
-        </ul>
-        <ul>Confirmación:
-            <li>Al cierre del día, te enviaremos el soporte de entrega.</li>
-        </ul>
-        
+        <div class="infoclientes">
+            <h2>Asi es como gestionamos tu pedido </h2> <br>
+
+            <ul>Recolección:
+                <li>Pasaremos por tu ubicación entre 10:00 a.m. y 12:30 p.m. para recoger tu paquete.</li>
+            </ul>
+            <ul>Consolidación:
+                <li>Tu pedido llegará a nuestro centro de acopio en Chapinero alrededor de la 1:00 p.m., donde lo
+                prepararemos para su distribución.</li>
+            </ul>
+            <ul>Distribución:
+                <li>Los pedidos salen clasificados por zonas alrededor de las 2:00pm.</li>
+                <li>Las entregas se realizan durante el resto del día (el horario exacto puede variar según ubicación y volumen de pedidos).</li>
+            </ul>
+            <ul>Notificación:
+                <li>El cliente final recibirá un aviso por WhatsApp o por llamada antes del mensajero llegar, para
+                asegurar que esté disponible para recibir.</li>
+            </ul>
+            <ul>Confirmación:
+                <li>Al cierre del día, te enviaremos el soporte de entrega.</li>
+            </ul>
+            
+        </div>
     </div>
 </body>
 <footer>

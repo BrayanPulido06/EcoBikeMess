@@ -26,6 +26,20 @@
         <p>Aquí puedes encontrar los comprobantes de entrega de tus pedidos.</p>
     </div>
 
+    <div class="fondocomprobante">
+
+        <div class="comprobanteentrega">
+            <h2>Comprobante de Entrega</h2>
+            <p>Nombre del Cliente: Juan Pérez</p>
+            <p>Teléfono: +57 312 318 06 19</p>
+            <p>Dirección de Entrega: Calle 61 #17-15, Bogotá, Colombia</p>
+            <p>Cobro: $10,000 COP</p>
+            <p>Observación: Entregar antes de las 5:00 p.m.</p>
+            <p>Fecha de Entrega: 25/04/2025</p>
+        </div>
+
+        <button type="submit" class="login-button">Descargar Comprobante</button>
+    </div>
 </body>
 <footer>
     <img src="../public/img/logoblanco.png" alt=""class="logo" width="250" height="250">

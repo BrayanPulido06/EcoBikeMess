@@ -25,6 +25,39 @@
         <h1>Solicita tu Servicio</h1>
         <p>Aquí puedes solicitar el servicio de entrega de paquetes.</p>
     </div>
+
+    <div class="fondodatossolicitudservicio">
+        <div class="datossolicitudservicio">
+            <label for="nombre">Nombre</label> <br>
+            <input type="text" id="nombre" name="nombre" placeholder="Ingresa el nombre del cliente" required>
+        </div>
+
+        <div class="datossolicitudservicio">
+            <label for="telefono">Telefono</label> <br>
+            <input type="text" id="telefono" name="telefono" placeholder="Ingresa el telefono" required>
+        </div>
+
+        <div class="datossolicitudservicio">
+            <label for="direccion">Dirección de Entrega</label> <br>
+            <input type="text" id="direccion" name="direccion" placeholder="Ingresa la dirección de entrega" required>
+        </div>
+
+        <div class="datossolicitudservicio">
+            <label for="cobro">Cobro</label> <br>
+            <input type="text" id="cobro" name="cobro" placeholder="Ingresa el cobro" required>
+        </div>
+
+        <div class="datossolicitudservicio">
+            <label for="observacion">Observacion</label> <br> 
+            <input type="text" id="observacion" name="observacion" placeholder="Ingresa una observación (de ser necesario)" required>
+        </div>
+
+
+        <button type="submit" class="login-button">Enviar</button>
+    </div>
+
+
+
 </body>
 <footer>
     <img src="../public/img/logoblanco.png" alt=""class="logo" width="250" height="250">
