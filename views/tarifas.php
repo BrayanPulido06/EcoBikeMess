@@ -1,12 +1,14 @@
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoBikeMess</title>
     <link rel="stylesheet" href="../public/assets/style.css">
+    <script src="../public/js/scripts.js"></script>
 
-    <div class="navfondo">
+    <div class="navfondo2">
 
-        <nav class="nav">
+        <nav class="navpagina">
             <img src="../public/img/logoblanco.png" alt=""class="logo" width="250" height="250">
             <ul class="navlista">
                 <li><a href="inicio.php">Inicio</a></li>
@@ -15,17 +17,20 @@
                 <li><a href="cobertura.php">Cobertura</a></li>
             </ul>
         </nav>
+
+        <div class="titulo">
+            <h1>Nuestros Planes y Precios</h1>
+        </div>
+
     </div>
     
 </head>
 
 <body>
-    <div class="titulo">
-        <h1>Nuestros Planes y Precios</h1>
-    </div>
+
 
     <div class="tarifaemprendedor">
-        <button id="tarifaemprendedor" onclick="mostrar1();">Tarifa Emprendedor</button>
+        <button id="tarifaemprendedor" onclick="mostrar1(event);">Tarifa Emprendedor</button>
         <h4>Ideal para tus envios con una tarfia fija</h4>
 
         <div id="tarifa1">

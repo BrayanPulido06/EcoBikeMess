@@ -4,9 +4,9 @@
     <title>EcoBikeMess</title>
     <link rel="stylesheet" href="../public/assets/style.css">
 
-    <div class="navfondo">
+    <div class="navfondo2">
 
-        <nav class="nav">
+        <nav class="navpagina">
             <img src="../public/img/logoblanco.png" alt=""class="logo" width="250" height="250">
             <ul class="navlista">
                 <li><a href="inicio.php">Inicio</a></li>
@@ -15,6 +15,11 @@
                 <li><a href="cobertura.php">Cobertura</a></li>
             </ul>
         </nav>
+
+        <div class="titulo">
+            <h1>Nuestros Planes y Precios</h1>
+        </div>
+
     </div>
     
 </head>
