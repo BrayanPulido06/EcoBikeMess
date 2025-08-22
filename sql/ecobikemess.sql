@@ -157,6 +157,8 @@ CREATE TABLE IF NOT EXISTS pagos (id INT AUTO_INCREMENT PRIMARY KEY,
                                     FOREIGN KEY (pedido_id) REFERENCES pedidos(id)
 );
 
+/**/
+
 CREATE TABLE IF NOT EXISTS notificaciones (id INT AUTO_INCREMENT PRIMARY KEY,
                                     usuario_id INT NOT NULL,  -- ID de cliente o mensajero
                                     tipo ENUM('cliente', 'mensajero') NOT NULL,
