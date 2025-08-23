@@ -1,59 +1,6 @@
 CREATE DATABASE IF NOT EXISTS ecobikemess;
 use ecobikemess;
 
-CREATE TABLE IF NOT EXISTS tp_registro (id INT AUTO_INCREMENT NOT NULL,
-                                        correo VARCHAR(100) NOT NULL,
-                                        password VARCHAR(100) NOT NULL,
-                                        telefono VARCHAR(15) NOT NULL,
-                                        nombre VARCHAR(50) NOT NULL,
-                                        estado INT(1) NOT NULL,
-
-                                        PRIMARY KEY (id)
-);
-
-
-
-CREATE TABLE IF NOT EXISTS tp_pedidos (id INT AUTO_INCREMENT NOT NULL,
-                                        id_usuario INT NOT NULL,
-                                        nombres VARCHAR(100) NOT NULL,
-                                        telefono VARCHAR(15) NOT NULL,
-                                        direccion VARCHAR(50) NOT NULL,
-                                        cobro VARCHAR(30) NOT NULL,
-                                        observacion varchar(100) NOT NULL,
-
-                                        PRIMARY KEY (id),
-                                        FOREIGN KEY (id_usuario) REFERENCES tp_registro(id) 
-)ENGINE=INNODB;
-
-
-
-CREATE TABLE IF NOT EXISTS tp_comprobante (id INT AUTO_INCREMENT NOT NULL,
-                                        observacion VARCHAR(100),
-                                        foto VARCHAR(500) NOT NULL,
-                                        foto2 VARCHAR(500) NOT NULL,
-                                        fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-                                        
-
-                                        PRIMARY KEY (id),
-                                        FOREIGN KEY (id) REFERENCES tp_pedidos(id)
-
-)ENGINE=INNODB;
-
-
-/*inserts*/
-INSERT INTO tp_registro VALUES 
-(NULL, 'brayan06.pulido@gmail.com', '123456789', '3172509298', 'Brayan', '1'), 
-(NULL, 'brayan@gmail.com', '987654321', '3187844160', 'Felipe', '0');
-
-
-INSERT INTO tp_servicio VALUES 
-(NULL, '1', 'Marlon Andres Pulido Lopez', '1234567899', 'calle 47 sur numero 1 f 21 este', '$100.000', 'recoger prenda');
-
-
-
-
-/*Posible codigo*/
-
 CREATE TABLE IF NOT EXISTS administradores (id INT AUTO_INCREMENT PRIMARY KEY,
                                     tipo_documento ENUM('cedula', 'dni', 'pasaporte', 'ruc', 'otro') NOT NULL,
                                     cedula VARCHAR(20) NOT NULL,
@@ -189,7 +136,7 @@ CREATE TABLE IF NOT EXISTS administradores (
     tipo_documento ENUM('cedula', 'dni', 'pasaporte', 'ruc', 'otro') NOT NULL,
     cedula VARCHAR(20) NOT NULL,
     nombre VARCHAR(200) NOT NULL,
-    correo VARCHAR(200) UNIQUE NOT NULL,
+    correo VARCHAR(255) UNIQUE NOT NULL,
     telefono VARCHAR(15) NOT NULL,
     password VARCHAR(255) NOT NULL,
     rol ENUM('super_admin', 'admin', 'operador') DEFAULT 'admin',
@@ -200,20 +147,21 @@ CREATE TABLE IF NOT EXISTS administradores (
     created_by INT,
     updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
     updated_by INT,
-    estado TINYINT(1) DEFAULT 1,
+    estado INT(1) DEFAULT 1,
     INDEX idx_cedula (cedula),
     INDEX idx_correo (correo)
 ) ENGINE=INNODB;
 
 CREATE TABLE IF NOT EXISTS clientes (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_emprendimiento VARCHAR(200) NOT NULL,
-    tipo_producto VARCHAR(200) NOT NULL,
+    nombre_emprendimiento VARCHAR(255) NOT NULL,
+    tipo_producto VARCHAR(255) NOT NULL,
     cuenta_bancaria VARCHAR(300), 
-    nombre VARCHAR(200) NOT NULL,
-    correo VARCHAR(200) UNIQUE NOT NULL,
+    nombres VARCHAR(200) NOT NULL,
+    apellidos VARCHAR(200) NOT NULL,
+    correo VARCHAR(255) UNIQUE NOT NULL,
     telefono VARCHAR(15) NOT NULL,
-    instagram VARCHAR(100) NOT NULL,
+    instagram VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
     direccion_principal VARCHAR(300),
     lat_direccion_principal DECIMAL(10, 8),
@@ -223,14 +171,14 @@ CREATE TABLE IF NOT EXISTS clientes (
     limite_credito DECIMAL(10,2) DEFAULT 0.00,
     calificacion_promedio DECIMAL(3,2) DEFAULT 0.00,
     total_pedidos INT DEFAULT 0,
-    verificado BOOLEAN DEFAULT FALSE,
+    verificado BOOLEAN DEFAULT FALSE, /*posible enum*/
     fecha_verificacion DATETIME,
     ultimo_acceso DATETIME,
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_by INT,
     updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
     updated_by INT,
-    estado TINYINT(1) DEFAULT 1,
+    estado INT(1) DEFAULT 1,
     INDEX idx_correo (correo),
     INDEX idx_verificado (verificado),
     INDEX idx_zona (zona_cobertura)
@@ -261,13 +209,13 @@ CREATE TABLE IF NOT EXISTS mensajeros (
     licencia_vencimiento DATE,
     seguro_vehiculo VARCHAR(100),
     zona_trabajo VARCHAR(200),
-    disponible BOOLEAN DEFAULT FALSE,
-    en_servicio BOOLEAN DEFAULT FALSE,
-    calificacion_promedio DECIMAL(3,2) DEFAULT 0.00,
-    total_entregas INT DEFAULT 0,
+    disponible BOOLEAN DEFAULT FALSE, -- Posible quitar
+    en_servicio BOOLEAN DEFAULT FALSE, -- Posible quitar
+    calificacion_promedio DECIMAL(3,2) DEFAULT 0.00, -- Posible quitar
+    total_entregas INT DEFAULT 0, 
     entregas_exitosas INT DEFAULT 0,
     ganancia_total DECIMAL(10,2) DEFAULT 0.00,
-    comision_porcentaje DECIMAL(5,2) DEFAULT 15.00, -- % que se lleva el mensajero
+    comision_porcentaje DECIMAL(5,2) DEFAULT 15.00, -- % que se lleva el mensajero     -- Posible quitar
     ultima_conexion DATETIME,
     ultima_ubicacion_lat DECIMAL(10, 8),
     ultima_ubicacion_lng DECIMAL(11, 8),
@@ -384,8 +332,6 @@ CREATE TABLE IF NOT EXISTS tarifas (
     recargo_urgente DECIMAL(8,2) DEFAULT 0,
     recargo_fragil DECIMAL(8,2) DEFAULT 0,
     recargo_nocturno DECIMAL(8,2) DEFAULT 0, -- Después de cierta hora
-    tipo_vehiculo ENUM('bicicleta', 'motocicleta', 'vehiculo'),
-    dia_semana TINYINT, -- NULL = todos los días
     hora_inicio TIME,
     hora_fin TIME,
     activo BOOLEAN DEFAULT TRUE,
@@ -410,6 +356,7 @@ CREATE TABLE IF NOT EXISTS ubicaciones_mensajeros (
     INDEX idx_mensajero_timestamp (mensajero_id, timestamp)
 ) ENGINE=INNODB;
 
+-- POSIBLE TABLA PARA QUITAR
 CREATE TABLE IF NOT EXISTS calificaciones (
     id INT AUTO_INCREMENT PRIMARY KEY,
     pedido_id INT NOT NULL,
@@ -425,6 +372,8 @@ CREATE TABLE IF NOT EXISTS calificaciones (
     INDEX idx_pedido (pedido_id),
     INDEX idx_calificado (calificado_tipo, calificado_id)
 ) ENGINE=INNODB;
+
+-- POSIBLE TABLA PARA QUITAR
 
 CREATE TABLE IF NOT EXISTS horarios_mensajeros (
     id INT AUTO_INCREMENT PRIMARY KEY,
