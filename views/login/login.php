@@ -1,31 +1,94 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio de Sesión</title>
-    <link rel="stylesheet" href="../../public/assets/stylelogin.css">
+    <title>Login - LodgeHub</title>
+    <link rel="stylesheet" href="../../public/assets/stylesLogin.css"> <!-- Enlaza el archivo CSS -->
 </head>
+
 <body>
-    
+    <div class="page-background">
+        <div class="borde-container-login">
+            <div class="login-container">
+                
 
-    <h1>Iniciar Sesión</h1>
-    <form action="../../config/validarlogin.php" method="POST">
+                <form action="validarLogin.php" method="post">
 
-        <div>
-            <label for="email">Correo Electrónico:</label>
-            <input type="email" class="form-control" id="email" placeholder="Ingrese su correo electrónico" name="email" required>
+                    <h1>¡BIENVENIDO A ECO BIKE MESS!</h1> <!-- Título -->
+
+
+                    <div class="input-group">
+                        <label for="username">Correo</label>
+                        <input type="text" id="correo" name="correo" placeholder="Ingresa tu correo" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password">Contraseña</label>
+                        <input type="password" id="password" name="password" placeholder="Ingresa tu contraseña" required>
+                    </div>
+
+                    <?php
+                    if (isset($_GET['mensaje'])) {
+
+                    ?>
+                        <div class="alert" role="alert">
+                            <?php
+                            switch ($_GET['mensaje']) {
+                                case 'Correo enviado correctamente':
+                                    echo "Se te envió un correo para restablecer tu contraseña.";
+                                    break;
+                                case 'Contraseña actualizada correctamente':
+                                    echo "La contraseña se ha actualizado correctamente.";
+                                    break;
+                                case 'Correo o contraseña incorrectos':
+                                    echo "El correo o la contraseña son incorrectos. Por favor, inténtalo de nuevo.";
+                                    break;
+                                case 'Contraseña actualizada correctamente':
+                                    echo "Contraseña actualizada correctamente.";
+                                    break;
+                                case 'Registro exitoso. ¡Ya puedes iniciar sesión!':
+                                    echo "Registro exitoso. ¡Ya puedes iniciar sesión!";
+                                    break;
+
+                                    // default:
+                                    //     echo "Hubo un error al enviar el correo, o el usuario no existe.";
+                            }
+                            ?>
+                        </div>
+
+                    <?php
+                    }
+                    ?>
+
+
+
+                    <a href="recuperarContraseña.php" class="account-link">¿Olvidaste tu contraseña?</a>
+                    <a href="crearUsuariologin.php" class="account-link">¿No tienes una cuenta? ¡Crea una!</a>
+
+                    <button type="submit" class="login-button">Ingresar</button>
+
+
+                </form>
+
+                <?php
+                ?>
+
+
+            </div>
+            <div class="degrade-container"></div>
+            <div class="logo-container">
+                <img src="../../public/img/LogoClaroLH.png" alt="">
+                <h6>EcoBikeMess © 2025</h6>
+            </div>
+
+
+
         </div>
-        <div>
-            <label for="password">Contraseña:</label>
-            <input type="password" class="form-control" id="password" placeholder="Ingrese su contraseña" name="password" required>
-        </div>
-        <button type="submit">Iniciar Sesión</button>
-    </form>
+    </div>
 
 
-
-
-    <script src="../../public/js/scriptlogin.js"></script>
 </body>
+
 </html>

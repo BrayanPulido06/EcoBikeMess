@@ -1,5 +1,3 @@
-# 🌐 ESTRUCTURA COMPLETA - SISTEMA DE LOGÍSTICA
-
 ## 📱 PÁGINA WEB (Responsive)
 
 ### 🏠 **SECCIÓN PÚBLICA (Sin Login)**
@@ -10,7 +8,6 @@
 - **Servicios**: Estándar, Express, Mismo Día, Programado
 - **Cobertura**: Mapa interactivo de zonas
 - **Testimonios**: Clientes satisfechos
-- **Estadísticas**: Paquetes entregados, ciudades, satisfacción
 - **Blog/Noticias**: Últimas noticias del sector
 - **Footer**: Enlaces, contacto, redes sociales
 
@@ -31,6 +28,7 @@
 - **Tiempo de Entrega**: Consultar tiempos estimados
 
 ---
+### LOGIN ###
 
 ### 👤 **SECCIÓN DE CLIENTES**
 

@@ -89,6 +89,46 @@ CREATE TABLE IF NOT EXISTS entregas (id INT AUTO_INCREMENT PRIMARY KEY,
                                     FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id)
 )ENGINE=INNODB;
 
+
+-- Insertar administradores
+INSERT INTO administradores (tipo_documento, cedula, nombre, correo, telefono, password) VALUES
+('cedula', '1014596349', 'Brayan Pulido', 'brayan06.pulido@gmail.com', '3172509298', '123456789'), -- password: password
+('dni', '987654321', 'Carlos Rodríguez', 'carlos@ecobike.com', '0991234567', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'), -- password: password
+('pasaporte', 'AB123456', 'Ana Martínez', 'ana@ecobike.com', '0978889999', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'); -- password: password
+
+-- Insertar clientes
+INSERT INTO clientes (nombre_emprendimiento, tipo_producto, cuenta_bancaria, nombre, correo, telefono, instagram, password) VALUES
+('Delicias Naturales', 'Alimentos orgánicos', '2109876543210987654321', 'Felipe Pulido', 'brayanpulido941@gmail.com', '0912345678', '@deliciasnaturales', '123456789'),
+('Artesanías Andinas', 'Artesanías', '2101234567890123456789', 'María López', 'maria@artesaniasandinas.com', '0923456789', '@artesanias.andinas', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+('Café Premium', 'Café especial', '2105555555555555555555', 'Pedro García', 'pedro@cafepremium.com', '0934567890', '@cafe.premium', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
+
+-- Insertar mensajeros
+INSERT INTO mensajeros (tipo_documento, numero_documento, nombres, apellidos, telefono, correo, password, tipo_sangre, direccion_residencia, foto, hoja_vida, telefono_emergencia1, nombre_emergencia1, apellido_emergencia1, telefono_emergencia2, nombre_emergencia2, apellido_emergencia2, tipo_vehiculo, numero_vehiculo) VALUES
+('cedula', '1712345678', 'Luis', 'Martínez', '0945678901', 'luis@ecobike.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'O+', 'Av. Amazonas N123', 'fotos/luis.jpg', 'hojas_vida/luis.pdf', '022222222', 'María', 'Martínez', '033333333', 'Carlos', 'Martínez', 'bicicleta', 'BIC-001'),
+('cedula', '1723456789', 'Ana', 'Gómez', '0956789012', 'ana.gomez@ecobike.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'A+', 'Calle 10 de Agosto Oe2-34', 'fotos/ana.jpg', 'hojas_vida/ana.pdf', '044444444', 'Roberto', 'Gómez', '055555555', 'Sofía', 'Gómez', 'motocicleta', 'MVC-123'),
+('cedula', '1734567890', 'Carlos', 'Ramírez', '0967890123', 'carlos.ramirez@ecobike.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'B+', 'Av. Shyris 1234', 'fotos/carlos.jpg', 'hojas_vida/carlos.pdf', '066666666', 'Elena', 'Ramírez', '077777777', 'Miguel', 'Ramírez', 'vehiculo', 'ABC-1234');
+
+-- Insertar pedidos
+INSERT INTO pedidos (cliente_id, codigo_qr, direccion_origen, nombre_origen, telefono_origen, direccion_destino, destinatario, telefono_destinatario, descripcion_paquete, instrucciones_entrega) VALUES
+(1, 'DELIV-ECO001', 'Av. Amazonas N456, Quito', 'Juan Pérez', '0912345678', 'Calle Guayaquil 789, Centro Histórico', 'María Rodríguez', '0987654321', 'Caja con 10 frascos de miel orgánica', 'Llamar antes de llegar'),
+(2, 'DELIV-ECO002', 'Calle Rocafuerte 321, Quito', 'María López', '0923456789', 'Av. 6 de Diciembre 1234', 'Carlos Sánchez', '0976543210', 'Bolso artesanal de cuero', 'Entregar en recepción'),
+(3, 'DELIV-ECO003', 'Av. Coruña 567, Quito', 'Pedro García', '0934567890', 'Calle Isabel La Católica 789', 'Ana Martínez', '0965432109', 'Paquete de café premium 500g', 'Dejar con el portero');
+
+-- Insertar asignaciones
+INSERT INTO asignaciones (pedido_id, mensajero_id) VALUES
+(1, 1),  -- Pedido 1 asignado a Luis Martínez
+(2, 2),  -- Pedido 2 asignado a Ana Gómez
+(3, 3);  -- Pedido 3 asignado a Carlos Ramírez
+
+-- Insertar entregas (simulando que los pedidos fueron entregados)
+INSERT INTO entregas (pedido_id, mensajero_id, foto_url, nombre_receptor, id_receptor, monto_cobrado, metodo_pago, observacion) VALUES
+(1, 1, 'entregas/entrega1.jpg', 'María Rodríguez', '1711111111', 25.50, 'efectivo', 'Cliente satisfecho con el servicio'),
+(2, 2, 'entregas/entrega2.jpg', 'Carlos Sánchez', '1722222222', 0.00, 'no_aplica', 'Entrega rápida y eficiente'),
+(3, 3, 'entregas/entrega3.jpg', 'Ana Martínez', '1733333333', 35.75, 'tarjeta', 'Producto en perfecto estado');
+
+-- Actualizar estado de los pedidos a "entregado"
+UPDATE pedidos SET estado = 'entregado' WHERE id IN (1, 2, 3);
+
 /*casilla obsional para notificar*/
 
 CREATE TABLE IF NOT EXISTS historial_pedidos (id INT AUTO_INCREMENT PRIMARY KEY,
