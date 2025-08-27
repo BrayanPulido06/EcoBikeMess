@@ -35,9 +35,10 @@ $usuario_encontrado = null;
 $tipo_usuario = null;
 
 // PASO 1: Buscar en tabla de administradores
-$consulta_admin = "SELECT id, tipo_documento, cedula, nombre, correo, telefono, password, fecha_registro, estado 
+// Removido el campo 'estado' que no existe en la BD
+$consulta_admin = "SELECT id, tipo_documento, cedula, nombre, correo, telefono, password, fecha_registro 
                    FROM administradores 
-                   WHERE correo = '$correo_escaped' AND estado = 1";
+                   WHERE correo = '$correo_escaped'";
 
 $resultado_admin = mysqli_query($conexion, $consulta_admin);
 
@@ -52,10 +53,13 @@ if (mysqli_num_rows($resultado_admin) > 0) {
     $tipo_usuario = 'administrador';
     mysqli_free_result($resultado_admin);
 } else {
+    mysqli_free_result($resultado_admin);
+    
     // PASO 2: Buscar en tabla de clientes
-    $consulta_cliente = "SELECT id, nombre_emprendimiento, tipo_producto, cuenta_bancaria, nombre, correo, telefono, instagram, password, fecha_registro, estado 
+    // Removido el campo 'estado' que no existe en la BD
+    $consulta_cliente = "SELECT id, tipo_documento, numDocumento, nombre_emprendimiento, tipo_producto, cuenta_bancaria, nombre, correo, telefono, instagram, password, fecha_registro 
                         FROM clientes 
-                        WHERE correo = '$correo_escaped' AND estado = 1";
+                        WHERE correo = '$correo_escaped'";
     
     $resultado_cliente = mysqli_query($conexion, $consulta_cliente);
     
@@ -71,17 +75,38 @@ if (mysqli_num_rows($resultado_admin) > 0) {
         mysqli_free_result($resultado_cliente);
     } else {
         mysqli_free_result($resultado_cliente);
+        
+        // PASO 3: Buscar en tabla de mensajeros
+        $consulta_mensajero = "SELECT id, tipo_documento, numero_documento, nombres, apellidos, telefono, correo, password, fecha_registro 
+                              FROM mensajeros 
+                              WHERE correo = '$correo_escaped'";
+        
+        $resultado_mensajero = mysqli_query($conexion, $consulta_mensajero);
+        
+        if (!$resultado_mensajero) {
+            mysqli_close($conexion);
+            header("location: login.php?mensaje=Error en la consulta");
+            exit;
+        }
+        
+        if (mysqli_num_rows($resultado_mensajero) > 0) {
+            $usuario_encontrado = mysqli_fetch_assoc($resultado_mensajero);
+            $tipo_usuario = 'mensajero';
+            mysqli_free_result($resultado_mensajero);
+        } else {
+            mysqli_free_result($resultado_mensajero);
+        }
     }
 }
 
-// PASO 3: Validar si se encontró el usuario
+// PASO 4: Validar si se encontró el usuario
 if ($usuario_encontrado === null) {
     mysqli_close($conexion);
-    header("location: login.php?mensaje=Correo o contraseña incorrectos");
+    header("location: login.php?mensaje=Datos incompletos");
     exit;
 }
 
-// PASO 4: Verificar la contraseña
+// PASO 5: Verificar la contraseña
 $password_bd = $usuario_encontrado['password'];
 $password_valida = false;
 
@@ -98,26 +123,40 @@ if (substr($password_bd, 0, 3) === '$2y') {
         $nueva_hash_escaped = mysqli_real_escape_string($conexion, $nueva_hash);
         $id_escaped = mysqli_real_escape_string($conexion, $usuario_encontrado['id']);
         
-        $tabla = ($tipo_usuario === 'administrador') ? 'administradores' : 'clientes';
-        $actualizar = "UPDATE $tabla SET password = '$nueva_hash_escaped' WHERE id = '$id_escaped'";
-        mysqli_query($conexion, $actualizar);
+        $tabla = '';
+        switch($tipo_usuario) {
+            case 'administrador':
+                $tabla = 'administradores';
+                break;
+            case 'cliente':
+                $tabla = 'clientes';
+                break;
+            case 'mensajero':
+                $tabla = 'mensajeros';
+                break;
+        }
+        
+        if (!empty($tabla)) {
+            $actualizar = "UPDATE $tabla SET password = '$nueva_hash_escaped' WHERE id = '$id_escaped'";
+            mysqli_query($conexion, $actualizar);
+        }
     }
 }
 
-// PASO 5: Procesar login exitoso o fallido
+// PASO 6: Procesar login exitoso o fallido
 if ($password_valida) {
     // Login exitoso - Configurar sesión según el tipo de usuario
     
-    // Datos comunes para ambos tipos de usuarios
+    // Datos comunes para todos los tipos de usuarios
     $_SESSION['user_id'] = $usuario_encontrado['id'];
     $_SESSION['user_email'] = $usuario_encontrado['correo'];
-    $_SESSION['user_name'] = $usuario_encontrado['nombre'];
     $_SESSION['user_phone'] = $usuario_encontrado['telefono'];
     $_SESSION['user_type'] = $tipo_usuario;
     $_SESSION['login_time'] = time();
     
     if ($tipo_usuario === 'administrador') {
         // Datos específicos del administrador
+        $_SESSION['user_name'] = $usuario_encontrado['nombre'];
         $_SESSION['admin_documento_tipo'] = $usuario_encontrado['tipo_documento'];
         $_SESSION['admin_cedula'] = $usuario_encontrado['cedula'];
         $_SESSION['is_admin'] = true;
@@ -128,6 +167,9 @@ if ($password_valida) {
         
     } elseif ($tipo_usuario === 'cliente') {
         // Datos específicos del cliente
+        $_SESSION['user_name'] = $usuario_encontrado['nombre'];
+        $_SESSION['client_documento_tipo'] = $usuario_encontrado['tipo_documento'];
+        $_SESSION['client_num_documento'] = $usuario_encontrado['numDocumento'];
         $_SESSION['client_emprendimiento'] = $usuario_encontrado['nombre_emprendimiento'];
         $_SESSION['client_tipo_producto'] = $usuario_encontrado['tipo_producto'];
         $_SESSION['client_cuenta_bancaria'] = $usuario_encontrado['cuenta_bancaria'];
@@ -137,12 +179,25 @@ if ($password_valida) {
         mysqli_close($conexion);
         header("location: ../clientes/homepage/clientHomepage.php");
         exit;
+        
+    } elseif ($tipo_usuario === 'mensajero') {
+        // Datos específicos del mensajero
+        $_SESSION['user_name'] = $usuario_encontrado['nombres'] . ' ' . $usuario_encontrado['apellidos'];
+        $_SESSION['mensajero_documento_tipo'] = $usuario_encontrado['tipo_documento'];
+        $_SESSION['mensajero_num_documento'] = $usuario_encontrado['numero_documento'];
+        $_SESSION['mensajero_nombres'] = $usuario_encontrado['nombres'];
+        $_SESSION['mensajero_apellidos'] = $usuario_encontrado['apellidos'];
+        $_SESSION['is_mensajero'] = true;
+        
+        mysqli_close($conexion);
+        header("location: ../mensajeros/homepage/mensajeroHomepage.php");
+        exit;
     }
     
 } else {
     // Contraseña incorrecta
     mysqli_close($conexion);
-    header("location: login.php?mensaje=Correo o contraseña incorrectos");
+    header("location: login.php?mensaje=Datos incompletos");
     exit;
 }
 ?>

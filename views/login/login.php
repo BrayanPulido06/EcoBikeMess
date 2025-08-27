@@ -16,7 +16,7 @@
 
                 <form action="validarLogin.php" method="post">
 
-                    <h1>¡BIENVENIDO A ECO BIKE MESS!</h1> <!-- Título -->
+                    <h1>¡BIENVENIDO A ECOBIKEMESS!</h1> <!-- Título -->
 
 
                     <div class="input-group">
@@ -42,7 +42,7 @@
                                 case 'Contraseña actualizada correctamente':
                                     echo "La contraseña se ha actualizado correctamente.";
                                     break;
-                                case 'Correo o contraseña incorrectos':
+                                case 'Datos incompletos':
                                     echo "El correo o la contraseña son incorrectos. Por favor, inténtalo de nuevo.";
                                     break;
                                 case 'Contraseña actualizada correctamente':
@@ -79,7 +79,7 @@
             </div>
             <div class="degrade-container"></div>
             <div class="logo-container">
-                <img src="../../public/img/LogoClaroLH.png" alt="">
+                <img src="../../public/img/logonegro.png" alt="EcoBikeMess">
                 <h6>EcoBikeMess © 2025</h6>
             </div>
 
