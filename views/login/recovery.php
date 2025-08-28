@@ -25,19 +25,19 @@ $tipo_usuario = null;
 $documento_id = null;
 
 // PASO 1: Buscar en tabla de administradores
-$consulta_admin = "SELECT id, tipo_documento, cedula, nombre, correo FROM administradores WHERE correo = '$correo_escaped' AND sesionCaducada = '1'";
+$consulta_admin = "SELECT id, tipo_documento, numDocumento, nombres, apellidos, correo FROM administradores WHERE correo = '$correo_escaped' AND sesionCaducada = '1'";
 $resultado_admin = mysqli_query($conexion, $consulta_admin);
 
 if (mysqli_num_rows($resultado_admin) > 0) {
     $usuario_encontrado = mysqli_fetch_assoc($resultado_admin);
     $tipo_usuario = 'administrador';
-    $documento_id = $usuario_encontrado['cedula'];
+    $documento_id = $usuario_encontrado['numDocumento'];
     mysqli_free_result($resultado_admin);
 } else {
     mysqli_free_result($resultado_admin);
     
     // PASO 2: Buscar en tabla de clientes
-    $consulta_cliente = "SELECT id, tipo_documento, numDocumento, nombre, correo FROM clientes WHERE correo = '$correo_escaped' AND sesionCaducada = '1'";
+    $consulta_cliente = "SELECT id, tipo_documento, numDocumento, nombres, apellidos, correo FROM clientes WHERE correo = '$correo_escaped' AND sesionCaducada = '1'";
     $resultado_cliente = mysqli_query($conexion, $consulta_cliente);
     
     if (mysqli_num_rows($resultado_cliente) > 0) {
@@ -49,13 +49,13 @@ if (mysqli_num_rows($resultado_admin) > 0) {
         mysqli_free_result($resultado_cliente);
         
         // PASO 3: Buscar en tabla de mensajeros
-        $consulta_mensajero = "SELECT id, tipo_documento, numero_documento, nombres, apellidos, correo FROM mensajeros WHERE correo = '$correo_escaped' AND sesionCaducada = '1'";
+        $consulta_mensajero = "SELECT id, tipo_documento, numDocumento, nombres, apellidos, correo FROM mensajeros WHERE correo = '$correo_escaped' AND sesionCaducada = '1'";
         $resultado_mensajero = mysqli_query($conexion, $consulta_mensajero);
         
         if (mysqli_num_rows($resultado_mensajero) > 0) {
             $usuario_encontrado = mysqli_fetch_assoc($resultado_mensajero);
             $tipo_usuario = 'mensajero';
-            $documento_id = $usuario_encontrado['numero_documento'];
+            $documento_id = $usuario_encontrado['numDocumento'];
             mysqli_free_result($resultado_mensajero);
         } else {
             mysqli_free_result($resultado_mensajero);
@@ -85,7 +85,12 @@ if($usuario_encontrado !== null){
     }
     
     $actualizar_token = "UPDATE $tabla SET tokenPassword = '$token_escaped' WHERE id = '$id_escaped'";
-    mysqli_query($conexion, $actualizar_token);
+    $resultado_token = mysqli_query($conexion, $actualizar_token);
+    
+    if (!$resultado_token) {
+        header("location: login.php?mensaje=Error al generar token de recuperación");
+        exit;
+    }
     
     $mail = new PHPMailer(true);
 
@@ -117,8 +122,10 @@ if($usuario_encontrado !== null){
         $nombre_usuario = '';
         switch($tipo_usuario) {
             case 'administrador':
+                $nombre_usuario = $usuario_encontrado['nombres'] . ' ' . $usuario_encontrado['apellidos'];
+                break;
             case 'cliente':
-                $nombre_usuario = $usuario_encontrado['nombre'];
+                $nombre_usuario = $usuario_encontrado['nombres'] . ' ' . $usuario_encontrado['apellidos'];
                 break;
             case 'mensajero':
                 $nombre_usuario = $usuario_encontrado['nombres'] . ' ' . $usuario_encontrado['apellidos'];
@@ -416,7 +423,7 @@ if($usuario_encontrado !== null){
         $mail->AltBody = 'Hola '.$nombre_usuario.', este es un mensaje de recuperación de contraseña. Por favor visita: http://localhost/ecobikemess/views/login/Contraseña.php?token='.$token.'&type='.$tipo_usuario;
 
         $mail->send();
-        header("location: login.php?mensaje=Correo enviado correctamente");
+        header("location: login.php?mensaje=Correo enviado correctamente. Revisa tu bandeja de entrada.");
     } catch (Exception $e) {
         header("location: login.php?mensaje=Error al enviar el correo: {$mail->ErrorInfo}");
     }

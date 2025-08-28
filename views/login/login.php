@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - LodgeHub</title>
+    <title>Login - EcoBikeMess</title>
     <link rel="stylesheet" href="../../public/assets/stylesLogin.css"> <!-- Enlaza el archivo CSS -->
 </head>
 
@@ -14,7 +14,7 @@
             <div class="login-container">
                 
 
-                <form action="validarLogin.php" method="post">
+                <form action="../../controller/validarLogin.php" method="post">
 
                     <h1>¡BIENVENIDO A ECOBIKEMESS!</h1> <!-- Título -->
 
@@ -36,24 +36,25 @@
                         <div class="alert" role="alert">
                             <?php
                             switch ($_GET['mensaje']) {
-                                case 'Correo enviado correctamente':
-                                    echo "Se te envió un correo para restablecer tu contraseña.";
+                                case 'Correo enviado correctamente. Revisa tu bandeja de entrada.':
+                                    echo "Se te envió un enlace al correo para restablecer tu contraseña.";
                                     break;
-                                case 'Contraseña actualizada correctamente':
+                                case 'El correo no existe o no es válido':
+                                    echo "El correo no existe o no es válido.";
+                                    break;
+                                case 'Contraseña actualizada correctamente. Ya puedes iniciar sesión.':
                                     echo "La contraseña se ha actualizado correctamente.";
                                     break;
                                 case 'Datos incompletos':
                                     echo "El correo o la contraseña son incorrectos. Por favor, inténtalo de nuevo.";
                                     break;
-                                case 'Contraseña actualizada correctamente':
-                                    echo "Contraseña actualizada correctamente.";
-                                    break;
                                 case 'Registro exitoso. ¡Ya puedes iniciar sesión!':
                                     echo "Registro exitoso. ¡Ya puedes iniciar sesión!";
                                     break;
+                                case 'Error en la consulta':
+                                    echo "Hubo un error en la consulta. Por favor, inténtalo de nuevo más tarde.";
+                                    break;
 
-                                    // default:
-                                    //     echo "Hubo un error al enviar el correo, o el usuario no existe.";
                             }
                             ?>
                         </div>

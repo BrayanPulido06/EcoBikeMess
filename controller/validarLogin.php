@@ -36,7 +36,7 @@ $tipo_usuario = null;
 
 // PASO 1: Buscar en tabla de administradores
 // Removido el campo 'estado' que no existe en la BD
-$consulta_admin = "SELECT id, tipo_documento, cedula, nombre, correo, telefono, password, fecha_registro 
+$consulta_admin = "SELECT id, tipo_documento, numDocumento, nombres, apellidos, correo, telefono, password, fecha_registro 
                    FROM administradores 
                    WHERE correo = '$correo_escaped'";
 
@@ -57,7 +57,7 @@ if (mysqli_num_rows($resultado_admin) > 0) {
     
     // PASO 2: Buscar en tabla de clientes
     // Removido el campo 'estado' que no existe en la BD
-    $consulta_cliente = "SELECT id, tipo_documento, numDocumento, nombre_emprendimiento, tipo_producto, cuenta_bancaria, nombre, correo, telefono, instagram, password, fecha_registro 
+    $consulta_cliente = "SELECT id, tipo_documento, numDocumento, nombre_emprendimiento, tipo_producto, cuenta_bancaria, nombres, apellidos, correo, telefono, instagram, password, fecha_registro 
                         FROM clientes 
                         WHERE correo = '$correo_escaped'";
     
@@ -77,8 +77,8 @@ if (mysqli_num_rows($resultado_admin) > 0) {
         mysqli_free_result($resultado_cliente);
         
         // PASO 3: Buscar en tabla de mensajeros
-        $consulta_mensajero = "SELECT id, tipo_documento, numero_documento, nombres, apellidos, telefono, correo, password, fecha_registro 
-                              FROM mensajeros 
+        $consulta_mensajero = "SELECT id, tipo_documento, numDocumento, nombres, apellidos, telefono, correo, password, fecha_registro 
+                              FROM mensajeros
                               WHERE correo = '$correo_escaped'";
         
         $resultado_mensajero = mysqli_query($conexion, $consulta_mensajero);
@@ -156,9 +156,9 @@ if ($password_valida) {
     
     if ($tipo_usuario === 'administrador') {
         // Datos específicos del administrador
-        $_SESSION['user_name'] = $usuario_encontrado['nombre'];
+        $_SESSION['user_name'] = $usuario_encontrado['nombres'] . ' ' . $usuario_encontrado['apellidos'];
         $_SESSION['admin_documento_tipo'] = $usuario_encontrado['tipo_documento'];
-        $_SESSION['admin_cedula'] = $usuario_encontrado['cedula'];
+        $_SESSION['admin_cedula'] = $usuario_encontrado['numDocumento'];
         $_SESSION['is_admin'] = true;
         
         mysqli_close($conexion);
@@ -167,7 +167,7 @@ if ($password_valida) {
         
     } elseif ($tipo_usuario === 'cliente') {
         // Datos específicos del cliente
-        $_SESSION['user_name'] = $usuario_encontrado['nombre'];
+        $_SESSION['user_name'] = $usuario_encontrado['nombres'] . ' ' . $usuario_encontrado['apellidos'];
         $_SESSION['client_documento_tipo'] = $usuario_encontrado['tipo_documento'];
         $_SESSION['client_num_documento'] = $usuario_encontrado['numDocumento'];
         $_SESSION['client_emprendimiento'] = $usuario_encontrado['nombre_emprendimiento'];
@@ -184,7 +184,7 @@ if ($password_valida) {
         // Datos específicos del mensajero
         $_SESSION['user_name'] = $usuario_encontrado['nombres'] . ' ' . $usuario_encontrado['apellidos'];
         $_SESSION['mensajero_documento_tipo'] = $usuario_encontrado['tipo_documento'];
-        $_SESSION['mensajero_num_documento'] = $usuario_encontrado['numero_documento'];
+        $_SESSION['mensajero_num_documento'] = $usuario_encontrado['numDocumento'];
         $_SESSION['mensajero_nombres'] = $usuario_encontrado['nombres'];
         $_SESSION['mensajero_apellidos'] = $usuario_encontrado['apellidos'];
         $_SESSION['is_mensajero'] = true;

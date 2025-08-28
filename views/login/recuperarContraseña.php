@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - LodgeHub</title>
+    <title>Login - EcoBikeMess</title>
     <link rel="stylesheet" href="../../public/assets/stylesLogin.css"> <!-- Enlaza el archivo CSS -->
 </head>
 
@@ -12,7 +12,7 @@
     <div class="page-background">
         <div class="borde-container-login">
             <div class="login-container">
-                
+
 
                 <form action="recovery.php" method="post">
 
@@ -30,6 +30,11 @@
                 </form>
 
                 <?php
+                switch ($_GET['mensaje']) {
+                    case 'El correo no existe o no es válido':
+                        echo "El correo no existe o no es válido.";
+                        break;
+                }
                 ?>
 
 

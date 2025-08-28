@@ -3,8 +3,9 @@ use ecobikemess;
 
 CREATE TABLE IF NOT EXISTS administradores (id INT AUTO_INCREMENT PRIMARY KEY,
                                     tipo_documento ENUM('cedula', 'dni', 'pasaporte', 'ruc', 'otro') NOT NULL,
-                                    cedula VARCHAR(20) NOT NULL,
-                                    nombre VARCHAR(200) NOT NULL,
+                                    numDocumento VARCHAR(20) NOT NULL,
+                                    nombres VARCHAR(200) NOT NULL,
+                                    apellidos VARCHAR(200) NOT NULL,
                                     correo VARCHAR(200) UNIQUE NOT NULL,
                                     telefono VARCHAR(15) NOT NULL,
                                     password VARCHAR(255) NOT NULL,
@@ -21,7 +22,8 @@ CREATE TABLE IF NOT EXISTS clientes (id INT AUTO_INCREMENT PRIMARY KEY,
                                     nombre_emprendimiento VARCHAR(200) NOT NULL,
                                     tipo_producto VARCHAR(200) NOT NULL,
                                     cuenta_bancaria VARCHAR (300), 
-                                    nombre VARCHAR(200) NOT NULL,
+                                    nombres VARCHAR(200) NOT NULL,
+                                    apellidos VARCHAR(200) NOT NULL,
                                     correo VARCHAR(200) UNIQUE NOT NULL,
                                     telefono VARCHAR(15) NOT NULL,
                                     instagram VARCHAR(100) NOT NULL,
@@ -34,7 +36,7 @@ CREATE TABLE IF NOT EXISTS clientes (id INT AUTO_INCREMENT PRIMARY KEY,
 
 CREATE TABLE IF NOT EXISTS mensajeros (id INT AUTO_INCREMENT PRIMARY KEY,
                                     tipo_documento ENUM('cedula', 'dni', 'pasaporte', 'ruc', 'otro') NOT NULL,
-                                    numero_documento VARCHAR(20) NOT NULL,
+                                    numDocumento VARCHAR(20) NOT NULL,
                                     nombres VARCHAR(200) NOT NULL,
                                     apellidos VARCHAR (200) NOT NULL,
                                     telefono VARCHAR(15) NOT NULL,
@@ -99,58 +101,52 @@ CREATE TABLE IF NOT EXISTS entregas (id INT AUTO_INCREMENT PRIMARY KEY,
 
 
 
-INSERT INTO administradores (tipo_documento, cedula, nombre, correo, telefono, password, solicitarContraseña, sesionCaducada) VALUES
-('cedula', '1014596349', 'Brayan Pulido Lopez', 'brayan06.pulido@gmail.com', '+573172509298', '123456789', '0', '0'),
-('cedula', '9876543210', 'Ana María González', 'ana.gonzalez@ecobikemess.com', '+573009876543', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '0', '0'),
-('cedula', '1122334455', 'Luis Fernando Martínez', 'luis.martinez@ecobikemess.com', '+573001122334', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '1', '1');
 
--- =============================================
--- TABLA CLIENTES
--- =============================================
-INSERT INTO clientes (tipo_documento, numDocumento, nombre_emprendimiento, tipo_producto, cuenta_bancaria, nombre, correo, telefono, instagram, password, solicitarContraseña, sesionCaducada) VALUES
-('cedula', '1014596349', 'ecobikemess', 'paquetes', '123456789-001-Bancolombia', 'Felipe Pulido Lopez', 'brayanpulido941@gmail.com', '+573172509298', '@ecobikemess', '123456789', '0', '0'),
-('ruc', '9000111222333', 'Panadería El Trigal', 'Panadería y repostería', '987654321-002-Davivienda', 'Jorge Andrés Silva', 'panaderia.trigal@outlook.com', '+573209876543', '@panaderia_eltrigal', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '0', '0'),
-('cedula', '5555666677', 'Café Artesano', 'Café y bebidas', '111222333-003-Nequi', 'Sandra Patricia Ruiz', 'cafe.artesano@gmail.com', '+573155556666', '@cafe_artesano_bog', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '0', '0'),
-('cedula', '7777888899', 'Frutas y Verduras Don Pedro', 'Frutas y verduras', '444555666-004-Bancolombia', 'Pedro Antonio López', 'donpedro.frutas@hotmail.com', '+573177778888', '@frutas_donpedro', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '1', '1'),
-('cedula', '3333444455', 'Postres Divinos', 'Repostería', '777888999-005-Davivienda', 'Laura Cristina Morales', 'postres.divinos@gmail.com', '+573133334444', '@postres_divinos', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '0', '0');
+-- Insertar Administradores
+INSERT INTO administradores (tipo_documento, numDocumento, nombres, apellidos, correo, telefono, password, solicitarContraseña, sesionCaducada) VALUES
+('cedula', '1014596349', 'Brayan Felipe', 'Pulido Lopez', 'brayan06.pulido@gmail.com', '3172509298', '123456789', '0', '1'),
+('cedula', '87654321', 'Maria', 'Gonzalez Lopez', 'maria.admin@ecobikemess.com', '3009876543', '$2b$10$encrypted_password_hash2', '0', '1'),
+('dni', '98765432', 'Juan', 'Perez Santos', 'juan.admin@ecobikemess.com', '3005555555', '$2b$10$encrypted_password_hash3', '1', '1');
 
--- =============================================
--- TABLA MENSAJEROS
--- =============================================
-INSERT INTO mensajeros (tipo_documento, numero_documento, nombres, apellidos, telefono, correo, password, tipo_sangre, direccion_residencia, foto, hoja_vida, telefono_emergencia1, nombre_emergencia1, apellido_emergencia1, telefono_emergencia2, nombre_emergencia2, apellido_emergencia2, tipo_vehiculo, numero_vehiculo, solicitarContraseña, sesionCaducada) VALUES
-('cedula', '2222333344', 'Juan Carlos', 'Ramírez Torres', '+573112223333', 'juan.ramirez.mensajero@gmail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'O+', 'Calle 45 #12-34, Bogotá', 'https://storage.cloud.com/fotos/juan_ramirez.jpg', 'https://storage.cloud.com/cv/juan_ramirez_cv.pdf', '+573188887777', 'Carmen Elena', 'Ramírez Vega', '+573166665555', 'Miguel Angel', 'Torres Gómez', 'bicicleta', 'ECO-BIKE-001', '0', '0'),
-('cedula', '4444555566', 'Andrea Paola', 'García Mendoza', '+573144445555', 'andrea.garcia.eco@hotmail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'A+', 'Carrera 20 #78-90, Bogotá', 'https://storage.cloud.com/fotos/andrea_garcia.jpg', 'https://storage.cloud.com/cv/andrea_garcia_cv.pdf', '+573199998888', 'Rosa María', 'García López', '+573177776666', 'Fernando', 'Mendoza Castro', 'bicicleta', 'ECO-BIKE-002', '0', '0'),
-('cedula', '6666777788', 'David Alejandro', 'Herrera Castillo', '+573166667777', 'david.herrera.delivery@gmail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'B+', 'Calle 67 #89-12, Bogotá', 'https://storage.cloud.com/fotos/david_herrera.jpg', 'https://storage.cloud.com/cv/david_herrera_cv.pdf', '+573122221111', 'Lucía', 'Herrera Díaz', '+573155554444', 'Roberto', 'Castillo Pérez', 'motocicleta', 'ABC-123', '0', '0'),
-('cedula', '8888999900', 'Camila Andrea', 'Ospina Vargas', '+573188889999', 'camila.ospina.bike@outlook.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'AB+', 'Carrera 15 #23-45, Bogotá', 'https://storage.cloud.com/fotos/camila_ospina.jpg', 'https://storage.cloud.com/cv/camila_ospina_cv.pdf', '+573133332222', 'Gloria', 'Ospina Ruiz', '+573144443333', 'Carlos Eduardo', 'Vargas Montenegro', 'bicicleta', 'ECO-BIKE-003', '1', '1'),
-('cedula', '1010202030', 'Sebastián', 'Moreno Jiménez', '+573110101020', 'sebastian.moreno.eco@gmail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'O-', 'Calle 123 #45-67, Bogotá', 'https://storage.cloud.com/fotos/sebastian_moreno.jpg', 'https://storage.cloud.com/cv/sebastian_moreno_cv.pdf', '+573199990000', 'Esperanza', 'Moreno Gutiérrez', '+573188881111', 'Jairo', 'Jiménez Rojas', 'motocicleta', 'DEF-456', '0', '0');
+-- Insertar Clientes (Emprendimientos)
+INSERT INTO clientes (tipo_documento, numDocumento, nombre_emprendimiento, tipo_producto, cuenta_bancaria, nombres, apellidos, correo, telefono, instagram, password, solicitarContraseña, sesionCaducada) VALUES
+('cedula', '1014596348', 'Delicias Caseras', 'Comida Casera', '1234567890123456', 'Brayan Felipe', 'Pulido Lopez', 'brayanpulido941@gmail.com', '3172509298', '@deliciascaseras', '123456789', '0', '1'),
+('ruc', '20123456789', 'Flores del Valle', 'Floreria', '9876543210987654', 'Pedro', 'Martinez Silva', 'pedro@floresdevalle.com', '3022222222', '@floresdevalle', '$2b$10$client_password2', '0', '1'),
+('cedula', '22222222', 'Reposteria Dulce', 'Reposteria', '5555666677778888', 'Sofia', 'Vargas Cruz', 'sofia@reposteriadulce.com', '3033333333', '@reposteriadulce', '$2b$10$client_password3', '1', '1'),
+('cedula', '33333333', 'Farmacia Central', 'Medicamentos', '1111222233334444', 'Luis', 'Herrera Mora', 'luis@farmaciacentral.com', '3044444444', '@farmaciacentral', '$2b$10$client_password4', '0', '0'),
+('dni', '44444444', 'Boutique Elegance', 'Ropa y Accesorios', '7777888899990000', 'Carmen', 'Lopez Diaz', 'carmen@boutiqueelegance.com', '3055555555', '@boutiqueelegance', '$2b$10$client_password5', '0', '1');
 
--- =============================================
--- TABLA PEDIDOS
--- =============================================
-INSERT INTO pedidos (cliente_id, codigo_qr, direccion_origen, nombre_origen, telefono_origen, direccion_destino, destinatario, telefono_destinatario, descripcion_paquete, instrucciones_entrega, estado, fecha_creacion) VALUES
-(1, 'DELIV-ABC001', 'Carrera 7 #45-67, Bogotá', 'María Elena Pérez', '+573101112222', 'Calle 85 #12-34, Bogotá', 'Ana Sofía Herrera', '+573201234567', 'Almuerzo ejecutivo con sancocho y arroz', 'Tocar timbre, apartamento 301', 'entregado', '2025-08-26 12:30:00'),
-(2, 'DELIV-XYZ002', 'Avenida 68 #123-45, Bogotá', 'Jorge Andrés Silva', '+573209876543', 'Carrera 15 #78-90, Bogotá', 'Carlos Mendoza', '+573187654321', 'Torta de chocolate personalizada', 'Entregar antes de las 6 PM', 'entregado', '2025-08-26 14:15:00'),
-(3, 'DELIV-CAF003', 'Calle 93 #11-28, Bogotá', 'Sandra Patricia Ruiz', '+573155556666', 'Carrera 9 #72-15, Bogotá', 'Melissa García', '+573143216789', 'Café especial y croissants', 'Oficina piso 8, recepción', 'en_camino', '2025-08-27 09:20:00'),
-(1, 'DELIV-DEL004', 'Carrera 7 #45-67, Bogotá', 'María Elena Pérez', '+573101112222', 'Calle 45 #23-56, Bogotá', 'Roberto Silva', '+573156789012', 'Bandeja paisa completa', 'Casa amarilla con portón negro', 'asignado', '2025-08-27 11:45:00'),
-(4, 'DELIV-FRU005', 'Calle 32 #45-12, Bogotá', 'Pedro Antonio López', '+573177778888', 'Carrera 13 #67-89, Bogotá', 'Luisa Fernanda Rojas', '+573198765432', 'Mercado de frutas y verduras', 'Apartamento 205, segundo piso', 'pendiente', '2025-08-27 13:10:00'),
-(5, 'DELIV-POS006', 'Avenida 19 #78-45, Bogotá', 'Laura Cristina Morales', '+573133334444', 'Calle 100 #15-28, Bogotá', 'Diana Marcela Vásquez', '+573174561230', 'Cupcakes para cumpleaños', 'Portería, preguntar por Diana', 'pendiente', '2025-08-27 15:30:00');
+-- Insertar Mensajeros
+INSERT INTO mensajeros (tipo_documento, numDocumento, nombres, apellidos, telefono, correo, password, tipo_sangre, direccion_residencia, foto, hoja_vida, telefono_emergencia1, nombre_emergencia1, apellido_emergencia1, telefono_emergencia2, nombre_emergencia2, apellido_emergencia2, tipo_vehiculo, numero_vehiculo, solicitarContraseña, sesionCaducada) VALUES
+('cedula', '55555555', 'Miguel', 'Castro Jimenez', '3066666666', 'miguel.castro@gmail.com', '$2b$10$messenger_pass1', 'O+', 'Calle 45 #12-34, Bogotá', 'https://storage.com/fotos/miguel.jpg', 'https://storage.com/cv/miguel_cv.pdf', '3077777777', 'Rosa', 'Castro', '3088888888', 'Alberto', 'Jimenez', 'bicicleta', 'BCL-001', '0', '0'),
+('cedula', '66666666', 'Laura', 'Mendez Restrepo', '3099999999', 'laura.mendez@gmail.com', '$2b$10$messenger_pass2', 'A-', 'Carrera 30 #25-67, Bogotá', 'https://storage.com/fotos/laura.jpg', 'https://storage.com/cv/laura_cv.pdf', '3010101010', 'Carmen', 'Mendez', '3020202020', 'Jorge', 'Restrepo', 'motocicleta', 'ABC-123', '0', '1'),
+('dni', '77777777', 'Roberto', 'Sandoval Vega', '3030303030', 'roberto.sandoval@yahoo.com', '$2b$10$messenger_pass3', 'B+', 'Avenida 68 #40-15, Bogotá', 'https://storage.com/fotos/roberto.jpg', 'https://storage.com/cv/roberto_cv.pdf', '3040404040', 'Maria', 'Sandoval', '3050505050', 'Carlos', 'Vega', 'bicicleta', 'BCL-002', '1', '1'),
+('cedula', '88888888', 'Diana', 'Rojas Morales', '3060606060', 'diana.rojas@hotmail.com', '$2b$10$messenger_pass4', 'AB+', 'Calle 80 #15-28, Bogotá', 'https://storage.com/fotos/diana.jpg', 'https://storage.com/cv/diana_cv.pdf', '3070707070', 'Ana', 'Rojas', '3080808080', 'Luis', 'Morales', 'vehiculo', 'DEF-456', '0', '0'),
+('pasaporte', 'PA123456', 'Alejandro', 'Gutierrez Romero', '3090909090', 'alejandro.gutierrez@gmail.com', '$2b$10$messenger_pass5', 'O-', 'Transversal 20 #35-42, Bogotá', 'https://storage.com/fotos/alejandro.jpg', 'https://storage.com/cv/alejandro_cv.pdf', '3011111111', 'Elena', 'Gutierrez', '3022222222', 'Fernando', 'Romero', 'bicicleta', 'BCL-003', '0', '1');
 
--- =============================================
--- TABLA ASIGNACIONES
--- =============================================
-INSERT INTO asignaciones (pedido_id, mensajero_id, fecha_asignacion) VALUES
-(1, 1, '2025-08-26 12:35:00'),  -- Pedido 1 asignado a Juan Carlos
-(2, 2, '2025-08-26 14:20:00'),  -- Pedido 2 asignado a Andrea
-(3, 3, '2025-08-27 09:25:00'),  -- Pedido 3 asignado a David
-(4, 1, '2025-08-27 11:50:00');  -- Pedido 4 asignado a Juan Carlos
+-- Insertar Pedidos
+INSERT INTO pedidos (cliente_id, codigo_qr, direccion_origen, nombre_origen, telefono_origen, direccion_destino, destinatario, telefono_destinatario, descripcion_paquete, instrucciones_entrega, estado) VALUES
+(1, 'DELIV-ABC123', 'Carrera 15 #32-45, Chapinero', 'Ana Torres', '3011111111', 'Calle 100 #20-30, Zona Rosa', 'Juan Perez', '3001111111', 'Almuerzo ejecutivo - 2 porciones de pollo con arroz', 'Entregar en la recepción del edificio', 'pendiente'),
+(2, 'DELIV-XYZ789', 'Avenida 19 #104-28, Usaquén', 'Pedro Martinez', '3022222222', 'Carrera 7 #63-15, Zona Rosa', 'Maria Rodriguez', '3002222222', 'Ramo de 12 rosas rojas con tarjeta', 'Llamar antes de subir al apartamento 502', 'asignado'),
+(3, 'DELIV-DEF456', 'Calle 53 #14-20, Chapinero', 'Sofia Vargas', '3033333333', 'Transversal 23 #97-45, Chicó', 'Carlos Mendoza', '3003333333', 'Torta de chocolate para 8 personas', 'Manejar con cuidado - frágil', 'en_camino'),
+(4, 'DELIV-GHI789', 'Carrera 30 #45-12, Teusaquillo', 'Luis Herrera', '3044444444', 'Calle 85 #12-34, Chapinero Norte', 'Patricia Silva', '3004444444', 'Medicamentos - Ibuprofeno y vitaminas', 'Entregar solo al destinatario con cédula', 'entregado'),
+(5, 'DELIV-JKL012', 'Avenida 82 #20-15, Zona Rosa', 'Carmen Lopez', '3055555555', 'Calle 140 #15-25, Cedritos', 'Andrea Morales', '3005555555', 'Vestido de fiesta talla M - color azul', 'Tocar timbre apartamento 301', 'pendiente'),
+(1, 'DELIV-MNO345', 'Carrera 15 #32-45, Chapinero', 'Ana Torres', '3011111111', 'Diagonal 109 #18-20, Usaquén', 'Roberto Castro', '3006666666', 'Cena para dos personas - pasta con pollo', 'Dejar en portería si no contesta', 'cancelado'),
+(3, 'DELIV-PQR678', 'Calle 53 #14-20, Chapinero', 'Sofia Vargas', '3033333333', 'Carrera 11 #93-45, Chicó Norte', 'Lucia Herrera', '3007777777', 'Cupcakes variados x12 unidades', 'Entrega urgente antes de las 6 PM', 'asignado');
 
--- =============================================
--- TABLA ENTREGAS
--- =============================================
-INSERT INTO entregas (pedido_id, mensajero_id, foto_url, nombre_receptor, id_receptor, monto_cobrado, metodo_pago, observacion, fecha_entrega) VALUES
-(1, 1, 'https://storage.cloud.com/entregas/entrega_001.jpg', 'Ana Sofía Herrera', '9876543210', 25000.00, 'efectivo', 'Entregado sin novedad, cliente muy amable', '2025-08-26 13:15:00'),
-(2, 2, 'https://storage.cloud.com/entregas/entrega_002.jpg', 'Carlos Mendoza', '5432167890', 45000.00, 'transferencia', 'Torta entregada en perfecto estado, celebración exitosa', '2025-08-26 17:45:00');
+-- Insertar Asignaciones
+INSERT INTO asignaciones (pedido_id, mensajero_id) VALUES
+(2, 1),  -- Pedido XYZ789 asignado a Miguel Castro
+(3, 2),  -- Pedido DEF456 asignado a Laura Mendez  
+(4, 3),  -- Pedido GHI789 asignado a Roberto Sandoval
+(7, 4);  -- Pedido PQR678 asignado a Diana Rojas
 
+-- Insertar Entregas (solo para pedidos completados)
+INSERT INTO entregas (pedido_id, mensajero_id, foto_url, nombre_receptor, id_receptor, monto_cobrado, metodo_pago, observacion) VALUES
+(4, 3, 'https://storage.com/entregas/entrega_ghi789.jpg', 'Patricia Silva', '98765432', 35000.00, 'efectivo', 'Entrega exitosa. Cliente muy amable y medicamentos entregados correctamente.');
+
+-- Actualizar estado del pedido entregado
+UPDATE pedidos SET estado = 'entregado' WHERE id = 4;
 
 
 
