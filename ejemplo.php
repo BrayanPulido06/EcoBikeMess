@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RapidoEnvíos - Mensajería y Paquetería en Bogotá</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" />
     <style>
         * {
             margin: 0;
@@ -12,38 +13,44 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.7;
+            color: #2d3748;
+            overflow-x: hidden;
+            background: #f7fafc;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* Header */
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem 0;
+        /* Navegación */
+        .navbar {
             position: fixed;
-            width: 100%;
             top: 0;
+            width: 100%;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 3px solid #68d391;
             z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        nav {
+        .nav-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
             font-size: 1.8rem;
             font-weight: bold;
+            color: #2d3748;
+            text-decoration: none;
+            font-family: 'Georgia', serif;
         }
 
         .nav-links {
@@ -53,417 +60,516 @@
         }
 
         .nav-links a {
-            color: white;
+            color: #4a5568;
             text-decoration: none;
-            transition: opacity 0.3s;
+            font-weight: 500;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            position: relative;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
         }
 
         .nav-links a:hover {
-            opacity: 0.8;
+            color: #38a169;
+            border-color: #68d391;
+            background: rgba(104, 211, 145, 0.1);
         }
 
         /* Hero Section */
         .hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 120px 0 80px;
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #68d391 0%, #48bb78 50%, #a3bdaf 100%);
+            overflow: hidden;
+            margin-top: 0;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+            background-size: 100px 100px;
+        }
+
+        .hero .container {
             text-align: center;
+            color: white;
+            max-width: 800px;
+            padding: 2rem;
+            z-index: 2;
+            position: relative;
         }
 
         .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            animation: fadeInUp 1s ease;
+            font-size: 4rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            font-family: 'Georgia', serif;
         }
 
         .hero p {
-            font-size: 1.3rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
+            font-size: 1.4rem;
+            margin-bottom: 3rem;
+            line-height: 1.6;
+            opacity: 0.95;
+            font-style: italic;
         }
 
         .cta-button {
-            background: #ff6b6b;
-            color: white;
-            padding: 15px 40px;
-            border: none;
+            padding: 1.2rem 3rem;
             border-radius: 50px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: all 0.3s;
+            font-weight: bold;
             text-decoration: none;
+            transition: all 0.4s ease;
+            font-size: 1.1rem;
+            border: 3px solid white;
+            font-family: 'Georgia', serif;
+            background: white;
+            color: #38a169;
             display: inline-block;
         }
 
         .cta-button:hover {
-            background: #ff5252;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+            background: #38a169;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
-        /* Como Funciona */
-        .como-funciona {
-            padding: 80px 0;
-            background: #f8f9fa;
+        /* Secciones generales */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
         }
 
         .section-title {
-            text-align: center;
-            font-size: 2.5rem;
+            font-size: 3rem;
+            font-weight: bold;
             margin-bottom: 3rem;
-            color: #333;
+            color: #2d3748;
+            line-height: 1.2;
+            font-family: 'Georgia', serif;
+            text-align: center;
+        }
+
+        /* Como funciona */
+        .como-funciona {
+            padding: 6rem 0;
+            background: white;
         }
 
         .pasos {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
+            gap: 3rem;
+            margin-top: 4rem;
         }
 
         .paso {
-            background: white;
-            padding: 2rem;
-            border-radius: 15px;
             text-align: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
+            padding: 2rem;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            border: 3px solid transparent;
         }
 
         .paso:hover {
-            transform: translateY(-5px);
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            border-color: #68d391;
         }
 
         .paso-numero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
             width: 60px;
             height: 60px;
+            background: linear-gradient(135deg, #68d391, #48bb78);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0 auto 1.5rem;
             font-size: 1.5rem;
+            color: white;
             font-weight: bold;
-            margin: 0 auto 1rem;
+        }
+
+        .paso h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+            font-family: 'Georgia', serif;
+        }
+
+        .paso p {
+            color: #4a5568;
+            line-height: 1.6;
         }
 
         /* Servicios */
         .servicios {
-            padding: 80px 0;
+            padding: 6rem 0;
+            background: #f0fff4;
         }
 
         .servicios-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+            margin-top: 4rem;
         }
 
         .servicio {
             background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            border: 2px solid #f0f0f0;
-            transition: all 0.3s;
+            padding: 3rem 2rem;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            border: 3px solid transparent;
+            text-align: center;
         }
 
         .servicio:hover {
-            border-color: #667eea;
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
+            transform: translateY(-10px);
+            border-color: #68d391;
         }
 
         .servicio-icon {
             font-size: 3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .servicio h3 {
+            font-size: 1.8rem;
             margin-bottom: 1rem;
+            color: #2d3748;
+            font-family: 'Georgia', serif;
+        }
+
+        .servicio p {
+            color: #4a5568;
+            margin-bottom: 1.5rem;
         }
 
         .precio {
-            color: #667eea;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: bold;
-            margin-top: 1rem;
+            color: #38a169;
+        }
+
+        .Tarifas {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-top: 2rem;
+            padding: 2rem;
+            background: rgba(104, 211, 145, 0.1);
+            border-radius: 20px;
+            border: 2px dashed #68d391;
+        }
+
+        .Tarifas a {
+            color: #38a169;
+            text-decoration: none;
+            font-weight: bold;
         }
 
         /* Cobertura */
         .cobertura {
-            padding: 80px 0;
-            background: #f8f9fa;
+            padding: 6rem 0;
+            background: white;
         }
 
         .mapa-container {
-            background: white;
-            padding: 3rem;
-            border-radius: 15px;
-            margin-top: 3rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-top: 4rem;
         }
 
         .mapa-placeholder {
-            background: #f8f9fa;
-            height: 500px;
-            border-radius: 10px;
-            position: relative;
+            background: #f7fafc;
+            border-radius: 20px;
             overflow: hidden;
-            border: 2px solid #e9ecef;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
         #map {
             width: 100%;
-            height: 100%;
-            border-radius: 8px;
-        }
-
-        .mapa-overlay {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-
-        .mapa-overlay h4 {
-            margin: 0 0 10px 0;
-            color: #667eea;
-            font-size: 1.1rem;
+            height: 400px;
+            border-radius: 20px;
         }
 
         .cobertura-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 2rem;
-            margin-top: 2rem;
         }
 
         .info-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            background: #f0fff4;
+            padding: 2rem;
+            border-radius: 20px;
+            border: 2px solid #68d391;
         }
 
         .info-card h4 {
-            color: #667eea;
-            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: #2d3748;
+            font-family: 'Georgia', serif;
         }
 
         .tiempo-zona {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 0.5rem;
-            padding: 0.5rem;
-            background: #f8f9fa;
-            border-radius: 5px;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(104, 211, 145, 0.2);
+        }
+
+        .tiempo-zona:last-child {
+            border-bottom: none;
         }
 
         .zonas-list {
+            grid-column: 1 / -1;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .zona {
-            background: #667eea;
-            color: white;
-            padding: 1rem;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        /* Testimonios */
-        .testimonios {
-            padding: 80px 0;
-        }
-
-        .testimonios-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
             margin-top: 3rem;
         }
 
-        .testimonio {
-            background: white;
-            padding: 2rem;
+        .zona {
+            background: #68d391;
+            color: white;
+            padding: 1rem;
             border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            border-left: 4px solid #667eea;
-        }
-
-        .testimonio-texto {
-            font-style: italic;
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-        }
-
-        .testimonio-autor {
+            text-align: center;
             font-weight: bold;
-            color: #667eea;
+            transition: all 0.3s ease;
         }
 
-        .estrellas {
-            color: #ffd700;
-            margin-bottom: 1rem;
+        .zona:hover {
+            background: #48bb78;
+            transform: scale(1.05);
         }
 
         /* Herramientas */
         .herramientas {
-            padding: 80px 0;
-            background: #f8f9fa;
+            padding: 6rem 0;
+            background: #f0fff4;
         }
 
         .herramientas-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2.5rem;
+            margin-top: 4rem;
         }
 
         .herramienta {
             background: white;
-            padding: 2rem;
-            border-radius: 15px;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             text-align: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
+            transition: all 0.4s ease;
         }
 
         .herramienta:hover {
-            transform: translateY(-5px);
+            transform: translateY(-10px);
         }
 
         .herramienta-icon {
             font-size: 3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .herramienta h3 {
+            font-size: 1.5rem;
             margin-bottom: 1rem;
-            color: #667eea;
+            color: #2d3748;
+            font-family: 'Georgia', serif;
+        }
+
+        .herramienta p {
+            color: #4a5568;
+            margin-bottom: 1.5rem;
+        }
+
+        .herramienta button {
+            background: #68d391;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Georgia', serif;
+        }
+
+        .herramienta button:hover {
+            background: #48bb78;
+            transform: translateY(-2px);
         }
 
         /* Blog */
         .blog {
-            padding: 80px 0;
+            padding: 6rem 0;
+            background: white;
         }
 
         .blog-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
+            gap: 2.5rem;
+            margin-top: 4rem;
         }
 
         .blog-post {
             background: white;
-            border-radius: 15px;
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
         }
 
         .blog-post:hover {
-            transform: translateY(-5px);
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
 
         .blog-image {
             height: 200px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #68d391, #48bb78);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-size: 1.2rem;
+            font-weight: bold;
         }
 
         .blog-content {
-            padding: 1.5rem;
+            padding: 2rem;
         }
 
         .blog-fecha {
-            color: #666;
+            color: #68d391;
             font-size: 0.9rem;
-            margin-bottom: 0.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .blog-post h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+            font-family: 'Georgia', serif;
+        }
+
+        .blog-post p {
+            color: #4a5568;
+            line-height: 1.6;
         }
 
         /* Footer */
         footer {
-            background: #333;
+            background: #2d3748;
             color: white;
-            padding: 60px 0 20px;
+            padding: 4rem 0 2rem;
         }
 
         .footer-content {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 3rem;
-            margin-bottom: 2rem;
+            margin-bottom: 3rem;
         }
 
         .footer-section h3 {
-            margin-bottom: 1rem;
-            color: #667eea;
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: #68d391;
+            font-family: 'Georgia', serif;
+        }
+
+        .footer-section p {
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
         }
 
         .footer-section ul {
             list-style: none;
         }
 
-        .footer-section ul li {
-            margin-bottom: 0.5rem;
+        .footer-section li {
+            margin-bottom: 0.8rem;
         }
 
-        .footer-section ul li a {
-            color: #ccc;
+        .footer-section a {
+            color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
-            transition: color 0.3s;
+            transition: color 0.3s ease;
         }
 
-        .footer-section ul li a:hover {
-            color: #667eea;
+        .footer-section a:hover {
+            color: #68d391;
         }
 
         .social-links {
             display: flex;
             gap: 1rem;
-            margin-top: 1rem;
         }
 
         .social-link {
-            background: #667eea;
-            color: white;
             width: 40px;
             height: 40px;
+            background: #68d391;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            transition: background 0.3s;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
         }
 
         .social-link:hover {
-            background: #5a6fd8;
+            background: #48bb78;
+            transform: scale(1.1);
         }
 
         .footer-bottom {
-            text-align: center;
+            border-top: 2px solid #4a5568;
             padding-top: 2rem;
-            border-top: 1px solid #555;
-            color: #ccc;
+            text-align: center;
+            opacity: 0.8;
         }
 
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* Leaflet map customization */
+        .leaflet-container {
+            background: #e6fffa;
+        }
+
+        .custom-div-icon {
+            background: transparent;
+            border: none;
         }
 
         /* Responsive */
@@ -471,21 +577,57 @@
             .hero h1 {
                 font-size: 2.5rem;
             }
-            
-            .nav-links {
-                display: none;
-            }
-            
+
             .section-title {
                 font-size: 2rem;
+            }
+
+            .nav-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .nav-links a {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .mapa-container {
+                grid-template-columns: 1fr;
+            }
+
+            .zonas-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .pasos {
+                grid-template-columns: 1fr;
+            }
+
+            .servicios-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .herramientas-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .blog-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
     <!-- Header -->
-    <header>
-        <nav class="container">
+    <header class="navbar">
+        <div class="nav-container">
             <div class="logo">RapidoEnvíos</div>
             <ul class="nav-links">
                 <li><a href="#inicio">Inicio</a></li>
@@ -494,7 +636,7 @@
                 <li><a href="#rastreo">Rastreo</a></li>
                 <li><a href="#contacto">Contacto</a></li>
             </ul>
-        </nav>
+        </div>
     </header>
 
     <!-- Hero Section -->
@@ -558,11 +700,10 @@
                     <p>Entrega garantizada el mismo día. Para envíos críticos que no pueden esperar.</p>
                     <div class="precio">Desde $25.000</div>
                 </div>
-                <div class="servicio">
+                <div class="Tarifas">
                     <div class="servicio-icon">📅</div>
-                    <h3>Programado</h3>
-                    <p>Programa tu entrega para una fecha y hora específica. Planifica con anticipación.</p>
-                    <div class="precio">Desde $12.000</div>
+                    <h3><a href="#mas-informacion">Mas información</a></h3>
+                    <p>Si necesitas más detalles sobre nuestros servicios, no dudes en contactarnos.</p>
                 </div>
             </div>
         </div>
@@ -574,12 +715,6 @@
             <h2 class="section-title">Cobertura en Bogotá</h2>
             <div class="mapa-container">
                 <div class="mapa-placeholder">
-                    <div class="mapa-overlay">
-                        <h4>🚚 Cobertura RapidoEnvíos</h4>
-                        <p><strong>Zona Verde:</strong> Entrega 2-4 horas<br>
-                        <strong>Zona Azul:</strong> Entrega 4-6 horas<br>
-                        <strong>Zona Amarilla:</strong> Entrega 6-8 horas</p>
-                    </div>
                     <div id="map"></div>
                 </div>
                 <div class="cobertura-info">
@@ -648,30 +783,6 @@
         </div>
     </section>
 
-    <!-- Testimonios -->
-    <section class="testimonios">
-        <div class="container">
-            <h2 class="section-title">Lo Que Dicen Nuestros Clientes</h2>
-            <div class="testimonios-grid">
-                <div class="testimonio">
-                    <div class="estrellas">⭐⭐⭐⭐⭐</div>
-                    <p class="testimonio-texto">"Excelente servicio, siempre puntuales y muy profesionales. Mis clientes quedan satisfechos con la rapidez de las entregas."</p>
-                    <div class="testimonio-autor">- María González, Tienda Online</div>
-                </div>
-                <div class="testimonio">
-                    <div class="estrellas">⭐⭐⭐⭐⭐</div>
-                    <p class="testimonio-texto">"Uso RapidoEnvíos para mi empresa de repuestos. La plataforma de seguimiento es fantástica y los precios muy competitivos."</p>
-                    <div class="testimonio-autor">- Carlos Rodríguez, AutoPartes SAS</div>
-                </div>
-                <div class="testimonio">
-                    <div class="estrellas">⭐⭐⭐⭐⭐</div>
-                    <p class="testimonio-texto">"Confiamos en ellos para nuestros documentos legales. Nunca han fallado, siempre con evidencia de entrega."</p>
-                    <div class="testimonio-autor">- Ana Martínez, Bufete Jurídico</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- Herramientas Públicas -->
     <section class="herramientas">
         <div class="container">
@@ -681,25 +792,25 @@
                     <div class="herramienta-icon">💰</div>
                     <h3>Calculadora de Tarifas</h3>
                     <p>Cotiza el costo de tu envío sin necesidad de registro</p>
-                    <button class="cta-button" style="margin-top: 1rem; font-size: 1rem; padding: 10px 25px;">Calcular</button>
+                    <button>Calcular</button>
                 </div>
                 <div class="herramienta">
                     <div class="herramienta-icon">📦</div>
                     <h3>Rastreo de Paquetes</h3>
                     <p>Consulta el estado de tu envío en tiempo real</p>
-                    <button class="cta-button" style="margin-top: 1rem; font-size: 1rem; padding: 10px 25px;">Rastrear</button>
+                    <button>Rastrear</button>
                 </div>
                 <div class="herramienta">
                     <div class="herramienta-icon">🗺️</div>
                     <h3>Mapa de Cobertura</h3>
                     <p>Verifica si llegamos a tu zona de entrega</p>
-                    <button class="cta-button" style="margin-top: 1rem; font-size: 1rem; padding: 10px 25px;">Ver Mapa</button>
+                    <button>Ver Mapa</button>
                 </div>
                 <div class="herramienta">
                     <div class="herramienta-icon">⏰</div>
                     <h3>Tiempo de Entrega</h3>
                     <p>Consulta tiempos estimados entre zonas</p>
-                    <button class="cta-button" style="margin-top: 1rem; font-size: 1rem; padding: 10px 25px;">Consultar</button>
+                    <button>Consultar</button>
                 </div>
             </div>
         </div>
@@ -800,7 +911,6 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" />
     
     <script>
         // Smooth scrolling for navigation links
@@ -819,11 +929,13 @@
 
         // Add scroll effect to header
         window.addEventListener('scroll', function() {
-            const header = document.querySelector('header');
+            const header = document.querySelector('.navbar');
             if (window.scrollY > 100) {
-                header.style.background = 'rgba(102, 126, 234, 0.95)';
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+                header.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.15)';
             } else {
-                header.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+                header.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
             }
         });
 
@@ -837,150 +949,137 @@
 
         // Initialize map when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize the map centered on Bogotá
-            var map = L.map('map').setView([4.6097, -74.0817], 11);
+            // Initialize the map centered on Bogotá with enhanced styling
+            var map = L.map('map', {
+                zoomControl: true,
+                scrollWheelZoom: false
+            }).setView([4.6097, -74.0817], 11);
 
-            // Add OpenStreetMap tiles
+            // Add custom tile layer with better contrast for Bogotá
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18,
+                opacity: 0.8
             }).addTo(map);
 
-            // Define coverage zones with different colors
-            var zonaVerde = {
-                color: '#28a745',
-                weight: 2,
-                opacity: 0.8,
-                fillColor: '#28a745',
-                fillOpacity: 0.3
-            };
-
-            var zonaAzul = {
-                color: '#007bff',
-                weight: 2,
-                opacity: 0.8,
-                fillColor: '#007bff',
-                fillOpacity: 0.3
-            };
-
-            var zonaAmarilla = {
-                color: '#ffc107',
-                weight: 2,
-                opacity: 0.8,
-                fillColor: '#ffc107',
-                fillOpacity: 0.3
-            };
-
-            // Centro/Zona Rosa (Verde - 2-3 horas)
-            var centro = L.polygon([
-                [4.6200, -74.0900],
-                [4.6200, -74.0700],
-                [4.5950, -74.0700],
-                [4.5950, -74.0900]
-            ], zonaVerde).addTo(map);
-            centro.bindPopup("<b>Centro/Zona Rosa</b><br>Tiempo: 2-3 horas<br>Tarifa: Desde $8.500");
-
-            // Chapinero (Verde - 3-4 horas)  
-            var chapinero = L.polygon([
-                [4.6400, -74.0800],
-                [4.6400, -74.0500],
-                [4.6200, -74.0500],
-                [4.6200, -74.0800]
-            ], zonaVerde).addTo(map);
-            chapinero.bindPopup("<b>Chapinero</b><br>Tiempo: 3-4 horas<br>Tarifa: Desde $9.500");
-
-            // Usaquén (Azul - 3-4 horas)
-            var usaquen = L.polygon([
-                [4.7000, -74.0600],
-                [4.7000, -74.0300],
-                [4.6600, -74.0300],
-                [4.6600, -74.0600]
-            ], zonaAzul).addTo(map);
-            usaquen.bindPopup("<b>Usaquén</b><br>Tiempo: 3-4 horas<br>Tarifa: Desde $10.500");
-
-            // Kennedy (Amarillo - 4-5 horas)
-            var kennedy = L.polygon([
-                [4.6200, -74.1500],
-                [4.6200, -74.1100],
-                [4.5700, -74.1100],
-                [4.5700, -74.1500]
-            ], zonaAmarilla).addTo(map);
-            kennedy.bindPopup("<b>Kennedy</b><br>Tiempo: 4-5 horas<br>Tarifa: Desde $12.000");
-
-            // Fontibón (Amarillo - 4-5 horas)
-            var fontibon = L.polygon([
-                [4.6800, -74.1600],
-                [4.6800, -74.1200],
-                [4.6400, -74.1200],
-                [4.6400, -74.1600]
-            ], zonaAmarilla).addTo(map);
-            fontibon.bindPopup("<b>Fontibón</b><br>Tiempo: 4-5 horas<br>Tarifa: Desde $12.000");
-
-            // Suba (Azul - 4-6 horas)
-            var suba = L.polygon([
-                [4.7600, -74.1200],
-                [4.7600, -74.0800],
-                [4.7200, -74.0800],
-                [4.7200, -74.1200]
-            ], zonaAzul).addTo(map);
-            suba.bindPopup("<b>Suba</b><br>Tiempo: 4-6 horas<br>Tarifa: Desde $11.500");
-
-            // Engativá (Azul - 4-6 horas)
-            var engativa = L.polygon([
-                [4.7200, -74.1400],
-                [4.7200, -74.1000],
-                [4.6800, -74.1000],
-                [4.6800, -74.1400]
-            ], zonaAzul).addTo(map);
-            engativa.bindPopup("<b>Engativá</b><br>Tiempo: 4-6 horas<br>Tarifa: Desde $11.500");
-
-            // Bosa (Amarillo - 5-7 horas)
-            var bosa = L.polygon([
-                [4.6000, -74.2000],
-                [4.6000, -74.1600],
-                [4.5600, -74.1600],
-                [4.5600, -74.2000]
-            ], zonaAmarilla).addTo(map);
-            bosa.bindPopup("<b>Bosa</b><br>Tiempo: 5-7 horas<br>Tarifa: Desde $13.500");
-
-            // Ciudad Bolívar (Amarillo - 5-7 horas)
-            var ciudadBolivar = L.polygon([
-                [4.5800, -74.1800],
-                [4.5800, -74.1400],
-                [4.5200, -74.1400],
-                [4.5200, -74.1800]
-            ], zonaAmarilla).addTo(map);
-            ciudadBolivar.bindPopup("<b>Ciudad Bolívar</b><br>Tiempo: 5-7 horas<br>Tarifa: Desde $13.500");
-
-            // Add headquarters marker
+            // Create custom icon for headquarters
             var headquartersIcon = L.divIcon({
-                className: 'headquarters-marker',
-                html: '<div style="background: #ff6b6b; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">🏢</div>',
+                className: 'custom-div-icon',
+                html: '<div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.3);">🏢</div>',
                 iconSize: [30, 30],
                 iconAnchor: [15, 15]
             });
 
+            // Add headquarters marker
             var headquarters = L.marker([4.6350, -74.1139], {icon: headquartersIcon}).addTo(map);
-            headquarters.bindPopup("<b>RapidoEnvíos - Sede Principal</b><br>Calle 26 #68-90, Bogotá<br>📞 (601) 123-4567");
+            headquarters.bindPopup("<div style='text-align: center; font-family: Georgia, serif;'><b>🏢 RapidoEnvíos - Sede Principal</b><br>📍 Calle 26 #68-90, Bogotá<br>📞 (601) 123-4567<br><span style='color: #68d391; font-weight: bold;'>¡Estamos aquí para servirte!</span></div>");
 
-            // Add some delivery points
+            // Create custom delivery icon
             var deliveryIcon = L.divIcon({
-                className: 'delivery-marker',
-                html: '<div style="background: #28a745; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px;">🚚</div>',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
+                className: 'custom-div-icon',
+                html: '<div style="background: #28a745; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">🚚</div>',
+                iconSize: [25, 25],
+                iconAnchor: [12, 12]
             });
 
-            // Add some example delivery markers
-            var deliveries = [
-                {coords: [4.6500, -74.0600], popup: "Entrega en Zona Rosa<br>Estado: En camino"},
-                {coords: [4.6800, -74.0500], popup: "Entrega en Chapinero<br>Estado: Entregado ✓"},
-                {coords: [4.5900, -74.1200], popup: "Entrega en Kennedy<br>Estado: Recogido"},
-                {coords: [4.7100, -74.0400], popup: "Entrega en Usaquén<br>Estado: En tránsito"}
+            // Sample delivery points to highlight Bogotá coverage
+            var deliveryPoints = [
+                {coords: [4.6482, -74.0637], popup: "<b>🚚 Centro Histórico</b><br>📦 Zona de alta demanda<br>⏱️ Tiempo promedio: 2-3 horas"},
+                {coords: [4.6736, -74.0465], popup: "<b>🚚 Chapinero</b><br>📦 Zona comercial activa<br>⏱️ Tiempo promedio: 3-4 horas"},
+                {coords: [4.7110, -74.0721], popup: "<b>🚚 Usaquén</b><br>📦 Zona residencial premium<br>⏱️ Tiempo promedio: 3-4 horas"},
+                {coords: [4.5981, -74.1421], popup: "<b>🚚 Kennedy</b><br>📦 Gran volumen de entregas<br>⏱️ Tiempo promedio: 4-5 horas"},
+                {coords: [4.6860, -74.1311], popup: "<b>🚚 Suba</b><br>📦 Zona en expansión<br>⏱️ Tiempo promedio: 4-6 horas"},
+                {coords: [4.5287, -74.1624], popup: "<b>🚚 Bosa</b><br>📦 Cobertura completa<br>⏱️ Tiempo promedio: 5-7 horas"},
+                {coords: [4.6629, -74.1067], popup: "<b>🚚 Engativá</b><br>📦 Ruta optimizada<br>⏱️ Tiempo promedio: 4-6 horas"}
             ];
 
-            deliveries.forEach(function(delivery) {
-                L.marker(delivery.coords, {icon: deliveryIcon}).addTo(map)
-                    .bindPopup(delivery.popup);
+            // Add delivery points to map
+            deliveryPoints.forEach(function(point) {
+                L.marker(point.coords, {icon: deliveryIcon}).addTo(map)
+                    .bindPopup(point.popup);
+            });
+
+            // Add coverage area circle to highlight Bogotá coverage
+            var coverageCircle = L.circle([4.6097, -74.0817], {
+                color: '#68d391',
+                fillColor: '#68d391',
+                fillOpacity: 0.1,
+                radius: 25000,
+                weight: 3,
+                dashArray: '10, 10'
+            }).addTo(map);
+
+            coverageCircle.bindPopup("<div style='text-align: center; font-family: Georgia, serif;'><b>🌍 Área de Cobertura RapidoEnvíos</b><br>📍 Toda Bogotá y área metropolitana<br>📊 99.2% de tasa de éxito<br>🚚 2,500+ entregas diarias</div>");
+
+            // Add district boundaries for better visualization
+            var districtStyle = {
+                color: '#48bb78',
+                weight: 2,
+                opacity: 0.6,
+                fillOpacity: 0.05,
+                fillColor: '#68d391'
+            };
+
+            // Sample district polygons (simplified for demo)
+            var centroHistorico = L.polygon([
+                [4.585, -74.085],
+                [4.620, -74.085],
+                [4.620, -74.050],
+                [4.585, -74.050]
+            ], districtStyle).addTo(map);
+            
+            centroHistorico.bindPopup("<b>Centro Histórico</b><br>⏱️ Tiempo de entrega: 2-3 horas<br>📊 Alta densidad de entregas");
+
+            // Disable zoom on double click to prevent accidental zooming
+            map.doubleClickZoom.disable();
+
+            // Add custom control for map info
+            var info = L.control({position: 'topright'});
+            info.onAdd = function (map) {
+                var div = L.DomUtil.create('div', 'info');
+                div.innerHTML = '<div style="background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: Georgia, serif;"><b style="color: #68d391;">🗺️ Mapa Interactivo</b><br><small>Haz clic en los marcadores para más información</small></div>';
+                return div;
+            };
+            info.addTo(map);
+
+            // Add scale control
+            L.control.scale({
+                position: 'bottomleft',
+                imperial: false
+            }).addTo(map);
+        });
+
+        // Add fade-in animation for sections
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe sections for animation
+        document.querySelectorAll('section').forEach(section => {
+            section.style.opacity = '0';
+            section.style.transform = 'translateY(30px)';
+            section.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+            observer.observe(section);
+        });
+
+        // Add hover effects to cards
+        document.querySelectorAll('.paso, .servicio, .herramienta, .blog-post').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
             });
         });
     </script>

@@ -162,7 +162,7 @@ if ($password_valida) {
         $_SESSION['is_admin'] = true;
         
         mysqli_close($conexion);
-        header("location: ../administrador/homepage/adminHomepage.php");
+        header("location: ../views/administrador/homepage/adminHomepage.php");
         exit;
         
     } elseif ($tipo_usuario === 'cliente') {
@@ -177,7 +177,7 @@ if ($password_valida) {
         $_SESSION['is_client'] = true;
         
         mysqli_close($conexion);
-        header("location: ../clientes/homepage/clientHomepage.php");
+        header("location: ../views/clientes/homepage/clientHomepage.php");
         exit;
         
     } elseif ($tipo_usuario === 'mensajero') {

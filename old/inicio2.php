@@ -49,39 +49,7 @@
         </div>
     </section>
 
-    <!-- Estadísticas -->
-    <section class="stats-section">
-        <div class="stats-container">
-            <div class="stat-item fade-in">
-                <span class="stat-number" data-target="500">0</span>
-                <span class="stat-label">Entregas Diarias</span>
-            </div>
-            <div class="stat-item fade-in">
-                <span class="stat-number" data-target="2500">0</span>
-                <span class="stat-label">Kg CO₂ Ahorrados</span>
-            </div>
-            <div class="stat-item fade-in">
-                <span class="stat-number" data-target="50">0</span>
-                <span class="stat-label">Ciclistas Activos</span>
-            </div>
-            <div class="stat-item fade-in">
-                <span class="stat-number" data-target="99">0</span>
-                <span class="stat-label">% Satisfacción</span>
-            </div>
-        </div>
-    </section>
 
-    <!-- Testimonial Section -->
-    <section class="testimonial-section">
-        <div class="testimonial-pattern"></div>
-        <div class="testimonial-content">
-            <p class="testimonial-quote">
-                "EcoBikeMess no solo entrega paquetes, entrega consciencia ambiental. 
-                Cada servicio es un paso hacia la ciudad que queremos para nuestros hijos."
-            </p>
-            <p class="testimonial-author">— María González, Cliente Empresarial</p>
-        </div>
-    </section>
 
     <!-- Sección Servicios -->
     <section class="section fade-in" id="servicios">

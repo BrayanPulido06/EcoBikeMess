@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS mensajeros (id INT AUTO_INCREMENT PRIMARY KEY,
 
 CREATE TABLE IF NOT EXISTS pedidos (id INT AUTO_INCREMENT PRIMARY KEY,
                                     cliente_id INT NOT NULL,
-                                    codigo_qr VARCHAR(50) UNIQUE NOT NULL,  -- Ej: "DELIV-ABC123"
+                                    codigo_cliente VARCHAR(50) NOT NULL,    -- Ej: "CLT-123456"
+                                    codigo_qr VARCHAR(50) UNIQUE NOT NULL,  -- Ej: "ECO-XYZ456"
                                     direccion_origen VARCHAR(255) NOT NULL,
                                     nombre_origen VARCHAR(200) NOT NULL,
                                     telefono_origen VARCHAR(15) NOT NULL,
