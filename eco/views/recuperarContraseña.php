@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Contraseña - EcoBikeMess</title>
+    <link rel="stylesheet" href="../public/css/login.css">
+</head>
+<body>
+    <div class="login-container">
+        <!-- Header con logo -->
+        <div class="login-header">
+            <h1>🚴 EcoBikeMess</h1>
+            <p>Mensajería Ecológica para un Futuro Sostenible</p>
+        </div>
+
+        <!-- Cuerpo del formulario -->
+        <div class="login-body">
+            <!-- Formulario de Recuperación de Contraseña -->
+            <form id="forgotPasswordForm" class="form-container active">
+                    <h2>Recuperar Contraseña</h2>
+                    <p class="form-subtitle">Te enviaremos un enlace de recuperación</p>
+
+                    <div class="form-group">
+                        <label for="forgotEmail">Correo Electrónico</label>
+                        <input type="email" id="forgotEmail" name="email" placeholder="tu@email.com" required>
+                        <span class="error-message" id="forgotEmailError"></span>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Enviar Enlace</button>
+
+                    <div class="form-footer">
+                        <p><a href="login.php" class="link">← Volver al inicio de sesión</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="../public/js/login.js"></script>
+</body>
+</html>

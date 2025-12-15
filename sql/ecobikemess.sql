@@ -260,7 +260,7 @@ CREATE TABLE IF NOT EXISTS clientes (
 CREATE TABLE IF NOT EXISTS mensajeros (
     id INT PRIMARY KEY AUTO_INCREMENT,
     usuario_id INT UNIQUE NOT NULL,
-    tipo_documento ENUM('cedula', 'tarjeta_identidad', 'pasaporte') NOT NULL,
+    tipo_documento ENUM('cedula', 'tarjeta_identidad', 'pasaporte', 'cedula_extranjeria') NOT NULL,
     numDocumento VARCHAR(20) UNIQUE NOT NULL,
     foto VARCHAR(255) NOT NULL,
     hoja_vida VARCHAR(255) NOT NULL,
@@ -291,7 +291,7 @@ CREATE TABLE IF NOT EXISTS mensajeros (
 CREATE TABLE IF NOT EXISTS administradores (
     id INT PRIMARY KEY AUTO_INCREMENT,
     usuario_id INT UNIQUE NOT NULL,
-    tipo_documento ENUM('cedula', 'tarjeta_identidad', 'pasaporte') NOT NULL,
+    tipo_documento ENUM('cedula', 'tarjeta_identidad', 'pasaporte', 'cedula_extranjeria') NOT NULL,
     num_documento VARCHAR(20) UNIQUE NOT NULL,
     rol ENUM('super_admin', 'admin_operativo', 'admin_reportes', 'admin_mensajeros') NOT NULL,
     foto VARCHAR(255) NOT NULL,
