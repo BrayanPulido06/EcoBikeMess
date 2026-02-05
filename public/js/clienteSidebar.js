@@ -23,7 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Marcar link activo según la URL actual
     const currentPage = window.location.pathname.split('/').pop();
     navLinks.forEach(link => {
-        const linkPage = link.getAttribute('href');
+        const href = link.getAttribute('href');
+        // Obtener solo el nombre del archivo (ej: inicioCliente.php) para comparar correctamente
+        const linkPage = href ? href.split('?')[0].split('/').pop() : '';
         
         // Remover active de todos
         link.classList.remove('active');
@@ -33,12 +35,6 @@ document.addEventListener('DOMContentLoaded', function() {
             link.classList.add('active');
         }
     });
-    
-    // Si no hay ningún link activo, activar "Inicio"
-    const hasActive = Array.from(navLinks).some(link => link.classList.contains('active'));
-    if (!hasActive && navLinks.length > 0) {
-        navLinks[0].classList.add('active');
-    }
     
     // Para móvil: crear overlay y manejar clics
     if (window.innerWidth <= 768) {

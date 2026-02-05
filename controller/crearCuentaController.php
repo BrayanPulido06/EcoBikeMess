@@ -39,6 +39,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $datos['tipo_producto'] = trim($_POST['tipo_producto']);
             $datos['instagram'] = trim($_POST['instagram']);
             $datos['direccion_principal'] = trim($_POST['direccion_principal']);
+
+            if (empty($datos['direccion_principal'])) {
+                throw new Exception("La dirección principal es obligatoria para completar el registro.");
+            }
             
         } elseif ($tipo_usuario == 'mensajero') {
             // Datos específicos mensajero

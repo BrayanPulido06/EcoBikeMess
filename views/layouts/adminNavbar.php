@@ -15,49 +15,6 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     </div>
 
     <div class="navbar-right">
-        <!-- Notificaciones -->
-        <div class="notification-btn" id="notificationBtn">
-            <span class="notification-icon">🔔</span>
-            <span class="notification-badge">3</span>
-        </div>
-
-        <!-- Panel de notificaciones -->
-        <div class="notification-panel" id="notificationPanel">
-            <div class="notification-header">
-                <h3>Notificaciones</h3>
-                <button class="mark-read-btn">Marcar todas como leídas</button>
-            </div>
-            <div class="notification-list">
-                <div class="notification-item unread">
-                    <span class="notif-icon">📦</span>
-                    <div class="notif-content">
-                        <p class="notif-title">Paquete entregado</p>
-                        <p class="notif-text">Tu pedido #12345 fue entregado exitosamente</p>
-                        <span class="notif-time">Hace 5 min</span>
-                    </div>
-                </div>
-                <div class="notification-item unread">
-                    <span class="notif-icon">💰</span>
-                    <div class="notif-content">
-                        <p class="notif-title">Pago recibido</p>
-                        <p class="notif-text">Se registró un pago de $50.000</p>
-                        <span class="notif-time">Hace 1 hora</span>
-                    </div>
-                </div>
-                <div class="notification-item unread">
-                    <span class="notif-icon">🚴</span>
-                    <div class="notif-content">
-                        <p class="notif-title">Mensajero asignado</p>
-                        <p class="notif-text">Juan Pérez fue asignado a tu pedido</p>
-                        <span class="notif-time">Hace 2 horas</span>
-                    </div>
-                </div>
-            </div>
-            <div class="notification-footer">
-                <a href="notificaciones.php">Ver todas las notificaciones</a>
-            </div>
-        </div>
-
         <!-- Menú de usuario -->
         <div class="user-menu" id="userMenu">
             <button class="user-btn" id="userBtn">
@@ -80,7 +37,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
                 </div>
                 <ul class="dropdown-menu">
                     <li>
-                        <a href="../layouts/miPerfilCliente.php" class="dropdown-item">
+                        <a href="../layouts/miPerfilAdmin.php" class="dropdown-item">
                             <span class="dropdown-icon">👤</span>
                             <span>Mi Perfil</span>
                         </a>

@@ -26,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         
         // 3. Consulta segura buscando por correo
-        $sql = "SELECT id, nombres, password, tipo_usuario FROM usuarios WHERE correo = :correo LIMIT 1";
+        $sql = "SELECT id, nombres, apellidos, correo, telefono, password, tipo_usuario FROM usuarios WHERE correo = :correo LIMIT 1";
         $stmt = $conn->prepare($sql);
         $stmt->bindParam(":correo", $correo, PDO::PARAM_STR);
         $stmt->execute();
@@ -42,6 +42,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             $_SESSION['user_id'] = $usuario['id'];
             $_SESSION['user_name'] = $usuario['nombres'];
+            $_SESSION['user_lastname'] = $usuario['apellidos'];
+            $_SESSION['user_email'] = $usuario['correo'];
+            $_SESSION['user_phone'] = $usuario['telefono'];
             $_SESSION['user_role'] = $usuario['tipo_usuario'];
             
             // Redireccionar según el rol del usuario
@@ -56,6 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     header("Location: ../views/mensajeros/inicioMensajero.php");
                     break;
                 case 'cliente':
+                case 'colaborador':
                     header("Location: ../views/clientes/inicioCliente.php");
                     break;
             }

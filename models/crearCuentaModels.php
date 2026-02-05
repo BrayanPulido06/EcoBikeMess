@@ -6,9 +6,6 @@ class UsuarioModel {
 
     public function __construct() {
         $this->conn = conexionDB();
-        if (!$this->conn) {
-            throw new Exception("Error de conexión a la base de datos");
-        }
     }
 
     public function existeCorreo($correo) {

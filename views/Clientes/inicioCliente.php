@@ -1,3 +1,40 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../login.php");
+    exit();
+}
+
+require_once '../../models/inicioClienteModel.php';
+
+// Inicializar variables por defecto
+$stats = ['pedidos_mes' => 0, 'en_transito' => 0, 'saldo_pendiente' => 0, 'entregados_total' => 0];
+$ultimosPedidos = [];
+$chartDataRaw = [];
+
+// Obtener datos reales
+$model = new InicioClienteModel();
+$cliente_id = $model->obtenerIdCliente($_SESSION['user_id'], $_SESSION['user_role']);
+
+if ($cliente_id) {
+    $stats = $model->obtenerEstadisticas($cliente_id);
+    $ultimosPedidos = $model->obtenerUltimosPedidos($cliente_id);
+    $chartDataRaw = $model->obtenerDatosGrafica($cliente_id);
+}
+
+// Procesar datos para la gráfica (llenar meses vacíos con 0)
+$chartLabels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+$dataTotal = array_fill(0, 12, 0);
+$dataEntregados = array_fill(0, 12, 0);
+
+foreach ($chartDataRaw as $row) {
+    $mesIndex = intval($row['mes']) - 1;
+    if ($mesIndex >= 0 && $mesIndex < 12) {
+        $dataTotal[$mesIndex] = intval($row['total']);
+        $dataEntregados[$mesIndex] = intval($row['entregados']);
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -27,7 +64,7 @@
                     </div>
                     <div class="stat-info">
                         <span class="stat-label">Pedidos del Mes</span>
-                        <span class="stat-value">24</span>
+                        <span class="stat-value"><?php echo $stats['pedidos_mes']; ?></span>
                         <span class="stat-change positive">+12% vs mes anterior</span>
                     </div>
                 </div>
@@ -38,7 +75,7 @@
                     </div>
                     <div class="stat-info">
                         <span class="stat-label">En Tránsito</span>
-                        <span class="stat-value">5</span>
+                        <span class="stat-value"><?php echo $stats['en_transito']; ?></span>
                         <span class="stat-change neutral">Actualizaciones en tiempo real</span>
                     </div>
                 </div>
@@ -49,7 +86,7 @@
                     </div>
                     <div class="stat-info">
                         <span class="stat-label">Saldo Pendiente</span>
-                        <span class="stat-value">$125.500</span>
+                        <span class="stat-value">$<?php echo number_format($stats['saldo_pendiente'], 0, ',', '.'); ?></span>
                         <span class="stat-change negative">Por pagar</span>
                     </div>
                 </div>
@@ -60,7 +97,7 @@
                     </div>
                     <div class="stat-info">
                         <span class="stat-label">Entregados</span>
-                        <span class="stat-value">158</span>
+                        <span class="stat-value"><?php echo $stats['entregados_total']; ?></span>
                         <span class="stat-change positive">Total histórico</span>
                     </div>
                 </div>
@@ -98,14 +135,7 @@
                             <a href="enviarPaquete.php" class="btn-primary">Nuevo Envío</a>
                         </div>
                         <div class="quick-stats">
-                            <div class="quick-stat-item">
-                                <span class="quick-stat-label">Último envío</span>
-                                <span class="quick-stat-value">Hace 2 horas</span>
-                            </div>
-                            <div class="quick-stat-item">
-                                <span class="quick-stat-label">Tiempo promedio</span>
-                                <span class="quick-stat-value">45 min</span>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -132,56 +162,34 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td><span class="order-id">#12345</span></td>
-                                        <td>Calle 100 #15-30</td>
-                                        <td><span class="status-badge status-delivered">Entregado</span></td>
-                                        <td>14/12/2024</td>
-                                        <td>
-                                            <button class="icon-btn" title="Ver detalles">👁️</button>
-                                            <button class="icon-btn" title="Descargar">⬇️</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><span class="order-id">#12344</span></td>
-                                        <td>Carrera 7 #80-45</td>
-                                        <td><span class="status-badge status-in-transit">En tránsito</span></td>
-                                        <td>14/12/2024</td>
-                                        <td>
-                                            <button class="icon-btn" title="Ver detalles">👁️</button>
-                                            <button class="icon-btn" title="Rastrear">📍</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><span class="order-id">#12343</span></td>
-                                        <td>Avenida 68 #25-10</td>
-                                        <td><span class="status-badge status-pending">Pendiente</span></td>
-                                        <td>13/12/2024</td>
-                                        <td>
-                                            <button class="icon-btn" title="Ver detalles">👁️</button>
-                                            <button class="icon-btn" title="Cancelar">❌</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><span class="order-id">#12342</span></td>
-                                        <td>Calle 26 #68-91</td>
-                                        <td><span class="status-badge status-delivered">Entregado</span></td>
-                                        <td>13/12/2024</td>
-                                        <td>
-                                            <button class="icon-btn" title="Ver detalles">👁️</button>
-                                            <button class="icon-btn" title="Descargar">⬇️</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><span class="order-id">#12341</span></td>
-                                        <td>Transversal 45 #12-67</td>
-                                        <td><span class="status-badge status-delivered">Entregado</span></td>
-                                        <td>12/12/2024</td>
-                                        <td>
-                                            <button class="icon-btn" title="Ver detalles">👁️</button>
-                                            <button class="icon-btn" title="Descargar">⬇️</button>
-                                        </td>
-                                    </tr>
+                                    <?php if (empty($ultimosPedidos)): ?>
+                                        <tr><td colspan="5" style="text-align:center;">No hay envíos recientes</td></tr>
+                                    <?php else: ?>
+                                        <?php foreach ($ultimosPedidos as $pedido): ?>
+                                            <?php 
+                                                // Determinar clase CSS según estado
+                                                $statusClass = 'status-pending';
+                                                $statusText = ucfirst(str_replace('_', ' ', $pedido['estado']));
+                                                if ($pedido['estado'] == 'entregado') $statusClass = 'status-delivered';
+                                                elseif (in_array($pedido['estado'], ['en_transito', 'en_proceso'])) $statusClass = 'status-in-transit';
+                                                elseif ($pedido['estado'] == 'cancelado') $statusClass = 'status-cancelled'; // Asegúrate de tener CSS para esto o usa pending
+                                            ?>
+                                            <tr>
+                                                <td><span class="order-id">#<?php echo htmlspecialchars($pedido['numero_guia']); ?></span></td>
+                                                <td><?php echo htmlspecialchars($pedido['direccion_destino']); ?></td>
+                                                <td><span class="status-badge <?php echo $statusClass; ?>"><?php echo $statusText; ?></span></td>
+                                                <td><?php echo date('d/m/Y', strtotime($pedido['fecha_creacion'])); ?></td>
+                                                <td>
+                                                    <button class="icon-btn" title="Ver detalles">👁️</button>
+                                                    <?php if ($pedido['estado'] == 'entregado'): ?>
+                                                        <button class="icon-btn" title="Descargar">⬇️</button>
+                                                    <?php else: ?>
+                                                        <button class="icon-btn" title="Rastrear">📍</button>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -241,6 +249,15 @@
 
     <!-- Chart.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <!-- Pasar datos de PHP a JS -->
+    <script>
+        window.dashboardChartData = {
+            labels: <?php echo json_encode($chartLabels); ?>,
+            total: <?php echo json_encode($dataTotal); ?>,
+            entregados: <?php echo json_encode($dataEntregados); ?>
+        };
+    </script>
     <script src="../../public/js/inicioCliente.js"></script>
 </body>
 </html>

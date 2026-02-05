@@ -122,7 +122,7 @@
                         <span class="error-message"></span>
                     </div>
                     <div class="form-group">
-                        <label for="cliente_direccion">Dirección Principal (opcional)</label>
+                        <label for="cliente_direccion">Dirección Principal *</label>
                         <input type="text" id="cliente_direccion" name="direccion_principal" placeholder="Calle 123 #45-67">
                         <span class="error-message"></span>
                     </div>

@@ -1,414 +1,762 @@
 document.addEventListener('DOMContentLoaded', function() {
-    
-    let currentStep = 1;
-    const totalSteps = 4;
-    
-    // Elementos del DOM
+    // --- ELEMENTOS DEL DOM ---
     const form = document.getElementById('envioForm');
+    const steps = document.querySelectorAll('.form-step');
+    const stepIndicators = document.querySelectorAll('.step');
     const btnNext = document.getElementById('btnNext');
     const btnPrevious = document.getElementById('btnPrevious');
     const btnSubmit = document.getElementById('btnSubmit');
+
+    // Botones y campos específicos
     const autoFillBtn = document.getElementById('autoFillRemitente');
-    const tieneRecaudo = document.getElementById('tiene_recaudo');
+    const tieneRecaudoCheckbox = document.getElementById('tiene_recaudo');
+    const btnUploadExcel = document.getElementById('btnUploadExcel');
+    const excelUploadInput = document.getElementById('excelUpload');
+    const btnDownloadTemplate = document.getElementById('btnDownloadTemplate');
+    const valorRecaudoInput = document.getElementById('valor_recaudo');
+    const valorRecaudoHidden = document.getElementById('valor_recaudo_hidden');
+    const recaudoField = document.querySelector('.recaudo-field');
     const calcularCostoBtn = document.getElementById('calcularCosto');
-    
-    // Tarifas base por zona
-    const tarifasZona = {
-        'Norte': 8000,
-        'Centro': 6000,
-        'Sur': 7500,
-        'Occidente': 7000
-    };
-    
-    // Recargos por tipo
-    const recargosTipo = {
-        'normal': 0,
-        'fragil': 2000,
-        'urgente': 5000
-    };
-    
-    // ============================================
-    // NAVEGACIÓN ENTRE PASOS
-    // ============================================
-    
-    function showStep(step) {
-        // Ocultar todos los pasos
-        document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
-        
-        // Mostrar paso actual
-        const stepElement = document.querySelector(`.form-step[data-step="${step}"]`);
-        if (stepElement) {
-            stepElement.classList.add('active');
+    const costoTotalHiddenInput = document.getElementById('costoTotalHidden');
+    const numeroGuiaHiddenInput = document.getElementById('numeroGuiaHidden');
+    const btnDownloadPDF = document.getElementById('btnDownloadPDF');
+    const qrcodeContainer = document.getElementById('qrcode');
+    let qrCodeStylingInstance = null; // Para la instancia del nuevo QR
+
+    let currentStep = 1;
+
+    // --- NAVEGACIÓN ENTRE PASOS ---
+    btnNext.addEventListener('click', () => {
+        if (validateStep(currentStep)) {
+            if (currentStep < 4) {
+                goToStep(currentStep + 1);
+            }
         }
-        
-        // Actualizar indicador
-        document.querySelectorAll('.step').forEach((s, index) => {
-            s.classList.remove('active', 'completed');
-            if (index + 1 < step) {
-                s.classList.add('completed');
-            } else if (index + 1 === step) {
-                s.classList.add('active');
+    });
+
+    btnPrevious.addEventListener('click', () => {
+        if (currentStep > 1) {
+            goToStep(currentStep - 1);
+        }
+    });
+
+    function goToStep(stepNumber) {
+        currentStep = stepNumber;
+
+        steps.forEach(step => {
+            step.classList.toggle('active', parseInt(step.dataset.step) === currentStep);
+        });
+
+        stepIndicators.forEach(indicator => {
+            const indicatorStep = parseInt(indicator.dataset.step);
+            if (indicatorStep < currentStep) {
+                indicator.classList.add('completed');
+                indicator.classList.remove('active');
+            } else if (indicatorStep === currentStep) {
+                indicator.classList.add('active');
+                indicator.classList.remove('completed');
+            } else {
+                indicator.classList.remove('active', 'completed');
             }
         });
-        
-        // Mostrar/ocultar botones
-        btnPrevious.style.display = step === 1 ? 'none' : 'inline-block';
-        btnNext.style.display = step === totalSteps ? 'none' : 'inline-block';
-        btnSubmit.style.display = step === totalSteps ? 'inline-block' : 'none';
-        
-        // Scroll al inicio
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    
-    btnNext.addEventListener('click', function() {
-        if (validateCurrentStep()) {
-            if (currentStep === 3) {
-                // Antes de ir al paso 4, mostrar resumen
-                mostrarResumen();
-            }
-            currentStep++;
-            showStep(currentStep);
+
+        btnPrevious.style.display = currentStep > 1 ? 'inline-block' : 'none';
+        btnNext.style.display = currentStep < 4 ? 'inline-block' : 'none';
+        btnSubmit.style.display = currentStep === 4 ? 'inline-block' : 'none';
+
+        if (currentStep === 4) {
+            populateConfirmation();
         }
-    });
-    
-    btnPrevious.addEventListener('click', function() {
-        currentStep--;
-        showStep(currentStep);
-    });
-    
-    // ============================================
-    // VALIDACIÓN
-    // ============================================
-    
-    function validateCurrentStep() {
-        const currentStepElement = document.querySelector(`.form-step[data-step="${currentStep}"]`);
-        const inputs = currentStepElement.querySelectorAll('input[required], select[required], textarea[required]');
+    }
+
+    // --- VALIDACIÓN ---
+    function validateStep(stepNumber) {
         let isValid = true;
-        
+        const currentStepFields = document.querySelector(`.form-step[data-step="${stepNumber}"]`);
+        const inputs = currentStepFields.querySelectorAll('input[required], textarea[required], select[required]');
+
         inputs.forEach(input => {
-            clearError(input);
+            const formGroup = input.closest('.form-group');
+            const errorSpan = formGroup.querySelector('.error-message');
             
             if (!input.value.trim()) {
-                showError(input, 'Este campo es obligatorio');
                 isValid = false;
+                formGroup.classList.add('error');
+                if (errorSpan) errorSpan.textContent = 'Este campo es obligatorio.';
             } else {
-                // Validaciones específicas
-                if (input.type === 'email' && !validateEmail(input.value)) {
-                    showError(input, 'Email no válido');
-                    isValid = false;
-                }
-                if (input.type === 'tel' && !validatePhone(input.value)) {
-                    showError(input, 'Teléfono no válido (7-10 dígitos)');
-                    isValid = false;
-                }
-                if (input.type === 'number') {
-                    const value = parseFloat(input.value);
-                    const min = parseFloat(input.getAttribute('min'));
-                    const max = parseFloat(input.getAttribute('max'));
-                    
-                    if (min && value < min) {
-                        showError(input, `Valor mínimo: ${min}`);
-                        isValid = false;
-                    }
-                    if (max && value > max) {
-                        showError(input, `Valor máximo: ${max}`);
-                        isValid = false;
-                    }
-                }
+                formGroup.classList.remove('error');
+                if (errorSpan) errorSpan.textContent = '';
             }
         });
-        
-        // Validar dimensiones
-        if (currentStep === 3) {
-            const largo = parseFloat(document.getElementById('dimension_largo').value);
-            const ancho = parseFloat(document.getElementById('dimension_ancho').value);
-            const alto = parseFloat(document.getElementById('dimension_alto').value);
-            
-            if (largo > 50 || ancho > 40 || alto > 30) {
-                alert('Las dimensiones exceden el máximo permitido (50x40x30 cm)');
-                isValid = false;
-            }
-        }
-        
         return isValid;
     }
-    
-    function validateEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-    
-    function validatePhone(phone) {
-        return /^[0-9]{7,10}$/.test(phone.replace(/\s/g, ''));
-    }
-    
-    function showError(input, message) {
-        const errorSpan = input.parentElement.querySelector('.error-message');
-        if (errorSpan) {
-            errorSpan.textContent = message;
-            input.style.borderColor = '#dc3545';
-        }
-    }
-    
-    function clearError(input) {
-        const errorSpan = input.parentElement.querySelector('.error-message');
-        if (errorSpan) {
-            errorSpan.textContent = '';
-            input.style.borderColor = '';
-        }
-    }
-    
-    // ============================================
-    // AUTO-RELLENAR DATOS DEL REMITENTE
-    // ============================================
-    
-    if (autoFillBtn) {
-        autoFillBtn.addEventListener('click', function() {
-            // Datos de ejemplo del usuario (en producción vendrían de la sesión)
-            document.getElementById('remitente_nombre').value = 'Juan Pérez';
-            document.getElementById('remitente_telefono').value = '300 123 4567';
-            document.getElementById('remitente_email').value = 'juan@example.com';
-            document.getElementById('remitente_direccion').value = 'Calle 123 #45-67, Apto 301';
-            document.getElementById('remitente_ciudad').value = 'Bogotá';
-            document.getElementById('remitente_zona').value = 'Centro';
-            
-            // Animación de confirmación
-            this.textContent = '✓ Datos cargados';
-            this.style.color = '#28a745';
-            setTimeout(() => {
-                this.textContent = 'Usar mis datos';
-                this.style.color = '';
-            }, 2000);
-        });
-    }
-    
-    // ============================================
-    // MANEJO DE RECAUDO
-    // ============================================
-    
-    if (tieneRecaudo) {
-        tieneRecaudo.addEventListener('change', function() {
-            const recaudoField = document.querySelector('.recaudo-field');
-            if (this.checked) {
-                recaudoField.style.display = 'block';
-                document.getElementById('valor_recaudo').required = true;
+
+    // --- FUNCIONALIDADES ESPECÍFICAS ---
+
+    // Formatear campo de recaudo con puntos de mil
+    if (valorRecaudoInput) {
+        valorRecaudoInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, ''); // Remover no-dígitos
+            if (value) {
+                const numberValue = parseInt(value, 10);
+                // Usar toLocaleString para formatear con puntos
+                e.target.value = numberValue.toLocaleString('es-CO');
+                // Actualizar input oculto con el valor limpio para la BD
+                if (valorRecaudoHidden) valorRecaudoHidden.value = numberValue;
             } else {
-                recaudoField.style.display = 'none';
-                document.getElementById('valor_recaudo').required = false;
-                document.getElementById('valor_recaudo').value = '';
+                e.target.value = '';
+                if (valorRecaudoHidden) valorRecaudoHidden.value = '';
             }
         });
     }
-    
-    // ============================================
-    // CALCULAR COSTO
-    // ============================================
-    
-    function calcularCostoEnvio() {
-        // Obtener valores
-        const zonaOrigen = document.getElementById('remitente_zona').value;
-        const zonaDestino = document.getElementById('destinatario_zona').value;
-        const peso = parseFloat(document.getElementById('peso_paquete').value) || 0;
-        const tipoPaquete = document.getElementById('tipo_paquete').value;
-        const valorRecaudo = tieneRecaudo.checked ? (parseFloat(document.getElementById('valor_recaudo').value) || 0) : 0;
-        
-        // Validar que hay datos suficientes
-        if (!zonaDestino || peso === 0 || !tipoPaquete) {
-            alert('Por favor complete todos los campos requeridos antes de calcular el costo');
-            return;
-        }
-        
-        // Calcular costo base
-        const costoBase = tarifasZona[zonaDestino] || 6000;
-        
-        // Calcular recargo por peso (si excede 5kg)
-        let recargoPeso = 0;
-        if (peso > 5) {
-            recargoPeso = Math.ceil(peso - 5) * 1000; // $1000 por kg adicional
-        }
-        
-        // Recargo por tipo
-        const recargoTipo = recargosTipo[tipoPaquete] || 0;
-        
-        // Total
-        const total = costoBase + recargoPeso + recargoTipo;
-        
-        // Mostrar desglose
-        document.getElementById('costoBase').textContent = '$' + costoBase.toLocaleString('es-CO');
-        document.getElementById('recargoPeso').textContent = '$' + recargoPeso.toLocaleString('es-CO');
-        document.getElementById('recargoTipo').textContent = '$' + recargoTipo.toLocaleString('es-CO');
-        document.getElementById('valorRecaudoDisplay').textContent = '$' + valorRecaudo.toLocaleString('es-CO');
-        document.getElementById('costoTotal').textContent = '$' + total.toLocaleString('es-CO');
-        
-        // Animar el total
-        const totalElement = document.getElementById('costoTotal');
-        totalElement.style.transform = 'scale(1.1)';
-        setTimeout(() => {
-            totalElement.style.transform = 'scale(1)';
-        }, 300);
-        
-        return total;
-    }
-    
-    if (calcularCostoBtn) {
-        calcularCostoBtn.addEventListener('click', calcularCostoEnvio);
-    }
-    
-    // Calcular automáticamente cuando cambian los valores
-    ['remitente_zona', 'destinatario_zona', 'peso_paquete', 'tipo_paquete', 'valor_recaudo'].forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.addEventListener('change', () => {
-                if (currentStep === 3) {
-                    calcularCostoEnvio();
+
+    // Usamos window.remitenteData para asegurar acceso global a los datos
+    if (autoFillBtn) {
+        autoFillBtn.addEventListener('click', () => {
+            // Verificamos que existan los datos al momento de hacer clic
+            const data = window.remitenteData || {};
+            
+            // Mapa de IDs de inputs y sus valores correspondientes
+            const campos = {
+                'remitente_nombre': data.nombre_completo,
+                'remitente_telefono': data.telefono,
+                'remitente_email': data.correo,
+                'remitente_direccion': data.direccion
+            };
+
+            // Llenar campos y limpiar errores visuales
+            for (const [id, valor] of Object.entries(campos)) {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.value = valor || '';
+                    // Disparar evento input para simular escritura y limpiar validaciones
+                    input.dispatchEvent(new Event('input'));
+                    // Remover clase de error si existe
+                    input.closest('.form-group')?.classList.remove('error');
+                    const errorSpan = input.closest('.form-group')?.querySelector('.error-message');
+                    if (errorSpan) errorSpan.textContent = '';
                 }
-            });
-        }
-    });
-    
-    // ============================================
-    // GENERAR NÚMERO DE GUÍA
-    // ============================================
-    
-    function generarNumeroGuia() {
-        const fecha = new Date();
-        const año = fecha.getFullYear();
-        const numero = Math.floor(Math.random() * 90000) + 10000;
-        return `ECO-${año}-${numero}`;
+            }
+        });
     }
-    
-    // ============================================
-    // MOSTRAR RESUMEN
-    // ============================================
-    
-    function mostrarResumen() {
-        // Remitente
-        document.getElementById('confirm_remitente_nombre').textContent = 
-            document.getElementById('remitente_nombre').value;
-        document.getElementById('confirm_remitente_telefono').textContent = 
-            document.getElementById('remitente_telefono').value;
-        document.getElementById('confirm_remitente_direccion').textContent = 
-            `${document.getElementById('remitente_direccion').value}, ${document.getElementById('remitente_zona').value}`;
+
+    // Elementos para carga masiva
+    const bulkContainer = document.getElementById('bulkPreviewContainer');
+    const btnCancelBulk = document.getElementById('btnCancelBulk');
+    const btnProcessBulk = document.getElementById('btnProcessBulk');
+    let bulkData = []; // Almacenará los datos procesados del Excel
+
+    // --- CARGA DE EXCEL ---
+    if (btnUploadExcel && excelUploadInput) {
+        btnUploadExcel.addEventListener('click', () => {
+            excelUploadInput.click();
+        });
+
+        excelUploadInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Array de arrays
+
+                    if (jsonData.length < 2) {
+                        alert('El archivo Excel parece estar vacío o sin datos.');
+                        return;
+                    }
+
+                    // Normalizar cabeceras (quitar tildes y minúsculas) para arreglar problema de "Teléfono"
+                    const normalize = (str) => str ? str.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : '';
+                    const headers = jsonData[0].map(h => normalize(h));
+                    
+                    const dataRows = jsonData.slice(1);
+
+                    // --- MODO MASIVO ---
+                    if (dataRows.length > 1) {
+                        if(confirm(`Se encontraron ${dataRows.length} registros. ¿Deseas cargarlos en modo masivo?`)) {
+                            initBulkMode(headers, dataRows);
+                            return;
+                        }
+                    }
+
+                    // --- MODO INDIVIDUAL (Lógica existente mejorada) ---
+                    const row = dataRows[0];
+                    if (!row || row.length === 0) return;
+
+                    const getValue = (keyPart) => {
+                        const index = headers.findIndex(h => h.includes(keyPart));
+                        return index !== -1 ? row[index] : '';
+                    };
+
+                    // Helper para asignar valor y disparar eventos
+                    const setField = (id, val) => {
+                        const input = document.getElementById(id);
+                        if (input && val !== undefined) {
+                            input.value = val;
+                            input.dispatchEvent(new Event('input'));
+                        }
+                    };
+
+                    // 1. Llenar Destinatario
+                    setField('destinatario_nombre', getValue('nombre') || getValue('destinatario'));
+                    // Agregamos 'movil' y la normalización arregla 'Teléfono'
+                    setField('destinatario_telefono', getValue('telefono') || getValue('celular') || getValue('movil'));
+                    setField('destinatario_direccion', getValue('direccion') || getValue('destino'));
+                    setField('instrucciones_entrega', getValue('instrucciones') || getValue('observaciones'));
+
+                    // 2. Llenar Paquete
+                    setField('descripcion_contenido', getValue('descripcion') || getValue('contenido'));
+                    setField('peso_paquete', getValue('peso'));
+                    setField('dimension_largo', getValue('largo'));
+                    setField('dimension_ancho', getValue('ancho'));
+                    setField('dimension_alto', getValue('alto'));
+
+                    // Tipo de Paquete
+                    const tipoVal = (getValue('tipo') || '').toString().toLowerCase();
+                    const tipoSelect = document.getElementById('tipo_paquete');
+                    if (tipoSelect) {
+                        if (tipoVal.includes('fragil') || tipoVal.includes('frágil')) tipoSelect.value = 'fragil';
+                        else if (tipoVal.includes('urgente')) tipoSelect.value = 'urgente';
+                        else tipoSelect.value = 'normal';
+                        tipoSelect.dispatchEvent(new Event('change'));
+                    }
+
+                    // Recaudo
+                    const recaudoVal = getValue('recaudo') || getValue('valor');
+                    if (recaudoVal && !isNaN(parseFloat(recaudoVal)) && parseFloat(recaudoVal) > 0) {
+                        if (!tieneRecaudoCheckbox.checked) tieneRecaudoCheckbox.click();
+                        setField('valor_recaudo', recaudoVal);
+                    } else {
+                        if (tieneRecaudoCheckbox.checked) tieneRecaudoCheckbox.click();
+                    }
+
+                    // 3. Auto-llenar Remitente (Datos del usuario logueado)
+                    if (autoFillBtn) autoFillBtn.click();
+
+                    alert('✅ Datos cargados correctamente desde el Excel.');
+                    excelUploadInput.value = ''; // Limpiar input para permitir recargar el mismo archivo
+
+                } catch (error) {
+                    console.error(error);
+                    alert('Error al leer el archivo Excel.');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    // --- LÓGICA DE MODO MASIVO ---
+    function initBulkMode(headers, rows) {
+        // Ocultar formulario normal y mostrar contenedor masivo
+        document.getElementById('envioForm').style.display = 'none';
+        document.querySelector('.steps-indicator').style.display = 'none';
+        document.querySelector('.page-header h1').textContent = 'Carga Masiva';
+        if(bulkContainer) bulkContainer.style.display = 'block';
+
+        const tbody = document.getElementById('bulkTableBody');
+        tbody.innerHTML = '';
+        bulkData = [];
+
+        rows.forEach((row, index) => {
+            if (!row || row.length === 0) return;
+
+            const getValue = (keyPart) => {
+                const idx = headers.findIndex(h => h.includes(keyPart));
+                return idx !== -1 ? row[idx] : '';
+            };
+
+            // Calcular costo para este item
+            const peso = parseFloat(getValue('peso')) || 1;
+            const tipoRaw = (getValue('tipo') || '').toString().toLowerCase();
+            let tipo = 'normal';
+            if (tipoRaw.includes('fragil')) tipo = 'fragil';
+            else if (tipoRaw.includes('urgente')) tipo = 'urgente';
+
+            let costoBase = 7000;
+            let recargoPeso = (peso > 1) ? Math.ceil(peso - 1) * 1000 : 0;
+            let recargoTipo = (tipo === 'fragil') ? 2000 : (tipo === 'urgente') ? 5000 : 0;
+            const total = costoBase + recargoPeso + recargoTipo;
+
+            // Preparar objeto de datos
+            const item = {
+                id: index,
+                remitente_nombre: document.getElementById('remitente_nombre').value || (window.remitenteData?.nombre_completo), // Usar datos del usuario logueado
+                remitente_telefono: document.getElementById('remitente_telefono').value || (window.remitenteData?.telefono),
+                remitente_email: document.getElementById('remitente_email').value || (window.remitenteData?.correo),
+                remitente_direccion: document.getElementById('remitente_direccion').value || (window.remitenteData?.direccion),
+                destinatario_nombre: getValue('nombre') || getValue('destinatario'),
+                destinatario_telefono: getValue('telefono') || getValue('celular') || getValue('movil'),
+                destinatario_direccion: getValue('direccion') || getValue('destino'),
+                instrucciones_entrega: getValue('instrucciones') || getValue('observaciones'),
+                descripcion_contenido: getValue('descripcion') || getValue('contenido'),
+                peso_paquete: peso,
+                tipo_paquete: tipo,
+                dimension_largo: getValue('largo') || 10,
+                dimension_ancho: getValue('ancho') || 10,
+                dimension_alto: getValue('alto') || 10,
+                tiene_recaudo: (getValue('recaudo') > 0) ? 'on' : '',
+                valor_recaudo: getValue('recaudo') || 0,
+                costo_total: total,
+                // Generar guía temporal
+                numero_guia: `ECO-${new Date().getFullYear()}${Math.random().toString(36).substring(2, 7).toUpperCase()}`
+            };
+
+            bulkData.push(item);
+
+            // Renderizar fila
+            const tr = document.createElement('tr');
+            tr.id = `row-${index}`;
+            tr.innerHTML = `
+                <td>${item.destinatario_nombre}</td>
+                <td>${item.destinatario_telefono}</td>
+                <td>${item.destinatario_direccion}</td>
+                <td>${item.descripcion_contenido} (${item.tipo_paquete})</td>
+                <td>$${total.toLocaleString('es-CO')}</td>
+                <td class="status-pending" id="status-${index}">Pendiente</td>
+                <td id="actions-${index}"></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    if (btnCancelBulk) {
+        btnCancelBulk.addEventListener('click', () => {
+            location.reload(); // Recargar para volver al estado inicial limpio
+        });
+    }
+
+    if (btnProcessBulk) {
+        btnProcessBulk.addEventListener('click', async () => {
+            if (bulkData.length === 0) return;
+            
+            if (!confirm(`¿Estás seguro de procesar ${bulkData.length} envíos?`)) return;
+
+            btnProcessBulk.disabled = true;
+            btnProcessBulk.textContent = 'Procesando...';
+
+            // Procesar uno por uno
+            for (const item of bulkData) {
+                const statusCell = document.getElementById(`status-${item.id}`);
+                statusCell.textContent = 'Enviando...';
+
+                try {
+                    const formData = new FormData();
+                    for (const key in item) {
+                        formData.append(key, item[key]);
+                    }
+                    formData.append('ajax', '1'); // Indicar al controlador que es AJAX
+
+                    // Enviar al controlador existente
+                    const response = await fetch('../../controller/enviarPaqueteController.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    // Intentar parsear JSON
+                    const result = await response.json();
+
+                    if (result.success) {
+                        statusCell.textContent = '✓ Creado';
+                        statusCell.className = 'status-success';
+                        
+                        // Agregar botón de descarga
+                        const actionsCell = document.getElementById(`actions-${item.id}`);
+                        actionsCell.innerHTML = `
+                            <button type="button" class="btn-text" style="color: #28a745; font-size: 0.9rem;" onclick="downloadBulkPDF(${item.id}, '${result.guia}')">⬇️ Rótulo</button>
+                        `;
+                    } else {
+                        throw new Error(result.message || 'Error en servidor');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    statusCell.textContent = '❌ Error';
+                    statusCell.className = 'status-error';
+                }
+            }
+
+            btnProcessBulk.textContent = 'Proceso Finalizado';
+            alert('Proceso masivo finalizado. Revisa el estado de cada envío.');
+        });
+    }
+
+    // --- FUNCIÓN PARA DESCARGAR PDF EN MODO MASIVO ---
+    window.downloadBulkPDF = async function(index, numeroGuia) {
+        const item = bulkData[index];
+        if (!item) return;
+
+        try {
+            const { jsPDF } = window.jspdf;
+            
+            // 1. Generar QR
+            const infoParaQR = `
+Guía: ${numeroGuia}
+Remitente: ${item.remitente_nombre}
+Origen: ${item.remitente_direccion}
+Destinatario: ${item.destinatario_nombre}
+Destino: ${item.destinatario_direccion}
+Contenido: ${item.descripcion_contenido}
+Costo Envío: $${item.costo_total.toLocaleString('es-CO')}
+Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
+            `.trim();
+
+            const qrCode = new QRCodeStyling({
+                width: 300,
+                height: 300,
+                data: infoParaQR,
+                dotsOptions: { color: "#000000", type: "rounded" },
+                backgroundOptions: { color: "#ffffff" },
+                imageOptions: { crossOrigin: "anonymous", margin: 4 },
+                qrOptions: { errorCorrectionLevel: 'H' }
+            });
+
+            const qrBlob = await qrCode.getRawData('png');
+            const qrImageDataUrl = URL.createObjectURL(qrBlob);
+
+            // 2. Crear Template HTML Temporal
+            const pdfTemplate = document.createElement('div');
+            pdfTemplate.style.width = '210mm';
+            pdfTemplate.style.position = 'absolute';
+            pdfTemplate.style.left = '-9999px';
+            pdfTemplate.style.background = 'white';
+            document.body.appendChild(pdfTemplate);
+
+            pdfTemplate.innerHTML = `
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                    <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 10px;">
+                        <tr>
+                            <td style="width: 50%;">
+                                <h1 style="font-size: 24px; margin: 0; color: #5cb85c;">🚴 EcoBikeMess</h1>
+                                <p style="margin: 0; font-size: 12px;">Guía de Envío</p>
+                            </td>
+                            <td style="width: 50%; text-align: right;">
+                                <p style="margin: 0; font-size: 12px;">Número de Guía:</p>
+                                <h2 style="margin: 0; font-size: 18px;">${numeroGuia}</h2>
+                            </td>
+                        </tr>
+                    </table>
+                    <table style="width: 100%; margin-top: 20px; font-size: 11px;">
+                        <tr>
+                            <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
+                                <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
+                                <p><strong>Nombre:</strong> ${item.remitente_nombre}</p>
+                                <p><strong>Teléfono:</strong> ${item.remitente_telefono}</p>
+                                <p><strong>Dirección:</strong> ${item.remitente_direccion}</p>
+                            </td>
+                            <td style="width: 4%;"></td>
+                            <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
+                                <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
+                                <p><strong>Nombre:</strong> ${item.destinatario_nombre}</p>
+                                <p><strong>Teléfono:</strong> ${item.destinatario_telefono}</p>
+                                <p><strong>Dirección:</strong> ${item.destinatario_direccion}</p>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 20px; border: 1px solid #eee; padding: 10px; border-radius: 8px; font-size: 11px;">
+                        <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
+                        <p><strong>Descripción:</strong> ${item.descripcion_contenido}</p>
+                        <p><strong>Peso:</strong> ${item.peso_paquete} kg | <strong>Dimensiones:</strong> ${item.dimension_largo}x${item.dimension_ancho}x${item.dimension_alto} cm</p>
+                    </div>
+                    <table style="width: 100%; margin-top: 20px; border-top: 2px solid #5cb85c; padding-top: 10px;">
+                        <tr>
+                            <td style="width: 60%; vertical-align: top; font-size: 11px;">
+                                <h3 style="margin: 0 0 10px; font-size: 14px;">💰 Resumen Financiero</h3>
+                                <p><strong>Costo Envío:</strong> $${item.costo_total.toLocaleString('es-CO')}</p>
+                                <p><strong>Valor a Recaudar:</strong> ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}</p>
+                            </td>
+                            <td style="width: 40%; text-align: right;">
+                                <img src="${qrImageDataUrl}" style="width: 180px; height: 180px;">
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            `;
+
+            // 3. Generar PDF
+            const canvas = await html2canvas(pdfTemplate, { useCORS: true, scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Guia-${numeroGuia}.pdf`);
+            
+            // Limpieza
+            document.body.removeChild(pdfTemplate);
+            URL.revokeObjectURL(qrImageDataUrl);
+
+        } catch (error) {
+            console.error("Error generando PDF masivo:", error);
+            alert("Error al generar el PDF.");
+        }
+    };
+
+    // --- DESCARGAR PLANTILLA EXCEL ---
+    if (btnDownloadTemplate) {
+        btnDownloadTemplate.addEventListener('click', () => {
+            try {
+                const templateData = [
+                    {
+                        "Nombre Destinatario": "Ej: María González",
+                        "Teléfono": "3001234567",
+                        "Dirección Destino": "Calle 100 # 15-20",
+                        "Instrucciones": "Dejar en recepción",
+                        "Descripción Contenido": "Ropa y accesorios",
+                        "Peso (kg)": 2.5,
+                        "Largo (cm)": 30,
+                        "Ancho (cm)": 20,
+                        "Alto (cm)": 10,
+                        "Tipo (Normal/Fragil/Urgente)": "Normal",
+                        "Valor Recaudo": 50000
+                    }
+                ];
+                const ws = XLSX.utils.json_to_sheet(templateData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
+                XLSX.writeFile(wb, "Plantilla_Envio_EcoBikeMess.xlsx");
+            } catch (error) {
+                console.error("Error al generar plantilla:", error);
+                alert("Error al generar la plantilla. Asegúrate de que la librería XLSX esté cargada.");
+            }
+        });
+    }
+
+    if (tieneRecaudoCheckbox) {
+        tieneRecaudoCheckbox.addEventListener('change', () => {
+            recaudoField.style.display = tieneRecaudoCheckbox.checked ? 'block' : 'none';
+            if (!tieneRecaudoCheckbox.checked) {
+                document.getElementById('valor_recaudo').value = '';
+                if (valorRecaudoHidden) valorRecaudoHidden.value = '';
+            }
+        });
+    }
+
+    // --- CÁLCULO AUTOMÁTICO DE COSTO ---
+    function calcularCostoAutomatico() {
+        const peso = parseFloat(document.getElementById('peso_paquete').value) || 0;
+        const tipo = document.getElementById('tipo_paquete').value;
+
+        let costoBase = 7000;
+        let recargoPeso = (peso > 1) ? Math.ceil(peso - 1) * 1000 : 0;
+        let recargoTipo = (tipo === 'fragil') ? 2000 : (tipo === 'urgente') ? 5000 : 0;
+
+        const total = costoBase + recargoPeso + recargoTipo;
+
+        document.getElementById('costoBase').textContent = `$${costoBase.toLocaleString('es-CO')}`;
+        document.getElementById('recargoPeso').textContent = `$${recargoPeso.toLocaleString('es-CO')}`;
+        document.getElementById('recargoTipo').textContent = `$${recargoTipo.toLocaleString('es-CO')}`;
+        document.getElementById('costoTotal').textContent = `$${total.toLocaleString('es-CO')}`;
         
-        // Destinatario
-        document.getElementById('confirm_destinatario_nombre').textContent = 
-            document.getElementById('destinatario_nombre').value;
-        document.getElementById('confirm_destinatario_telefono').textContent = 
-            document.getElementById('destinatario_telefono').value;
-        document.getElementById('confirm_destinatario_direccion').textContent = 
-            `${document.getElementById('destinatario_direccion').value}, ${document.getElementById('destinatario_zona').value}`;
-        
-        // Paquete
-        document.getElementById('confirm_descripcion').textContent = 
-            document.getElementById('descripcion_contenido').value;
-        document.getElementById('confirm_peso').textContent = 
-            document.getElementById('peso_paquete').value + ' kg';
-        
+        if(costoTotalHiddenInput) {
+            costoTotalHiddenInput.value = total;
+        }
+    }
+
+    // Agregar listeners a los campos que afectan el precio
+    const pesoInput = document.getElementById('peso_paquete');
+    const tipoInput = document.getElementById('tipo_paquete');
+
+    if (pesoInput) pesoInput.addEventListener('input', calcularCostoAutomatico);
+    if (tipoInput) tipoInput.addEventListener('change', calcularCostoAutomatico);
+
+    // Mantener compatibilidad con el botón si existe (aunque lo ocultaremos)
+    if (calcularCostoBtn) {
+        calcularCostoBtn.addEventListener('click', calcularCostoAutomatico);
+    }
+
+    function populateConfirmation() {
+        document.getElementById('confirm_remitente_nombre').textContent = document.getElementById('remitente_nombre').value;
+        document.getElementById('confirm_remitente_telefono').textContent = document.getElementById('remitente_telefono').value;
+        document.getElementById('confirm_remitente_direccion').textContent = document.getElementById('remitente_direccion').value;
+
+        document.getElementById('confirm_destinatario_nombre').textContent = document.getElementById('destinatario_nombre').value;
+        document.getElementById('confirm_destinatario_telefono').textContent = document.getElementById('destinatario_telefono').value;
+        document.getElementById('confirm_destinatario_direccion').textContent = document.getElementById('destinatario_direccion').value;
+
+        const peso = document.getElementById('peso_paquete').value;
         const largo = document.getElementById('dimension_largo').value;
         const ancho = document.getElementById('dimension_ancho').value;
         const alto = document.getElementById('dimension_alto').value;
-        document.getElementById('confirm_dimensiones').textContent = 
-            `${largo} x ${ancho} x ${alto} cm`;
+        const tipoSelect = document.getElementById('tipo_paquete');
+        const tipoTexto = tipoSelect.options[tipoSelect.selectedIndex].text;
+
+        document.getElementById('confirm_descripcion').textContent = document.getElementById('descripcion_contenido').value;
+        document.getElementById('confirm_peso').textContent = `${peso} kg`;
+        document.getElementById('confirm_dimensiones').textContent = `${largo}x${ancho}x${alto} cm`;
+        document.getElementById('confirm_tipo').textContent = tipoTexto;
+
+        document.getElementById('confirm_total').textContent = document.getElementById('costoTotal').textContent;
+
+        // --- NUEVO: Mostrar info de recaudo en la confirmación ---
+        const confirmMetodoPago = document.getElementById('confirm_metodo_pago');
+        const confirmRecaudoContainer = document.getElementById('confirm_recaudo_container');
+        const confirmValorRecaudo = document.getElementById('confirm_valor_recaudo');
+
+        if (tieneRecaudoCheckbox.checked && valorRecaudoInput.value) {
+            confirmMetodoPago.textContent = 'Pago Contra Entrega';
+            // El valor ya está formateado por el listener del input
+            confirmValorRecaudo.textContent = `$${valorRecaudoInput.value}`;
+            confirmRecaudoContainer.style.display = 'block';
+        } else {
+            confirmMetodoPago.textContent = 'Prepago (Costo de envío)';
+            confirmRecaudoContainer.style.display = 'none';
+        }
         
-        const tipoPaquete = document.getElementById('tipo_paquete').value;
-        const tipoTexto = {
-            'normal': 'Normal',
-            'fragil': 'Frágil',
-            'urgente': 'Urgente'
-        };
-        document.getElementById('confirm_tipo').textContent = tipoTexto[tipoPaquete];
-        
-        // Total
-        const costoTotal = document.getElementById('costoTotal').textContent;
-        document.getElementById('confirm_total').textContent = costoTotal;
-        
-        // Generar número de guía
-        const numeroGuia = generarNumeroGuia();
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const random = Math.random().toString(36).substring(2, 7).toUpperCase();
+        const numeroGuia = `ECO-${year}${month}${day}-${random}`;
         document.getElementById('numeroGuia').textContent = numeroGuia;
+        // Guardar la guía en el input oculto para enviarla al backend
+        if (numeroGuiaHiddenInput) {
+            numeroGuiaHiddenInput.value = numeroGuia;
+        }
+
+        // --- QR CODE GENERATION ---
+        const infoParaQR = `
+Guía: ${numeroGuia}
+Remitente: ${document.getElementById('remitente_nombre').value}
+Origen: ${document.getElementById('remitente_direccion').value}
+Destinatario: ${document.getElementById('destinatario_nombre').value}
+Destino: ${document.getElementById('destinatario_direccion').value}
+Contenido: ${document.getElementById('descripcion_contenido').value}
+Costo Envío: ${document.getElementById('costoTotal').textContent.trim()}
+Recaudo: ${tieneRecaudoCheckbox.checked ? '$' + valorRecaudoInput.value : 'No aplica'}
+        `.trim();
+
+        // Limpiar contenedor de QR
+        qrcodeContainer.innerHTML = '';
+        
+        // Crear nueva instancia de QR con logo
+        qrCodeStylingInstance = new QRCodeStyling({
+            width: 300,
+            height: 300,
+            data: infoParaQR,
+            // image: "../../public/img/logo_qr.png", // Desactivado para asegurar que el QR funcione. Actívalo cuando tengas el logo.
+            dotsOptions: {
+                color: "#000000",
+                type: "rounded"
+            },
+            backgroundOptions: {
+                color: "#ffffff",
+            },
+            imageOptions: {
+                crossOrigin: "anonymous",
+                margin: 4
+            },
+            qrOptions: {
+                errorCorrectionLevel: 'H' // Nivel alto para que el logo no afecte la lectura
+            }
+        });
+
+        qrCodeStylingInstance.append(qrcodeContainer);
     }
-    
-    // ============================================
-    // ENVIAR FORMULARIO
-    // ============================================
-    
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        if (!validateCurrentStep()) {
-            return;
-        }
-        
-        // Recopilar todos los datos
-        const formData = new FormData(form);
-        const numeroGuia = document.getElementById('numeroGuia').textContent;
-        formData.append('numero_guia', numeroGuia);
-        formData.append('costo_total', document.getElementById('costoTotal').textContent.replace(/[$.,]/g, ''));
-        formData.append('fecha_creacion', new Date().toISOString());
-        formData.append('estado', 'pendiente');
-        
-        // Mostrar datos en consola (en producción se enviaría al servidor)
-        console.log('Datos del envío:');
-        for (let [key, value] of formData.entries()) {
-            console.log(`${key}: ${value}`);
-        }
-        
-        // Simular envío al servidor
-        btnSubmit.textContent = 'Procesando...';
-        btnSubmit.disabled = true;
-        
-        setTimeout(() => {
-            // Éxito
-            alert(`¡Envío creado exitosamente!\n\nNúmero de Guía: ${numeroGuia}\n\nPodrás rastrear tu paquete en la sección "Mis Pedidos"`);
-            
-            // Redirigir a la página de pedidos
-            window.location.href = 'misPedidos.php';
-        }, 2000);
-    });
-    
-    // ============================================
-    // VALIDACIÓN EN TIEMPO REAL
-    // ============================================
-    
-    const inputs = document.querySelectorAll('input, select, textarea');
-    inputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            if (this.hasAttribute('required') && !this.value.trim()) {
-                return; // No mostrar error en blur si está vacío
-            }
-            
-            if (this.type === 'email' && this.value && !validateEmail(this.value)) {
-                showError(this, 'Email no válido');
-            } else if (this.type === 'tel' && this.value && !validatePhone(this.value)) {
-                showError(this, 'Teléfono no válido');
-            } else {
-                clearError(this);
+
+    // --- PDF DOWNLOAD ---
+    if (btnDownloadPDF) {
+        btnDownloadPDF.addEventListener('click', async () => {
+            try {
+                const { jsPDF } = window.jspdf;
+                const numeroGuia = document.getElementById('numeroGuia').textContent;
+                const valorRecaudo = tieneRecaudoCheckbox.checked ? `$${valorRecaudoInput.value}` : 'No aplica';
+
+                // Obtener la imagen del QR como Data URL
+                if (!qrCodeStylingInstance) {
+                    alert('Error: El código QR no se ha generado. No se puede crear el PDF.');
+                    return;
+                }
+                
+                // CORRECCIÓN: Usamos getRawData y creamos un objeto URL porque getImageUrl no existe en esta versión
+                const qrBlob = await qrCodeStylingInstance.getRawData('png');
+                const qrImageDataUrl = URL.createObjectURL(qrBlob);
+
+                // Crear un div temporal para generar el PDF a partir de HTML
+                const pdfTemplate = document.createElement('div');
+                pdfTemplate.style.width = '210mm'; // Ancho de A4
+                pdfTemplate.style.position = 'absolute';
+                pdfTemplate.style.left = '-9999px'; // Moverlo fuera de la pantalla
+                document.body.appendChild(pdfTemplate); // Añadir al DOM para que html2canvas lo renderice
+                
+                pdfTemplate.innerHTML = `
+                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                        <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 10px;">
+                            <tr>
+                                <td style="width: 50%;">
+                                    <h1 style="font-size: 24px; margin: 0; color: #5cb85c;">🚴 EcoBikeMess</h1>
+                                    <p style="margin: 0; font-size: 12px;">Guía de Envío</p>
+                                </td>
+                                <td style="width: 50%; text-align: right;">
+                                    <p style="margin: 0; font-size: 12px;">Número de Guía:</p>
+                                    <h2 style="margin: 0; font-size: 18px;">${numeroGuia}</h2>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        <table style="width: 100%; margin-top: 20px; font-size: 11px;">
+                            <tr>
+                                <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
+                                    <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
+                                    <p><strong>Nombre:</strong> ${document.getElementById('remitente_nombre').value}</p>
+                                    <p><strong>Teléfono:</strong> ${document.getElementById('remitente_telefono').value}</p>
+                                    <p><strong>Dirección:</strong> ${document.getElementById('remitente_direccion').value}</p>
+                                </td>
+                                <td style="width: 4%;"></td>
+                                <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
+                                    <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
+                                    <p><strong>Nombre:</strong> ${document.getElementById('destinatario_nombre').value}</p>
+                                    <p><strong>Teléfono:</strong> ${document.getElementById('destinatario_telefono').value}</p>
+                                    <p><strong>Dirección:</strong> ${document.getElementById('destinatario_direccion').value}</p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <div style="margin-top: 20px; border: 1px solid #eee; padding: 10px; border-radius: 8px; font-size: 11px;">
+                            <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
+                            <p><strong>Descripción:</strong> ${document.getElementById('descripcion_contenido').value}</p>
+                            <p><strong>Peso:</strong> ${document.getElementById('peso_paquete').value} kg | <strong>Dimensiones:</strong> ${document.getElementById('dimension_largo').value}x${document.getElementById('dimension_ancho').value}x${document.getElementById('dimension_alto').value} cm</p>
+                        </div>
+
+                        <table style="width: 100%; margin-top: 20px; border-top: 2px solid #5cb85c; padding-top: 10px;">
+                            <tr>
+                                <td style="width: 60%; vertical-align: top; font-size: 11px;">
+                                    <h3 style="margin: 0 0 10px; font-size: 14px;">💰 Resumen Financiero</h3>
+                                    <p><strong>Costo Envío:</strong> ${document.getElementById('costoTotal').textContent}</p>
+                                    <p><strong>Valor a Recaudar:</strong> ${valorRecaudo}</p>
+                                </td>
+                                <td style="width: 40%; text-align: right;">
+                                    <img src="${qrImageDataUrl}" style="width: 180px; height: 180px;">
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                `;
+
+                html2canvas(pdfTemplate, { useCORS: true, scale: 2 }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    pdf.save(`Guia-${numeroGuia}.pdf`);
+                    document.body.removeChild(pdfTemplate); // Limpiar el DOM
+                    URL.revokeObjectURL(qrImageDataUrl); // Liberar memoria
+                }).catch(err => {
+                    console.error("Error al generar canvas:", err);
+                    alert("Error al generar la imagen del PDF.");
+                    if(document.body.contains(pdfTemplate)) document.body.removeChild(pdfTemplate);
+                });
+
+            } catch (error) {
+                console.error("Error al generar PDF:", error);
+                alert("Ocurrió un error al intentar descargar el PDF. Revisa la consola para más detalles.");
             }
         });
-        
-        input.addEventListener('input', function() {
-            if (this.parentElement.querySelector('.error-message').textContent) {
-                clearError(this);
-            }
-        });
-    });
-    
-    // ============================================
-    // ANIMACIONES DE ENTRADA
-    // ============================================
-    
-    const cards = document.querySelectorAll('.card');
-    cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        
-        setTimeout(() => {
-            card.style.transition = 'all 0.5s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 100);
-    });
-    
-    // Inicializar
-    showStep(1);
-    
-    console.log('Sistema de envío de paquetes cargado ✓');
+    }
 });

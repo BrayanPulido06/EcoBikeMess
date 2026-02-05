@@ -1,12 +1,12 @@
 <?php
 function conexionDB(){
     try {
-        $dsn = "mysql:host=127.0.0.1;port=3307;dbname=ecobikemess;charset=utf8";
+        // IMPORTANTE: Si tu XAMPP dice Port: 3307, cambia el 3306 de abajo por 3307
+        $dsn = "mysql:host=127.0.0.1;port=3306;dbname=ecobikemess;charset=utf8";
         $db = new PDO($dsn, 'root', '');
         $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         return $db;
     } catch (PDOException $PDOe) {
-        error_log("Error de conexión PDO: " . $PDOe->getMessage());
-        return null;
+        throw new Exception("Fallo SQL: " . $PDOe->getMessage());
     }
 }

@@ -12,67 +12,48 @@
     <nav class="sidebar-nav">
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="inicioCliente.php" class="nav-link active">
+                <a href="/ecobikemess/views/Clientes/inicioCliente.php" class="nav-link">
                     <span class="nav-icon">📊</span>
                     <span class="nav-text">Inicio</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="enviarPaquete.php" class="nav-link">
+                <a href="/ecobikemess/views/Clientes/enviarPaquete.php" class="nav-link">
                     <span class="nav-icon">📦</span>
                     <span class="nav-text">Enviar Paquete</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="misPedidos.php" class="nav-link">
+                <a href="/ecobikemess/views/Clientes/misPedidos.php" class="nav-link">
                     <span class="nav-icon">📋</span>
                     <span class="nav-text">Mis Pedidos</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="seguimiento.php" class="nav-link">
+                <a href="/ecobikemess/views/Clientes/seguimiento.php" class="nav-link">
                     <span class="nav-icon">🗺️</span>
                     <span class="nav-text">Seguimiento</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="comprobantes.php" class="nav-link">
-                    <span class="nav-icon">📄</span>
-                    <span class="nav-text">Comprobantes</span>
-                </a>
-            </li>
-            
-            <li class="nav-item">
-                <a href="facturacion.php" class="nav-link">
+                <a href="/ecobikemess/views/Clientes/facturacion.php" class="nav-link">
                     <span class="nav-icon">💰</span>
                     <span class="nav-text">Facturación</span>
                 </a>
             </li>
-            
+
+            <?php if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'colaborador'): ?>
             <li class="nav-item">
-                <a href="historial.php" class="nav-link">
-                    <span class="nav-icon">📚</span>
-                    <span class="nav-text">Historial</span>
-                </a>
-            </li>
-            
-            <li class="nav-item">
-                <a href="miEmprendimiento.php" class="nav-link">
-                    <span class="nav-icon">🏢</span>
-                    <span class="nav-text">Mi Emprendimiento</span>
-                </a>
-            </li>
-            
-            <li class="nav-item">
-                <a href="equipoTrabajo.php" class="nav-link">
+                <a href="/ecobikemess/views/Clientes/equipoTrabajo.php" class="nav-link">
                     <span class="nav-icon">💬</span>
                     <span class="nav-text">Equipo de Trabajo</span>
                 </a>
             </li>
+            <?php endif; ?>
         </ul>
     </nav>
 
@@ -87,4 +68,4 @@
     </div>
 </aside>
 
-<script src="../../public/js/clienteSidebar.js"></script>
+<script src="/ecobikemess/public/js/clienteSidebar.js"></script>

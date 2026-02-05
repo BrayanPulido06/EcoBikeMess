@@ -17,9 +17,20 @@
         <!-- Cuerpo del formulario -->
         <div class="login-body">
             <!-- Formulario de Recuperación de Contraseña -->
-            <form id="forgotPasswordForm" class="form-container active">
+            <form id="forgotPasswordForm" class="form-container active" action="recovery.php" method="POST">
                     <h2>Recuperar Contraseña</h2>
                     <p class="form-subtitle">Te enviaremos un enlace de recuperación</p>
+
+                    <?php if (isset($_GET['mensaje'])): ?>
+                        <p class="success-message" style="color: green; text-align: center; margin-bottom: 10px;">
+                            <?php echo htmlspecialchars($_GET['mensaje']); ?>
+                        </p>
+                        <?php if (isset($_GET['debug_link'])): ?>
+                            <p style="font-size: 0.8em; text-align: center; background: #f0f0f0; padding: 5px; word-break: break-all;">
+                                <a href="<?php echo htmlspecialchars($_GET['debug_link']); ?>">LINK DE PRUEBA (Click aquí)</a>
+                            </p>
+                        <?php endif; ?>
+                    <?php endif; ?>
 
                     <div class="form-group">
                         <label for="forgotEmail">Correo Electrónico</label>

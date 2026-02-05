@@ -6,14 +6,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('activityChart');
     
     if (ctx) {
+        // Usar datos dinámicos si existen, sino usar datos de ejemplo
+        const chartData = window.dashboardChartData || {
+            labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+            total: [12, 19, 15, 25, 22, 30, 28, 32, 26, 35, 29, 24],
+            entregados: [10, 17, 13, 23, 20, 28, 25, 30, 24, 33, 27, 22]
+        };
+
         const activityChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                labels: chartData.labels,
                 datasets: [
                     {
                         label: 'Envíos Realizados',
-                        data: [12, 19, 15, 25, 22, 30, 28, 32, 26, 35, 29, 24],
+                        data: chartData.total,
                         borderColor: '#5cb85c',
                         backgroundColor: 'rgba(92, 184, 92, 0.1)',
                         tension: 0.4,
@@ -26,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     {
                         label: 'Envíos Entregados',
-                        data: [10, 17, 13, 23, 20, 28, 25, 30, 24, 33, 27, 22],
+                        data: chartData.entregados,
                         borderColor: '#2196f3',
                         backgroundColor: 'rgba(33, 150, 243, 0.1)',
                         tension: 0.4,
@@ -112,24 +119,27 @@ document.addEventListener('DOMContentLoaded', function() {
         if (periodSelect) {
             periodSelect.addEventListener('change', function() {
                 const period = this.value;
+                let periodKey = 'year';
                 
-                // Aquí actualizarías los datos según el período seleccionado
-                if (period === 'Últimos 3 meses') {
-                    activityChart.data.labels = ['Oct', 'Nov', 'Dic'];
-                    activityChart.data.datasets[0].data = [35, 29, 24];
-                    activityChart.data.datasets[1].data = [33, 27, 22];
-                } else if (period === 'Último año') {
-                    activityChart.data.labels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-                    activityChart.data.datasets[0].data = [12, 19, 15, 25, 22, 30, 28, 32, 26, 35, 29, 24];
-                    activityChart.data.datasets[1].data = [10, 17, 13, 23, 20, 28, 25, 30, 24, 33, 27, 22];
-                } else {
-                    // Últimos 30 días
-                    activityChart.data.labels = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'];
-                    activityChart.data.datasets[0].data = [5, 8, 6, 5];
-                    activityChart.data.datasets[1].data = [4, 7, 5, 6];
-                }
-                
-                activityChart.update();
+                // Mapear el texto del select a claves para el backend
+                if (period === 'Últimos 30 días') periodKey = '30_days';
+                else if (period === 'Últimos 3 meses') periodKey = '3_months';
+                else periodKey = 'year';
+
+                // Llamada AJAX al controlador
+                fetch(`../../controller/inicioClienteController.php?op=grafica&periodo=${periodKey}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Actualizar datos del gráfico
+                        activityChart.data.datasets[0].data = data.total;
+                        activityChart.data.datasets[1].data = data.entregados;
+                        activityChart.update();
+                    } else {
+                        console.error('Error al cargar datos:', data.msg);
+                    }
+                })
+                .catch(err => console.error('Error de red:', err));
             });
         }
     }
@@ -241,12 +251,14 @@ document.addEventListener('DOMContentLoaded', function() {
         let targetValue = 0;
         
         if (text.includes('$')) {
-            targetValue = parseInt(text.replace(/[$.]/g, ''));
+            // Limpiar formato moneda para obtener el número
+            targetValue = parseInt(text.replace(/[$.]/g, '').trim());
         } else {
             targetValue = parseInt(text);
         }
         
         if (!isNaN(targetValue)) {
+            // Resetear valor visual para la animación
             stat.textContent = text.includes('$') ? '$0' : '0';
             setTimeout(() => {
                 animateValue(stat, 0, targetValue, 1000);
