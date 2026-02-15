@@ -182,6 +182,7 @@ CREATE TABLE IF NOT EXISTS paquetes (
     recaudo_esperado DECIMAL(10,2) DEFAULT 0.00,
     estado ENUM('pendiente', 'asignado', 'en_transito', 'entregado', 'devuelto', 'cancelado') DEFAULT 'pendiente',
     mensajero_id INT NULL,
+    mensajero_recoleccion_id INT NULL,
     creado_por INT NOT NULL,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_asignacion TIMESTAMP NULL,
@@ -191,6 +192,7 @@ CREATE TABLE IF NOT EXISTS paquetes (
     fecha_escaneo TIMESTAMP NULL,
     FOREIGN KEY (cliente_id) REFERENCES clientes(id),
     FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id),
+    FOREIGN KEY (mensajero_recoleccion_id) REFERENCES mensajeros(id),
     FOREIGN KEY (creado_por) REFERENCES usuarios(id)
 );
 
@@ -734,15 +736,15 @@ INSERT INTO invitaciones_colaboradores (
 );
 
 -- Paquetes (con campo creado_por)
-INSERT INTO paquetes (numero_guia, cliente_id, remitente_nombre, remitente_telefono, remitente_correo, direccion_origen, destinatario_nombre, destinatario_telefono, direccion_destino, coordenadas_destino_lat, coordenadas_destino_lng, instrucciones_entrega, descripcion_contenido, peso, largo, ancho, alto, tipo_paquete, valor_declarado, tipo_servicio, costo_envio, recaudo_esperado, estado, mensajero_id, creado_por, fecha_asignacion, fecha_entrega, qr_code, escaneado, fecha_escaneo)
+INSERT INTO paquetes (numero_guia, cliente_id, remitente_nombre, remitente_telefono, remitente_correo, direccion_origen, destinatario_nombre, destinatario_telefono, direccion_destino, coordenadas_destino_lat, coordenadas_destino_lng, instrucciones_entrega, descripcion_contenido, peso, largo, ancho, alto, tipo_paquete, valor_declarado, tipo_servicio, costo_envio, recaudo_esperado, estado, mensajero_id, mensajero_recoleccion_id, creado_por, fecha_asignacion, fecha_entrega, qr_code, escaneado, fecha_escaneo)
 VALUES 
-('ECO-2024-001', 1, 'Brayan Rodriguez', '3001234567', 'brayan@gmail.com', 'Calle 45 #23-67, Bogota', 'Ana Maria Lopez', '3156789012', 'Carrera 7 #100-25, Bogota', 4.701954, -74.035599, 'Dejar con porteria si no esta', 'Camiseta deportiva talla M', 0.25, 30.00, 25.00, 5.00, 'normal', 50000.00, 'contraentrega', 8000.00, 75000.00, 'entregado', 1, 1, '2024-12-20 08:30:00', '2024-12-20 14:45:00', 'QR-ECO-001', TRUE, '2024-12-20 08:35:00'),
+('ECO-2024-001', 1, 'Brayan Rodriguez', '3001234567', 'brayan@gmail.com', 'Calle 45 #23-67, Bogota', 'Ana Maria Lopez', '3156789012', 'Carrera 7 #100-25, Bogota', 4.701954, -74.035599, 'Dejar con porteria si no esta', 'Camiseta deportiva talla M', 0.25, 30.00, 25.00, 5.00, 'normal', 50000.00, 'contraentrega', 8000.00, 75000.00, 'entregado', 1, 1, 1, '2024-12-20 08:30:00', '2024-12-20 14:45:00', 'QR-ECO-001', TRUE, '2024-12-20 08:35:00'),
 
-('ECO-2024-002', 1, 'Brayan Store', '3001234567', 'brayan@gmail.com', 'Calle 45 #23-67, Bogota', 'Carlos Mendoza', '3187654321', 'Calle 127 #15-40, Bogota', 4.722445, -74.045732, 'Llamar al llegar', 'Zapatillas deportivas talla 42', 0.80, 35.00, 25.00, 15.00, 'express', 120000.00, 'entrega_simple', 12000.00, 0, 'en_transito', 1, 4, '2024-12-25 09:15:00', NULL, 'QR-ECO-002', TRUE, '2024-12-25 09:20:00'),
+('ECO-2024-002', 1, 'Brayan Store', '3001234567', 'brayan@gmail.com', 'Calle 45 #23-67, Bogota', 'Carlos Mendoza', '3187654321', 'Calle 127 #15-40, Bogota', 4.722445, -74.045732, 'Llamar al llegar', 'Zapatillas deportivas talla 42', 0.80, 35.00, 25.00, 15.00, 'express', 120000.00, 'entrega_simple', 12000.00, 0, 'en_transito', 1, 1, 4, '2024-12-25 09:15:00', NULL, 'QR-ECO-002', TRUE, '2024-12-25 09:20:00'),
 
-('ECO-2024-003', 1, 'Brayan Store', '3001234567', 'brayan@gmail.com', 'Calle 45 #23-67, Bogota', 'Laura Sanchez', '3209876543', 'Avenida 68 #45-23, Bogota', NULL, NULL, 'Entregar en horario de oficina', 'Conjunto deportivo completo', 0.60, NULL, NULL, NULL, 'urgente', 85000.00, 'contraentrega', 10000.00, 95000.00, 'pendiente', NULL, 5, NULL, NULL, 'QR-ECO-003', FALSE, NULL),
+('ECO-2024-003', 1, 'Brayan Store', '3001234567', 'brayan@gmail.com', 'Calle 45 #23-67, Bogota', 'Laura Sanchez', '3209876543', 'Avenida 68 #45-23, Bogota', NULL, NULL, 'Entregar en horario de oficina', 'Conjunto deportivo completo', 0.60, NULL, NULL, NULL, 'urgente', 85000.00, 'contraentrega', 10000.00, 95000.00, 'pendiente', NULL, NULL, 5, NULL, NULL, 'QR-ECO-003', FALSE, NULL),
 
-('ECO-2024-004', 1, 'Brayan Store', '3001234567', NULL, 'Calle 45 #23-67, Bogota', 'Miguel Torres', '3123456789', 'Calle 80 #10-20, Bogota', NULL, NULL, NULL, 'Gorra deportiva', 0.15, NULL, NULL, NULL, 'normal', 30000.00, 'entrega_simple', 7000.00, 0, 'asignado', 1, 4, '2024-12-25 10:00:00', NULL, 'QR-ECO-004', FALSE, NULL);
+('ECO-2024-004', 1, 'Brayan Store', '3001234567', NULL, 'Calle 45 #23-67, Bogota', 'Miguel Torres', '3123456789', 'Calle 80 #10-20, Bogota', NULL, NULL, NULL, 'Gorra deportiva', 0.15, NULL, NULL, NULL, 'normal', 30000.00, 'entrega_simple', 7000.00, 0, 'asignado', 1, 1, 4, '2024-12-25 10:00:00', NULL, 'QR-ECO-004', FALSE, NULL);
 
 -- Entregas
 INSERT INTO entregas (paquete_id, mensajero_id, nombre_receptor, parentesco_cargo, documento_receptor, recaudo_real, coordenadas_entrega_lat, coordenadas_entrega_lng, foto_entrega, foto_adicional, observaciones)
@@ -858,6 +860,55 @@ VALUES
 -- FROM clientes c
 -- LEFT JOIN colaboradores_cliente cc ON c.id = cc.cliente_id
 -- GROUP BY c.id, c.nombre_emprendimiento;
+
+-- =====================================================
+-- TRIGGERS PARA AUTOMATIZACIÓN (NUEVO)
+-- =====================================================
+
+DELIMITER //
+
+-- Trigger para agrupar paquetes en recolecciones automáticamente
+CREATE TRIGGER trg_auto_gestion_recolecciones
+AFTER INSERT ON paquetes
+FOR EACH ROW
+BEGIN
+    DECLARE v_recoleccion_id INT;
+    
+    -- 1. Buscar si ya existe una recolección activa (asignada) para este cliente, 
+    -- en esta dirección y creada el día de hoy.
+    SELECT id INTO v_recoleccion_id
+    FROM recolecciones
+    WHERE cliente_id = NEW.cliente_id
+      AND direccion_recoleccion = NEW.direccion_origen
+      AND DATE(fecha_creacion) = CURDATE()
+      AND estado = 'asignada' -- Solo agrupamos si aún está en estado inicial
+    LIMIT 1;
+
+    -- 2. Lógica de Agrupación
+    IF v_recoleccion_id IS NOT NULL THEN
+        -- CASO A: Ya existe la recolección, aumentamos el contador
+        UPDATE recolecciones
+        SET cantidad_estimada = cantidad_estimada + 1,
+            descripcion_paquetes = CONCAT(descripcion_paquetes, ' | ', NEW.numero_guia) -- Opcional: concatenar guías
+        WHERE id = v_recoleccion_id;
+    ELSE
+        -- CASO B: No existe, creamos una nueva recolección
+        INSERT INTO recolecciones (
+            numero_orden, cliente_id, direccion_recoleccion, 
+            nombre_contacto, telefono_contacto, 
+            descripcion_paquetes, cantidad_estimada, 
+            estado, creada_por, fecha_creacion
+        ) VALUES (
+            CONCAT('REC-AUTO-', UUID_SHORT()), -- Generar ID único
+            NEW.cliente_id, NEW.direccion_origen,
+            NEW.remitente_nombre, NEW.remitente_telefono,
+            CONCAT('Auto-generada: ', NEW.descripcion_contenido), 1,
+            'asignada', NEW.creado_por, NOW()
+        );
+    END IF;
+END //
+
+DELIMITER ;
 
 -- =====================================================
 -- FIN DEL SCRIPT

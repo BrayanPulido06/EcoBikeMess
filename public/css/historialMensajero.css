@@ -1,0 +1,64 @@
+/* Estilos específicos para el Historial */
+
+/* Ajuste para el resumen histórico */
+.estadisticas-dia {
+    background: #ffffff;
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columnas grandes para historial */
+    gap: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    /* Asegurar que no quede detrás del header */
+    position: relative;
+    z-index: 1;
+}
+
+.stat-item {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e2e8f0;
+}
+
+.stat-valor {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #2563eb;
+    line-height: 1.2;
+}
+
+.stat-valor.recaudo {
+    color: #16a34a;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+/* Sobrescribir estilo de paquetes entregados para que se vean nítidos en el historial */
+.tarjeta-paquete.entregado {
+    opacity: 1 !important; /* Quitar la transparencia que tienen en "Mis Paquetes" */
+    background: #ffffff;
+    border-left: 5px solid #16a34a;
+}
+
+.paquete-header .badge.entregado {
+    background: #dcfce7;
+    color: #166534;
+    padding: 0.4rem 0.8rem;
+}
+
+/* Ajuste responsive */
+@media (max-width: 480px) {
+    .stat-valor {
+        font-size: 1.6rem;
+    }
+}

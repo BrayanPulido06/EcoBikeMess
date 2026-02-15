@@ -1,9 +1,10 @@
 // Variables globales
 let administradores = [];
 let mensajeros = [];
+let clientes = [];
 let logs = [];
 let solicitudesPendientes = [];
-let currentUser = { rol: 'super_admin' }; // Usuario actual (simula sesión)
+let currentUser = window.serverUser || { rol: 'guest' }; // Obtener usuario de la vista
 let adminEnEdicion = null;
 let userToReset = null;
 
@@ -25,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Inicializar aplicación
 function initializeApp() {
     // Verificar permisos del usuario actual
-    if (currentUser.rol !== 'super_admin') {
+    if (currentUser.rol !== 'super_admin' && currentUser.rol !== 'admin') {
         document.getElementById('btnNuevoAdmin').style.display = 'none';
     }
 }
@@ -57,6 +58,10 @@ function setupEventListeners() {
     document.getElementById('btnCerrarModalMensajero').addEventListener('click', () => closeModal('modalMensajero'));
     document.getElementById('btnCerrarModalSolicitudes').addEventListener('click', () => closeModal('modalSolicitudes'));
 
+    // Clientes
+    document.getElementById('searchCliente')?.addEventListener('input', filtrarClientes);
+    document.getElementById('btnReporteClientes')?.addEventListener('click', () => alert('Funcionalidad de reporte en desarrollo'));
+
     // Reset Password
     document.getElementById('btnCerrarModalReset').addEventListener('click', () => closeModal('modalResetPassword'));
     document.getElementById('btnCancelarReset').addEventListener('click', () => closeModal('modalResetPassword'));
@@ -84,14 +89,36 @@ function switchTab(tabId) {
 // Cargar datos iniciales
 async function loadInitialData() {
     try {
-        // Aquí deberías hacer llamadas reales a tu API
-        administradores = generateMockAdmins();
-        mensajeros = generateMockMensajeros();
-        logs = generateMockLogs();
+        // 1. Cargar Administradores
+        const respAdmins = await fetch('../../controller/añadirAdminController.php?action=listar_admins');
+        const dataAdmins = await respAdmins.json();
+        if (dataAdmins.success) {
+            administradores = dataAdmins.data;
+            renderAdministradores();
+        } else {
+            console.error('Error admins:', dataAdmins.message);
+        }
+
+        // 2. Cargar Mensajeros
+        const respMensajeros = await fetch('../../controller/añadirAdminController.php?action=listar_mensajeros');
+        const dataMensajeros = await respMensajeros.json();
+        if (dataMensajeros.success) {
+            mensajeros = dataMensajeros.data;
+            renderMensajeros();
+        }
+
+        // 3. Cargar Clientes
+        const respClientes = await fetch('../../controller/añadirAdminController.php?action=listar_clientes');
+        const dataClientes = await respClientes.json();
+        if (dataClientes.success) {
+            clientes = dataClientes.data;
+            renderClientes();
+        }
+
+        // Logs y Solicitudes (Simulados por ahora si no hay endpoint)
+        logs = generateMockLogs(); 
         solicitudesPendientes = generateMockSolicitudes();
         
-        renderAdministradores();
-        renderMensajeros();
         actualizarEstadisticas();
         cargarUsuariosEnFiltros();
         
@@ -99,72 +126,6 @@ async function loadInitialData() {
         console.error('Error al cargar datos:', error);
         showNotification('Error al cargar los datos', 'error');
     }
-}
-
-// Generar administradores de ejemplo
-function generateMockAdmins() {
-    return [
-        {
-            id: 1,
-            nombre: 'Juan Pérez',
-            email: 'juan@sistema.com',
-            telefono: '3001234567',
-            rol: 'super_admin',
-            estado: 'activo',
-            foto: null,
-            fechaCreacion: new Date('2024-01-01').toISOString(),
-            ultimoAcceso: new Date().toISOString(),
-            permisos: ['todos']
-        },
-        {
-            id: 2,
-            nombre: 'María García',
-            email: 'maria@sistema.com',
-            telefono: '3009876543',
-            rol: 'admin_operativo',
-            estado: 'activo',
-            foto: null,
-            fechaCreacion: new Date('2024-02-15').toISOString(),
-            ultimoAcceso: new Date(Date.now() - 3600000).toISOString(),
-            permisos: ['crear_paquetes', 'editar_paquetes', 'asignar_mensajeros']
-        },
-        {
-            id: 3,
-            nombre: 'Carlos López',
-            email: 'carlos@sistema.com',
-            telefono: '3005555555',
-            rol: 'admin_reportes',
-            estado: 'inactivo',
-            foto: null,
-            fechaCreacion: new Date('2024-03-10').toISOString(),
-            ultimoAcceso: new Date(Date.now() - 86400000).toISOString(),
-            permisos: ['ver_reportes']
-        }
-    ];
-}
-
-// Generar mensajeros de ejemplo
-function generateMockMensajeros() {
-    const mensajeros = [];
-    const estados = ['activo', 'en_ruta', 'descanso', 'inactivo'];
-    
-    for (let i = 1; i <= 15; i++) {
-        mensajeros.push({
-            id: i,
-            nombre: `Mensajero ${i}`,
-            telefono: `300${String(i).padStart(7, '0')}`,
-            email: `mensajero${i}@sistema.com`,
-            estado: estados[Math.floor(Math.random() * estados.length)],
-            ubicacionActual: `Calle ${Math.floor(Math.random() * 100)} # ${Math.floor(Math.random() * 50)}-${Math.floor(Math.random() * 100)}`,
-            paquetesAsignados: Math.floor(Math.random() * 10),
-            entregasHoy: Math.floor(Math.random() * 15),
-            rendimiento: (Math.random() * 30 + 70).toFixed(1),
-            fechaRegistro: new Date(Date.now() - Math.random() * 90 * 86400000).toISOString(),
-            aprobado: true
-        });
-    }
-    
-    return mensajeros;
 }
 
 // Generar logs de ejemplo
@@ -236,7 +197,7 @@ function renderAdministradores() {
             <td>${formatRelativeTime(admin.ultimoAcceso)}</td>
             <td>
                 <div class="action-buttons">
-                    ${currentUser.rol === 'super_admin' ? `
+                    ${(currentUser.rol === 'super_admin' || currentUser.rol === 'admin') ? `
                         <button class="btn btn-sm btn-info" onclick="editarAdmin(${admin.id})" title="Editar">✏️</button>
                         <button class="btn btn-sm btn-warning" onclick="toggleEstadoAdmin(${admin.id})" title="Cambiar estado">
                             ${admin.estado === 'activo' ? '🔒' : '🔓'}
@@ -295,6 +256,32 @@ function renderMensajeros() {
     `).join('');
 }
 
+// Renderizar clientes
+function renderClientes() {
+    const tbody = document.getElementById('tablaClientesBody');
+    if (!tbody) return;
+
+    if (clientes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">No hay clientes registrados</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = clientes.map(c => `
+        <tr>
+            <td><strong>C${String(c.id).padStart(3, '0')}</strong></td>
+            <td>${c.emprendimiento}</td>
+            <td>${c.nombreContacto}</td>
+            <td>${c.telefono}</td>
+            <td>${c.direccion}</td>
+            <td><span class="status-badge status-${c.estado}">${c.estado === 'activo' ? 'Activo' : 'Inactivo'}</span></td>
+            <td>${formatDate(c.fechaRegistro)}</td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="alert('Detalles de ${c.emprendimiento}')">👁️</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
 // Renderizar logs
 function renderLogs() {
     const container = document.getElementById('logsContainer');
@@ -320,7 +307,7 @@ function renderLogs() {
 
 // Abrir modal administrador
 function abrirModalAdmin(adminId = null) {
-    if (currentUser.rol !== 'super_admin') {
+    if (currentUser.rol !== 'super_admin' && currentUser.rol !== 'admin') {
         showNotification('No tiene permisos para crear administradores', 'error');
         return;
     }
@@ -362,10 +349,10 @@ function editarAdmin(id) {
 }
 
 // Guardar administrador
-function guardarAdministrador(e) {
+async function guardarAdministrador(e) {
     e.preventDefault();
     
-    if (currentUser.rol !== 'super_admin') {
+    if (currentUser.rol !== 'super_admin' && currentUser.rol !== 'admin') {
         showNotification('No tiene permisos para esta acción', 'error');
         return;
     }
@@ -378,62 +365,48 @@ function guardarAdministrador(e) {
     const estado = document.getElementById('adminEstado').value;
     const password = document.getElementById('adminPassword').value;
     
-    // Validar email único
-    const emailExiste = administradores.some(a => a.email === email && a.id != id);
-    if (emailExiste) {
-        showNotification('El email ya está registrado', 'error');
-        return;
-    }
-    
     // Obtener permisos seleccionados
     const permisos = Array.from(document.querySelectorAll('input[name="permiso"]:checked'))
         .map(cb => cb.value);
     
+    // Preparar datos para enviar
+    const formData = new FormData();
+    formData.append('action', 'guardar_admin');
     if (id) {
-        // Editar
-        const admin = administradores.find(a => a.id == id);
-        if (admin) {
-            admin.nombre = nombre;
-            admin.email = email;
-            admin.telefono = telefono;
-            admin.rol = rol;
-            admin.estado = estado;
-            admin.permisos = permisos;
-            
-            registrarLog('editar', `Administrador ${nombre} actualizado`);
-            showNotification('Administrador actualizado exitosamente', 'success');
-        }
-    } else {
-        // Crear nuevo
-        const nuevoAdmin = {
-            id: administradores.length + 1,
-            nombre,
-            email,
-            telefono,
-            rol,
-            estado,
-            foto: null,
-            fechaCreacion: new Date().toISOString(),
-            ultimoAcceso: null,
-            permisos,
-            cambiarPassword: true
-        };
-        
-        administradores.push(nuevoAdmin);
-        
-        registrarLog('crear', `Nuevo administrador ${nombre} creado`);
-        showNotification(`Administrador creado. Contraseña temporal: ${password}`, 'success');
+        formData.append('id', id);
     }
-    
-    renderAdministradores();
-    actualizarEstadisticas();
-    closeModal('modalAdmin');
-    document.getElementById('formAdmin').reset();
+    formData.append('nombre', nombre);
+    formData.append('email', email);
+    formData.append('telefono', telefono);
+    formData.append('rol', rol);
+    formData.append('estado', estado);
+    if (password) formData.append('password', password);
+    formData.append('permisos', permisos.join(','));
+
+    try {
+        const response = await fetch('../../controller/añadirAdminController.php', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification(result.message, 'success');
+            closeModal('modalAdmin');
+            document.getElementById('formAdmin').reset();
+            loadInitialData(); // Recargar lista
+        } else {
+            showNotification(result.message, 'error');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('Error de conexión al guardar', 'error');
+    }
 }
 
 // Toggle estado admin
-function toggleEstadoAdmin(id) {
-    if (currentUser.rol !== 'super_admin') {
+async function toggleEstadoAdmin(id) {
+    if (currentUser.rol !== 'super_admin' && currentUser.rol !== 'admin') {
         showNotification('No tiene permisos para esta acción', 'error');
         return;
     }
@@ -441,17 +414,34 @@ function toggleEstadoAdmin(id) {
     const admin = administradores.find(a => a.id === id);
     if (!admin) return;
     
-    admin.estado = admin.estado === 'activo' ? 'inactivo' : 'activo';
+    const nuevoEstado = admin.estado === 'activo' ? 'inactivo' : 'activo';
     
-    registrarLog('editar', `Estado de ${admin.nombre} cambiado a ${admin.estado}`);
-    renderAdministradores();
-    actualizarEstadisticas();
-    showNotification(`Administrador ${admin.estado === 'activo' ? 'activado' : 'desactivado'}`, 'success');
+    const formData = new FormData();
+    formData.append('action', 'cambiar_estado_admin');
+    formData.append('id', id);
+    formData.append('estado', nuevoEstado);
+
+    try {
+        const response = await fetch('../../controller/añadirAdminController.php', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(result.message, 'success');
+            loadInitialData();
+        } else {
+            showNotification(result.message, 'error');
+        }
+    } catch (error) {
+        showNotification('Error al cambiar estado', 'error');
+    }
 }
 
 // Eliminar admin
-function eliminarAdmin(id) {
-    if (currentUser.rol !== 'super_admin') {
+async function eliminarAdmin(id) {
+    if (currentUser.rol !== 'super_admin' && currentUser.rol !== 'admin') {
         showNotification('No tiene permisos para esta acción', 'error');
         return;
     }
@@ -460,13 +450,26 @@ function eliminarAdmin(id) {
     if (!admin) return;
     
     if (confirm(`¿Está seguro de eliminar al administrador ${admin.nombre}?`)) {
-        const index = administradores.findIndex(a => a.id === id);
-        administradores.splice(index, 1);
-        
-        registrarLog('eliminar', `Administrador ${admin.nombre} eliminado`);
-        renderAdministradores();
-        actualizarEstadisticas();
-        showNotification('Administrador eliminado', 'success');
+        const formData = new FormData();
+        formData.append('action', 'eliminar_admin');
+        formData.append('id', id);
+
+        try {
+            const response = await fetch('../../controller/añadirAdminController.php', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                showNotification(result.message, 'success');
+                loadInitialData();
+            } else {
+                showNotification(result.message, 'error');
+            }
+        } catch (error) {
+            showNotification('Error al eliminar', 'error');
+        }
     }
 }
 
@@ -579,7 +582,7 @@ function toggleEstadoMensajero(id) {
 
 // Eliminar mensajero
 function eliminarMensajero(id) {
-    if (currentUser.rol !== 'super_admin') {
+    if (currentUser.rol !== 'super_admin' && currentUser.rol !== 'admin') {
         showNotification('No tiene permisos para esta acción', 'error');
         return;
     }
@@ -659,6 +662,17 @@ function filtrarMensajeros() {
     });
 }
 
+// Filtrar clientes
+function filtrarClientes() {
+    const search = document.getElementById('searchCliente').value.toLowerCase();
+    const rows = document.querySelectorAll('#tablaClientesBody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(search) ? '' : 'none';
+    });
+}
+
 // Filtrar logs
 function filtrarLogs() {
     renderLogs();
@@ -685,6 +699,11 @@ function actualizarEstadisticas() {
     document.getElementById('paquetesAsignadosHoy').textContent = mensajeros.reduce((sum, m) => sum + m.paquetesAsignados, 0);
     document.getElementById('entregasHoy').textContent = mensajeros.reduce((sum, m) => sum + m.entregasHoy, 0);
     
+    // Clientes
+    document.getElementById('totalClientes').textContent = clientes.length;
+    document.getElementById('clientesActivos').textContent = clientes.filter(c => c.estado === 'activo').length;
+    document.getElementById('clientesNuevos').textContent = clientes.filter(c => new Date(c.fechaRegistro) > new Date(Date.now() - 30 * 86400000)).length;
+
     // Solicitudes
     document.getElementById('countSolicitudes').textContent = solicitudesPendientes.length;
 }

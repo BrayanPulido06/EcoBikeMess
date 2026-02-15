@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dashboard Mensajero - EcoBikeMess</title>
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
+    <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
+    <!-- Librería para escaneo de QR -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
     <!-- Header Móvil -->
@@ -23,27 +26,7 @@
     </header>
 
     <!-- Menu Lateral -->
-    <nav class="side-menu" id="sideMenu">
-        <div class="menu-header">
-            <div class="user-avatar">
-                <img src="../public/img/default-avatar.png" alt="Avatar" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%228%22 r=%224%22 fill=%22%235cb85c%22/%3E%3Cpath d=%22M12 14c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z%22 fill=%22%235cb85c%22/%3E%3C/svg%3E'">
-            </div>
-            <h3>Carlos Rodríguez</h3>
-            <p>Mensajero Activo</p>
-        </div>
-        <ul class="menu-list">
-            <li><a href="inicioMensajero.php" class="active">📊 Inicio</a></li>
-            <li><a href="misEntregas.php">📦 Mis Entregas</a></li>
-            <li><a href="historialMensajero.php">📚 Historial</a></li>
-            <li><a href="ganancias.php">💰 Ganancias</a></li>
-            <li><a href="miPerfilMensajero.php">👤 Mi Perfil</a></li>
-            <li><a href="configuracionMensajero.php">⚙️ Configuración</a></li>
-            <li><a href="../controllers/logout.php" class="logout">🚪 Cerrar Sesión</a></li>
-        </ul>
-    </nav>
-
-    <!-- Overlay del menú -->
-    <div class="menu-overlay" id="menuOverlay"></div>
+    <?php include '../layouts/mensajeroSidebar.php'; ?>
 
     <!-- Contenido Principal -->
     <main class="main-content">
@@ -144,14 +127,14 @@
             <button class="modal-close" id="closeScanModal">×</button>
             <h2>Escanear Código QR</h2>
             <div class="scan-container">
-                <div class="scan-frame">
-                    <div class="scan-corner tl"></div>
-                    <div class="scan-corner tr"></div>
-                    <div class="scan-corner bl"></div>
-                    <div class="scan-corner br"></div>
-                    <div class="scan-line"></div>
+                <div style="position: relative;">
+                    <div id="reader" style="width: 100%; border-radius: 10px; overflow: hidden;"></div>
+                    <!-- Botón de Flash (oculto por defecto) -->
+                    <button id="btnFlash" style="display: none; position: absolute; top: 10px; right: 10px; z-index: 10; background: rgba(0,0,0,0.6); color: white; border: none; padding: 10px; border-radius: 50%; cursor: pointer; width: 40px; height: 40px;">⚡</button>
                 </div>
-                <p class="scan-instruction">Coloca el código QR dentro del marco</p>
+                <!-- Contador en la parte inferior del escáner -->
+                <p style="margin-top: 10px; font-weight: bold; color: #5cb85c;">Escaneados en sesión: <span id="modalQrCounter">0</span></p>
+                <p class="scan-instruction">Coloca el código QR frente a la cámara</p>
             </div>
             <div class="scan-actions">
                 <button class="btn-secondary" id="btnManualCode">

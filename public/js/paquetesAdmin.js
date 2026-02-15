@@ -1,627 +1,524 @@
-// Variables globales
-let paquetes = [];
-let paquetesFiltrados = [];
-let currentPage = 1;
-let pageSize = 25;
-let sortColumn = 'fecha';
-let sortDirection = 'desc';
-let currentPaquete = null;
+// Variable global para almacenar todos los mensajeros
+let todosLosMensajeros = [];
+let currentData = []; // Almacenar datos actuales de la tabla para exportación
 
-// Inicialización
 document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
-    setupEventListeners();
-    loadInitialData();
+    console.log('Script paquetesAdmin.js cargado correctamente');
+
+    // --- REFERENCIAS AL DOM ---
+    // Asegúrate de que tu tabla en HTML tenga <tbody id="tablaPaquetesBody">
+    const tableBody = document.getElementById('tablaPaquetesBody');
+    const btnLimpiar = document.getElementById('btnLimpiarFiltros');
+    const btnExportExcel = document.getElementById('btnExportarExcel');
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const btnNuevoPaquete = document.getElementById('btnNuevoPaquete');
+    
+    // Referencias a los filtros (Asegúrate de que los IDs en tu HTML coincidan)
+    const inputs = {
+        search: document.getElementById('searchInput'),        // Input tipo text (Corregido ID)
+        fechaDesde: document.getElementById('filtroFechaDesde'), // Input date
+        fechaHasta: document.getElementById('filtroFechaHasta'), // Input date
+        cliente: document.getElementById('filtroCliente'),     // Select
+        estado: document.getElementById('filtroEstado'),       // Select
+        mensajero: document.getElementById('filtroMensajero')  // Select
+    };
+
+    // Referencias a Modales
+    const modals = {
+        detalles: document.getElementById('modalDetalles'),
+        asignar: document.getElementById('modalAsignar'),
+        editar: document.getElementById('modalEditar')
+    };
+
+    // --- INICIALIZACIÓN ---
+    listarPaquetes(); // Carga la tabla inicial
+    setupModalClosers(); // Configura los botones de cerrar modales
+
+    // --- EVENTOS ---
+    // Agregar evento 'change' a todos los filtros para que la tabla se actualice sola
+    Object.values(inputs).forEach(input => {
+        if (input) {
+            input.addEventListener('change', listarPaquetes);
+        }
+    });
+
+    // Botón Limpiar Filtros
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', function() {
+            Object.values(inputs).forEach(input => {
+                if (input) input.value = '';
+            });
+            listarPaquetes();
+        });
+    }
+    
+    // Evento para filtrar mensajeros en el modal al escribir
+    const inputBuscarMensajero = document.getElementById('buscarMensajeroInput');
+    if (inputBuscarMensajero) {
+        inputBuscarMensajero.addEventListener('input', filtrarListaMensajeros);
+    }
+
+    // Permitir buscar al presionar Enter en el campo de texto
+    if (inputs.search) {
+        inputs.search.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') listarPaquetes();
+        });
+    }
+
+    // Formulario Asignar Mensajero
+    const formAsignar = document.getElementById('formAsignarMensajero');
+    if (formAsignar) {
+        formAsignar.addEventListener('submit', function(e) {
+            e.preventDefault();
+            asignarMensajeroAction();
+        });
+    }
+
+    // Botones Cancelar en Modales
+    document.getElementById('btnCancelarAsignar')?.addEventListener('click', () => closeModal('asignar'));
+    document.getElementById('btnCancelarEditar')?.addEventListener('click', () => closeModal('editar'));
+
+    // --- EXPORTACIÓN ---
+    if (btnExportExcel) btnExportExcel.addEventListener('click', exportarExcel);
+
+    // --- NUEVO PAQUETE ---
+    if (btnNuevoPaquete) {
+        btnNuevoPaquete.addEventListener('click', () => window.location.href = 'digitarAdmin.php');
+    }
+
+    // --- SELECCIONAR TODOS ---
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.paquete-checkbox');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+        });
+    }
+
+    // --- FUNCIONES ---
+
+    // 2. Obtener datos y renderizar la tabla
+    function listarPaquetes() {
+        // Mostrar indicador de carga
+        if (tableBody) {
+            tableBody.innerHTML = '<tr><td colspan="11" style="text-align:center;">Cargando datos...</td></tr>';
+        }
+
+        // Construir URL con los parámetros de los filtros
+        const params = new URLSearchParams();
+        params.append('action', 'listar');
+        
+        for (const [key, input] of Object.entries(inputs)) {
+            if (input && input.value) {
+                params.append(key, input.value);
+            }
+        }
+
+        // Petición AJAX al controlador
+        fetch(`../../controller/paquetesAdminController.php?${params.toString()}`)
+            .then(response => response.json())
+            .then(response => {
+                if (response.data) {
+                    renderizarTabla(response.data);
+                } else if (response.error) {
+                    console.error('Error del servidor:', response.error);
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="11" class="text-danger text-center">Error: ${response.error}</td></tr>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error en la petición:', error);
+                if (tableBody) tableBody.innerHTML = '<tr><td colspan="11" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>';
+            });
+    }
+
+    // 3. Generar el HTML de las filas
+    function renderizarTabla(data) {
+        if (!tableBody) return;
+
+        if (data.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="11" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
+            return;
+        }
+
+        currentData = data; // Guardar datos para exportación
+
+        let html = '';
+        data.forEach(p => {
+            // Definir color del badge según estado
+            let badgeClass = 'secondary'; // Gris por defecto
+            
+            switch(p.estado) {
+                case 'entregado': badgeClass = 'success'; break;   // Verde
+                case 'cancelado': badgeClass = 'danger'; break;    // Rojo
+                case 'pendiente': badgeClass = 'warning'; break;   // Amarillo
+                case 'en_transito': badgeClass = 'primary'; break; // Azul
+                case 'asignado': badgeClass = 'info'; break;       // Cian
+                case 'devuelto': badgeClass = 'dark'; break;       // Oscuro
+            }
+
+            // Formatear valor a moneda
+            const valorFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.valor);
+            const recaudoFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.recaudo || 0);
+
+            html += `
+                <tr>
+                    <td><input type="checkbox" class="paquete-checkbox" value="${p.id}"></td>
+                    <td>${p.guia}</td>
+                    <td>${p.fechaIngreso}</td>
+                    <td>${p.remitente || '<span class="text-muted">N/A</span>'}</td>
+                    <td>${p.destinatario}</td>
+                    <td>${p.direccion}</td>
+                    <td><span class="badge badge-${badgeClass}">${p.estado.toUpperCase()}</span></td>
+                    <td>${p.mensajero || '<span class="text-muted font-italic">Sin asignar</span>'}</td>
+                    <td>${valorFormateado}</td>
+                    <td>${recaudoFormateado}</td>
+                    <td>${p.tipo || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})" title="Ver Detalle">👁️</button>
+                        ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar">🚴</button>` : ''}
+                    </td>
+                </tr>
+            `;
+        });
+
+        tableBody.innerHTML = html;
+    }
+
+    // --- FUNCIONES DE EXPORTACIÓN ---
+    function getPaquetesParaExportar() {
+        const selectedCheckboxes = document.querySelectorAll('.paquete-checkbox:checked');
+        let dataToExport = [];
+
+        if (selectedCheckboxes.length > 0) {
+            const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value.toString());
+            dataToExport = currentData.filter(p => selectedIds.includes(p.id.toString()));
+        } else {
+            dataToExport = currentData;
+        }
+        return dataToExport;
+    }
+
+    function exportarExcel() {
+        const data = getPaquetesParaExportar();
+        if (data.length === 0) {
+            alert("No hay datos para exportar");
+            return;
+        }
+
+        const exportData = data.map(p => ({
+            "Guía": p.guia,
+            "Fecha": p.fechaIngreso,
+            "Remitente": p.remitente,
+            "Destinatario": p.destinatario,
+            "Dirección": p.direccion,
+            "Estado": p.estado,
+            "Mensajero": p.mensajero,
+            "Valor": p.valor,
+            "Recaudo": p.recaudo,
+            "Tipo": p.tipo
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Paquetes");
+        XLSX.writeFile(wb, `Paquetes_EcoBikeMess_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
 });
 
-// Inicializar aplicación
-function initializeApp() {
-    setDateFilters();
-    startPolling();
-}
+// --- FUNCIONES GLOBALES (Para los botones de la tabla) ---
 
-// Configurar event listeners
-function setupEventListeners() {
-    // Búsqueda
-    document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 300));
-    
-    // Filtros
-    document.getElementById('filtroFechaDesde').addEventListener('change', applyFilters);
-    document.getElementById('filtroFechaHasta').addEventListener('change', applyFilters);
-    document.getElementById('filtroCliente').addEventListener('change', applyFilters);
-    document.getElementById('filtroEstado').addEventListener('change', applyFilters);
-    document.getElementById('filtroZona').addEventListener('change', applyFilters);
-    document.getElementById('filtroMensajero').addEventListener('change', applyFilters);
-    document.getElementById('filtroTipo').addEventListener('change', applyFilters);
-    document.getElementById('btnLimpiarFiltros').addEventListener('click', limpiarFiltros);
-    
-    // Paginación
-    document.getElementById('pageSize').addEventListener('change', function() {
-        pageSize = parseInt(this.value);
-        currentPage = 1;
-        renderTable();
-    });
-    
-    // Exportar
-    document.getElementById('btnExportarExcel').addEventListener('click', exportarExcel);
-    document.getElementById('btnExportarPDF').addEventListener('click', exportarPDF);
-    
-    // Modales
-    document.getElementById('btnCerrarDetalles').addEventListener('click', () => closeModal('modalDetalles'));
-    document.getElementById('btnCerrarEditar').addEventListener('click', () => closeModal('modalEditar'));
-    document.getElementById('btnCancelarEditar').addEventListener('click', () => closeModal('modalEditar'));
-    document.getElementById('btnCerrarAsignar').addEventListener('click', () => closeModal('modalAsignar'));
-    document.getElementById('btnCancelarAsignar').addEventListener('click', () => closeModal('modalAsignar'));
-    
-    // Formularios
-    document.getElementById('formEditarPaquete').addEventListener('submit', handleEditarPaquete);
-    document.getElementById('formAsignarMensajero').addEventListener('submit', handleAsignarMensajero);
-    
-    // Selector de mensajero
-    document.getElementById('asignarMensajero').addEventListener('change', mostrarInfoMensajero);
-    
-    // Ordenamiento
-    document.querySelectorAll('th.sortable').forEach(th => {
-        th.addEventListener('click', function() {
-            const column = this.dataset.column;
-            if (sortColumn === column) {
-                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortColumn = column;
-                sortDirection = 'asc';
-            }
-            updateSortIndicators();
-            sortData();
-            renderTable();
-        });
-    });
-}
-
-// Debounce function
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// Establecer filtros de fecha
-function setDateFilters() {
-    const hoy = new Date();
-    const hace30Dias = new Date();
-    hace30Dias.setDate(hace30Dias.getDate() - 30);
-    
-    document.getElementById('filtroFechaDesde').value = hace30Dias.toISOString().split('T')[0];
-    document.getElementById('filtroFechaHasta').value = hoy.toISOString().split('T')[0];
-}
-
-// Cargar datos iniciales
-async function loadInitialData(isBackground = false) {
-    try {
-        if (!isBackground) showLoading(true);
-        
-        // 1. Cargar filtros (Clientes y Mensajeros)
-        const responseFilters = await fetch('../../controller/paquetesAdminController.php?action=get_filters');
-        const filtersData = await responseFilters.json();
-
-        if (filtersData.success) {
-            loadClientes(filtersData.clientes);
-            loadMensajeros(filtersData.mensajeros);
-        }
-
-        // 2. Cargar Paquetes (usando los filtros actuales por defecto)
-        applyFilters();
-        
-        // Nota: applyFilters ahora se encarga de llamar a fetchPaquetes y renderizar.
-        // Ya no generamos datos mock.
-        
-        // paquetes = generateMockPaquetes(); // ELIMINADO
-        // const clientes = generateMockClientes(); // ELIMINADO
-        // const mensajeros = generateMockMensajeros(); // ELIMINADO
-        
-        // updateStats(); // Se llama dentro de fetchPaquetes
-        
-        if (!isBackground) showLoading(false);
-        
-    } catch (error) {
-        console.error('Error al cargar datos:', error);
-        if (!isBackground) {
-            showNotification('Error al cargar los datos', 'error');
-            showLoading(false);
-        }
-    }
-}
-
-// Iniciar actualización automática
-function startPolling() {
-    setInterval(() => {
-        // Solo actualizar si no hay modales abiertos para no interrumpir la edición
-        if (!document.querySelector('.modal.active')) {
-            loadInitialData(true);
-        }
-    }, 10000); // Actualizar cada 10 segundos
-}
-
-// Funciones de generación de datos Mock ELIMINADAS
-// generateMockPaquetes, generateHistorial, generateMockClientes, generateMockMensajeros
-// han sido reemplazadas por llamadas a la API.
-
-// Cargar clientes en select
-function loadClientes(clientes) {
-    const select = document.getElementById('filtroCliente');
-    select.innerHTML = '<option value="">Todos los clientes</option>';
-    clientes.forEach(cliente => {
-        const option = document.createElement('option');
-        option.value = cliente.id; // Usar ID para filtrar
-        option.textContent = cliente.nombre;
-        select.appendChild(option);
-    });
-}
-
-// Cargar mensajeros en select
-function loadMensajeros(mensajeros) {
-    const select1 = document.getElementById('filtroMensajero');
-    const select2 = document.getElementById('asignarMensajero');
-    
-    select1.innerHTML = '<option value="">Todos los mensajeros</option>';
-    select2.innerHTML = '<option value="">Seleccione un mensajero</option>';
-    
-    mensajeros.forEach(mensajero => {
-        const option1 = document.createElement('option');
-        option1.value = mensajero.id; // Usar ID para filtrar
-        option1.textContent = mensajero.nombre;
-        select1.appendChild(option1);
-        
-        const option2 = document.createElement('option');
-        option2.value = mensajero.id;
-        option2.textContent = `${mensajero.nombre} - ${mensajero.estado === 'activo' ? '🟢 Disponible' : '🔴 Ocupado'}`;
-        option2.dataset.disponible = (mensajero.estado === 'activo');
-        option2.dataset.tareas = mensajero.tareas_activas || 0;
-        option2.dataset.zona = 'General'; // Ajustar si tienes zona en mensajero
-        select2.appendChild(option2);
-    });
-}
-
-// Aplicar filtros
-function applyFilters() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const fechaDesde = document.getElementById('filtroFechaDesde').value;
-    const fechaHasta = document.getElementById('filtroFechaHasta').value;
-    const cliente = document.getElementById('filtroCliente').value;
-    const estado = document.getElementById('filtroEstado').value;
-    const zona = document.getElementById('filtroZona').value;
-    const mensajero = document.getElementById('filtroMensajero').value;
-    const tipo = document.getElementById('filtroTipo').value;
-    
-    // Construir URL con parámetros
-    const params = new URLSearchParams({
-        action: 'get_paquetes',
-        search: searchTerm,
-        fechaDesde: fechaDesde,
-        fechaHasta: fechaHasta,
-        cliente_id: cliente,
-        estado: estado,
-        zona: zona,
-        mensajero_id: mensajero,
-        tipo: tipo
-    });
-
-    fetch(`../../controller/paquetesAdminController.php?${params.toString()}`)
+// 1. Cargar opciones para los Selects (Clientes y Mensajeros) - AHORA GLOBAL
+function cargarFiltros() {
+    fetch('../../controller/paquetesAdminController.php?action=filtros')
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                paquetes = data.data; // Actualizar global
-                paquetesFiltrados = [...paquetes]; // Filtrado ya hecho en servidor
+            // Llenar select de Clientes (si existe en el DOM)
+            const selectCliente = document.getElementById('filtroCliente');
+            if (selectCliente && data.clientes) {
+                let html = '<option value="">Todos los clientes</option>';
+                data.clientes.forEach(c => {
+                    html += `<option value="${c.id}">${c.nombre}</option>`;
+                });
+                selectCliente.innerHTML = html;
+            }
+
+            // Llenar select de Mensajeros
+            if (data.mensajeros) {
+                todosLosMensajeros = data.mensajeros; // Guardar para uso en el modal
                 
-                sortData();
-                currentPage = 1;
-                renderTable();
-                updateStats();
+                let html = '<option value="">Todos los mensajeros</option>';
+                
+                data.mensajeros.forEach(m => {
+                    const texto = `${m.nombre} (${m.estado})`;
+                    html += `<option value="${m.id}">${texto}</option>`;
+                });
+                
+                const selectMensajero = document.getElementById('filtroMensajero');
+                if (selectMensajero) selectMensajero.innerHTML = html;
+                
+                // Renderizar lista inicial en el modal si está abierto
+                renderizarListaMensajeros(todosLosMensajeros);
             }
         })
-        .catch(error => console.error('Error fetching paquetes:', error));
+        .catch(error => console.error('Error cargando filtros:', error));
 }
+// Llamar a cargar filtros al inicio
+cargarFiltros();
 
-// Limpiar filtros
-function limpiarFiltros() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('filtroCliente').value = '';
-    document.getElementById('filtroEstado').value = '';
-    document.getElementById('filtroZona').value = '';
-    document.getElementById('filtroMensajero').value = '';
-    document.getElementById('filtroTipo').value = '';
-    setDateFilters();
-    applyFilters();
-}
+// Función para renderizar la lista de mensajeros en el modal (divs en lugar de options)
+function renderizarListaMensajeros(lista) {
+    const contenedor = document.getElementById('listaMensajeros');
+    if (!contenedor) return;
 
-// Ordenar datos
-function sortData() {
-    paquetesFiltrados.sort((a, b) => {
-        let aVal, bVal;
-        
-        switch(sortColumn) {
-            case 'guia':
-                aVal = a.guia;
-                bVal = b.guia;
-                break;
-            case 'fecha':
-                aVal = new Date(a.fechaIngreso);
-                bVal = new Date(b.fechaIngreso);
-                break;
-            case 'estado':
-                aVal = a.estado;
-                bVal = b.estado;
-                break;
-            case 'valor':
-                aVal = a.valor;
-                bVal = b.valor;
-                break;
-            default:
-                return 0;
-        }
-        
-        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-        return 0;
-    });
-}
-
-// Actualizar indicadores de ordenamiento
-function updateSortIndicators() {
-    document.querySelectorAll('th.sortable').forEach(th => {
-        th.classList.remove('sorted-asc', 'sorted-desc');
-        if (th.dataset.column === sortColumn) {
-            th.classList.add(`sorted-${sortDirection}`);
-        }
-    });
-}
-
-// Renderizar tabla
-function renderTable() {
-    const tbody = document.getElementById('tablaPaquetesBody');
-    const start = (currentPage - 1) * pageSize;
-    const end = start + pageSize;
-    const paginatedData = paquetesFiltrados.slice(start, end);
-    
-    if (paginatedData.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="10" style="text-align: center; padding: 40px;">
-                    <p style="color: #999; font-size: 1.1em;">No se encontraron paquetes</p>
-                </td>
-            </tr>
-        `;
-    } else {
-        tbody.innerHTML = paginatedData.map(paq => `
-            <tr class="${paq.urgente ? 'urgente' : ''} ${paq.problema ? 'problema' : ''}">
-                <td>
-                    ${paq.urgente ? '<span class="urgente-indicator"></span>' : ''}
-                    <strong>${paq.guia}</strong>
-                </td>
-                <td>${formatDateTime(paq.fechaIngreso)}</td>
-                <td>${paq.remitente}</td>
-                <td>
-                    ${paq.destinatario}<br>
-                    <small style="color: #666;">${paq.telefonoDestinatario}</small>
-                </td>
-                <td>${paq.direccion}<br><small style="color: #666;">Zona: ${paq.zona}</small></td>
-                <td><span class="status-badge status-${paq.estado}">${formatEstado(paq.estado)}</span></td>
-                <td>${paq.mensajero || '-'}</td>
-                <td>${formatCurrency(paq.valor)}</td>
-                <td><span class="type-badge">${formatTipo(paq.tipo)}</span></td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="btn btn-sm btn-info" onclick="verDetalles(${paq.id})">👁️</button>
-                        ${paq.estado === 'pendiente' ? `
-                            <button class="btn btn-sm btn-warning" onclick="editarPaquete(${paq.id})">✏️</button>
-                            <button class="btn btn-sm btn-success" onclick="asignarMensajero(${paq.id})">👤</button>
-                        ` : ''}
-                    </div>
-                </td>
-            </tr>
-        `).join('');
+    if (lista.length === 0) {
+        contenedor.innerHTML = '<div class="mensajero-item text-muted">No se encontraron mensajeros</div>';
+        return;
     }
-    
-    updatePaginationInfo(start, end);
-    renderPaginationControls();
-}
 
-// Actualizar información de paginación
-function updatePaginationInfo(start, end) {
-    document.getElementById('showingFrom').textContent = paquetesFiltrados.length > 0 ? start + 1 : 0;
-    document.getElementById('showingTo').textContent = Math.min(end, paquetesFiltrados.length);
-    document.getElementById('totalResults').textContent = paquetesFiltrados.length;
-}
-
-// Renderizar controles de paginación
-function renderPaginationControls() {
-    const totalPages = Math.ceil(paquetesFiltrados.length / pageSize);
-    const controls = document.getElementById('paginationControls');
-    
-    let html = `
-        <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
-            ‹ Anterior
-        </button>
-    `;
-    
-    const maxButtons = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
-    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
-    
-    if (endPage - startPage < maxButtons - 1) {
-        startPage = Math.max(1, endPage - maxButtons + 1);
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
+    let html = '';
+    lista.forEach(m => {
+        const tareas = m.tareas_activas || 0;
+        const estadoColor = m.estado === 'activo' ? 'green' : 'gray';
         html += `
-            <button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">
-                ${i}
-            </button>
+            <div class="mensajero-item" onclick="seleccionarMensajero(${m.id}, '${m.nombre}')" data-id="${m.id}">
+                <div style="font-weight:bold;">${m.nombre}</div>
+                <div style="font-size:0.85em; color:#666;">
+                    <span style="color:${estadoColor}">● ${m.estado}</span> | Tareas activas: ${tareas}
+                </div>
+            </div>
         `;
-    }
+    });
+    contenedor.innerHTML = html;
+}
+
+// Función para filtrar la lista cuando el usuario escribe
+function filtrarListaMensajeros(e) {
+    const texto = e.target.value.toLowerCase();
+    const filtrados = todosLosMensajeros.filter(m => 
+        m.nombre.toLowerCase().includes(texto)
+    );
+    renderizarListaMensajeros(filtrados);
+}
+
+function verDetalle(id) {
+    const modal = document.getElementById('modalDetalles');
+    const container = document.getElementById('detallesPaquete');
     
-    html += `
-        <button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">
-            Siguiente ›
-        </button>
-    `;
-    
-    controls.innerHTML = html;
-}
+    if (modal && container) {
+        modal.style.display = 'flex'; // Mostrar modal
+        container.innerHTML = '<p style="text-align:center">Cargando historial...</p>';
 
-// Cambiar página
-function changePage(page) {
-    const totalPages = Math.ceil(paquetesFiltrados.length / pageSize);
-    if (page >= 1 && page <= totalPages) {
-        currentPage = page;
-        renderTable();
-    }
-}
+        fetch(`../../controller/paquetesAdminController.php?action=detalle&id=${id}`)
+            .then(res => res.json())
+            .then(data => {
+                const info = data.info;
+                const historial = data.historial || [];
 
-// Actualizar estadísticas
-function updateStats() {
-    document.getElementById('totalPaquetes').textContent = paquetes.length;
-    document.getElementById('pendientes').textContent = paquetes.filter(p => p.estado === 'pendiente').length;
-    document.getElementById('enTransito').textContent = paquetes.filter(p => p.estado === 'en_transito').length;
-    document.getElementById('entregados').textContent = paquetes.filter(p => p.estado === 'entregado').length;
-    document.getElementById('conProblemas').textContent = paquetes.filter(p => p.problema).length;
-}
+                if (!info) {
+                    const msg = data.error ? `Error: ${data.error}` : 'No se encontró información del paquete.';
+                    container.innerHTML = `<p class="text-danger text-center">${msg}</p>`;
+                    return;
+                }
 
-// Ver detalles del paquete
-function verDetalles(id) {
-    const paquete = paquetes.find(p => p.id === id);
-    if (!paquete) return;
-    
-    // Obtener historial real
-    fetch(`../../controller/paquetesAdminController.php?action=get_paquete_details&id=${id}`)
-        .then(res => res.json())
-        .then(data => {
-            const historial = data.success ? data.historial : [];
-            renderModalDetalles(paquete, historial);
-        });
-}
+                // Formateadores
+                const currency = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
+                
+                let badgeClass = 'secondary';
+                switch(info.estado) {
+                    case 'entregado': badgeClass = 'success'; break;
+                    case 'cancelado': badgeClass = 'danger'; break;
+                    case 'pendiente': badgeClass = 'warning'; break;
+                    case 'en_transito': badgeClass = 'primary'; break;
+                    case 'asignado': badgeClass = 'info'; break;
+                    case 'devuelto': badgeClass = 'dark'; break;
+                }
 
-function renderModalDetalles(paquete, historial) {
-    const detallesHTML = `
-        <div class="detalle-section">
-            <h3>Información del Paquete</h3>
-            <div class="detalle-grid">
-                <div class="detalle-item">
-                    <div class="detalle-label">N° de Guía</div>
-                    <div class="detalle-value">${paquete.guia}</div>
-                </div>
-                <div class="detalle-item">
-                    <div class="detalle-label">Fecha de Ingreso</div>
-                    <div class="detalle-value">${formatDateTime(paquete.fechaIngreso)}</div>
-                </div>
-                <div class="detalle-item">
-                    <div class="detalle-label">Estado</div>
-                    <div class="detalle-value"><span class="status-badge status-${paquete.estado}">${formatEstado(paquete.estado)}</span></div>
-                </div>
-                <div class="detalle-item">
-                    <div class="detalle-label">Tipo</div>
-                    <div class="detalle-value">${formatTipo(paquete.tipo)}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="detalle-section">
-            <h3>Remitente y Destinatario</h3>
-            <div class="detalle-grid">
-                <div class="detalle-item">
-                    <div class="detalle-label">Remitente</div>
-                    <div class="detalle-value">${paquete.remitente}</div>
-                </div>
-                <div class="detalle-item">
-                    <div class="detalle-label">Destinatario</div>
-                    <div class="detalle-value">${paquete.destinatario}</div>
-                </div>
-                <div class="detalle-item">
-                    <div class="detalle-label">Teléfono</div>
-                    <div class="detalle-value">${paquete.telefonoDestinatario}</div>
-                </div>
-                <div class="detalle-item">
-                    <div class="detalle-label">Dirección</div>
-                    <div class="detalle-value">${paquete.direccion}</div>
-                </div>
-                <div class="detalle-item">
-                    <div class="detalle-label">Zona</div>
-                    <div class="detalle-value">${paquete.zona.toUpperCase()}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="detalle-section">
-            <h3>Detalles del Envío</h3>
-            <div class="detalle-grid">
-                <div class="detalle-item">
-                    <div class="detalle-label">Valor</div>
-                    <div class="detalle-value">${formatCurrency(paquete.valor)}</div>
-                </div>
-                <div class="detalle-item">
-                    <div class="detalle-label">Peso</div>
-                    <div class="detalle-value">${paquete.peso} kg</div>
-                </div>
-                <div class="detalle-item">
-                    <div class="detalle-label">Mensajero</div>
-                    <div class="detalle-value">${paquete.mensajero || 'Sin asignar'}</div>
-                </div>
-            </div>
-            ${paquete.observaciones ? `
-                <div class="detalle-item" style="margin-top: 15px;">
-                    <div class="detalle-label">Observaciones</div>
-                    <div class="detalle-value">${paquete.observaciones}</div>
-                </div>
-            ` : ''}
-        </div>
-
-        <div class="detalle-section">
-            <h3>Historial de Cambios</h3>
-            <div class="historial-timeline">
-                ${historial.map(h => `
-                    <div class="historial-item">
-                        <div class="historial-time">${formatDateTime(h.fecha)}</div>
-                        <div class="historial-text">
-                            <strong>${formatEstado(h.estado)}</strong> - ${h.descripcion}
-                            <br><small>Por: ${h.usuario}</small>
+                let html = `
+                    <div class="detalle-section">
+                        <h3>📦 Información del Paquete</h3>
+                        <div class="detalle-grid">
+                            <div class="detalle-item">
+                                <div class="detalle-label">Número de Guía</div>
+                                <div class="detalle-value" style="font-size: 1.2em; color: #667eea;">${info.numero_guia}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Estado Actual</div>
+                                <div class="detalle-value"><span class="badge badge-${badgeClass}">${info.estado.toUpperCase()}</span></div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Fecha de Ingreso</div>
+                                <div class="detalle-value">${info.fecha_creacion}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Remitente</div>
+                                <div class="detalle-value">${info.remitente || 'N/A'}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Destinatario</div>
+                                <div class="detalle-value">${info.destinatario_nombre}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Teléfono Destinatario</div>
+                                <div class="detalle-value">${info.destinatario_telefono}</div>
+                            </div>
+                            <div class="detalle-item" style="grid-column: span 2;">
+                                <div class="detalle-label">Dirección de Entrega</div>
+                                <div class="detalle-value">${info.direccion_destino}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Mensajero Asignado</div>
+                                <div class="detalle-value">${info.mensajero || '<span class="text-muted">Sin asignar</span>'}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Tipo de Paquete</div>
+                                <div class="detalle-value">${info.tipo_paquete}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Contenido</div>
+                                <div class="detalle-value">${info.descripcion_contenido || '-'}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Costo Envío</div>
+                                <div class="detalle-value">${currency.format(info.costo_envio)}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Valor a Recaudar</div>
+                                <div class="detalle-value" style="color: ${info.recaudo_esperado > 0 ? '#dc3545' : '#333'}">
+                                    ${currency.format(info.recaudo_esperado || 0)}
+                                </div>
+                            </div>
+                            <div class="detalle-item" style="grid-column: span 2;">
+                                <div class="detalle-label">Instrucciones / Observaciones</div>
+                                <div class="detalle-value">${info.instrucciones_entrega || 'Ninguna'}</div>
+                            </div>
                         </div>
                     </div>
-                `).join('')}
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('detallesPaquete').innerHTML = detallesHTML;
-    openModal('modalDetalles');
+
+                    <div class="detalle-section" style="margin-top: 20px;">
+                        <h3>🕒 Historial de Movimientos</h3>
+                        <div class="timeline-container" style="max-height: 300px; overflow-y: auto; padding-right: 10px;">
+                `;
+
+                if (historial.length === 0) {
+                    html += '<p style="text-align:center; color: #999;">No hay historial registrado para este paquete.</p>';
+                } else {
+                    historial.forEach(item => {
+                        html += `
+                            <div class="timeline-item" style="border-left: 2px solid #ddd; padding-left: 15px; margin-bottom: 15px; position: relative;">
+                                <div style="position: absolute; left: -21px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #667eea; border: 2px solid white;"></div>
+                                <div class="text-muted small">${item.fecha}</div>
+                                <strong>${item.estado.toUpperCase()}</strong>
+                                <p class="mb-0" style="font-size: 0.9em;">${item.descripcion || ''}</p>
+                                <small class="text-muted">Usuario: ${item.usuario || 'Sistema'}</small>
+                            </div>
+                        `;
+                    });
+                }
+                html += '</div></div>';
+                container.innerHTML = html;
+            })
+            .catch(err => {
+                console.error(err);
+                container.innerHTML = '<p class="text-danger">Error al cargar datos.</p>';
+            });
+    }
 }
 
-// Editar paquete
-function editarPaquete(id) {
-    const paquete = paquetes.find(p => p.id === id);
-    if (!paquete) return;
+function abrirModalAsignar(id, guia) {
+    const modal = document.getElementById('modalAsignar');
+    const inputId = document.getElementById('asignarGuia'); // Usamos este input oculto o visible para guardar el ID
     
-    currentPaquete = paquete;
-    
-    document.getElementById('editGuia').value = paquete.guia;
-    document.getElementById('editRemitente').value = paquete.remitente;
-    document.getElementById('editDestinatario').value = paquete.destinatario;
-    document.getElementById('editTelefono').value = paquete.telefonoDestinatario;
-    document.getElementById('editDireccion').value = paquete.direccion;
-    document.getElementById('editZona').value = paquete.zona;
-    document.getElementById('editTipo').value = paquete.tipo;
-    document.getElementById('editValor').value = paquete.valor;
-    document.getElementById('editPeso').value = paquete.peso;
-    document.getElementById('editObservaciones').value = paquete.observaciones;
-    
-    openModal('modalEditar');
-}
-
-// Manejar edición de paquete (AJAX)
-async function handleEditarPaquete(e) {
-    e.preventDefault();
-    
-    if (!currentPaquete) return;
-    
-    const formData = new FormData();
-    formData.append('action', 'update_paquete');
-    formData.append('id', currentPaquete.id);
-    formData.append('destinatario', document.getElementById('editDestinatario').value);
-    formData.append('telefono', document.getElementById('editTelefono').value);
-    formData.append('direccion', document.getElementById('editDireccion').value);
-    formData.append('zona', document.getElementById('editZona').value);
-    formData.append('tipo', document.getElementById('editTipo').value);
-    formData.append('valor', document.getElementById('editValor').value);
-    formData.append('peso', document.getElementById('editPeso').value);
-    formData.append('observaciones', document.getElementById('editObservaciones').value);
-
-    try {
-        const response = await fetch('../../controller/paquetesAdminController.php', {
-            method: 'POST',
-            body: formData
-        });
-        const result = await response.json();
-        
-        if (result.success) {
-            closeModal('modalEditar');
-            applyFilters(); // Recargar tabla
-            showNotification('Paquete actualizado correctamente', 'success');
-        } else {
-            showNotification('Error: ' + result.message, 'error');
+    if (modal) {
+        // Guardamos el ID del paquete en el formulario (puedes usar un data-attribute o un input hidden)
+        // Si tu HTML tiene un input para mostrar la guía, úsalo, si no, crea un hidden dinámicamente
+        if (!document.getElementById('hiddenPaqueteId')) {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.id = 'hiddenPaqueteId';
+            hidden.name = 'paquete_id';
+            document.getElementById('formAsignarMensajero').appendChild(hidden);
         }
-    } catch (error) {
-        showNotification('Error de conexión', 'error');
-    }
-}
-
-// Asignar mensajero
-function asignarMensajero(id) {
-    const paquete = paquetes.find(p => p.id === id);
-    if (!paquete) return;
-    
-    currentPaquete = paquete;
-    document.getElementById('asignarGuia').value = paquete.guia;
-    document.getElementById('asignarMensajero').value = '';
-    document.getElementById('mensajeroInfo').classList.remove('active');
-    
-    openModal('modalAsignar');
-}
-
-// Mostrar información del mensajero
-function mostrarInfoMensajero() {
-    const select = document.getElementById('asignarMensajero');
-    const option = select.options[select.selectedIndex];
-    const infoCard = document.getElementById('mensajeroInfo');
-    
-    if (select.value) {
-        const disponible = option.dataset.disponible === 'true';
-        const tareas = option.dataset.tareas;
-        const zona = option.dataset.zona;
+        document.getElementById('hiddenPaqueteId').value = id;
         
-        infoCard.innerHTML = `
-            <h4>${option.text.split(' - ')[0]}</h4>
-            <p><strong>Estado:</strong> ${disponible ? '🟢 Disponible' : '🔴 Ocupado'}</p>
-            <p><strong>Tareas activas:</strong> ${tareas}</p>
-            <p><strong>Zona asignada:</strong> ${zona.toUpperCase()}</p>
-        `;
-        infoCard.classList.add('active');
-    } else {
-        infoCard.classList.remove('active');
+        if (inputId) inputId.value = guia; // Mostrar número de guía
+        
+        // Resetear búsqueda y selección en el modal
+        document.getElementById('buscarMensajeroInput').value = '';
+        document.getElementById('asignarMensajero').value = ''; // Limpiar ID seleccionado
+        
+        if (todosLosMensajeros.length === 0) {
+            cargarFiltros(); // Intentar cargar de nuevo si la lista está vacía
+        } else {
+            renderizarListaMensajeros(todosLosMensajeros); // Mostrar todos de nuevo
+        }
+        
+        document.querySelectorAll('.mensajero-item').forEach(el => el.classList.remove('selected'));
+        
+        modal.style.display = 'flex';
     }
 }
 
-// Manejar asignación de mensajero (AJAX)
-async function handleAsignarMensajero(e) {
-    e.preventDefault();
-    
-    if (!currentPaquete) return;
-    
+function asignarMensajeroAction() {
+    const paqueteId = document.getElementById('hiddenPaqueteId').value;
     const mensajeroId = document.getElementById('asignarMensajero').value;
-    
+
+    if (!mensajeroId) {
+        alert('Por favor seleccione un mensajero');
+        return;
+    }
+
     const formData = new FormData();
-    formData.append('action', 'assign_mensajero');
-    formData.append('paquete_id', currentPaquete.id);
+    formData.append('paquete_id', paqueteId);
     formData.append('mensajero_id', mensajeroId);
 
-    try {
-        const response = await fetch('../../controller/paquetesAdminController.php', {
-            method: 'POST',
-            body: formData
-        });
-        const result = await response.json();
-        
-        if (result.success) {
-            closeModal('modalAsignar');
-            applyFilters(); // Recargar tabla
-            showNotification('Mensajero asignado correctamente', 'success');
+    fetch('../../controller/paquetesAdminController.php?action=asignar', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Mensajero asignado correctamente');
+            document.getElementById('modalAsignar').style.display = 'none';
+            document.querySelector('.btn-close').click(); // Truco para recargar o llamar a listarPaquetes()
+            location.reload(); // Recargar para ver cambios
         } else {
-            showNotification('Error: ' + result.message, 'error');
+            alert('Error al asignar: ' + (data.error || 'Desconocido'));
         }
-    } catch (error) {
-        showNotification('Error de conexión', 'error');
+    })
+    .catch(err => console.error(err));
+}
+
+// Función global para seleccionar un mensajero de la lista
+window.seleccionarMensajero = function(id, nombre) {
+    // Actualizar input oculto
+    document.getElementById('asignarMensajero').value = id;
+    
+    // Actualizar input visual de búsqueda con el nombre seleccionado
+    document.getElementById('buscarMensajeroInput').value = nombre;
+    
+    // Resaltar visualmente
+    document.querySelectorAll('.mensajero-item').forEach(el => el.classList.remove('selected'));
+    const item = document.querySelector(`.mensajero-item[data-id="${id}"]`);
+    if (item) item.classList.add('selected');
+};
+
+// Utilidad para cerrar modales
+function setupModalClosers() {
+    document.querySelectorAll('.btn-close').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.closest('.modal').style.display = 'none';
+        });
+    });
+    
+    // Cerrar al hacer clic fuera del modal
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
     }
+}
+
+function closeModal(name) {
+    const modal = document.getElementById(`modal${name.charAt(0).toUpperCase() + name.slice(1)}`);
+    if (modal) modal.style.display = 'none';
 }

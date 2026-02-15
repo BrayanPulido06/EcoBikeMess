@@ -23,7 +23,7 @@ session_start();
                 <p>Administradores y Mensajeros del Sistema</p>
             </div>
             <div class="header-actions">
-                <span class="user-badge">Sesión: <strong id="currentUser">Super Admin</strong></span>
+                <span class="user-badge">Sesión: <strong id="currentUserDisplay"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Usuario'); ?></strong></span>
             </div>
         </header>
 
@@ -34,6 +34,9 @@ session_start();
             </button>
             <button class="tab-btn" data-tab="mensajeros">
                 🚴 Mensajeros
+            </button>
+            <button class="tab-btn" data-tab="clientes">
+                🏢 Clientes
             </button>
             <button class="tab-btn" data-tab="logs">
                 📊 Logs de Actividad
@@ -188,6 +191,70 @@ session_start();
                             </tr>
                         </thead>
                         <tbody id="tablaMensajerosBody">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Clientes -->
+        <div class="tab-content" id="tab-clientes">
+            <div class="section-actions">
+                <button class="btn btn-info" id="btnReporteClientes">
+                    📊 Reporte de Clientes
+                </button>
+            </div>
+
+            <!-- Estadísticas de Clientes -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🏢</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Clientes</span>
+                        <span class="stat-value" id="totalClientes">0</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Activos</span>
+                        <span class="stat-value" id="clientesActivos">0</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Nuevos este mes</span>
+                        <span class="stat-value" id="clientesNuevos">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Clientes -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h2>Clientes Registrados</h2>
+                    <div class="search-box">
+                        <input type="text" id="searchCliente" placeholder="🔍 Buscar cliente...">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="tablaClientes">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Emprendimiento</th>
+                                <th>Contacto</th>
+                                <th>Teléfono</th>
+                                <th>Dirección</th>
+                                <th>Estado</th>
+                                <th>Fecha Registro</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaClientesBody">
                             <!-- Se llena dinámicamente -->
                         </tbody>
                     </table>
@@ -377,6 +444,14 @@ session_start();
 
     </div>
 
+    <!-- Inyectar datos de sesión para JS -->
+    <script>
+        window.serverUser = {
+            id: <?php echo $_SESSION['user_id'] ?? 0; ?>,
+            rol: '<?php echo $_SESSION['user_role'] ?? 'guest'; ?>',
+            nombre: '<?php echo $_SESSION['user_name'] ?? 'Usuario'; ?>'
+        };
+    </script>
     <script src="../../public/js/añadirAdmin.js"></script>
 </body>
 </html>

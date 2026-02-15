@@ -4,6 +4,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let scannedQRs = [];
     let sessionStartTime = new Date();
     let sessionTimer;
+    let html5QrCode = null; // Variable para la instancia del escáner
+    let lastScannedCode = null;
+    let lastScannedTime = 0;
+    let isFlashOn = false;
+    let ubicacionActual = null;
+    let watchId = null;
     
     // Datos de ejemplo
     const statsData = {
@@ -109,28 +115,155 @@ document.addEventListener('DOMContentLoaded', function() {
     
     btnScanQR.addEventListener('click', function() {
         scanModal.classList.add('active');
-        
-        // Simular escaneo automático después de 2 segundos
-        setTimeout(() => {
-            const randomCode = 'ECO-2024-' + Math.floor(10000 + Math.random() * 90000);
-            addScannedQR(randomCode);
-            scanModal.classList.remove('active');
-        }, 2000);
+        startScanning();
     });
     
     closeScanModal.addEventListener('click', function() {
-        scanModal.classList.remove('active');
+        stopScanning().then(() => {
+            scanModal.classList.remove('active');
+        });
     });
+
+    // ============================================
+    // LÓGICA DE ESCANEO (HTML5-QRCODE)
+    // ============================================
+
+    function startScanning() {
+        // Limpiar cualquier instancia previa o mensaje de error
+        document.getElementById('reader').innerHTML = '';
+        document.getElementById('modalQrCounter').textContent = scannedQRs.length;
+        
+        // Resetear variables de control
+        lastScannedCode = null;
+        isFlashOn = false;
+        const btnFlash = document.getElementById('btnFlash');
+        if(btnFlash) btnFlash.style.display = 'none';
+        
+        html5QrCode = new Html5Qrcode("reader");
+        // fps: 10 para escaneo rápido, qrbox responsive
+        const config = { 
+            fps: 10, 
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+        };
+        
+        // Usar 'environment' para forzar cámara trasera
+        html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
+        .then(() => {
+            // Intentar habilitar botón de flash si el dispositivo lo soporta
+            if(btnFlash) {
+                btnFlash.style.display = 'block';
+                btnFlash.onclick = toggleFlash;
+            }
+        })
+        .catch(err => {
+            console.error("Error iniciando cámara:", err);
+            document.getElementById('reader').innerHTML = 
+                '<p style="color:#dc3545; padding:1rem;">No se pudo acceder a la cámara. Por favor verifica los permisos.</p>';
+        });
+    }
+
+    function stopScanning() {
+        if (html5QrCode && html5QrCode.isScanning) {
+            // Apagar flash si estaba encendido
+            if (isFlashOn) toggleFlash();
+            return html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+                html5QrCode = null;
+            }).catch(err => console.error("Error al detener:", err));
+        }
+        return Promise.resolve();
+    }
+    
+    function toggleFlash() {
+        if (html5QrCode) {
+            isFlashOn = !isFlashOn;
+            html5QrCode.applyVideoConstraints({
+                advanced: [{ torch: isFlashOn }]
+            }).catch(err => {
+                console.warn("Flash no soportado o error al cambiar:", err);
+                isFlashOn = !isFlashOn; // Revertir estado si falla
+            });
+        }
+    }
+
+    // Generar sonido de confirmación (Beep)
+    function playScanSound(type = 'success') {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            if (type === 'success') {
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime); // 1000Hz
+                oscillator.frequency.exponentialRampToValueAtTime(500, audioCtx.currentTime + 0.1);
+            } else {
+                oscillator.type = 'sawtooth'; // Sonido más áspero para error
+                oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+            }
+            
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.2);
+        } catch (e) {
+            console.error("AudioContext no soportado", e);
+        }
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        const now = Date.now();
+        // Evitar lecturas múltiples del mismo código en menos de 2 segundos
+        if (decodedText === lastScannedCode && (now - lastScannedTime) < 2000) {
+            return;
+        }
+        lastScannedCode = decodedText;
+        lastScannedTime = now;
+
+        // 1. Validar formato del sistema
+        if (!decodedText.startsWith('ECO-')) {
+            playScanSound('error');
+            showToast('Código inválido. Debe iniciar con ECO-', 'error');
+            return;
+        }
+
+        // 2. Verificar duplicados
+        if (scannedQRs.find(qr => qr.code === decodedText)) {
+            playScanSound('error');
+            showToast('Este paquete ya fue escaneado', 'warning');
+            return;
+        }
+
+        // 3. Éxito: Agregar y continuar escaneando (No cerramos el modal)
+        playScanSound('success');
+        addScannedQR(decodedText);
+        
+        // Actualizar contador dentro del modal
+        const modalCounter = document.getElementById('modalQrCounter');
+        if (modalCounter) modalCounter.textContent = scannedQRs.length;
+    }
+
+    function onScanFailure(error) {
+        // Se ejecuta continuamente mientras busca QR, no es necesario loguear todo
+        // console.warn(`Code scan error = ${error}`);
+    }
     
     // ============================================
     // CÓDIGO MANUAL
     // ============================================
     
     btnManualCode.addEventListener('click', function() {
-        scanModal.classList.remove('active');
-        manualModal.classList.add('active');
-        manualCodeInput.value = '';
-        document.getElementById('manualError').textContent = '';
+        stopScanning().then(() => {
+            scanModal.classList.remove('active');
+            manualModal.classList.add('active');
+            manualCodeInput.value = '';
+            document.getElementById('manualError').textContent = '';
+        });
     });
     
     closeManualModal.addEventListener('click', function() {
@@ -344,7 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (collection) {
             showToast(`Iniciando recolección ${collection.guia}`, 'success');
             // Redirigir a página de recolección
-            // window.location.href = `recolectar.php?id=${id}`;
+            window.location.href = `recoleccionesMensajero.php`;
         }
     };
     
@@ -424,6 +557,62 @@ document.addEventListener('DOMContentLoaded', function() {
             badge.textContent = currentCount + 1;
         }, 5000);
     }
+
+    // ============================================
+    // GEOLOCALIZACIÓN Y PERMISOS (AL INICIO)
+    // ============================================
+    
+    function solicitarPermisosGPS() {
+        if ('geolocation' in navigator) {
+            // Opciones para alta precisión
+            const opciones = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
+            
+            // 1. Obtener ubicación inmediata para forzar el prompt de permisos
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    ubicacionActual = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    console.log('📍 Ubicación inicial obtenida:', ubicacionActual);
+                    
+                    // Actualizar estado visual si existe el indicador
+                    const statusDot = document.querySelector('.status-dot');
+                    const statusText = document.querySelector('.status-text');
+                    if(statusDot && statusText) {
+                        statusDot.style.background = '#28a745'; // Verde
+                        statusText.textContent = 'En línea - GPS Activo';
+                    }
+                    
+                    // 2. Iniciar tracking continuo
+                    iniciarTrackingGPS();
+                },
+                error => {
+                    console.error('Error GPS:', error);
+                    showToast('⚠️ Por favor activa la ubicación para recibir pedidos', 'warning');
+                },
+                opciones
+            );
+        }
+    }
+
+    function iniciarTrackingGPS() {
+        if (watchId) return; // Ya está activo
+        
+        watchId = navigator.geolocation.watchPosition(
+            position => {
+                // Aquí podrías enviar la ubicación al servidor en segundo plano
+                // updateLocationOnServer(position.coords);
+                console.log('📡 GPS Actualizado');
+            },
+            error => console.warn('Pérdida de señal GPS'),
+            { enableHighAccuracy: true }
+        );
+    }
     
     // ============================================
     // INICIALIZAR
@@ -433,8 +622,9 @@ document.addEventListener('DOMContentLoaded', function() {
         updateStats();
         renderCollections();
         renderDeliveries();
-        renderScannedList();
+        renderScannedList(); // LocalStorage o sesión actual
         simulateNotifications();
+        solicitarPermisosGPS(); // Solicitar GPS apenas carga el dashboard
         
         // Animación de entrada
         const cards = document.querySelectorAll('.stat-card, .qr-counter-card, .collections-section');
@@ -453,7 +643,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cerrar modales al hacer clic fuera
     scanModal.addEventListener('click', function(e) {
         if (e.target === scanModal) {
-            scanModal.classList.remove('active');
+            stopScanning().then(() => {
+                scanModal.classList.remove('active');
+            });
         }
     });
     

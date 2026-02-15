@@ -1,5 +1,5 @@
 <?php
-require_once 'conexionGlobal.php';
+require_once __DIR__ . '/conexionGlobal.php';
 
 class InicioAdminModel {
     private $conn;
@@ -72,7 +72,7 @@ class InicioAdminModel {
             $stats['mensajeros_activos'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 
             // 6. Ingresos del Día (Suma de costo_total de paquetes creados hoy)
-            $sql = "SELECT SUM(costo_total) as total FROM paquetes WHERE DATE(fecha_creacion) = :hoy";
+            $sql = "SELECT SUM(costo_envio) as total FROM paquetes WHERE DATE(fecha_creacion) = :hoy";
             $stmt = $this->conn->prepare($sql);
             $stmt->execute([':hoy' => $hoy]);
             $stats['ingresos_dia'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
@@ -173,6 +173,34 @@ class InicioAdminModel {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
         return [];
+    }
+
+    // Método agregado para soportar la gráfica del dashboard
+    public function obtenerDatosGraficaSemana() {
+        $data = [
+            'labels' => [],
+            'entregados' => [],
+            'creados' => []
+        ];
+
+        // Generar últimos 7 días
+        for ($i = 6; $i >= 0; $i--) {
+            $fecha = date('Y-m-d', strtotime("-$i days"));
+            $data['labels'][] = date('d/m', strtotime($fecha));
+
+            // Creados ese día
+            $sql1 = "SELECT COUNT(*) FROM paquetes WHERE DATE(fecha_creacion) = :fecha";
+            $stmt1 = $this->conn->prepare($sql1);
+            $stmt1->execute([':fecha' => $fecha]);
+            $data['creados'][] = $stmt1->fetchColumn();
+
+            // Entregados ese día (basado en fecha de creación y estado actual, ya que no hay fecha_entrega explícita en el insert)
+            $sql2 = "SELECT COUNT(*) FROM paquetes WHERE estado = 'entregado' AND DATE(fecha_creacion) = :fecha";
+            $stmt2 = $this->conn->prepare($sql2);
+            $stmt2->execute([':fecha' => $fecha]);
+            $data['entregados'][] = $stmt2->fetchColumn();
+        }
+        return $data;
     }
 }
 ?>

@@ -26,20 +26,6 @@
             </li>
             
             <li class="nav-item">
-                <a href="/ecobikemess/views/Clientes/misPedidos.php" class="nav-link">
-                    <span class="nav-icon">📋</span>
-                    <span class="nav-text">Mis Pedidos</span>
-                </a>
-            </li>
-            
-            <li class="nav-item">
-                <a href="/ecobikemess/views/Clientes/seguimiento.php" class="nav-link">
-                    <span class="nav-icon">🗺️</span>
-                    <span class="nav-text">Seguimiento</span>
-                </a>
-            </li>
-            
-            <li class="nav-item">
                 <a href="/ecobikemess/views/Clientes/facturacion.php" class="nav-link">
                     <span class="nav-icon">💰</span>
                     <span class="nav-text">Facturación</span>

@@ -92,6 +92,24 @@ $remitente_data = [
         .status-pending { color: #f0ad4e; font-weight: bold; }
         .status-success { color: #28a745; font-weight: bold; }
         .status-error { color: #dc3545; font-weight: bold; }
+        
+        /* Estilos para tarjetas de selección de recaudo */
+        .radio-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fff;
+        }
+        .radio-card:hover { border-color: #b0b0b0; background: #f9f9f9; }
+        .radio-card.selected { border-color: #28a745; background: #e8f5e9; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15); }
+        .radio-card input[type="radio"] { transform: scale(1.5); accent-color: #28a745; margin: 0; }
+        .radio-card-content strong { display: block; font-size: 1.1rem; color: #333; margin-bottom: 2px; }
+        .radio-card-content small { color: #666; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -329,6 +347,30 @@ $remitente_data = [
                                     <span>Total a pagar:</span>
                                     <span id="costoTotal">$0</span>
                                 </div>
+                                
+                                <!-- Opción para sumar envío al recaudo -->
+                                <div class="form-group" id="container_sumar_envio" style="display: none; margin-top: 25px; border-top: 2px dashed #eee; padding-top: 20px;">
+                                    <label style="font-weight: bold; display: block; margin-bottom: 15px; font-size: 1.1rem; color: #2c3e50;">¿Desea sumar el costo del envío al valor del recaudo? *</label>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                        <label class="radio-card">
+                                            <input type="radio" name="sumar_envio_recaudo" value="si" required>
+                                            <div class="radio-card-content">
+                                                <strong>SÍ, SUMAR</strong>
+                                                <small>Cobrar envío al destinatario</small>
+                                            </div>
+                                        </label>
+                                        <label class="radio-card">
+                                            <input type="radio" name="sumar_envio_recaudo" value="no" required>
+                                            <div class="radio-card-content">
+                                                <strong>NO, MANTENER</strong>
+                                                <small>Cobrar solo el valor del producto</small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div id="preview_total_recaudo" style="margin-top: 15px; font-weight: bold; color: #155724; background-color: #d4edda; border-color: #c3e6cb; padding: 12px; border-radius: 6px; text-align: center; font-size: 1.1rem; display: none;"></div>
+                                    <span class="error-message"></span>
+                                </div>
+
                                 <!-- Campo oculto para enviar el costo total -->
                                 <input type="hidden" name="costo_total" id="costoTotalHidden" value="0">
                                 <!-- Campo oculto para enviar el número de guía generado en JS -->

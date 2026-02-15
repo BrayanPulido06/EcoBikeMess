@@ -144,6 +144,30 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     const logoutLink = document.querySelector('.dropdown-item.logout');
     if (logoutLink) {
+        // Inyectar HTML del modal personalizado si no existe
+        if (!document.getElementById('customLogoutModal')) {
+            const modalHtml = `
+                <div id="customLogoutModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;">
+                    <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transform: translateY(20px); transition: transform 0.3s ease;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🚪</div>
+                        <h3 style="margin: 0 0 10px; color: #2c3e50; font-size: 1.5rem;">¿Cerrar Sesión?</h3>
+                        <p style="color: #666; margin-bottom: 25px; font-size: 1rem;">¿Estás seguro de que deseas salir del sistema?</p>
+                        <div style="display: flex; gap: 15px; justify-content: center;">
+                            <button id="btnCancelLogout" style="padding: 10px 20px; border: 1px solid #ddd; background: #f8f9fa; color: #333; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s;">Cancelar</button>
+                            <button id="btnConfirmLogout" style="padding: 10px 20px; border: none; background: #dc3545; color: white; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 5px rgba(220, 53, 69, 0.3);">Sí, Cerrar Sesión</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        const modal = document.getElementById('customLogoutModal');
+        const modalContent = modal.querySelector('div');
+        const btnCancel = document.getElementById('btnCancelLogout');
+        const btnConfirm = document.getElementById('btnConfirmLogout');
+        let targetUrl = '';
+
         logoutLink.addEventListener('click', function(e) {
             e.preventDefault();
             
@@ -151,6 +175,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Aquí iría la lógica de logout
                 window.location.href = this.getAttribute('href');
             }
+            targetUrl = this.getAttribute('href');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                modalContent.style.transform = 'translateY(0)';
+            }, 10);
+        });
+
+        const closeModal = () => {
+            modal.style.opacity = '0';
+            modalContent.style.transform = 'translateY(20px)';
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        };
+
+        btnCancel.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        
+        btnConfirm.addEventListener('click', function() {
+            window.location.href = targetUrl;
         });
     }
     

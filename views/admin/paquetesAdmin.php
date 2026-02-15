@@ -11,8 +11,62 @@ session_start();
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/paquetesAdmin.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        /* Estilos para centrar modales perfectamente */
+        .modal {
+            display: none; /* Oculto por defecto */
+            position: fixed;
+            z-index: 1050;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: rgba(0,0,0,0.5);
+            /* Flexbox para centrado */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            margin: 0; /* Quitar márgenes automáticos */
+            max-height: 90vh; /* Evitar que sea más alto que la pantalla */
+            overflow-y: auto; /* Scroll interno si es necesario */
+        }
+        /* Estilos para la lista de mensajeros con búsqueda */
+        .mensajeros-list-container {
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 5px;
+        }
+        .mensajero-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .mensajero-item:hover { background-color: #f8f9fa; }
+        .mensajero-item.selected { background-color: #e8f0fe; color: #0d6efd; font-weight: bold; }
+        
+        /* Estilos para badges de estado */
+        .badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: white;
+            display: inline-block;
+            min-width: 80px;
+            text-align: center;
+        }
+        .badge-success { background-color: #28a745; } /* Verde - Entregado */
+        .badge-danger { background-color: #dc3545; }  /* Rojo - Cancelado */
+        .badge-warning { background-color: #ffc107; color: #333; } /* Amarillo - Pendiente */
+        .badge-primary { background-color: #007bff; } /* Azul - En tránsito */
+        .badge-info { background-color: #17a2b8; }    /* Cian - Asignado */
+        .badge-secondary { background-color: #6c757d; } /* Gris - Default */
+        .badge-dark { background-color: #343a40; }    /* Oscuro - Devuelto */
+    </style>
 </head>
 <body>
     <?php include '../layouts/adminNavbar.php'; ?>
@@ -29,53 +83,11 @@ session_start();
                 <button class="btn btn-secondary" id="btnExportarExcel">
                     📊 Exportar Excel
                 </button>
-                <button class="btn btn-secondary" id="btnExportarPDF">
-                    📄 Exportar PDF
-                </button>
                 <button class="btn btn-primary" id="btnNuevoPaquete">
                     + Nuevo Paquete
                 </button>
             </div>
         </header>
-
-        <!-- Estadísticas Rápidas -->
-        <div class="stats-quick">
-            <div class="stat-card">
-                <div class="stat-icon">📦</div>
-                <div class="stat-info">
-                    <span class="stat-label">Total Paquetes</span>
-                    <span class="stat-value" id="totalPaquetes">0</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">⏳</div>
-                <div class="stat-info">
-                    <span class="stat-label">Pendientes</span>
-                    <span class="stat-value" id="pendientes">0</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🚚</div>
-                <div class="stat-info">
-                    <span class="stat-label">En Tránsito</span>
-                    <span class="stat-value" id="enTransito">0</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">✅</div>
-                <div class="stat-info">
-                    <span class="stat-label">Entregados</span>
-                    <span class="stat-value" id="entregados">0</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">⚠️</div>
-                <div class="stat-info">
-                    <span class="stat-label">Con Problemas</span>
-                    <span class="stat-value" id="conProblemas">0</span>
-                </div>
-            </div>
-        </div>
 
         <!-- Filtros y Búsqueda -->
         <div class="filters-section">
@@ -111,30 +123,9 @@ session_start();
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Zona</label>
-                    <select id="filtroZona" class="form-control">
-                        <option value="">Todas las zonas</option>
-                        <option value="norte">Norte</option>
-                        <option value="sur">Sur</option>
-                        <option value="este">Este</option>
-                        <option value="oeste">Oeste</option>
-                        <option value="centro">Centro</option>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label>Mensajero</label>
                     <select id="filtroMensajero" class="form-control">
                         <option value="">Todos los mensajeros</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Tipo de Paquete</label>
-                    <select id="filtroTipo" class="form-control">
-                        <option value="">Todos los tipos</option>
-                        <option value="documento">Documento</option>
-                        <option value="paquete">Paquete</option>
-                        <option value="sobre">Sobre</option>
-                        <option value="caja">Caja</option>
                     </select>
                 </div>
                 <div class="form-group align-end">
@@ -158,6 +149,7 @@ session_start();
                 <table id="tablaPaquetes">
                     <thead>
                         <tr>
+                            <th><input type="checkbox" id="selectAll"></th>
                             <th class="sortable" data-column="guia">N° Guía <span class="sort-icon">↕</span></th>
                             <th class="sortable" data-column="fecha">Fecha/Hora <span class="sort-icon">↕</span></th>
                             <th>Remitente</th>
@@ -166,6 +158,7 @@ session_start();
                             <th class="sortable" data-column="estado">Estado <span class="sort-icon">↕</span></th>
                             <th>Mensajero</th>
                             <th class="sortable" data-column="valor">Valor <span class="sort-icon">↕</span></th>
+                            <th>Recaudo</th>
                             <th>Tipo</th>
                             <th>Acciones</th>
                         </tr>
@@ -295,9 +288,9 @@ session_start();
                         </div>
                         <div class="form-group">
                             <label>Seleccionar Mensajero *</label>
-                            <select id="asignarMensajero" class="form-control" required>
-                                <option value="">Seleccione un mensajero</option>
-                            </select>
+                            <input type="text" id="buscarMensajeroInput" class="form-control" placeholder="Escriba para buscar mensajero...">
+                            <div id="listaMensajeros" class="mensajeros-list-container"></div>
+                            <input type="hidden" id="asignarMensajero" name="mensajero_id" required>
                         </div>
                         <div id="mensajeroInfo" class="mensajero-info-card"></div>
                         <div class="form-actions">

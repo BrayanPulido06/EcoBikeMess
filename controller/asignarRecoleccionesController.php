@@ -62,46 +62,32 @@ try {
             ]);
             break;
 
-        // Guardar nueva recolección
-        case 'crear':
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                throw new Exception('Método no permitido');
-            }
+        // Nuevo caso: Asignar mensajero
+        case 'asignar':
+            $ids = $_POST['ids_paquetes'];
+            $mensajeroId = $_POST['mensajero_id'];
             
-            // Recoger datos del formulario
-            $datos = [
-                'cliente_id' => $_POST['cliente'],
-                'contacto' => $_POST['contacto'],
-                'telefono' => $_POST['telefono'],
-                'direccion' => $_POST['direccion'],
-                'latitud' => $_POST['latitud'],
-                'longitud' => $_POST['longitud'],
-                'descripcion' => $_POST['descripcion'],
-                'cantidad' => $_POST['cantidad'],
-                'fechaRecoleccion' => $_POST['fechaRecoleccion'],
-                'horario' => $_POST['horario'],
-                'prioridad' => $_POST['prioridad'],
-                'observaciones' => $_POST['observaciones'],
-                'mensajero_id' => $_POST['mensajero_id'] ?? null,
-                'creado_por' => $_SESSION['user_id']
-            ];
-
-            if ($model->crearRecoleccion($datos)) {
-                echo json_encode(['success' => true, 'message' => 'Recolección creada exitosamente']);
+            if ($model->asignarMensajeroPaquetes($ids, $mensajeroId)) {
+                echo json_encode(['success' => true, 'message' => 'Mensajero asignado correctamente']);
             } else {
-                throw new Exception('Error al guardar la recolección en la base de datos');
+                throw new Exception('Error al asignar el mensajero');
             }
             break;
 
-        // Cancelar recolección
+        // Nuevo caso: Obtener detalles para el modal
+        case 'detalles':
+            $ids = $_GET['ids'] ?? '';
+            $detalles = $model->obtenerDetallesPaquetes($ids);
+            echo json_encode(['success' => true, 'data' => $detalles]);
+            break;
+
+        // Nuevo caso: Cancelar recolección (Eliminar de la vista)
         case 'cancelar':
-            $id = $_POST['id'];
-            $motivo = $_POST['motivo'];
-            
-            if ($model->cancelarRecoleccion($id, $motivo)) {
-                echo json_encode(['success' => true, 'message' => 'Recolección cancelada correctamente']);
+            $ids = $_POST['ids_paquetes'];
+            if ($model->cancelarPaquetes($ids)) {
+                echo json_encode(['success' => true, 'message' => 'Recolección eliminada de la vista correctamente']);
             } else {
-                throw new Exception('Error al cancelar la recolección');
+                throw new Exception('Error al eliminar la recolección');
             }
             break;
 

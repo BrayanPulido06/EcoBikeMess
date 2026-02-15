@@ -1,0 +1,1012 @@
+/* ============================================
+   VARIABLES Y RESET
+   ============================================ */
+:root {
+    --color-primario: #2563eb;
+    --color-primario-hover: #1d4ed8;
+    --color-secundario: #64748b;
+    --color-exito: #16a34a;
+    --color-exito-hover: #15803d;
+    --color-peligro: #dc2626;
+    --color-peligro-hover: #b91c1c;
+    --color-advertencia: #f59e0b;
+    --color-urgente: #ef4444;
+    
+    --color-fondo: #f8fafc;
+    --color-blanco: #ffffff;
+    --color-texto: #1e293b;
+    --color-texto-claro: #64748b;
+    --color-borde: #e2e8f0;
+    
+    --sombra-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --sombra-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --sombra-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    
+    --radio-sm: 0.375rem;
+    --radio-md: 0.5rem;
+    --radio-lg: 0.75rem;
+    --radio-xl: 1rem;
+    
+    --transicion: all 0.3s ease;
+    
+    /* Variables específicas para móvil */
+    --touch-target-min: 48px;
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    touch-action: pan-y;
+    /* Evitar zoom en inputs en iOS */
+    font-size: 16px;
+    /* Soportar notch en iPhone */
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
+}
+
+/* Prevenir zoom en inputs en iOS */
+input, select, textarea {
+    font-size: 16px;
+}
+
+/* Mejorar scroll en móviles */
+* {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================
+   HEADER - OPTIMIZADO PARA MÓVIL
+   ============================================ */
+.app-header {
+    background: linear-gradient(135deg, var(--color-primario) 0%, #1e40af 100%);
+    color: var(--color-blanco);
+    padding: 1rem;
+    padding-top: calc(1rem + var(--safe-area-top));
+    box-shadow: var(--sombra-md);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.app-header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-icon {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: var(--color-blanco);
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    border-radius: 50%;
+    font-size: 1.3rem;
+    cursor: pointer;
+    position: relative;
+    transition: var(--transicion);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Mejora para touch en móvil */
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+.btn-icon:active {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(0.95);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--color-peligro);
+    color: var(--color-blanco);
+    font-size: 0.7rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.user-info {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* ============================================
+   FILTROS
+   ============================================ */
+.filtros {
+    max-width: 1200px;
+    margin: 1rem auto;
+    padding: 0 1rem;
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+}
+
+.filtro-btn {
+    background: var(--color-blanco);
+    border: 2px solid var(--color-borde);
+    color: var(--color-texto);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radio-lg);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--transicion);
+}
+
+.filtro-btn:hover {
+    border-color: var(--color-primario);
+    color: var(--color-primario);
+}
+
+.filtro-btn.activo {
+    background: var(--color-primario);
+    color: var(--color-blanco);
+    border-color: var(--color-primario);
+}
+
+/* ============================================
+   LISTA DE RECOLECCIONES
+   ============================================ */
+.lista-recolecciones {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.tarjeta-recoleccion {
+    background: var(--color-blanco);
+    border-radius: var(--radio-xl);
+    padding: 1.25rem;
+    box-shadow: var(--sombra-sm);
+    border: 1px solid var(--color-borde);
+    cursor: pointer;
+    transition: var(--transicion);
+    /* Mejorar touch en móvil */
+    -webkit-touch-callout: none;
+    user-select: none;
+    min-height: var(--touch-target-min);
+}
+
+.tarjeta-recoleccion:active {
+    box-shadow: var(--sombra-md);
+    transform: scale(0.98);
+    background: var(--color-fondo);
+}
+
+.tarjeta-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.numero-orden {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-primario);
+}
+
+.badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radio-lg);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge.pendiente {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge.en_curso {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.badge.completada {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge.urgente {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge.normal {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.tarjeta-info {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--color-texto-claro);
+}
+
+.info-row strong {
+    color: var(--color-texto);
+}
+
+.distancia {
+    color: var(--color-primario);
+    font-weight: 600;
+}
+
+/* ============================================
+   VISTA DETALLE
+   ============================================ */
+.vista-detalle {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.detalle-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.btn-volver {
+    background: var(--color-blanco);
+    border: 1px solid var(--color-borde);
+    color: var(--color-primario);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radio-md);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transicion);
+}
+
+.btn-volver:hover {
+    background: var(--color-fondo);
+}
+
+.detalle-contenido {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.seccion-detalle {
+    background: var(--color-blanco);
+    border-radius: var(--radio-xl);
+    padding: 1.5rem;
+    box-shadow: var(--sombra-sm);
+    border: 1px solid var(--color-borde);
+}
+
+.seccion-detalle h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--color-texto);
+    font-weight: 600;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.info-label {
+    font-size: 0.85rem;
+    color: var(--color-texto-claro);
+    font-weight: 500;
+}
+
+.info-item > span:not(.info-label) {
+    font-size: 0.95rem;
+    color: var(--color-texto);
+}
+
+.ubicacion-info .direccion {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-texto);
+}
+
+.coordenadas {
+    font-size: 0.85rem;
+    color: var(--color-texto-claro);
+    margin-bottom: 1rem;
+}
+
+.cantidad-grande {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primario);
+}
+
+.instrucciones {
+    grid-column: 1 / -1;
+}
+
+.instrucciones p {
+    background: var(--color-fondo);
+    padding: 1rem;
+    border-radius: var(--radio-md);
+    margin-top: 0.5rem;
+    line-height: 1.6;
+}
+
+/* ============================================
+   BOTONES - OPTIMIZADOS PARA MÓVIL
+   ============================================ */
+.btn-primario,
+.btn-secundario,
+.btn-exito,
+.btn-peligro {
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: var(--radio-md);
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transicion);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    /* Touch targets mínimos */
+    min-height: var(--touch-target-min);
+    /* Mejorar feedback táctil */
+    -webkit-touch-callout: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.btn-primario {
+    background: var(--color-primario);
+    color: var(--color-blanco);
+}
+
+.btn-primario:active {
+    background: var(--color-primario-hover);
+    transform: scale(0.97);
+}
+
+.btn-secundario {
+    background: var(--color-blanco);
+    color: var(--color-texto);
+    border: 2px solid var(--color-borde);
+}
+
+.btn-secundario:active {
+    background: var(--color-fondo);
+    transform: scale(0.97);
+}
+
+.btn-exito {
+    background: var(--color-exito);
+    color: var(--color-blanco);
+}
+
+.btn-exito:active {
+    background: var(--color-exito-hover);
+    transform: scale(0.97);
+}
+
+.btn-peligro {
+    background: var(--color-peligro);
+    color: var(--color-blanco);
+}
+
+.btn-peligro:active {
+    background: var(--color-peligro-hover);
+    transform: scale(0.97);
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.btn-grande {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+.acciones-detalle {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* ============================================
+   FORMULARIO DE RECOLECCIÓN
+   ============================================ */
+.vista-formulario {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.formulario-header {
+    background: var(--color-blanco);
+    border-radius: var(--radio-xl);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    box-shadow: var(--sombra-sm);
+}
+
+.formulario-header h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.formulario-header p {
+    color: var(--color-texto-claro);
+}
+
+.formulario-recoleccion {
+    background: var(--color-blanco);
+    border-radius: var(--radio-xl);
+    padding: 1.5rem;
+    box-shadow: var(--sombra-sm);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--color-texto);
+}
+
+.obligatorio::after {
+    content: ' *';
+    color: var(--color-peligro);
+}
+
+.fotos-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.btn-foto {
+    background: var(--color-primario);
+    color: var(--color-blanco);
+    border: none;
+    padding: 1.25rem;
+    border-radius: var(--radio-md);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transicion);
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+.btn-foto:active {
+    background: var(--color-primario-hover);
+    transform: scale(0.98);
+}
+
+.previsualizacion-fotos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.foto-item {
+    position: relative;
+    border-radius: var(--radio-md);
+    overflow: hidden;
+    aspect-ratio: 1;
+    box-shadow: var(--sombra-sm);
+}
+
+.foto-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.foto-meta {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    color: var(--color-blanco);
+    padding: 0.5rem;
+    font-size: 0.7rem;
+}
+
+.btn-eliminar-foto {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--color-peligro);
+    color: var(--color-blanco);
+    border: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cantidad-control {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-cantidad {
+    background: var(--color-primario);
+    color: var(--color-blanco);
+    border: none;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    font-size: 1.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: var(--transicion);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+.btn-cantidad:active {
+    background: var(--color-primario-hover);
+    transform: scale(0.9);
+}
+
+#cantidadReal {
+    width: 6rem;
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    border: 2px solid var(--color-borde);
+    border-radius: var(--radio-md);
+    padding: 0.75rem;
+    /* Prevenir zoom en iOS */
+    font-size: max(16px, 1.8rem);
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+}
+
+#cantidadReal::-webkit-inner-spin-button,
+#cantidadReal::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.ayuda-texto {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--color-texto-claro);
+}
+
+.alerta {
+    padding: 1rem;
+    border-radius: var(--radio-md);
+    margin-bottom: 1rem;
+}
+
+.alerta-advertencia {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    color: #92400e;
+}
+
+textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid var(--color-borde);
+    border-radius: var(--radio-md);
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical;
+    transition: var(--transicion);
+    min-height: 120px;
+    /* Prevenir zoom en iOS */
+    font-size: max(16px, 1rem);
+}
+
+textarea:focus {
+    outline: none;
+    border-color: var(--color-primario);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    border: 2px solid var(--color-borde);
+    border-radius: var(--radio-md);
+    cursor: pointer;
+    transition: var(--transicion);
+    min-height: var(--touch-target-min);
+    font-size: 1.05rem;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+.radio-label:active {
+    border-color: var(--color-primario);
+    background: var(--color-fondo);
+    transform: scale(0.98);
+}
+
+.radio-label input[type="radio"] {
+    display: none;
+}
+
+.radio-custom {
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 2px solid var(--color-borde);
+    border-radius: 50%;
+    position: relative;
+    transition: var(--transicion);
+    flex-shrink: 0;
+}
+
+.radio-label input[type="radio"]:checked + .radio-custom {
+    border-color: var(--color-primario);
+}
+
+.radio-label input[type="radio"]:checked + .radio-custom::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1rem;
+    height: 1rem;
+    background: var(--color-primario);
+    border-radius: 50%;
+}
+
+.form-acciones {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.form-acciones button {
+    flex: 1;
+}
+
+/* ============================================
+   MODALES
+   ============================================ */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal-contenido {
+    background: var(--color-blanco);
+    border-radius: var(--radio-xl);
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: var(--sombra-lg);
+    text-align: center;
+}
+
+.modal-icono {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+
+.modal-icono.exito {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.modal-contenido h2 {
+    margin-bottom: 1rem;
+}
+
+.modal-acciones {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.modal-acciones button {
+    flex: 1;
+}
+
+/* ============================================
+   LOADING
+   ============================================ */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 4px solid var(--color-borde);
+    border-top-color: var(--color-primario);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-overlay p {
+    margin-top: 1rem;
+    color: var(--color-texto);
+    font-weight: 500;
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+.oculto {
+    display: none !important;
+}
+
+.vista-activa {
+    display: block;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .app-header h1 {
+        font-size: 1.2rem;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-acciones {
+        flex-direction: column;
+    }
+    
+    .modal-acciones {
+        flex-direction: column;
+    }
+    
+    .cantidad-control {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-content {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    .filtros {
+        justify-content: flex-start;
+    }
+    
+    .previsualizacion-fotos {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+}
+
+/* ============================================
+   OPTIMIZACIONES ESPECÍFICAS PARA MÓVIL
+   ============================================ */
+
+/* Pull to refresh - Prevenir en la app */
+body {
+    overscroll-behavior-y: contain;
+}
+
+/* Mejorar rendimiento de scroll */
+.lista-recolecciones,
+.detalle-contenido,
+.formulario-recoleccion {
+    will-change: transform;
+}
+
+/* Mejor experiencia táctil */
+.tarjeta-recoleccion,
+.btn-primario,
+.btn-secundario,
+.btn-exito,
+.btn-peligro,
+.filtro-btn,
+.radio-label {
+    -webkit-tap-highlight-color: rgba(37, 99, 235, 0.1);
+}
+
+/* Vibración en acciones importantes (se maneja en JS) */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* Modo oscuro automático */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-fondo: #0f172a;
+        --color-blanco: #1e293b;
+        --color-texto: #f1f5f9;
+        --color-texto-claro: #94a3b8;
+        --color-borde: #334155;
+    }
+}
+
+/* Landscape en móvil */
+@media (max-height: 500px) and (orientation: landscape) {
+    .app-header {
+        padding: 0.5rem 1rem;
+    }
+    
+    .app-header h1 {
+        font-size: 1rem;
+    }
+    
+    .btn-icon {
+        min-width: 40px;
+        min-height: 40px;
+    }
+}
+
+/* Optimización para pantallas pequeñas (iPhone SE, etc) */
+@media (max-width: 375px) {
+    .tarjeta-recoleccion {
+        padding: 1rem;
+    }
+    
+    .btn-cantidad {
+        width: 3rem;
+        height: 3rem;
+        font-size: 1.5rem;
+    }
+    
+    #cantidadReal {
+        width: 5rem;
+        font-size: 1.5rem;
+    }
+    
+    .seccion-detalle {
+        padding: 1rem;
+    }
+}
+
+/* iOS Safari - Fix para 100vh */
+.modal,
+.loading-overlay {
+    height: 100dvh; /* Dynamic viewport height */
+}
+
+/* Android Chrome - Mejorar scroll */
+.lista-recolecciones {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Mejorar legibilidad en exteriores (brillo alto) */
+@media (prefers-contrast: high) {
+    .badge,
+    .btn-primario,
+    .btn-exito,
+    .btn-peligro {
+        border: 2px solid currentColor;
+    }
+}

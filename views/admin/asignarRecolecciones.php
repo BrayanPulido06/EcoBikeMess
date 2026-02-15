@@ -1,5 +1,10 @@
 <?php
 session_start();
+require_once '../../models/asignarRecoleccionesModels.php';
+
+$model = new AsignarRecoleccionesModel();
+// Por ahora, cargamos todas las recolecciones. El JS puede encargarse de filtrar dinámicamente.
+$recolecciones = $model->listarRecolecciones([]);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -12,6 +17,80 @@ session_start();
     <link rel="stylesheet" href="../../public/css/asignarRecolecciones.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        /* Estilos para insignias de estado y prioridad */
+        .badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: white;
+            display: inline-block;
+            min-width: 90px;
+            text-align: center;
+            text-transform: capitalize;
+        }
+        .badge.estado-pendiente { background-color: #ffc107; color: #333; } /* Amarillo */
+        .badge.estado-asignado { background-color: #17a2b8; }    /* Cian */
+        .badge.estado-en_transito { background-color: #007bff; } /* Azul */
+        .badge.estado-en_ruta { background-color: #007bff; }     /* Azul */
+        .badge.estado-entregado { background-color: #28a745; }   /* Verde */
+
+        .badge.prioridad-urgente { background-color: #dc3545; }
+        .badge.prioridad-normal { background-color: #ffc107; color: #333; }
+        .badge.prioridad-programada { background-color: #6c757d; }
+
+        .actions { display: flex; gap: 5px; justify-content: center; }
+        
+        /* Estilos de botones iguales a paquetesAdmin */
+        .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.875rem; line-height: 1.5; border-radius: 0.2rem; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; }
+        .btn-info { color: #fff; background-color: #17a2b8; border-color: #17a2b8; }
+        .btn-warning { color: #212529; background-color: #ffc107; border-color: #ffc107; }
+        .btn-danger { color: #fff; background-color: #dc3545; border-color: #dc3545; }
+        .btn-info:hover { background-color: #138496; border-color: #117a8b; }
+        .btn-warning:hover { background-color: #e0a800; border-color: #d39e00; }
+        .btn-danger:hover { background-color: #c82333; border-color: #bd2130; }
+
+        /* Estilos para el Modal de Detalles (Grid) */
+        .detalle-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .detalle-item { background: #f8f9fa; padding: 10px; border-radius: 5px; }
+        .detalle-label { font-size: 0.85em; color: #6c757d; margin-bottom: 5px; }
+        .detalle-value { font-weight: 600; color: #333; }
+
+        /* Estilos para la lista de mensajeros en el modal */
+        .mensajeros-list-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        .mensajero-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .mensajero-item:hover { background-color: #f8f9fa; }
+        .mensajero-item.selected { background-color: #e3f2fd; border-left: 4px solid #17a2b8; }
+        .form-control { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        .mb-2 { margin-bottom: 0.5rem; }
+
+        /* Estilos para centrar el Modal (Igual a paquetesAdmin) */
+        .modal {
+            display: none; /* Oculto por defecto */
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.5); /* Fondo oscuro */
+            justify-content: center; /* Centrar horizontalmente */
+            align-items: center; /* Centrar verticalmente */
+        }
+    </style>
 </head>
 <body>
     <?php include '../layouts/adminNavbar.php'; ?>
@@ -182,6 +261,45 @@ session_start();
             </div>
         </div>
 
+        <!-- Modal Detalles (Nuevo, igual a paquetesAdmin) -->
+        <div class="modal" id="modalDetalles" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📦 Detalles de Recolección</h2>
+                    <button class="btn-close" onclick="document.getElementById('modalDetalles').style.display='none'">&times;</button>
+                </div>
+                <div class="modal-body" id="detallesRecoleccionBody">
+                    <p style="text-align:center">Cargando información...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Asignación Rápida (Nuevo) -->
+        <div class="modal" id="modalAsignarRapido" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Asignar Mensajero</h2>
+                    <button class="btn-close" id="btnCerrarAsignar">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAsignarRapido">
+                        <input type="hidden" id="idsPaquetesHidden" name="ids_paquetes">
+                        <input type="hidden" id="mensajeroIdHidden" name="mensajero_id" required>
+                        
+                        <div class="form-group">
+                            <label>Buscar Mensajero:</label>
+                            <input type="text" id="buscarMensajeroInput" class="form-control mb-2" placeholder="Escriba nombre del mensajero...">
+                            <div id="listaMensajeros" class="mensajeros-list-container"></div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Confirmar Asignación</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Filtros y Búsqueda -->
         <div class="filters-section">
             <div class="filters-grid">
@@ -226,20 +344,55 @@ session_start();
                 <table id="tablaRecolecciones">
                     <thead>
                         <tr>
-                            <th>Orden</th>
+                            <th>Dirección Origen</th>
                             <th>Cliente</th>
-                            <th>Dirección</th>
-                            <th>Contacto</th>
                             <th>Mensajero</th>
                             <th>Estado</th>
-                            <th>Prioridad</th>
-                            <th>Programada</th>
-                            <th>Completada</th>
+                            <th>Cantidad</th>
+                            <th>Guías</th>
+                            <th>Fecha Solicitud</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tablaRecoleccionesBody">
-                        <!-- Se llena dinámicamente -->
+                        <?php if (empty($recolecciones)): ?>
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 20px;">No hay recolecciones pendientes.</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($recolecciones as $rec): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($rec['direccion_origen']); ?></td>
+                                    <td><?php echo htmlspecialchars($rec['cliente_nombre']); ?></td>
+                                    <td><?php echo htmlspecialchars($rec['mensajero_nombre']); ?></td>
+                                    <td>
+                                        <span class="badge estado-<?php echo htmlspecialchars($rec['estado']); ?>">
+                                            <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $rec['estado']))); ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info" style="font-size: 1em; background-color: #17a2b8;">
+                                            <?php echo htmlspecialchars($rec['cantidad']); ?> Paquetes
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small><?php echo htmlspecialchars(mb_strimwidth($rec['guias'], 0, 50, "...")); ?></small>
+                                    </td>
+                                    <td><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($rec['fecha_creacion']))); ?></td>
+                                    <td>
+                                        <div class="actions">
+                                            <button class="btn btn-sm btn-info" title="Ver Paquetes" onclick="verDetallesPaquetes('<?php echo $rec['ids']; ?>')">👁️</button>
+                                            <?php if ($rec['estado'] === 'pendiente'): ?>
+                                                <button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('<?php echo $rec['ids']; ?>')">🚴</button>
+                                            <?php else: ?>
+                                                <button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('<?php echo $rec['ids']; ?>')">🔄</button>
+                                            <?php endif; ?>
+                                            <button class="btn btn-sm btn-danger" title="Eliminar" onclick="cancelarRecoleccion('<?php echo $rec['ids']; ?>')">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>

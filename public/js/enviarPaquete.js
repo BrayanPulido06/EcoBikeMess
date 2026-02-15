@@ -7,6 +7,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnPrevious = document.getElementById('btnPrevious');
     const btnSubmit = document.getElementById('btnSubmit');
 
+    // Evitar que el formulario se envíe al presionar Enter
+    if (form) {
+        form.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
+        });
+    }
+
     // Botones y campos específicos
     const autoFillBtn = document.getElementById('autoFillRemitente');
     const tieneRecaudoCheckbox = document.getElementById('tiene_recaudo');
@@ -22,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnDownloadPDF = document.getElementById('btnDownloadPDF');
     const qrcodeContainer = document.getElementById('qrcode');
     let qrCodeStylingInstance = null; // Para la instancia del nuevo QR
+    let baseRecaudo = 0; // Variable para almacenar el valor base del recaudo (sin envío)
 
     let currentStep = 1;
 
@@ -75,17 +85,38 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentStepFields = document.querySelector(`.form-step[data-step="${stepNumber}"]`);
         const inputs = currentStepFields.querySelectorAll('input[required], textarea[required], select[required]');
 
+        // Validar inputs normales
         inputs.forEach(input => {
+            // Ignorar campos ocultos (ej. si no hay recaudo, no validar radios ocultos)
+            if (input.offsetParent === null) return;
+
             const formGroup = input.closest('.form-group');
             const errorSpan = formGroup.querySelector('.error-message');
             
-            if (!input.value.trim()) {
-                isValid = false;
-                formGroup.classList.add('error');
-                if (errorSpan) errorSpan.textContent = 'Este campo es obligatorio.';
+            if (input.type === 'radio') {
+                // Validación específica para radios
+                const name = input.name;
+                const group = currentStepFields.querySelectorAll(`input[name="${name}"]`);
+                const isChecked = Array.from(group).some(r => r.checked);
+                
+                if (!isChecked) {
+                    isValid = false;
+                    formGroup.classList.add('error');
+                    if (errorSpan) errorSpan.textContent = 'Debe seleccionar una opción.';
+                } else {
+                    formGroup.classList.remove('error');
+                    if (errorSpan) errorSpan.textContent = '';
+                }
             } else {
-                formGroup.classList.remove('error');
-                if (errorSpan) errorSpan.textContent = '';
+                // Validación estándar
+                if (!input.value.trim()) {
+                    isValid = false;
+                    formGroup.classList.add('error');
+                    if (errorSpan) errorSpan.textContent = 'Este campo es obligatorio.';
+                } else {
+                    formGroup.classList.remove('error');
+                    if (errorSpan) errorSpan.textContent = '';
+                }
             }
         });
         return isValid;
@@ -102,10 +133,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Usar toLocaleString para formatear con puntos
                 e.target.value = numberValue.toLocaleString('es-CO');
                 // Actualizar input oculto con el valor limpio para la BD
+                baseRecaudo = numberValue; // Guardar valor base
                 if (valorRecaudoHidden) valorRecaudoHidden.value = numberValue;
+                actualizarRecaudoFinal();
             } else {
                 e.target.value = '';
+                baseRecaudo = 0;
                 if (valorRecaudoHidden) valorRecaudoHidden.value = '';
+                actualizarRecaudoFinal();
             }
         });
     }
@@ -555,6 +590,47 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         if(costoTotalHiddenInput) {
             costoTotalHiddenInput.value = total;
         }
+
+        // Manejar visibilidad de la opción de sumar envío
+        const containerSumar = document.getElementById('container_sumar_envio');
+        if (tieneRecaudoCheckbox && tieneRecaudoCheckbox.checked) {
+            if (containerSumar) containerSumar.style.display = 'block';
+            actualizarRecaudoFinal(); // Recalcular por si cambió el costo
+        } else {
+            if (containerSumar) containerSumar.style.display = 'none';
+        }
+    }
+
+    // Función para actualizar el recaudo final según la selección
+    function actualizarRecaudoFinal() {
+        if (!tieneRecaudoCheckbox.checked) return;
+        
+        const sumarOption = document.querySelector('input[name="sumar_envio_recaudo"]:checked');
+        const costoTotal = parseFloat(costoTotalHiddenInput.value) || 0;
+        const preview = document.getElementById('preview_total_recaudo');
+        
+        // Actualizar estilos visuales de las tarjetas
+        document.querySelectorAll('.radio-card').forEach(c => c.classList.remove('selected'));
+        if (sumarOption) {
+            sumarOption.closest('.radio-card').classList.add('selected');
+        }
+
+        if (sumarOption && sumarOption.value === 'si') {
+            const total = baseRecaudo + costoTotal;
+            if (valorRecaudoHidden) valorRecaudoHidden.value = total;
+            if (preview) {
+                preview.style.display = 'block';
+                preview.innerHTML = `Total a cobrar al destinatario: <span style="font-size: 1.2em;">$${total.toLocaleString('es-CO')}</span>`;
+            }
+        } else if (sumarOption && sumarOption.value === 'no') {
+            if (valorRecaudoHidden) valorRecaudoHidden.value = baseRecaudo;
+            if (preview) {
+                preview.style.display = 'block';
+                preview.innerHTML = `Total a cobrar al destinatario: <span style="font-size: 1.2em;">$${baseRecaudo.toLocaleString('es-CO')}</span>`;
+            }
+        } else {
+            if (preview) preview.style.display = 'none';
+        }
     }
 
     // Agregar listeners a los campos que afectan el precio
@@ -563,6 +639,10 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
 
     if (pesoInput) pesoInput.addEventListener('input', calcularCostoAutomatico);
     if (tipoInput) tipoInput.addEventListener('change', calcularCostoAutomatico);
+    
+    // Listeners para los radios de sumar envío
+    const radiosSumar = document.querySelectorAll('input[name="sumar_envio_recaudo"]');
+    radiosSumar.forEach(r => r.addEventListener('change', actualizarRecaudoFinal));
 
     // Mantener compatibilidad con el botón si existe (aunque lo ocultaremos)
     if (calcularCostoBtn) {
@@ -600,7 +680,8 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         if (tieneRecaudoCheckbox.checked && valorRecaudoInput.value) {
             confirmMetodoPago.textContent = 'Pago Contra Entrega';
             // El valor ya está formateado por el listener del input
-            confirmValorRecaudo.textContent = `$${valorRecaudoInput.value}`;
+            const finalRecaudo = parseInt(valorRecaudoHidden.value) || 0;
+            confirmValorRecaudo.textContent = `$${finalRecaudo.toLocaleString('es-CO')}`;
             confirmRecaudoContainer.style.display = 'block';
         } else {
             confirmMetodoPago.textContent = 'Prepago (Costo de envío)';
@@ -619,6 +700,21 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
             numeroGuiaHiddenInput.value = numeroGuia;
         }
 
+        // Lógica para mostrar información financiera en el QR
+        const sumarOption = document.querySelector('input[name="sumar_envio_recaudo"]:checked');
+        const sumarEnvio = sumarOption ? sumarOption.value : 'no';
+        let qrFinanciero = '';
+
+        if (tieneRecaudoCheckbox.checked && sumarEnvio === 'si') {
+            // Si se suma, solo mostramos el total a recaudar
+            const totalRecaudar = document.getElementById('confirm_valor_recaudo').textContent;
+            qrFinanciero = `Total a Recaudar: ${totalRecaudar}`;
+        } else {
+            // Si no se suma o no hay recaudo, mostramos desglose normal
+            qrFinanciero = `Costo Envío: ${document.getElementById('costoTotal').textContent.trim()}
+Recaudo: ${tieneRecaudoCheckbox.checked ? document.getElementById('confirm_valor_recaudo').textContent : 'No aplica'}`;
+        }
+
         // --- QR CODE GENERATION ---
         const infoParaQR = `
 Guía: ${numeroGuia}
@@ -627,8 +723,7 @@ Origen: ${document.getElementById('remitente_direccion').value}
 Destinatario: ${document.getElementById('destinatario_nombre').value}
 Destino: ${document.getElementById('destinatario_direccion').value}
 Contenido: ${document.getElementById('descripcion_contenido').value}
-Costo Envío: ${document.getElementById('costoTotal').textContent.trim()}
-Recaudo: ${tieneRecaudoCheckbox.checked ? '$' + valorRecaudoInput.value : 'No aplica'}
+${qrFinanciero}
         `.trim();
 
         // Limpiar contenedor de QR
@@ -665,7 +760,26 @@ Recaudo: ${tieneRecaudoCheckbox.checked ? '$' + valorRecaudoInput.value : 'No ap
             try {
                 const { jsPDF } = window.jspdf;
                 const numeroGuia = document.getElementById('numeroGuia').textContent;
-                const valorRecaudo = tieneRecaudoCheckbox.checked ? `$${valorRecaudoInput.value}` : 'No aplica';
+                
+                // Lógica para el Resumen Financiero en el PDF
+                const sumarOption = document.querySelector('input[name="sumar_envio_recaudo"]:checked');
+                const sumarEnvio = sumarOption ? sumarOption.value : 'no';
+                let htmlResumenFinanciero = '';
+
+                if (tieneRecaudoCheckbox.checked && sumarEnvio === 'si') {
+                    // Caso: Sumar envío al recaudo -> Mostrar solo Total a Recaudar
+                    const totalRecaudar = document.getElementById('confirm_valor_recaudo').textContent;
+                    htmlResumenFinanciero = `<p><strong>Total a Recaudar:</strong> ${totalRecaudar}</p>`;
+                } else {
+                    // Caso: No sumar o Sin recaudo -> Mostrar Costo Envío y Recaudo por separado
+                    const costoEnvio = document.getElementById('costoTotal').textContent;
+                    const valorRecaudo = tieneRecaudoCheckbox.checked ? document.getElementById('confirm_valor_recaudo').textContent : 'No aplica';
+                    // Si es recaudo 0 y dijo NO sumar, aparecerá $0. Si no hay recaudo, "No aplica".
+                    htmlResumenFinanciero = `
+                        <p><strong>Costo Envío:</strong> ${costoEnvio}</p>
+                        <p><strong>Valor a Recaudar:</strong> ${valorRecaudo}</p>
+                    `;
+                }
 
                 // Obtener la imagen del QR como Data URL
                 if (!qrCodeStylingInstance) {
@@ -727,8 +841,7 @@ Recaudo: ${tieneRecaudoCheckbox.checked ? '$' + valorRecaudoInput.value : 'No ap
                             <tr>
                                 <td style="width: 60%; vertical-align: top; font-size: 11px;">
                                     <h3 style="margin: 0 0 10px; font-size: 14px;">💰 Resumen Financiero</h3>
-                                    <p><strong>Costo Envío:</strong> ${document.getElementById('costoTotal').textContent}</p>
-                                    <p><strong>Valor a Recaudar:</strong> ${valorRecaudo}</p>
+                                    ${htmlResumenFinanciero}
                                 </td>
                                 <td style="width: 40%; text-align: right;">
                                     <img src="${qrImageDataUrl}" style="width: 180px; height: 180px;">

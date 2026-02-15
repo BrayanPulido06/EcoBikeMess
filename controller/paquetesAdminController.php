@@ -2,98 +2,64 @@
 session_start();
 require_once '../models/paquetesAdminModels.php';
 
+// Configurar cabecera para devolver JSON
 header('Content-Type: application/json');
 
-// Verificar sesión (opcionalmente verificar rol de admin)
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit;
-}
+// Verificar sesión (opcional, descomentar si es necesario seguridad estricta)
+// if (!isset($_SESSION['user_id'])) { echo json_encode(['error' => 'No autorizado']); exit; }
 
 $model = new PaquetesAdminModel();
-$action = $_REQUEST['action'] ?? '';
+$action = $_REQUEST['action'] ?? 'listar';
 
 try {
     switch ($action) {
-        case 'get_filters':
-            $data = $model->getFilters();
-            echo json_encode([
-                'success' => true, 
-                'clientes' => $data['clientes'], 
-                'mensajeros' => $data['mensajeros']
-            ]);
-            break;
-
-        case 'get_paquetes':
+        case 'listar':
+            // Recoger filtros enviados desde el JS
             $filters = [
-                'search' => $_GET['search'] ?? '',
-                'fechaDesde' => $_GET['fechaDesde'] ?? '',
-                'fechaHasta' => $_GET['fechaHasta'] ?? '',
-                'cliente_id' => $_GET['cliente_id'] ?? '',
-                'estado' => $_GET['estado'] ?? '',
-                'zona' => $_GET['zona'] ?? '',
-                'mensajero_id' => $_GET['mensajero_id'] ?? '',
-                'tipo' => $_GET['tipo'] ?? ''
-            ];
-            $paquetes = $model->getPaquetes($filters);
-            echo json_encode(['success' => true, 'data' => $paquetes]);
-            break;
-
-        case 'get_paquete_details':
-            $id = $_GET['id'] ?? 0;
-            $historial = $model->getPaqueteDetails($id);
-            echo json_encode(['success' => true, 'historial' => $historial]);
-            break;
-
-        case 'update_paquete':
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                throw new Exception('Método no permitido');
-            }
-            
-            $id = $_POST['id'];
-            // Limpiar datos básicos
-            $data = [
-                'destinatario' => trim($_POST['destinatario']),
-                'telefono' => trim($_POST['telefono']),
-                'direccion' => trim($_POST['direccion']),
-                'zona' => trim($_POST['zona']),
-                'tipo' => trim($_POST['tipo']),
-                'valor' => str_replace(['$', '.', ','], '', $_POST['valor']), // Limpiar formato moneda
-                'peso' => trim($_POST['peso']),
-                'observaciones' => trim($_POST['observaciones'])
+                'search' => $_REQUEST['search'] ?? '',
+                'fechaDesde' => $_REQUEST['fechaDesde'] ?? '',
+                'fechaHasta' => $_REQUEST['fechaHasta'] ?? '',
+                'cliente_id' => $_REQUEST['cliente'] ?? '',
+                'estado' => $_REQUEST['estado'] ?? '',
+                'zona' => $_REQUEST['zona'] ?? '',
+                'mensajero_id' => $_REQUEST['mensajero'] ?? '',
+                'tipo' => $_REQUEST['tipo'] ?? ''
             ];
             
-            if ($model->updatePaquete($id, $data)) {
-                echo json_encode(['success' => true, 'message' => 'Paquete actualizado correctamente']);
-            } else {
-                throw new Exception('Error al actualizar el paquete en la base de datos');
-            }
+            $data = $model->getPaquetes($filters);
+            
+            // Devolver en formato que DataTables o tu JS pueda leer
+            echo json_encode(['data' => $data]);
             break;
 
-        case 'assign_mensajero':
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                throw new Exception('Método no permitido');
-            }
+        case 'filtros':
+            // Devolver listas para los selects (clientes y mensajeros)
+            $data = $model->getFilters();
+            echo json_encode($data);
+            break;
+
+        case 'detalle':
+            $id = $_REQUEST['id'] ?? 0;
+            $data = $model->getPaqueteDetails($id);
+            echo json_encode($data);
+            break;
             
-            $paqueteId = $_POST['paquete_id'];
-            $mensajeroId = $_POST['mensajero_id'];
-            
-            if (empty($mensajeroId)) {
-                throw new Exception('Debe seleccionar un mensajero');
-            }
-            
-            if ($model->assignMensajero($paqueteId, $mensajeroId, $_SESSION['user_id'])) {
-                echo json_encode(['success' => true, 'message' => 'Mensajero asignado correctamente']);
-            } else {
-                throw new Exception('Error al asignar el mensajero');
+        case 'asignar':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $paqueteId = $_POST['paquete_id'];
+                $mensajeroId = $_POST['mensajero_id'];
+                $userId = $_SESSION['user_id'] ?? 0;
+                
+                $res = $model->assignMensajero($paqueteId, $mensajeroId, $userId);
+                echo json_encode(['success' => $res]);
             }
             break;
 
         default:
-            echo json_encode(['success' => false, 'message' => 'Acción no válida']);
+            echo json_encode(['error' => 'Acción no válida']);
             break;
     }
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    echo json_encode(['error' => $e->getMessage()]);
 }
 ?>

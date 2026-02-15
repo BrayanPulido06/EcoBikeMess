@@ -1,420 +1,75 @@
-// Variables globales
-let map;
-let marker;
+// public/js/asignarRecolecciones.js
 let recolecciones = [];
-let mensajeros = [];
-let selectedMensajero = null;
-let recoleccionToCancel = null;
+let todosLosMensajeros = []; // Almacenar mensajeros globalmente
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
     setupEventListeners();
     loadInitialData();
+    cargarMensajerosEnModal();
 });
-
-// Inicializar aplicación
-function initializeApp() {
-    initializeMap();
-    setMinDate();
-    startPolling();
-}
 
 // Configurar event listeners
 function setupEventListeners() {
-    // Modal Nueva Recolección
-    document.getElementById('btnNuevaRecoleccion').addEventListener('click', openNewRecoleccionModal);
-    document.getElementById('btnCerrarModal').addEventListener('click', closeNewRecoleccionModal);
-    document.getElementById('btnCancelarForm').addEventListener('click', closeNewRecoleccionModal);
-    
-    // Modal Cancelar
-    document.getElementById('btnCerrarModalCancelar').addEventListener('click', closeCancelModal);
-    document.getElementById('btnCerrarCancelar').addEventListener('click', closeCancelModal);
-    
-    // Formularios
-    document.getElementById('formNuevaRecoleccion').addEventListener('submit', handleSubmitRecoleccion);
-    document.getElementById('formCancelar').addEventListener('submit', handleCancelRecoleccion);
-    
-    // Obtener ubicación
-    document.getElementById('btnObtenerUbicacion').addEventListener('click', obtenerUbicacionActual);
-    
     // Filtros
     document.getElementById('busqueda').addEventListener('input', applyFilters);
-    document.getElementById('filtroEstado').addEventListener('change', applyFilters);
-    document.getElementById('filtroPrioridad').addEventListener('change', applyFilters);
-    document.getElementById('filtroFecha').addEventListener('change', applyFilters);
     
-    // Reportes
-    document.getElementById('btnReportes').addEventListener('click', generarReportes);
-}
-
-// Inicializar mapa
-function initializeMap() {
-    map = L.map('mapContainer').setView([4.6097, -74.0817], 13); // Bogotá por defecto
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-    
-    // Click en el mapa para seleccionar ubicación
-    map.on('click', function(e) {
-        const lat = e.latlng.lat.toFixed(6);
-        const lng = e.latlng.lng.toFixed(6);
-        updateMapMarker(lat, lng);
-    });
-}
-
-// Actualizar marcador en el mapa
-function updateMapMarker(lat, lng) {
-    if (marker) {
-        map.removeLayer(marker);
-    }
-    
-    marker = L.marker([lat, lng]).addTo(map);
-    document.getElementById('latitud').value = lat;
-    document.getElementById('longitud').value = lng;
-    
-    map.setView([lat, lng], 15);
-}
-
-// Obtener ubicación actual del navegador
-function obtenerUbicacionActual() {
-    if (navigator.geolocation) {
-        const btn = document.getElementById('btnObtenerUbicacion');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="loading"></span> Obteniendo ubicación...';
-        
-        navigator.geolocation.getCurrentPosition(
-            function(position) {
-                const lat = position.coords.latitude.toFixed(6);
-                const lng = position.coords.longitude.toFixed(6);
-                updateMapMarker(lat, lng);
-                btn.disabled = false;
-                btn.innerHTML = '📍 Obtener Ubicación Actual';
-                showNotification('Ubicación obtenida correctamente', 'success');
-            },
-            function(error) {
-                btn.disabled = false;
-                btn.innerHTML = '📍 Obtener Ubicación Actual';
-                showNotification('No se pudo obtener la ubicación', 'error');
-            }
-        );
-    } else {
-        showNotification('Tu navegador no soporta geolocalización', 'error');
-    }
-}
-
-// Establecer fecha mínima (hoy)
-function setMinDate() {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('fechaRecoleccion').min = today;
-    document.getElementById('fechaRecoleccion').value = today;
-}
-
-// Cargar datos iniciales
-async function loadInitialData(isBackground = false) {
-    try {
-        // Aquí deberías hacer llamadas reales a tu API
-        // const [clientesData, mensajerosData, recoleccionesData] = await Promise.all([
-        //     fetch('api/clientes.php').then(r => r.json()),
-        //     fetch('api/mensajeros.php').then(r => r.json()),
-        //     fetch('api/recolecciones.php').then(r => r.json())
-        // ]);
-        
-        // Datos de ejemplo
-        const clientesData = generateMockClientes();
-        mensajeros = generateMockMensajeros();
-        recolecciones = generateMockRecolecciones();
-        
-        loadClientes(clientesData);
-        checkAlertas();
-        renderRecolecciones();
-        updateStats();
-        
-    } catch (error) {
-        console.error('Error al cargar datos:', error);
-        if (!isBackground) {
-            showNotification('Error al cargar los datos', 'error');
-        }
-    }
-}
-
-// Iniciar actualización automática
-function startPolling() {
-    setInterval(() => {
-        // Solo actualizar si no hay modales abiertos
-        if (!document.querySelector('.modal.active')) {
-            loadInitialData(true);
-        }
-    }, 15000); // Actualizar cada 15 segundos
-}
-
-// Generar clientes de ejemplo
-function generateMockClientes() {
-    return [
-        { id: 1, nombre: 'Empresa ABC Ltda', telefono: '3001234567' },
-        { id: 2, nombre: 'Comercializadora XYZ', telefono: '3009876543' },
-        { id: 3, nombre: 'Distribuidora 123', telefono: '3005555555' },
-        { id: 4, nombre: 'Importadora Global', telefono: '3007777777' }
-    ];
-}
-
-// Generar mensajeros de ejemplo
-function generateMockMensajeros() {
-    return [
-        {
-            id: 1,
-            nombre: 'Carlos Martínez',
-            estado: 'disponible',
-            tareasActivas: 2,
-            ubicacion: { lat: 4.6097, lng: -74.0817 },
-            entregas: 23
-        },
-        {
-            id: 2,
-            nombre: 'Ana García',
-            estado: 'disponible',
-            tareasActivas: 1,
-            ubicacion: { lat: 4.6500, lng: -74.1000 },
-            entregas: 19
-        },
-        {
-            id: 3,
-            nombre: 'Luis Rodríguez',
-            estado: 'ocupado',
-            tareasActivas: 4,
-            ubicacion: { lat: 4.5900, lng: -74.0700 },
-            entregas: 18
-        },
-        {
-            id: 4,
-            nombre: 'María Sánchez',
-            estado: 'disponible',
-            tareasActivas: 0,
-            ubicacion: { lat: 4.6200, lng: -74.0900 },
-            entregas: 16
-        }
-    ];
-}
-
-// Generar recolecciones de ejemplo
-function generateMockRecolecciones() {
-    const estados = ['asignada', 'en_curso', 'completada'];
-    const prioridades = ['urgente', 'normal', 'programada'];
-    const recolecciones = [];
-    
-    for (let i = 1; i <= 15; i++) {
-        const estado = estados[Math.floor(Math.random() * estados.length)];
-        recolecciones.push({
-            id: i,
-            orden: `REC-${String(i).padStart(5, '0')}`,
-            cliente: `Cliente ${i}`,
-            direccion: `Calle ${i} # ${10 + i}-${20 + i}`,
-            contacto: `Contacto ${i}`,
-            telefono: `300${String(i).padStart(7, '0')}`,
-            mensajero: mensajeros[Math.floor(Math.random() * mensajeros.length)].nombre,
-            mensajeroId: Math.floor(Math.random() * mensajeros.length) + 1,
-            estado: estado,
-            prioridad: prioridades[Math.floor(Math.random() * prioridades.length)],
-            fechaProgramada: new Date().toISOString().split('T')[0],
-            horario: '10:00-12:00',
-            fechaCompletada: estado === 'completada' ? new Date().toISOString() : null,
-            cantidad: Math.floor(Math.random() * 10) + 1
+    // Modal Asignación Rápida
+    const btnCerrarAsignar = document.getElementById('btnCerrarAsignar');
+    if (btnCerrarAsignar) {
+        btnCerrarAsignar.addEventListener('click', function() {
+            document.getElementById('modalAsignarRapido').style.display = 'none';
         });
     }
-    
-    return recolecciones;
-}
 
-// Cargar clientes en el select
-function loadClientes(clientes) {
-    const select = document.getElementById('cliente');
-    select.innerHTML = '<option value="">Seleccione un cliente</option>';
-    
-    clientes.forEach(cliente => {
-        const option = document.createElement('option');
-        option.value = cliente.id;
-        option.textContent = cliente.nombre;
-        option.dataset.telefono = cliente.telefono;
-        select.appendChild(option);
-    });
-    
-    // Auto-llenar contacto al seleccionar cliente
-    select.addEventListener('change', function() {
-        const selected = this.options[this.selectedIndex];
-        if (selected.dataset.telefono) {
-            document.getElementById('telefono').value = selected.dataset.telefono;
-        }
-    });
-}
-
-// Verificar y mostrar alertas
-function checkAlertas() {
-    const alertsSection = document.getElementById('alertsSection');
-    alertsSection.innerHTML = '';
-    
-    const now = new Date();
-    const recoleccionesRetrasadas = recolecciones.filter(r => {
-        if (r.estado === 'completada' || r.estado === 'cancelada') return false;
-        const programada = new Date(r.fechaProgramada + ' ' + r.horario.split('-')[1]);
-        return programada < now;
-    });
-    
-    if (recoleccionesRetrasadas.length > 0) {
-        const alert = createAlert(
-            'danger',
-            'Recolecciones Retrasadas',
-            `Hay ${recoleccionesRetrasadas.length} recolecciones que superaron su horario programado`
-        );
-        alertsSection.appendChild(alert);
+    // Formulario de Asignación
+    const formAsignar = document.getElementById('formAsignarRapido');
+    if (formAsignar) {
+        formAsignar.addEventListener('submit', handleAsignarSubmit);
     }
-    
-    const mensajerosInactivos = mensajeros.filter(m => m.estado === 'ocupado' && m.tareasActivas > 3);
-    if (mensajerosInactivos.length > 0) {
-        const alert = createAlert(
-            'warning',
-            'Mensajeros Sobrecargados',
-            `${mensajerosInactivos.length} mensajeros tienen más de 3 tareas activas`
-        );
-        alertsSection.appendChild(alert);
+
+    // Filtro de mensajeros en el modal
+    const inputBuscarMensajero = document.getElementById('buscarMensajeroInput');
+    if (inputBuscarMensajero) {
+        inputBuscarMensajero.addEventListener('input', filtrarListaMensajeros);
+    }
+
+    // Botón Reportes (Opcional)
+    const btnReportes = document.getElementById('btnReportes');
+    if (btnReportes) {
+        btnReportes.addEventListener('click', () => alert('Funcionalidad de reportes en desarrollo'));
     }
 }
 
-// Crear elemento de alerta
-function createAlert(type, title, message) {
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type}`;
-    alert.innerHTML = `
-        <div class="alert-content">
-            <h4>${title}</h4>
-            <p>${message}</p>
-        </div>
-    `;
-    return alert;
-}
-
-// Abrir modal nueva recolección
-function openNewRecoleccionModal() {
-    document.getElementById('modalNuevaRecoleccion').classList.add('active');
-    loadMensajerosDisponibles();
-}
-
-// Cerrar modal nueva recolección
-function closeNewRecoleccionModal() {
-    document.getElementById('modalNuevaRecoleccion').classList.remove('active');
-    document.getElementById('formNuevaRecoleccion').reset();
-    selectedMensajero = null;
-    if (marker) {
-        map.removeLayer(marker);
-        marker = null;
-    }
-}
-
-// Cargar mensajeros disponibles
-function loadMensajerosDisponibles() {
-    const container = document.getElementById('mensajerosDisponibles');
-    container.innerHTML = '';
-    
-    mensajeros.forEach(mensajero => {
-        const card = document.createElement('div');
-        card.className = 'mensajero-card';
-        card.dataset.id = mensajero.id;
-        
-        // Calcular distancia (simulada)
-        const distancia = (Math.random() * 10 + 1).toFixed(1);
-        
-        card.innerHTML = `
-            <div class="mensajero-header">
-                <div class="mensajero-avatar">${mensajero.nombre.charAt(0)}</div>
-                <div class="mensajero-info">
-                    <h4>${mensajero.nombre}</h4>
-                    <span class="mensajero-status ${mensajero.estado}">${mensajero.estado === 'disponible' ? '🟢 Disponible' : '🟡 Ocupado'}</span>
-                </div>
-            </div>
-            <div class="mensajero-details">
-                <p>📍 Distancia: ~${distancia} km</p>
-                <p>📦 Tareas activas: ${mensajero.tareasActivas}</p>
-                <p>✅ Entregas hoy: ${mensajero.entregas}</p>
-            </div>
-        `;
-        
-        card.addEventListener('click', function() {
-            document.querySelectorAll('.mensajero-card').forEach(c => c.classList.remove('selected'));
-            this.classList.add('selected');
-            selectedMensajero = mensajero.id;
-        });
-        
-        container.appendChild(card);
-    });
-}
-
-// Manejar envío de formulario
-async function handleSubmitRecoleccion(e) {
-    e.preventDefault();
-    
-    if (!selectedMensajero) {
-        showNotification('Por favor selecciona un mensajero', 'error');
-        return;
-    }
-    
-    const formData = new FormData(e.target);
-    const data = {
-        cliente: formData.get('cliente'),
-        contacto: formData.get('contacto'),
-        telefono: formData.get('telefono'),
-        direccion: formData.get('direccion'),
-        latitud: formData.get('latitud'),
-        longitud: formData.get('longitud'),
-        descripcion: formData.get('descripcion'),
-        cantidad: formData.get('cantidad'),
-        fechaRecoleccion: formData.get('fechaRecoleccion'),
-        horario: formData.get('horario'),
-        prioridad: formData.get('prioridad'),
-        observaciones: formData.get('observaciones'),
-        mensajeroId: selectedMensajero
-    };
-    
+// Cargar datos reales desde el servidor
+async function loadInitialData() {
     try {
-        // Aquí deberías hacer la llamada a tu API
-        // const response = await fetch('api/recolecciones.php', {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(data)
-        // });
-        
-        // Simulación
-        const newRecoleccion = {
-            id: recolecciones.length + 1,
-            orden: `REC-${String(recolecciones.length + 1).padStart(5, '0')}`,
-            cliente: document.getElementById('cliente').options[document.getElementById('cliente').selectedIndex].text,
-            direccion: data.direccion,
-            contacto: data.contacto,
-            telefono: data.telefono,
-            mensajero: mensajeros.find(m => m.id === selectedMensajero).nombre,
-            mensajeroId: selectedMensajero,
-            estado: 'asignada',
-            prioridad: data.prioridad,
-            fechaProgramada: data.fechaRecoleccion,
-            horario: data.horario,
-            fechaCompletada: null,
-            cantidad: data.cantidad
-        };
-        
-        recolecciones.unshift(newRecoleccion);
-        renderRecolecciones();
-        updateStats();
-        closeNewRecoleccionModal();
-        
-        showNotification('Recolección creada y asignada correctamente', 'success');
-        
-        // Simular notificación al mensajero
-        setTimeout(() => {
-            showNotification(`Notificación enviada a ${newRecoleccion.mensajero}`, 'info');
-        }, 1000);
-        
+        const response = await fetch('../../controller/asignarRecoleccionesController.php?action=listar');
+        const data = await response.json();
+
+        if (data.success) {
+            recolecciones = data.data;
+            renderRecolecciones();
+            updateStats(data.stats);
+        } else {
+            console.error('Error cargando datos:', data.message);
+        }
     } catch (error) {
-        console.error('Error:', error);
-        showNotification('Error al crear la recolección', 'error');
+        console.error('Error de red:', error);
+    }
+}
+
+// Cargar lista de mensajeros para el select del modal
+async function cargarMensajerosEnModal() {
+    try {
+        const response = await fetch('../../controller/asignarRecoleccionesController.php?action=get_data_init');
+        const data = await response.json();
+
+        if (data.success) {
+            todosLosMensajeros = data.mensajeros;
+        }
+    } catch (error) {
+        console.error('Error cargando mensajeros:', error);
     }
 }
 
@@ -422,14 +77,10 @@ async function handleSubmitRecoleccion(e) {
 function renderRecolecciones() {
     const tbody = document.getElementById('tablaRecoleccionesBody');
     
-    if (recolecciones.length === 0) {
+    if (!recolecciones || recolecciones.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="10" style="text-align: center; padding: 40px;">
-                    <div class="empty-state">
-                        <p>No hay recolecciones registradas</p>
-                    </div>
-                </td>
+                <td colspan="6" style="text-align: center; padding: 20px;">No hay recolecciones pendientes.</td>
             </tr>
         `;
         return;
@@ -437,201 +88,294 @@ function renderRecolecciones() {
     
     tbody.innerHTML = recolecciones.map(rec => `
         <tr>
-            <td><strong>${rec.orden}</strong></td>
-            <td>${rec.cliente}</td>
-            <td>${rec.direccion}</td>
-            <td>${rec.contacto}<br><small>${rec.telefono}</small></td>
-            <td>${rec.mensajero}</td>
-            <td><span class="status-badge status-${rec.estado}">${formatEstado(rec.estado)}</span></td>
-            <td><span class="priority-badge priority-${rec.prioridad}">${formatPrioridad(rec.prioridad)}</span></td>
-            <td>${formatDate(rec.fechaProgramada)}<br><small>${rec.horario}</small></td>
-            <td>${rec.fechaCompletada ? formatDateTime(rec.fechaCompletada) : '-'}</td>
+            <td>${rec.direccion_origen}</td>
+            <td>${rec.cliente_nombre}</td>
+            <td>${rec.mensajero_nombre}</td>
             <td>
-                <div class="action-buttons">
-                    ${rec.estado !== 'completada' && rec.estado !== 'cancelada' ? `
-                        <button class="btn btn-sm btn-warning" onclick="reasignarRecoleccion(${rec.id})">
-                            🔄 Reasignar
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="openCancelModal(${rec.id})">
-                            ❌ Cancelar
-                        </button>
-                    ` : ''}
-                    <button class="btn btn-sm btn-secondary" onclick="verDetalles(${rec.id})">
-                        👁️ Ver
-                    </button>
+                <span class="badge estado-${rec.estado}">
+                    ${rec.estado.replace('_', ' ').toUpperCase()}
+                </span>
+            </td>
+            <td>
+                <span class="badge badge-info" style="font-size: 1em; background-color: #17a2b8;">
+                    ${rec.cantidad} Paquetes
+                </span>
+            </td>
+            <td><small>${rec.guias ? rec.guias.substring(0, 50) + (rec.guias.length > 50 ? '...' : '') : ''}</small></td>
+            <td>${new Date(rec.fecha_creacion).toLocaleString()}</td>
+            <td>
+                <div class="actions">
+                    <button class="btn btn-sm btn-info" title="Ver Paquetes" onclick="verDetallesPaquetes('${rec.ids}')">👁️</button>
+                    ${rec.estado === 'pendiente' ? 
+                        `<button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('${rec.ids}')">🚴</button>` : 
+                        `<button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('${rec.ids}')">🔄</button>`
+                    }
+                    <button class="btn btn-sm btn-danger" title="Eliminar" onclick="cancelarRecoleccion('${rec.ids}')">🗑️</button>
                 </div>
             </td>
         </tr>
     `).join('');
 }
 
-// Formatear estado
-function formatEstado(estado) {
-    const estados = {
-        'asignada': 'Asignada',
-        'en_curso': 'En Curso',
-        'completada': 'Completada',
-        'cancelada': 'Cancelada'
-    };
-    return estados[estado] || estado;
-}
-
-// Formatear prioridad
-function formatPrioridad(prioridad) {
-    const prioridades = {
-        'urgente': '🔴 Urgente',
-        'normal': '🟡 Normal',
-        'programada': '🟢 Programada'
-    };
-    return prioridades[prioridad] || prioridad;
-}
-
-// Formatear fecha
-function formatDate(dateStr) {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('es-ES');
-}
-
-// Formatear fecha y hora
-function formatDateTime(dateStr) {
-    const date = new Date(dateStr);
-    return date.toLocaleString('es-ES');
-}
-
 // Actualizar estadísticas
-function updateStats() {
-    document.getElementById('totalRecolecciones').textContent = recolecciones.length;
-    document.getElementById('pendientes').textContent = recolecciones.filter(r => 
-        r.estado === 'asignada' || r.estado === 'en_curso'
-    ).length;
-    document.getElementById('completadas').textContent = recolecciones.filter(r => 
-        r.estado === 'completada'
-    ).length;
+function updateStats(stats) {
+    if (stats) {
+        document.getElementById('totalRecolecciones').textContent = stats.total || 0;
+        document.getElementById('pendientes').textContent = stats.pendientes || 0;
+        document.getElementById('completadas').textContent = stats.completadas || 0;
+    }
 }
 
 // Aplicar filtros
 function applyFilters() {
     const busqueda = document.getElementById('busqueda').value.toLowerCase();
-    const estado = document.getElementById('filtroEstado').value;
-    const prioridad = document.getElementById('filtroPrioridad').value;
-    const fecha = document.getElementById('filtroFecha').value;
     
     const filtered = recolecciones.filter(rec => {
-        const matchBusqueda = !busqueda || 
-            rec.cliente.toLowerCase().includes(busqueda) ||
-            rec.direccion.toLowerCase().includes(busqueda) ||
-            rec.mensajero.toLowerCase().includes(busqueda);
-        
-        const matchEstado = !estado || rec.estado === estado;
-        const matchPrioridad = !prioridad || rec.prioridad === prioridad;
-        const matchFecha = !fecha || rec.fechaProgramada === fecha;
-        
-        return matchBusqueda && matchEstado && matchPrioridad && matchFecha;
+        return !busqueda || 
+            rec.cliente_nombre.toLowerCase().includes(busqueda) ||
+            rec.direccion_origen.toLowerCase().includes(busqueda);
     });
     
-    // Temporalmente reemplazar el array para renderizar
+    // Renderizar filtrados
     const temp = recolecciones;
-    recolecciones = filtered;
-    renderRecolecciones();
-    recolecciones = temp;
+    
+    // Hack temporal para usar la misma función de renderizado
+    const tbody = document.getElementById('tablaRecoleccionesBody');
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">No se encontraron resultados.</td></tr>`;
+    } else {
+        // Renderizar manualmente los filtrados
+        tbody.innerHTML = filtered.map(rec => `
+            <tr>
+                <td>${rec.direccion_origen}</td>
+                <td>${rec.cliente_nombre}</td>
+                <td>${rec.mensajero_nombre}</td>
+                <td>
+                    <span class="badge estado-${rec.estado}">
+                        ${rec.estado.replace('_', ' ').toUpperCase()}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge badge-info" style="font-size: 1em; background-color: #17a2b8;">
+                        ${rec.cantidad} Paquetes
+                    </span>
+                </td>
+                <td><small>${rec.guias ? rec.guias.substring(0, 50) + (rec.guias.length > 50 ? '...' : '') : ''}</small></td>
+                <td>${new Date(rec.fecha_creacion).toLocaleString()}</td>
+                <td>
+                    <div class="actions">
+                        <button class="btn btn-sm btn-info" title="Ver Paquetes" onclick="verDetallesPaquetes('${rec.ids}')">👁️</button>
+                        ${rec.estado === 'pendiente' ? 
+                            `<button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('${rec.ids}')">🚴</button>` : 
+                            `<button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('${rec.ids}')">🔄</button>`
+                        }
+                        <button class="btn btn-sm btn-danger" title="Eliminar" onclick="cancelarRecoleccion('${rec.ids}')">🗑️</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
 }
 
-// Reasignar recolección
-function reasignarRecoleccion(id) {
-    const recoleccion = recolecciones.find(r => r.id === id);
-    if (!recoleccion) return;
+// Funciones globales para los botones de la tabla
+window.verDetallesPaquetes = async function(ids) {
+    const modal = document.getElementById('modalDetalles');
+    const container = document.getElementById('detallesRecoleccionBody');
     
-    // Abrir modal con opciones de mensajeros
-    openNewRecoleccionModal();
-    showNotification(`Reasignando recolección ${recoleccion.orden}`, 'info');
+    if (modal && container) {
+        modal.style.display = 'flex';
+        container.innerHTML = '<p style="text-align:center">Cargando detalles de la base de datos...</p>';
+
+        try {
+            const response = await fetch(`../../controller/asignarRecoleccionesController.php?action=detalles&ids=${ids}`);
+            const result = await response.json();
+
+            if (result.success && result.data.length > 0) {
+                const primerPaquete = result.data[0];
+                const clienteNombre = primerPaquete.nombre_emprendimiento || (primerPaquete.cli_nombres + ' ' + primerPaquete.cli_apellidos);
+                
+                let html = `
+                    <div class="detalle-section">
+                        <h3 style="margin-bottom: 15px;">📍 Información de Recolección</h3>
+                        <div class="detalle-grid">
+                            <div class="detalle-item">
+                                <div class="detalle-label">Cliente</div>
+                                <div class="detalle-value">${clienteNombre}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Dirección de Origen</div>
+                                <div class="detalle-value">${primerPaquete.direccion_origen}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Teléfono Contacto</div>
+                                <div class="detalle-value">${primerPaquete.cli_telefono || 'N/A'}</div>
+                            </div>
+                        </div>
+                        
+                        <h3 style="margin-top: 20px;">📦 Paquetes a Recoger (${result.data.length})</h3>
+                        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                                <thead style="background: #f8f9fa; position: sticky; top: 0;">
+                                    <tr>
+                                        <th style="padding: 8px; text-align: left;">Guía</th>
+                                        <th style="padding: 8px; text-align: left;">Destinatario</th>
+                                        <th style="padding: 8px; text-align: left;">Descripción</th>
+                                        <th style="padding: 8px; text-align: left;">Peso</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${result.data.map(p => `
+                                        <tr style="border-bottom: 1px solid #eee;">
+                                            <td style="padding: 8px;"><strong>${p.numero_guia}</strong></td>
+                                            <td style="padding: 8px;">${p.destinatario_nombre}<br><small>${p.direccion_destino}</small></td>
+                                            <td style="padding: 8px;">${p.descripcion_contenido || '-'}</td>
+                                            <td style="padding: 8px;">${p.peso_paquete} kg</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<p class="text-danger text-center">No se encontraron detalles.</p>';
+            }
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = '<p class="text-danger text-center">Error al cargar detalles.</p>';
+        }
+    }
 }
 
-// Abrir modal de cancelación
-function openCancelModal(id) {
-    recoleccionToCancel = id;
-    document.getElementById('modalCancelar').classList.add('active');
-}
-
-// Cerrar modal de cancelación
-function closeCancelModal() {
-    document.getElementById('modalCancelar').classList.remove('active');
-    document.getElementById('formCancelar').reset();
-    recoleccionToCancel = null;
-}
-
-// Manejar cancelación
-async function handleCancelRecoleccion(e) {
-    e.preventDefault();
-    
-    const motivo = document.getElementById('motivoCancelacion').value;
-    
-    if (!recoleccionToCancel) return;
-    
-    try {
-        // Aquí deberías hacer la llamada a tu API
-        // await fetch(`api/recolecciones.php?id=${recoleccionToCancel}`, {
-        //     method: 'DELETE',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify({ motivo })
-        // });
+// Abrir modal de asignación y preparar lista
+window.asignarRecoleccion = function(ids) {
+    const modal = document.getElementById('modalAsignarRapido');
+    if (modal) {
+        // Resetear formulario
+        document.getElementById('idsPaquetesHidden').value = ids;
+        document.getElementById('mensajeroIdHidden').value = '';
+        document.getElementById('buscarMensajeroInput').value = '';
         
-        const recoleccion = recolecciones.find(r => r.id === recoleccionToCancel);
-        if (recoleccion) {
-            recoleccion.estado = 'cancelada';
-            recoleccion.motivoCancelacion = motivo;
+        // Renderizar lista completa (o recargar si está vacía)
+        if (todosLosMensajeros.length === 0) {
+            cargarMensajerosEnModal().then(() => {
+                renderizarListaMensajeros(todosLosMensajeros);
+            });
+        } else {
+            renderizarListaMensajeros(todosLosMensajeros);
         }
         
-        renderRecolecciones();
-        updateStats();
-        closeCancelModal();
-        showNotification('Recolección cancelada correctamente', 'success');
-        
+        // Limpiar selección visual previa
+        document.querySelectorAll('.mensajero-item').forEach(el => el.classList.remove('selected'));
+        modal.style.display = 'flex';
+    }
+}
+
+// Renderizar lista de mensajeros (estilo paquetesAdmin)
+function renderizarListaMensajeros(lista) {
+    const contenedor = document.getElementById('listaMensajeros');
+    if (!contenedor) return;
+
+    if (lista.length === 0) {
+        contenedor.innerHTML = '<div class="mensajero-item text-muted" style="padding:10px; text-align:center;">No se encontraron mensajeros</div>';
+        return;
+    }
+
+    let html = '';
+    lista.forEach(m => {
+        const tareas = m.tareas_activas || 0;
+        const estadoColor = (m.estado === 'activo' || m.estado === 'en_ruta') ? 'green' : 'gray';
+        const safeName = m.nombre.replace(/'/g, "\\'"); // Escapar comillas simples para el onclick
+        html += `
+            <div class="mensajero-item" onclick="seleccionarMensajero(${m.id}, '${safeName}')" data-id="${m.id}">
+                <div style="font-weight:bold;">${m.nombre}</div>
+                <div style="font-size:0.85em; color:#666;">
+                    <span style="color:${estadoColor}">● ${m.estado}</span> | Tareas activas: ${tareas}
+                </div>
+            </div>
+        `;
+    });
+    contenedor.innerHTML = html;
+}
+
+// Filtrar mensajeros al escribir
+function filtrarListaMensajeros(e) {
+    const texto = e.target.value.toLowerCase();
+    const filtrados = todosLosMensajeros.filter(m => 
+        m.nombre.toLowerCase().includes(texto)
+    );
+    renderizarListaMensajeros(filtrados);
+}
+
+// Seleccionar un mensajero de la lista
+window.seleccionarMensajero = function(id, nombre) {
+    document.getElementById('mensajeroIdHidden').value = id;
+    document.getElementById('buscarMensajeroInput').value = nombre;
+    
+    document.querySelectorAll('.mensajero-item').forEach(el => el.classList.remove('selected'));
+    const item = document.querySelector(`.mensajero-item[data-id="${id}"]`);
+    if (item) {
+        item.classList.add('selected');
+    }
+}
+
+// Manejar envío de asignación
+async function handleAsignarSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    formData.append('action', 'asignar');
+
+    if (!formData.get('mensajero_id')) {
+        alert('Por favor seleccione un mensajero de la lista.');
+        return;
+    }
+
+    try {
+        const response = await fetch('../../controller/asignarRecoleccionesController.php', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            alert('Mensajero asignado correctamente');
+            document.getElementById('modalAsignarRapido').style.display = 'none';
+            loadInitialData(); // Recargar tabla
+        } else {
+            alert('Error: ' + data.message);
+        }
     } catch (error) {
         console.error('Error:', error);
-        showNotification('Error al cancelar la recolección', 'error');
+        alert('Ocurrió un error al procesar la solicitud');
     }
 }
 
-// Ver detalles
-function verDetalles(id) {
-    const recoleccion = recolecciones.find(r => r.id === id);
-    if (recoleccion) {
-        alert(`Detalles de la recolección:\n\nOrden: ${recoleccion.orden}\nCliente: ${recoleccion.cliente}\nEstado: ${formatEstado(recoleccion.estado)}`);
+// Cancelar (Eliminar de la vista) recolección
+window.cancelarRecoleccion = async function(ids) {
+    if (!confirm('¿Estás seguro de eliminar esta recolección de la vista? Los paquetes pasarán a estado "cancelado" pero no se borrarán de la base de datos.')) {
+        return;
     }
-}
 
-// Generar reportes
-function generarReportes() {
-    const reporte = {
-        total: recolecciones.length,
-        completadas: recolecciones.filter(r => r.estado === 'completada').length,
-        pendientes: recolecciones.filter(r => r.estado === 'asignada' || r.estado === 'en_curso').length,
-        canceladas: recolecciones.filter(r => r.estado === 'cancelada').length,
-        tasaCompletado: ((recolecciones.filter(r => r.estado === 'completada').length / recolecciones.length) * 100).toFixed(2)
-    };
-    
-    alert(`📊 Reporte de Productividad\n\nTotal de recolecciones: ${reporte.total}\nCompletadas: ${reporte.completadas}\nPendientes: ${reporte.pendientes}\nCanceladas: ${reporte.canceladas}\nTasa de completado: ${reporte.tasaCompletado}%`);
-}
+    const formData = new FormData();
+    formData.append('action', 'cancelar');
+    formData.append('ids_paquetes', ids);
 
-// Mostrar notificación
-function showNotification(message, type = 'info') {
-    // Crear notificación temporal
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type}`;
-    notification.style.position = 'fixed';
-    notification.style.top = '20px';
-    notification.style.right = '20px';
-    notification.style.zIndex = '10000';
-    notification.style.minWidth = '300px';
-    notification.innerHTML = `
-        <div class="alert-content">
-            <p>${message}</p>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
+    try {
+        const response = await fetch('../../controller/asignarRecoleccionesController.php', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            loadInitialData(); // Recargar tabla
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Ocurrió un error al procesar la solicitud');
+    }
 }
