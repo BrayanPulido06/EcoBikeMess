@@ -33,7 +33,8 @@ class InicioClienteModel {
             'pedidos_mes' => 0,
             'en_transito' => 0,
             'saldo_pendiente' => 0,
-            'entregados_total' => 0
+            'entregados_total' => 0,
+            'pedidos_colaboradores' => 0
         ];
 
         try {
@@ -66,6 +67,14 @@ class InicioClienteModel {
             $stmt = $this->conn->prepare($sqlEntregados);
             $stmt->execute([':cid' => $cliente_id]);
             $stats['entregados_total'] = $stmt->fetchColumn();
+
+            // 5. Pedidos realizados por colaboradores
+            $sqlColab = "SELECT COUNT(p.id) FROM paquetes p
+                         INNER JOIN usuarios u ON p.creado_por = u.id
+                         WHERE p.cliente_id = :cid AND u.tipo_usuario = 'colaborador'";
+            $stmt = $this->conn->prepare($sqlColab);
+            $stmt->execute([':cid' => $cliente_id]);
+            $stats['pedidos_colaboradores'] = $stmt->fetchColumn();
 
         } catch (PDOException $e) {
             // En caso de error, retornamos ceros

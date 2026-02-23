@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
 require_once '../../models/inicioClienteModel.php';
 
 // Inicializar variables por defecto
-$stats = ['pedidos_mes' => 0, 'en_transito' => 0, 'saldo_pendiente' => 0, 'entregados_total' => 0];
+$stats = ['pedidos_mes' => 0, 'en_transito' => 0, 'saldo_pendiente' => 0, 'entregados_total' => 0, 'pedidos_colaboradores' => 0];
 $ultimosPedidos = [];
 $chartDataRaw = [];
 
@@ -70,37 +70,16 @@ foreach ($chartDataRaw as $row) {
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
-                        🚴
-                    </div>
-                    <div class="stat-info">
-                        <span class="stat-label">En Tránsito</span>
-                        <span class="stat-value"><?php echo $stats['en_transito']; ?></span>
-                        <span class="stat-change neutral">Actualizaciones en tiempo real</span>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);">
-                        💰
-                    </div>
-                    <div class="stat-info">
-                        <span class="stat-label">Saldo Pendiente</span>
-                        <span class="stat-value">$<?php echo number_format($stats['saldo_pendiente'], 0, ',', '.'); ?></span>
-                        <span class="stat-change negative">Por pagar</span>
-                    </div>
-                </div>
-
-                <div class="stat-card">
                     <div class="stat-icon" style="background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);">
-                        ✓
+                        👥
                     </div>
                     <div class="stat-info">
-                        <span class="stat-label">Entregados</span>
-                        <span class="stat-value"><?php echo $stats['entregados_total']; ?></span>
-                        <span class="stat-change positive">Total histórico</span>
+                        <span class="stat-label">Por Colaboradores</span>
+                        <span class="stat-value"><?php echo $stats['pedidos_colaboradores']; ?></span>
+                        <span class="stat-change neutral">Total histórico</span>
                     </div>
                 </div>
+
             </div>
 
             <!-- Main Content Grid -->
@@ -196,56 +175,6 @@ foreach ($chartDataRaw as $row) {
                     </div>
                 </div>
 
-                <!-- Comprobantes Recientes -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Comprobantes Recientes</h2>
-                        <a href="comprobantes.php" class="view-all-link">Ver todos →</a>
-                    </div>
-                    <div class="card-body">
-                        <div class="receipt-list">
-                            <div class="receipt-item">
-                                <div class="receipt-icon">📄</div>
-                                <div class="receipt-info">
-                                    <span class="receipt-title">Comprobante #2024-001</span>
-                                    <span class="receipt-date">14 de Diciembre, 2024</span>
-                                </div>
-                                <div class="receipt-amount">$35.000</div>
-                                <button class="icon-btn" title="Descargar">⬇️</button>
-                            </div>
-                            <div class="receipt-item">
-                                <div class="receipt-icon">📄</div>
-                                <div class="receipt-info">
-                                    <span class="receipt-title">Comprobante #2024-002</span>
-                                    <span class="receipt-date">13 de Diciembre, 2024</span>
-                                </div>
-                                <div class="receipt-amount">$28.500</div>
-                                <button class="icon-btn" title="Descargar">⬇️</button>
-                            </div>
-                            <div class="receipt-item">
-                                <div class="receipt-icon">📄</div>
-                                <div class="receipt-info">
-                                    <span class="receipt-title">Comprobante #2024-003</span>
-                                    <span class="receipt-date">12 de Diciembre, 2024</span>
-                                </div>
-                                <div class="receipt-amount">$42.000</div>
-                                <button class="icon-btn" title="Descargar">⬇️</button>
-                            </div>
-                            <div class="receipt-item">
-                                <div class="receipt-icon">📄</div>
-                                <div class="receipt-info">
-                                    <span class="receipt-title">Comprobante #2024-004</span>
-                                    <span class="receipt-date">11 de Diciembre, 2024</span>
-                                </div>
-                                <div class="receipt-amount">$31.500</div>
-                                <button class="icon-btn" title="Descargar">⬇️</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Chart.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>

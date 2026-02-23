@@ -246,20 +246,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     // 2. Llenar Paquete
                     setField('descripcion_contenido', getValue('descripcion') || getValue('contenido'));
-                    setField('peso_paquete', getValue('peso'));
-                    setField('dimension_largo', getValue('largo'));
-                    setField('dimension_ancho', getValue('ancho'));
-                    setField('dimension_alto', getValue('alto'));
 
-                    // Tipo de Paquete
-                    const tipoVal = (getValue('tipo') || '').toString().toLowerCase();
-                    const tipoSelect = document.getElementById('tipo_paquete');
-                    if (tipoSelect) {
-                        if (tipoVal.includes('fragil') || tipoVal.includes('frágil')) tipoSelect.value = 'fragil';
-                        else if (tipoVal.includes('urgente')) tipoSelect.value = 'urgente';
-                        else tipoSelect.value = 'normal';
-                        tipoSelect.dispatchEvent(new Event('change'));
-                    }
+                    // Dimensiones - El usuario debe seleccionarlo manualmente ya que la lógica es compleja.
+                    // Se podría implementar una lógica para mapear cm a la opción correcta si se desea.
 
                     // Recaudo
                     const recaudoVal = getValue('recaudo') || getValue('valor');
@@ -305,17 +294,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 return idx !== -1 ? row[idx] : '';
             };
 
-            // Calcular costo para este item
-            const peso = parseFloat(getValue('peso')) || 1;
-            const tipoRaw = (getValue('tipo') || '').toString().toLowerCase();
-            let tipo = 'normal';
-            if (tipoRaw.includes('fragil')) tipo = 'fragil';
-            else if (tipoRaw.includes('urgente')) tipo = 'urgente';
-
-            let costoBase = 7000;
-            let recargoPeso = (peso > 1) ? Math.ceil(peso - 1) * 1000 : 0;
-            let recargoTipo = (tipo === 'fragil') ? 2000 : (tipo === 'urgente') ? 5000 : 0;
-            const total = costoBase + recargoPeso + recargoTipo;
+            let costoBase = 8000;
+            let recargoRecaudo = (getValue('recaudo') > 0) ? 3000 : 0;
+            const total = costoBase + recargoRecaudo; // Nota: No se pueden calcular otros recargos desde excel (dimensiones, etc)
 
             // Preparar objeto de datos
             const item = {
@@ -329,11 +310,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 destinatario_direccion: getValue('direccion') || getValue('destino'),
                 instrucciones_entrega: getValue('instrucciones') || getValue('observaciones'),
                 descripcion_contenido: getValue('descripcion') || getValue('contenido'),
-                peso_paquete: peso,
-                tipo_paquete: tipo,
-                dimension_largo: getValue('largo') || 10,
-                dimension_ancho: getValue('ancho') || 10,
-                dimension_alto: getValue('alto') || 10,
                 tiene_recaudo: (getValue('recaudo') > 0) ? 'on' : '',
                 valor_recaudo: getValue('recaudo') || 0,
                 costo_total: total,
@@ -350,7 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>${item.destinatario_nombre}</td>
                 <td>${item.destinatario_telefono}</td>
                 <td>${item.destinatario_direccion}</td>
-                <td>${item.descripcion_contenido} (${item.tipo_paquete})</td>
+                <td>${item.descripcion_contenido}</td>
                 <td>$${total.toLocaleString('es-CO')}</td>
                 <td class="status-pending" id="status-${index}">Pendiente</td>
                 <td id="actions-${index}"></td>
@@ -494,7 +470,6 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                     <div style="margin-top: 20px; border: 1px solid #eee; padding: 10px; border-radius: 8px; font-size: 11px;">
                         <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
                         <p><strong>Descripción:</strong> ${item.descripcion_contenido}</p>
-                        <p><strong>Peso:</strong> ${item.peso_paquete} kg | <strong>Dimensiones:</strong> ${item.dimension_largo}x${item.dimension_ancho}x${item.dimension_alto} cm</p>
                     </div>
                     <table style="width: 100%; margin-top: 20px; border-top: 2px solid #5cb85c; padding-top: 10px;">
                         <tr>
@@ -568,23 +543,72 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                 document.getElementById('valor_recaudo').value = '';
                 if (valorRecaudoHidden) valorRecaudoHidden.value = '';
             }
+            calcularCostoAutomatico();
         });
     }
 
     // --- CÁLCULO AUTOMÁTICO DE COSTO ---
     function calcularCostoAutomatico() {
-        const peso = parseFloat(document.getElementById('peso_paquete').value) || 0;
-        const tipo = document.getElementById('tipo_paquete').value;
+        // Nuevos campos de recargo
+        const mismoDiaCheckbox = document.getElementById('envio_mismo_dia');
+        const zonaPerifericaCheckbox = document.getElementById('zona_periferica');
+        const dimensionesSelect = document.getElementById('dimensiones_paquete');
 
-        let costoBase = 7000;
-        let recargoPeso = (peso > 1) ? Math.ceil(peso - 1) * 1000 : 0;
-        let recargoTipo = (tipo === 'fragil') ? 2000 : (tipo === 'urgente') ? 5000 : 0;
+        let recargoDimensionesValue = dimensionesSelect ? dimensionesSelect.value : '0';
 
-        const total = costoBase + recargoPeso + recargoTipo;
+        if (recargoDimensionesValue === 'notificar') {
+            const modal = document.getElementById('whatsappModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                const closeBtn = modal.querySelector('.close-wa-modal');
+                if(closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
+                modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+            } else {
+                // Fallback si no existe el modal
+                if(confirm('Para paquetes de 50x50 cm o más, por favor contáctanos directamente al WhatsApp +57 312318019. ¿Deseas ir ahora?')) {
+                    window.open('https://wa.link/49g8jg', '_blank');
+                }
+            }
+            
+            dimensionesSelect.value = ''; // Resetear selección
+            recargoDimensionesValue = '0'; // Evitar que se calcule un costo
+        }
+
+        let costoBase = 8000;
+        let recargoMismoDia = (mismoDiaCheckbox && mismoDiaCheckbox.checked) ? 2000 : 0;
+        let recargoZona = (zonaPerifericaCheckbox && zonaPerifericaCheckbox.checked) ? 4000 : 0;
+        let recargoDimensiones = parseInt(recargoDimensionesValue, 10) || 0;
+        let recargoAdicionales = recargoMismoDia + recargoZona;
+        
+        let recargoRecaudo = 0;
+        if (tieneRecaudoCheckbox && tieneRecaudoCheckbox.checked) {
+            recargoRecaudo = 3000;
+        }
+
+        const total = costoBase + recargoRecaudo + recargoAdicionales + recargoDimensiones;
 
         document.getElementById('costoBase').textContent = `$${costoBase.toLocaleString('es-CO')}`;
-        document.getElementById('recargoPeso').textContent = `$${recargoPeso.toLocaleString('es-CO')}`;
-        document.getElementById('recargoTipo').textContent = `$${recargoTipo.toLocaleString('es-CO')}`;
+        
+        const recargoDimensionesDisplay = document.getElementById('recargoDimensiones');
+        if(recargoDimensionesDisplay) {
+            recargoDimensionesDisplay.textContent = `$${recargoDimensiones.toLocaleString('es-CO')}`;
+        }
+
+        const recargoMismoDiaDisplay = document.getElementById('recargoMismoDia');
+        if(recargoMismoDiaDisplay) {
+            recargoMismoDiaDisplay.textContent = `$${recargoMismoDia.toLocaleString('es-CO')}`;
+        }
+
+        const recargoZonaDisplay = document.getElementById('recargoZona');
+        if(recargoZonaDisplay) {
+            recargoZonaDisplay.textContent = `$${recargoZona.toLocaleString('es-CO')}`;
+        }
+        
+        const recaudoDisplay = document.getElementById('valorRecaudoDisplay');
+        if (recaudoDisplay) {
+            recaudoDisplay.textContent = `$${recargoRecaudo.toLocaleString('es-CO')}`;
+        }
+        
         document.getElementById('costoTotal').textContent = `$${total.toLocaleString('es-CO')}`;
         
         if(costoTotalHiddenInput) {
@@ -593,18 +617,12 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
 
         // Manejar visibilidad de la opción de sumar envío
         const containerSumar = document.getElementById('container_sumar_envio');
-        if (tieneRecaudoCheckbox && tieneRecaudoCheckbox.checked) {
-            if (containerSumar) containerSumar.style.display = 'block';
-            actualizarRecaudoFinal(); // Recalcular por si cambió el costo
-        } else {
-            if (containerSumar) containerSumar.style.display = 'none';
-        }
+        if (containerSumar) containerSumar.style.display = 'block';
+        actualizarRecaudoFinal(); // Recalcular siempre
     }
 
     // Función para actualizar el recaudo final según la selección
     function actualizarRecaudoFinal() {
-        if (!tieneRecaudoCheckbox.checked) return;
-        
         const sumarOption = document.querySelector('input[name="sumar_envio_recaudo"]:checked');
         const costoTotal = parseFloat(costoTotalHiddenInput.value) || 0;
         const preview = document.getElementById('preview_total_recaudo');
@@ -634,11 +652,13 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
     }
 
     // Agregar listeners a los campos que afectan el precio
-    const pesoInput = document.getElementById('peso_paquete');
-    const tipoInput = document.getElementById('tipo_paquete');
+    const mismoDiaInput = document.getElementById('envio_mismo_dia');
+    const zonaPerifericaInput = document.getElementById('zona_periferica');
+    const dimensionesInput = document.getElementById('dimensiones_paquete');
 
-    if (pesoInput) pesoInput.addEventListener('input', calcularCostoAutomatico);
-    if (tipoInput) tipoInput.addEventListener('change', calcularCostoAutomatico);
+    if (mismoDiaInput) mismoDiaInput.addEventListener('change', calcularCostoAutomatico);
+    if (zonaPerifericaInput) zonaPerifericaInput.addEventListener('change', calcularCostoAutomatico);
+    if (dimensionesInput) dimensionesInput.addEventListener('change', calcularCostoAutomatico);
     
     // Listeners para los radios de sumar envío
     const radiosSumar = document.querySelectorAll('input[name="sumar_envio_recaudo"]');
@@ -657,36 +677,40 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         document.getElementById('confirm_destinatario_nombre').textContent = document.getElementById('destinatario_nombre').value;
         document.getElementById('confirm_destinatario_telefono').textContent = document.getElementById('destinatario_telefono').value;
         document.getElementById('confirm_destinatario_direccion').textContent = document.getElementById('destinatario_direccion').value;
-
-        const peso = document.getElementById('peso_paquete').value;
-        const largo = document.getElementById('dimension_largo').value;
-        const ancho = document.getElementById('dimension_ancho').value;
-        const alto = document.getElementById('dimension_alto').value;
-        const tipoSelect = document.getElementById('tipo_paquete');
-        const tipoTexto = tipoSelect.options[tipoSelect.selectedIndex].text;
+        document.getElementById('confirm_destinatario_observaciones').textContent = document.getElementById('instrucciones_entrega').value || 'Sin observaciones';
 
         document.getElementById('confirm_descripcion').textContent = document.getElementById('descripcion_contenido').value;
-        document.getElementById('confirm_peso').textContent = `${peso} kg`;
-        document.getElementById('confirm_dimensiones').textContent = `${largo}x${ancho}x${alto} cm`;
-        document.getElementById('confirm_tipo').textContent = tipoTexto;
 
-        document.getElementById('confirm_total').textContent = document.getElementById('costoTotal').textContent;
+        // --- CÁLCULO DE TOTALES A COBRAR ---
+        const costoEnvioNum = parseFloat(document.getElementById('costoTotalHidden').value) || 0;
+        const baseRecaudoNum = baseRecaudo || 0;
+        const sumarOption = document.querySelector('input[name="sumar_envio_recaudo"]:checked');
+        const sumar = sumarOption ? sumarOption.value : 'no';
+        const tieneRecaudo = document.getElementById('tiene_recaudo').checked;
 
-        // --- NUEVO: Mostrar info de recaudo en la confirmación ---
-        const confirmMetodoPago = document.getElementById('confirm_metodo_pago');
-        const confirmRecaudoContainer = document.getElementById('confirm_recaudo_container');
-        const confirmValorRecaudo = document.getElementById('confirm_valor_recaudo');
+        let totalCobrar = 0;
+        let valorProducto = 0;
+        let valorEnvio = 0;
 
-        if (tieneRecaudoCheckbox.checked && valorRecaudoInput.value) {
-            confirmMetodoPago.textContent = 'Pago Contra Entrega';
-            // El valor ya está formateado por el listener del input
-            const finalRecaudo = parseInt(valorRecaudoHidden.value) || 0;
-            confirmValorRecaudo.textContent = `$${finalRecaudo.toLocaleString('es-CO')}`;
-            confirmRecaudoContainer.style.display = 'block';
+        if (tieneRecaudo) {
+            valorProducto = baseRecaudoNum;
+            if (sumar === 'si') {
+                valorEnvio = costoEnvioNum;
+                totalCobrar = valorProducto + valorEnvio;
+            } else {
+                valorEnvio = 0;
+                totalCobrar = valorProducto;
+            }
         } else {
-            confirmMetodoPago.textContent = 'Prepago (Costo de envío)';
-            confirmRecaudoContainer.style.display = 'none';
+            // Si no hay recaudo, asumimos que no se cobra nada al destinatario (0)
+            totalCobrar = 0;
+            valorProducto = 0;
+            valorEnvio = 0;
         }
+
+        document.getElementById('confirm_total_cobrar').textContent = `$${totalCobrar.toLocaleString('es-CO')}`;
+        document.getElementById('confirm_valor_producto').textContent = `$${valorProducto.toLocaleString('es-CO')}`;
+        document.getElementById('confirm_valor_envio').textContent = `$${valorEnvio.toLocaleString('es-CO')}`;
         
         const date = new Date();
         const year = date.getFullYear();
@@ -701,18 +725,16 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         }
 
         // Lógica para mostrar información financiera en el QR
-        const sumarOption = document.querySelector('input[name="sumar_envio_recaudo"]:checked');
-        const sumarEnvio = sumarOption ? sumarOption.value : 'no';
         let qrFinanciero = '';
 
-        if (tieneRecaudoCheckbox.checked && sumarEnvio === 'si') {
-            // Si se suma, solo mostramos el total a recaudar
-            const totalRecaudar = document.getElementById('confirm_valor_recaudo').textContent;
-            qrFinanciero = `Total a Recaudar: ${totalRecaudar}`;
+        if (sumar === 'si') {
+            // Si se suma el envío, mostramos el total unificado a recaudar
+            qrFinanciero = `Total a Recaudar: $${totalCobrar.toLocaleString('es-CO')}`;
         } else {
-            // Si no se suma o no hay recaudo, mostramos desglose normal
-            qrFinanciero = `Costo Envío: ${document.getElementById('costoTotal').textContent.trim()}
-Recaudo: ${tieneRecaudoCheckbox.checked ? document.getElementById('confirm_valor_recaudo').textContent : 'No aplica'}`;
+            // Si NO se suma, mostramos por separado
+            const textoRecaudo = (valorProducto > 0) ? `$${valorProducto.toLocaleString('es-CO')}` : 'No aplica';
+            qrFinanciero = `Costo Envío: $${costoEnvioNum.toLocaleString('es-CO')}
+Recaudo: ${textoRecaudo}`;
         }
 
         // --- QR CODE GENERATION ---
@@ -762,24 +784,33 @@ ${qrFinanciero}
                 const numeroGuia = document.getElementById('numeroGuia').textContent;
                 
                 // Lógica para el Resumen Financiero en el PDF
+                const costoEnvioNum = parseFloat(document.getElementById('costoTotalHidden').value) || 0;
+                const baseRecaudoNum = baseRecaudo || 0;
                 const sumarOption = document.querySelector('input[name="sumar_envio_recaudo"]:checked');
-                const sumarEnvio = sumarOption ? sumarOption.value : 'no';
-                let htmlResumenFinanciero = '';
+                const sumar = sumarOption ? sumarOption.value : 'no';
+                const tieneRecaudo = document.getElementById('tiene_recaudo').checked;
 
-                if (tieneRecaudoCheckbox.checked && sumarEnvio === 'si') {
-                    // Caso: Sumar envío al recaudo -> Mostrar solo Total a Recaudar
-                    const totalRecaudar = document.getElementById('confirm_valor_recaudo').textContent;
-                    htmlResumenFinanciero = `<p><strong>Total a Recaudar:</strong> ${totalRecaudar}</p>`;
-                } else {
-                    // Caso: No sumar o Sin recaudo -> Mostrar Costo Envío y Recaudo por separado
-                    const costoEnvio = document.getElementById('costoTotal').textContent;
-                    const valorRecaudo = tieneRecaudoCheckbox.checked ? document.getElementById('confirm_valor_recaudo').textContent : 'No aplica';
-                    // Si es recaudo 0 y dijo NO sumar, aparecerá $0. Si no hay recaudo, "No aplica".
-                    htmlResumenFinanciero = `
-                        <p><strong>Costo Envío:</strong> ${costoEnvio}</p>
-                        <p><strong>Valor a Recaudar:</strong> ${valorRecaudo}</p>
-                    `;
+                let totalCobrar = 0;
+                let valorProducto = 0;
+                let valorEnvio = 0;
+
+                if (tieneRecaudo) {
+                    valorProducto = baseRecaudoNum;
+                    if (sumar === 'si') {
+                        valorEnvio = costoEnvioNum;
+                        totalCobrar = valorProducto + valorEnvio;
+                    } else {
+                        valorEnvio = 0;
+                        totalCobrar = valorProducto;
+                    }
                 }
+
+                let htmlResumenFinanciero = '';
+                htmlResumenFinanciero = `
+                    <p><strong>Total a Cobrar:</strong> $${totalCobrar.toLocaleString('es-CO')}</p>
+                    <p><strong>Valor Producto:</strong> $${valorProducto.toLocaleString('es-CO')}</p>
+                    <p><strong>Valor Envío:</strong> $${valorEnvio.toLocaleString('es-CO')}</p>
+                `;
 
                 // Obtener la imagen del QR como Data URL
                 if (!qrCodeStylingInstance) {
@@ -817,7 +848,8 @@ ${qrFinanciero}
                             <tr>
                                 <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
                                     <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
-                                    <p><strong>Nombre:</strong> ${document.getElementById('remitente_nombre').value}</p>
+                                    <p><strong>Tienda:</strong> ${window.remitenteData?.nombre_tienda || ''}</p>
+                                    <p><strong>Remitente:</strong> ${document.getElementById('remitente_nombre').value}</p>
                                     <p><strong>Teléfono:</strong> ${document.getElementById('remitente_telefono').value}</p>
                                     <p><strong>Dirección:</strong> ${document.getElementById('remitente_direccion').value}</p>
                                 </td>
@@ -827,6 +859,7 @@ ${qrFinanciero}
                                     <p><strong>Nombre:</strong> ${document.getElementById('destinatario_nombre').value}</p>
                                     <p><strong>Teléfono:</strong> ${document.getElementById('destinatario_telefono').value}</p>
                                     <p><strong>Dirección:</strong> ${document.getElementById('destinatario_direccion').value}</p>
+                                    <p><strong>Observaciones:</strong> ${document.getElementById('instrucciones_entrega').value || 'Sin observaciones'}</p>
                                 </td>
                             </tr>
                         </table>
@@ -834,7 +867,6 @@ ${qrFinanciero}
                         <div style="margin-top: 20px; border: 1px solid #eee; padding: 10px; border-radius: 8px; font-size: 11px;">
                             <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
                             <p><strong>Descripción:</strong> ${document.getElementById('descripcion_contenido').value}</p>
-                            <p><strong>Peso:</strong> ${document.getElementById('peso_paquete').value} kg | <strong>Dimensiones:</strong> ${document.getElementById('dimension_largo').value}x${document.getElementById('dimension_ancho').value}x${document.getElementById('dimension_alto').value} cm</p>
                         </div>
 
                         <table style="width: 100%; margin-top: 20px; border-top: 2px solid #5cb85c; padding-top: 10px;">
