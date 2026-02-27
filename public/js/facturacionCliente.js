@@ -131,6 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${f.tipo_paquete}</td>
                     <td><span class="badge badge-${badgeClass}">${f.estado.toUpperCase()}</span></td>
                     <td>
+                        <button class="btn btn-sm btn-warning" onclick="cargarRotulo(${f.id})" title="Ver Rótulo" style="margin-right:3px;">🏷️ Rótulo</button>
                         <button class="btn btn-sm btn-info" onclick="verDetalle(${f.id})" title="Ver Detalle">👁️</button>
                         <button class="btn btn-sm btn-secondary" title="Descargar PDF">⬇️</button>
                     </td>
@@ -199,6 +200,50 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
         }
+    };
+
+    // Función para cargar datos y abrir el rótulo
+    window.cargarRotulo = function(id) {
+        // Feedback visual en el botón
+        const btn = event.currentTarget;
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '⌛';
+        btn.disabled = true;
+
+        fetch(`../../controller/facturacionClienteController.php?action=detalle&id=${id}`)
+            .then(res => res.json())
+            .then(response => {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+
+                if (response.success) {
+                    const info = response.data.info;
+                    // Preparar datos para el modal
+                    const datos = {
+                        guia: info.numero_guia,
+                        remitente_nombre: info.remitente_nombre || 'EcoBikeMess', // Fallback si no viene del back
+                        remitente_direccion: info.remitente_direccion || '',
+                        remitente_telefono: info.remitente_telefono || '',
+                        destinatario_nombre: info.destinatario_nombre,
+                        destinatario_direccion: info.direccion_destino,
+                        destinatario_telefono: info.destinatario_telefono || '',
+                        destinatario_observaciones: info.instrucciones_entrega || 'Sin observaciones',
+                        contenido: info.descripcion_contenido || '',
+                        cambios: info.recoger_cambios ? 'Sí' : 'No',
+                        costo_envio: info.costo_envio,
+                        recaudo: info.recaudo_esperado || 0
+                    };
+                    // Llamar a la función del PHP
+                    if (typeof window.verRotulo === 'function') window.verRotulo(datos);
+                } else {
+                    alert('No se pudieron cargar los datos: ' + response.error);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            });
     };
 
     function formatCurrency(val) {

@@ -10,7 +10,7 @@
     <header>
         <nav class="navbar">
             <div class="logo">
-                <h1>🚴 EcoBikeMess</h1>
+                <h1><img src="../public/img/Logo_Circulo_Fondoblanco.png" alt="Logo EcoBikeMess" style="height: 40px; vertical-align: middle; margin-right: 5px;"> EcoBikeMess</h1>
             </div>
             <div class="nav-links">
                 <a href="#inicio">Inicio</a>
@@ -47,8 +47,8 @@
                 <h2>Nuestros Servicios</h2>
                 <div class="services-grid">
                     <div class="service-card">
-                        <h3>📦 Paquetería Express</h3>
-                        <p>Entregas el mismo día en menos de 2 horas</p>
+                        <h3>📦 Cobertura y precios base</h3>
+                        <p>$8.000: Envío estándar en Bogotá</p>
                         <button class="btn-expand" data-service="express">
                             <span>Ver más detalles</span>
                             <span class="arrow">▼</span>
@@ -56,9 +56,9 @@
                         <div class="service-details" id="details-express">
                             <p><strong>Características:</strong></p>
                             <ul>
-                                <li>Paquetes de hasta 15 kg</li>
-                                <li>Dimensiones máximas: 50x40x30 cm</li>
-                                <li>Seguimiento en tiempo real</li>
+                                <li>Todo paquete que sean menores o iguales a 20x20x20 cm</li>
+                                <li>Para Soacha y zonas verdes oscuras en Bogotá tendra un adicional de $4.000</li>
+                                <li>Todo paquete con tarifa plena tendra entre 1 a 2 dias de entrega</li>
                                 <li>Garantía de entrega en 2 horas</li>
                                 <li>Servicio disponible de lunes a sábado de 8:00 AM a 6:00 PM</li>
                                 <li>Notificación por SMS y correo electrónico</li>

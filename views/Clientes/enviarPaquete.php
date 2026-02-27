@@ -278,11 +278,7 @@ $remitente_data = [
                             <h2>📦 Información del Paquete</h2>
                         </div>
                         <div class="card-body">
-                            <div class="form-group">
-                                <label for="descripcion_contenido">Descripción del Contenido *</label>
-                                <textarea id="descripcion_contenido" name="descripcion_contenido" rows="2" placeholder="Ej: Ropa, documentos, accesorios, etc." required></textarea>
-                                <span class="error-message"></span>
-                            </div>
+
                             <div class="form-group">
                                 <label for="dimensiones_paquete">Dimensiones del Paquete *</label>
                                 <select id="dimensiones_paquete" name="dimensiones_paquete" required>
@@ -310,7 +306,18 @@ $remitente_data = [
                                         <span>Destino Soacha, Usme, C. Bolívar o San Cristóbal sur (+$4.000)</span>
                                     </label>
                                 </div>
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="recoger_cambios" name="recoger_cambios">
+                                        <span>¿Hay cambios por recoger? (+$5.000)</span>
+                                    </label>
+                                </div>
                             </div>
+                                <div class="form-group">
+                                    <label for="descripcion_contenido">Descripción del Contenido y Observaciones*</label>
+                                    <textarea id="descripcion_contenido" name="descripcion_contenido" rows="2" placeholder="Ej: Ropa, documentos, accesorios, etc." required></textarea>
+                                    <span class="error-message"></span>
+                                </div>
                         </div>
                     </div>
 
@@ -336,6 +343,10 @@ $remitente_data = [
                                 <div class="cost-item">
                                     <span>Zonas de difícil acceso:</span>
                                     <span id="recargoZona">$0</span>
+                                </div>
+                                <div class="cost-item">
+                                    <span>Cambios por recoger:</span>
+                                    <span id="recargoCambios">$0</span>
                                 </div>
                                 <div class="cost-item">
                                     <span>Recaudo (si aplica):</span>
@@ -439,6 +450,10 @@ $remitente_data = [
                                         <span class="info-label">Descripción:</span>
                                         <span id="confirm_descripcion"></span>
                                     </div>
+                                <div class="info-item">
+                                    <span class="info-label">Cambios por recoger:</span>
+                                    <span id="confirm_recoger_cambios"></span>
+                                </div>
                                 </div>
                             </div>
 

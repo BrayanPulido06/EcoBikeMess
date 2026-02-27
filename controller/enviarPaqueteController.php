@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Asegurar manejo correcto de checkboxes y booleanos
         $datos['tiene_recaudo'] = isset($_POST['tiene_recaudo']) ? 1 : 0;
+        $datos['tiene_cambios'] = isset($_POST['recoger_cambios']) ? 1 : 0;
 
         // Limpieza de moneda (por si el JS envía '$ 10.000')
         $datos['valor_recaudo'] = str_replace(['$', '.', ','], '', $datos['valor_recaudo'] ?? '0');

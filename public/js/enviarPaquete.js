@@ -552,6 +552,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         // Nuevos campos de recargo
         const mismoDiaCheckbox = document.getElementById('envio_mismo_dia');
         const zonaPerifericaCheckbox = document.getElementById('zona_periferica');
+        const recogerCambiosCheckbox = document.getElementById('recoger_cambios');
         const dimensionesSelect = document.getElementById('dimensiones_paquete');
 
         let recargoDimensionesValue = dimensionesSelect ? dimensionesSelect.value : '0';
@@ -577,15 +578,15 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         let costoBase = 8000;
         let recargoMismoDia = (mismoDiaCheckbox && mismoDiaCheckbox.checked) ? 2000 : 0;
         let recargoZona = (zonaPerifericaCheckbox && zonaPerifericaCheckbox.checked) ? 4000 : 0;
+        let recargoCambios = (recogerCambiosCheckbox && recogerCambiosCheckbox.checked) ? 5000 : 0;
         let recargoDimensiones = parseInt(recargoDimensionesValue, 10) || 0;
-        let recargoAdicionales = recargoMismoDia + recargoZona;
         
         let recargoRecaudo = 0;
         if (tieneRecaudoCheckbox && tieneRecaudoCheckbox.checked) {
             recargoRecaudo = 3000;
         }
 
-        const total = costoBase + recargoRecaudo + recargoAdicionales + recargoDimensiones;
+        const total = costoBase + recargoRecaudo + recargoMismoDia + recargoZona + recargoDimensiones + recargoCambios;
 
         document.getElementById('costoBase').textContent = `$${costoBase.toLocaleString('es-CO')}`;
         
@@ -602,6 +603,11 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         const recargoZonaDisplay = document.getElementById('recargoZona');
         if(recargoZonaDisplay) {
             recargoZonaDisplay.textContent = `$${recargoZona.toLocaleString('es-CO')}`;
+        }
+
+        const recargoCambiosDisplay = document.getElementById('recargoCambios');
+        if(recargoCambiosDisplay) {
+            recargoCambiosDisplay.textContent = `$${recargoCambios.toLocaleString('es-CO')}`;
         }
         
         const recaudoDisplay = document.getElementById('valorRecaudoDisplay');
@@ -654,10 +660,12 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
     // Agregar listeners a los campos que afectan el precio
     const mismoDiaInput = document.getElementById('envio_mismo_dia');
     const zonaPerifericaInput = document.getElementById('zona_periferica');
+    const recogerCambiosInput = document.getElementById('recoger_cambios');
     const dimensionesInput = document.getElementById('dimensiones_paquete');
 
     if (mismoDiaInput) mismoDiaInput.addEventListener('change', calcularCostoAutomatico);
     if (zonaPerifericaInput) zonaPerifericaInput.addEventListener('change', calcularCostoAutomatico);
+    if (recogerCambiosInput) recogerCambiosInput.addEventListener('change', calcularCostoAutomatico);
     if (dimensionesInput) dimensionesInput.addEventListener('change', calcularCostoAutomatico);
     
     // Listeners para los radios de sumar envío
@@ -680,6 +688,9 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         document.getElementById('confirm_destinatario_observaciones').textContent = document.getElementById('instrucciones_entrega').value || 'Sin observaciones';
 
         document.getElementById('confirm_descripcion').textContent = document.getElementById('descripcion_contenido').value;
+        const recogerCambios = document.getElementById('recoger_cambios').checked;
+        document.getElementById('confirm_recoger_cambios').textContent = recogerCambios ? 'Sí' : 'No';
+
 
         // --- CÁLCULO DE TOTALES A COBRAR ---
         const costoEnvioNum = parseFloat(document.getElementById('costoTotalHidden').value) || 0;
@@ -745,6 +756,7 @@ Origen: ${document.getElementById('remitente_direccion').value}
 Destinatario: ${document.getElementById('destinatario_nombre').value}
 Destino: ${document.getElementById('destinatario_direccion').value}
 Contenido: ${document.getElementById('descripcion_contenido').value}
+Cambios por recoger: ${recogerCambios ? 'Sí' : 'No'}
 ${qrFinanciero}
         `.trim();
 
@@ -812,6 +824,9 @@ ${qrFinanciero}
                     <p><strong>Valor Envío:</strong> $${valorEnvio.toLocaleString('es-CO')}</p>
                 `;
 
+                const recogerCambiosChecked = document.getElementById('recoger_cambios').checked;
+                const textoRecogerCambiosPDF = `<p><strong>Cambios por recoger:</strong> ${recogerCambiosChecked ? 'Sí' : 'No'}</p>`;
+
                 // Obtener la imagen del QR como Data URL
                 if (!qrCodeStylingInstance) {
                     alert('Error: El código QR no se ha generado. No se puede crear el PDF.');
@@ -867,6 +882,7 @@ ${qrFinanciero}
                         <div style="margin-top: 20px; border: 1px solid #eee; padding: 10px; border-radius: 8px; font-size: 11px;">
                             <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
                             <p><strong>Descripción:</strong> ${document.getElementById('descripcion_contenido').value}</p>
+                            ${textoRecogerCambiosPDF}
                         </div>
 
                         <table style="width: 100%; margin-top: 20px; border-top: 2px solid #5cb85c; padding-top: 10px;">
