@@ -165,18 +165,12 @@ CREATE TABLE IF NOT EXISTS paquetes (
     remitente_correo VARCHAR(150),
     direccion_origen TEXT NOT NULL,
     destinatario_nombre VARCHAR(200) NOT NULL,
-    destinatario_telefono VARCHAR(20) NOT NULL,
+    destinatario_telefono VARCHAR(10) NOT NULL,
+    destinatario_telefono2 VARCHAR(10),
     direccion_destino TEXT NOT NULL,
-    coordenadas_destino_lat DECIMAL(10, 8),
-    coordenadas_destino_lng DECIMAL(11, 8),
     instrucciones_entrega TEXT,
     descripcion_contenido TEXT NOT NULL,
-    peso DECIMAL(8,2),
-    largo DECIMAL(8,2),
-    ancho DECIMAL(8,2),
-    alto DECIMAL(8,2),
-    tipo_paquete ENUM('normal', 'fragil', 'urgente', 'express') DEFAULT 'normal',
-    valor_declarado DECIMAL(10,2) DEFAULT 0.00,
+    envio_destinatario ENUM('si', 'no') DEFAULT 'no',
     tipo_servicio ENUM('entrega_simple', 'contraentrega') DEFAULT 'entrega_simple',
     costo_envio DECIMAL(10,2) NOT NULL,
     recaudo_esperado DECIMAL(10,2) DEFAULT 0.00,
@@ -736,15 +730,15 @@ INSERT INTO invitaciones_colaboradores (
 );
 
 -- Paquetes (con campo creado_por)
-INSERT INTO paquetes (numero_guia, cliente_id, remitente_nombre, remitente_telefono, remitente_correo, direccion_origen, destinatario_nombre, destinatario_telefono, direccion_destino, coordenadas_destino_lat, coordenadas_destino_lng, instrucciones_entrega, descripcion_contenido, peso, largo, ancho, alto, tipo_paquete, valor_declarado, tipo_servicio, costo_envio, recaudo_esperado, estado, mensajero_id, mensajero_recoleccion_id, creado_por, fecha_asignacion, fecha_entrega, qr_code, escaneado, fecha_escaneo)
+INSERT INTO paquetes (numero_guia, cliente_id, remitente_nombre, remitente_telefono, remitente_correo, direccion_origen, destinatario_nombre, destinatario_telefono, direccion_destino, instrucciones_entrega, descripcion_contenido, envio_destinatario, tipo_servicio, costo_envio, recaudo_esperado, estado, mensajero_id, mensajero_recoleccion_id, creado_por, fecha_asignacion, fecha_entrega, qr_code, escaneado, fecha_escaneo)
 VALUES 
-('ECO-2024-001', 1, 'Brayan Rodriguez', '3001234567', 'brayan@gmail.com', 'Calle 45 #23-67, Bogota', 'Ana Maria Lopez', '3156789012', 'Carrera 7 #100-25, Bogota', 4.701954, -74.035599, 'Dejar con porteria si no esta', 'Camiseta deportiva talla M', 0.25, 30.00, 25.00, 5.00, 'normal', 50000.00, 'contraentrega', 8000.00, 75000.00, 'entregado', 1, 1, 1, '2024-12-20 08:30:00', '2024-12-20 14:45:00', 'QR-ECO-001', TRUE, '2024-12-20 08:35:00'),
+('ECO-2024-001', 1, 'Brayan Rodriguez', '3001234567', 'brayan@gmail.com', 'Calle 45 #23-67, Bogota', 'Ana Maria Lopez', '3156789012', 'Carrera 7 #100-25, Bogota', 'Dejar con porteria si no esta', 'Camiseta deportiva talla M', 'no', 'contraentrega', 8000.00, 75000.00, 'entregado', 1, 1, 1, '2024-12-20 08:30:00', '2024-12-20 14:45:00', 'QR-ECO-001', TRUE, '2024-12-20 08:35:00'),
 
-('ECO-2024-002', 1, 'Brayan Store', '3001234567', 'brayan@gmail.com', 'Calle 45 #23-67, Bogota', 'Carlos Mendoza', '3187654321', 'Calle 127 #15-40, Bogota', 4.722445, -74.045732, 'Llamar al llegar', 'Zapatillas deportivas talla 42', 0.80, 35.00, 25.00, 15.00, 'express', 120000.00, 'entrega_simple', 12000.00, 0, 'en_transito', 1, 1, 4, '2024-12-25 09:15:00', NULL, 'QR-ECO-002', TRUE, '2024-12-25 09:20:00'),
+('ECO-2024-002', 1, 'Brayan Store', '3001234567', 'brayan@gmail.com', 'Calle 45 #23-67, Bogota', 'Carlos Mendoza', '3187654321', 'Calle 127 #15-40, Bogota', 'Llamar al llegar', 'Zapatillas deportivas talla 42', 'si', 'entrega_simple', 12000.00, 0, 'en_transito', 1, 1, 4, '2024-12-25 09:15:00', NULL, 'QR-ECO-002', TRUE, '2024-12-25 09:20:00'),
 
-('ECO-2024-003', 1, 'Brayan Store', '3001234567', 'brayan@gmail.com', 'Calle 45 #23-67, Bogota', 'Laura Sanchez', '3209876543', 'Avenida 68 #45-23, Bogota', NULL, NULL, 'Entregar en horario de oficina', 'Conjunto deportivo completo', 0.60, NULL, NULL, NULL, 'urgente', 85000.00, 'contraentrega', 10000.00, 95000.00, 'pendiente', NULL, NULL, 5, NULL, NULL, 'QR-ECO-003', FALSE, NULL),
+('ECO-2024-003', 1, 'Brayan Store', '3001234567', 'brayan@gmail.com', 'Calle 45 #23-67, Bogota', 'Laura Sanchez', '3209876543', 'Avenida 68 #45-23, Bogota', 'Entregar en horario de oficina', 'Conjunto deportivo completo', 'si', 'contraentrega', 10000.00, 95000.00, 'pendiente', NULL, NULL, 5, NULL, NULL, 'QR-ECO-003', FALSE, NULL),
 
-('ECO-2024-004', 1, 'Brayan Store', '3001234567', NULL, 'Calle 45 #23-67, Bogota', 'Miguel Torres', '3123456789', 'Calle 80 #10-20, Bogota', NULL, NULL, NULL, 'Gorra deportiva', 0.15, NULL, NULL, NULL, 'normal', 30000.00, 'entrega_simple', 7000.00, 0, 'asignado', 1, 1, 4, '2024-12-25 10:00:00', NULL, 'QR-ECO-004', FALSE, NULL);
+('ECO-2024-004', 1, 'Brayan Store', '3001234567', NULL, 'Calle 45 #23-67, Bogota', 'Miguel Torres', '3123456789', 'Calle 80 #10-20, Bogota', NULL, 'Gorra deportiva', 'no', 'entrega_simple', 7000.00, 0, 'asignado', 1, 1, 4, '2024-12-25 10:00:00', NULL, 'QR-ECO-004', FALSE, NULL);
 
 -- Entregas
 INSERT INTO entregas (paquete_id, mensajero_id, nombre_receptor, parentesco_cargo, documento_receptor, recaudo_real, coordenadas_entrega_lat, coordenadas_entrega_lng, foto_entrega, foto_adicional, observaciones)
@@ -802,13 +796,13 @@ VALUES
 INSERT INTO logs_actividad (usuario_id, tipo_actividad, descripcion, datos_adicionales, ip_address)
 VALUES 
 (1, 'login', 'Inicio de sesion exitoso', '{"metodo": "email_password"}', '192.168.1.100'),
-(1, 'crear_paquete', 'Creacion de nuevo paquete', '{"numero_guia": "ECO-2024-001", "tipo": "normal"}', '192.168.1.100'),
+(1, 'crear_paquete', 'Creacion de nuevo paquete', '{"numero_guia": "ECO-2024-001", "envio_destinatario": "no"}', '192.168.1.100'),
 (3, 'entrega_completada', 'Entrega de paquete completada', '{"paquete_id": 1, "numero_guia": "ECO-2024-001", "recaudo": 75000.00}', '192.168.1.102'),
 (2, 'registrar_pago', 'Registro de pago de cliente', '{"pago_id": 1, "monto": 53550.00, "cliente_id": 1}', '192.168.1.101'),
 (1, 'agregar_colaborador', 'Se agregó un nuevo colaborador', '{"colaborador_id": 4, "nombre": "Sofia Martinez", "cargo": "Asistente de Logística"}', '192.168.1.100'),
 (4, 'login', 'Primer inicio de sesion como colaborador', '{"metodo": "email_password"}', '192.168.1.103'),
-(4, 'crear_paquete', 'Creacion de paquete por colaborador', '{"numero_guia": "ECO-2024-002", "tipo": "express"}', '192.168.1.103'),
-(5, 'crear_paquete', 'Creacion de paquete por colaborador', '{"numero_guia": "ECO-2024-003", "tipo": "urgente"}', '192.168.1.104');
+(4, 'crear_paquete', 'Creacion de paquete por colaborador', '{"numero_guia": "ECO-2024-002", "envio_destinatario": "si"}', '192.168.1.103'),
+(5, 'crear_paquete', 'Creacion de paquete por colaborador', '{"numero_guia": "ECO-2024-003", "envio_destinatario": "si"}', '192.168.1.104');
 
 -- Auditoría de colaboradores (NUEVO)
 INSERT INTO auditoria_colaboradores (colaborador_id, cliente_id, accion, descripcion, datos_anteriores, datos_nuevos, ip_address)

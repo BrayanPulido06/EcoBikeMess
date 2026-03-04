@@ -41,6 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $datos['tiene_recaudo'] = isset($_POST['tiene_recaudo']) ? 1 : 0;
         $datos['tiene_cambios'] = isset($_POST['recoger_cambios']) ? 1 : 0;
 
+        // Si el envío tiene recaudo, se espera el valor de 'envio_destinatario'. Si no, se asume 'no'.
+        // Esto corresponde a la pregunta de si el costo del envío se suma al recaudo.
+        $datos['envio_destinatario'] = $_POST['envio_destinatario'] ?? 'no';
+
         // Limpieza de moneda (por si el JS envía '$ 10.000')
         $datos['valor_recaudo'] = str_replace(['$', '.', ','], '', $datos['valor_recaudo'] ?? '0');
         $datos['costo_total'] = str_replace(['$', '.', ','], '', $datos['costo_total'] ?? '0');

@@ -629,7 +629,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
 
     // Función para actualizar el recaudo final según la selección
     function actualizarRecaudoFinal() {
-        const sumarOption = document.querySelector('input[name="sumar_envio_recaudo"]:checked');
+        const sumarOption = document.querySelector('input[name="envio_destinatario"]:checked');
         const costoTotal = parseFloat(costoTotalHiddenInput.value) || 0;
         const preview = document.getElementById('preview_total_recaudo');
         
@@ -669,7 +669,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
     if (dimensionesInput) dimensionesInput.addEventListener('change', calcularCostoAutomatico);
     
     // Listeners para los radios de sumar envío
-    const radiosSumar = document.querySelectorAll('input[name="sumar_envio_recaudo"]');
+    const radiosSumar = document.querySelectorAll('input[name="envio_destinatario"]');
     radiosSumar.forEach(r => r.addEventListener('change', actualizarRecaudoFinal));
 
     // Mantener compatibilidad con el botón si existe (aunque lo ocultaremos)
@@ -678,9 +678,8 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
     }
 
     function populateConfirmation() {
-        document.getElementById('confirm_remitente_nombre').textContent = document.getElementById('remitente_nombre').value;
-        document.getElementById('confirm_remitente_telefono').textContent = document.getElementById('remitente_telefono').value;
-        document.getElementById('confirm_remitente_direccion').textContent = document.getElementById('remitente_direccion').value;
+        // Usar el nombre de la tienda desde los datos cargados de la BD (window.remitenteData)
+        document.getElementById('confirm_tienda_nombre').textContent = window.remitenteData?.nombre_tienda || 'Tienda';
 
         document.getElementById('confirm_destinatario_nombre').textContent = document.getElementById('destinatario_nombre').value;
         document.getElementById('confirm_destinatario_telefono').textContent = document.getElementById('destinatario_telefono').value;
@@ -695,7 +694,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         // --- CÁLCULO DE TOTALES A COBRAR ---
         const costoEnvioNum = parseFloat(document.getElementById('costoTotalHidden').value) || 0;
         const baseRecaudoNum = baseRecaudo || 0;
-        const sumarOption = document.querySelector('input[name="sumar_envio_recaudo"]:checked');
+        const sumarOption = document.querySelector('input[name="envio_destinatario"]:checked');
         const sumar = sumarOption ? sumarOption.value : 'no';
         const tieneRecaudo = document.getElementById('tiene_recaudo').checked;
 
@@ -720,8 +719,6 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         }
 
         document.getElementById('confirm_total_cobrar').textContent = `$${totalCobrar.toLocaleString('es-CO')}`;
-        document.getElementById('confirm_valor_producto').textContent = `$${valorProducto.toLocaleString('es-CO')}`;
-        document.getElementById('confirm_valor_envio').textContent = `$${valorEnvio.toLocaleString('es-CO')}`;
         
         const date = new Date();
         const year = date.getFullYear();
@@ -798,7 +795,7 @@ ${qrFinanciero}
                 // Lógica para el Resumen Financiero en el PDF
                 const costoEnvioNum = parseFloat(document.getElementById('costoTotalHidden').value) || 0;
                 const baseRecaudoNum = baseRecaudo || 0;
-                const sumarOption = document.querySelector('input[name="sumar_envio_recaudo"]:checked');
+                const sumarOption = document.querySelector('input[name="envio_destinatario"]:checked');
                 const sumar = sumarOption ? sumarOption.value : 'no';
                 const tieneRecaudo = document.getElementById('tiene_recaudo').checked;
 
@@ -819,9 +816,7 @@ ${qrFinanciero}
 
                 let htmlResumenFinanciero = '';
                 htmlResumenFinanciero = `
-                    <p><strong>Total a Cobrar:</strong> $${totalCobrar.toLocaleString('es-CO')}</p>
-                    <p><strong>Valor Producto:</strong> $${valorProducto.toLocaleString('es-CO')}</p>
-                    <p><strong>Valor Envío:</strong> $${valorEnvio.toLocaleString('es-CO')}</p>
+                    <p style="font-size: 18px; font-weight: bold; color: #28a745; margin-top: 5px;">$${totalCobrar.toLocaleString('es-CO')}</p>
                 `;
 
                 const recogerCambiosChecked = document.getElementById('recoger_cambios').checked;
@@ -858,29 +853,22 @@ ${qrFinanciero}
                                 </td>
                             </tr>
                         </table>
-                        
-                        <table style="width: 100%; margin-top: 20px; font-size: 11px;">
-                            <tr>
-                                <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
-                                    <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
-                                    <p><strong>Tienda:</strong> ${window.remitenteData?.nombre_tienda || ''}</p>
-                                    <p><strong>Remitente:</strong> ${document.getElementById('remitente_nombre').value}</p>
-                                    <p><strong>Teléfono:</strong> ${document.getElementById('remitente_telefono').value}</p>
-                                    <p><strong>Dirección:</strong> ${document.getElementById('remitente_direccion').value}</p>
-                                </td>
-                                <td style="width: 4%;"></td>
-                                <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
-                                    <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
-                                    <p><strong>Nombre:</strong> ${document.getElementById('destinatario_nombre').value}</p>
-                                    <p><strong>Teléfono:</strong> ${document.getElementById('destinatario_telefono').value}</p>
-                                    <p><strong>Dirección:</strong> ${document.getElementById('destinatario_direccion').value}</p>
-                                    <p><strong>Observaciones:</strong> ${document.getElementById('instrucciones_entrega').value || 'Sin observaciones'}</p>
-                                </td>
-                            </tr>
-                        </table>
 
                         <div style="margin-top: 20px; border: 1px solid #eee; padding: 10px; border-radius: 8px; font-size: 11px;">
-                            <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
+                            <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
+                            <p><strong>Tienda:</strong> ${window.remitenteData?.nombre_tienda || 'Tienda'}</p>
+                        </div>
+
+                        <div style="margin-top: 15px; border: 1px solid #eee; padding: 10px; border-radius: 8px; font-size: 11px;">
+                            <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
+                            <p><strong>Nombre:</strong> ${document.getElementById('destinatario_nombre').value}</p>
+                            <p><strong>Teléfono:</strong> ${document.getElementById('destinatario_telefono').value}</p>
+                            <p><strong>Dirección:</strong> ${document.getElementById('destinatario_direccion').value}</p>
+                            <p><strong>Observaciones:</strong> ${document.getElementById('instrucciones_entrega').value || 'Sin observaciones'}</p>
+                        </div>
+
+                        <div style="margin-top: 20px; border: 1px solid #eee; padding: 10px; border-radius: 8px; font-size: 11px;">
+                            <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">� Detalles del Paquete</h3>
                             <p><strong>Descripción:</strong> ${document.getElementById('descripcion_contenido').value}</p>
                             ${textoRecogerCambiosPDF}
                         </div>
@@ -888,7 +876,7 @@ ${qrFinanciero}
                         <table style="width: 100%; margin-top: 20px; border-top: 2px solid #5cb85c; padding-top: 10px;">
                             <tr>
                                 <td style="width: 60%; vertical-align: top; font-size: 11px;">
-                                    <h3 style="margin: 0 0 10px; font-size: 14px;">💰 Resumen Financiero</h3>
+                                    <h3 style="margin: 0 0 10px; font-size: 14px;">💰 Total a Cobrar</h3>
                                     ${htmlResumenFinanciero}
                                 </td>
                                 <td style="width: 40%; text-align: right;">

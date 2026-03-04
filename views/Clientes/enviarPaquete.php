@@ -239,7 +239,7 @@ $remitente_data = [
                                 </div>
                                 <div class="form-group">
                                     <label for="destinatario_telefono">Teléfono *</label>
-                                    <input type="tel" id="destinatario_telefono" name="destinatario_telefono" placeholder="300 123 4567" required>
+                                    <input type="tel" id="destinatario_telefono" name="destinatario_telefono" placeholder="3001234567" required maxlength="10" pattern="\d{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                     <span class="error-message"></span>
                                 </div>
                             </div>
@@ -363,14 +363,14 @@ $remitente_data = [
                                     <label style="font-weight: bold; display: block; margin-bottom: 15px; font-size: 1.1rem; color: #2c3e50;">¿Desea sumar el costo del envío al valor del recaudo? *</label>
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                         <label class="radio-card">
-                                            <input type="radio" name="sumar_envio_recaudo" value="si" required>
+                                            <input type="radio" name="envio_destinatario" value="si" required>
                                             <div class="radio-card-content">
                                                 <strong>SÍ, SUMAR</strong>
                                                 <small>Cobrar envío al destinatario</small>
                                             </div>
                                         </label>
                                         <label class="radio-card">
-                                            <input type="radio" name="sumar_envio_recaudo" value="no" required>
+                                            <input type="radio" name="envio_destinatario" value="no" required>
                                             <div class="radio-card-content">
                                                 <strong>NO, MANTENER</strong>
                                                 <small>Cobrar solo el valor del producto</small>
@@ -408,15 +408,7 @@ $remitente_data = [
                                 <div class="info-grid">
                                     <div class="info-item">
                                         <span class="info-label">Tienda:</span>
-                                        <span id="confirm_remitente_nombre"></span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="info-label">Teléfono:</span>
-                                        <span id="confirm_remitente_telefono"></span>
-                                    </div>
-                                    <div class="info-item full-width">
-                                        <span class="info-label">Dirección:</span>
-                                        <span id="confirm_remitente_direccion"></span>
+                                        <span id="confirm_tienda_nombre"></span>
                                     </div>
                                 </div>
                             </div>
@@ -460,15 +452,6 @@ $remitente_data = [
                             <div class="confirmation-total">
                                 <h3>Total a Cobrar</h3>
                                 <div class="total-amount" id="confirm_total_cobrar">$0</div>
-                                
-                                <div class="info-item" style="margin-top: 15px; font-size: 0.9rem; display: flex; justify-content: space-between;">
-                                    <span class="info-label">Valor del Producto:</span>
-                                    <span id="confirm_valor_producto" style="font-weight: bold;">$0</span>
-                                </div>
-                                <div class="info-item" style="font-size: 0.9rem; display: flex; justify-content: space-between;">
-                                    <span class="info-label">Valor del Envío:</span>
-                                    <span id="confirm_valor_envio" style="font-weight: bold;">$0</span>
-                                </div>
                             </div>
 
                             <div class="guia-section">
