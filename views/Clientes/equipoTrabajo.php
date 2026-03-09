@@ -14,9 +14,10 @@ if (!isset($_SESSION['user_id'])) {
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/equipoTrabajo.css">
+    <link rel="stylesheet" href="../../public/css/clientesTheme.css">
     <!-- Estilos básicos para el modal y layout -->
     <style>
-        .main-content { margin-left: 250px; padding: 20px; margin-top: 60px; }
+        .main-content { margin-left: 260px; padding: 90px 24px 24px; }
         .btn-primary { background: #009688; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
         .btn-sm { padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; color: white; }
         .btn-danger { background: #e74c3c; }
@@ -31,7 +32,8 @@ if (!isset($_SESSION['user_id'])) {
         .permissions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .checkbox-label { display: flex; align-items: center; gap: 8px; font-weight: normal; font-size: 0.9rem; }
         
-        @media (max-width: 768px) { .main-content { margin-left: 0; } }
+        @media (max-width: 992px) { .main-content { margin-left: 70px; padding: 84px 14px 16px; } }
+        @media (max-width: 768px) { .main-content { margin-left: 0; padding: 82px 10px 14px; } }
     </style>
 </head>
 <body>
@@ -145,3 +147,4 @@ if (!isset($_SESSION['user_id'])) {
     <script src="../../public/js/equipoTrabajo.js"></script>
 </body>
 </html>
+

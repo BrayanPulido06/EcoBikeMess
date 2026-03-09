@@ -1,754 +1,280 @@
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // Datos de ejemplo de pedidos
-    let pedidos = [];
-    let filteredPedidos = [];
-    let currentPage = 1;
-    const itemsPerPage = 5;
-    
-    // Elementos del DOM
-    const searchInput = document.getElementById('searchInput');
-    const filterEstado = document.getElementById('filterEstado');
-    const filterFecha = document.getElementById('filterFecha');
-    const filterOrden = document.getElementById('filterOrden');
-    const btnExportPDF = document.getElementById('btnExportPDF');
-    const btnExportExcel = document.getElementById('btnExportExcel');
-    const btnNuevoPedido = document.getElementById('btnNuevoPedido');
-    const selectAllCheckbox = document.getElementById('selectAll');
-    const pedidosContainer = document.getElementById('pedidosContainer');
-    const noResults = document.getElementById('noResults');
-    const loading = document.getElementById('loading');
-    const detalleModal = document.getElementById('detalleModal');
-    const closeDetalleModal = document.getElementById('closeDetalleModal');
-    
-    // ============================================
-    // INICIALIZAR
-    // ============================================
-    
-    function init() {
-        fetchPedidos();
-        setupEventListeners();
-    }
+    console.log('Script facturacionCliente.js cargado');
 
-    async function fetchPedidos() {
-        try {
-            loading.style.display = 'block';
-            const response = await fetch('../../controller/misPedidosController.php');
-            const result = await response.json();
-            
-            if (result.success) {
-                pedidos = result.data;
-                filteredPedidos = [...pedidos];
-                updateStats();
-                renderPedidos();
-            } else {
-                console.error(result.message);
-                showToast('Error al cargar pedidos: ' + result.message, 'error');
-                loading.style.display = 'none';
-                document.getElementById('noResults').style.display = 'block';
-            }
-        } catch (error) {
-            console.error(error);
-            showToast('Error de conexión al cargar pedidos', 'error');
-            loading.style.display = 'none';
-        }
-    }
+    // --- REFERENCIAS DOM ---
+    const tableBody = document.getElementById('tablaFacturasBody');
+    const btnLimpiar = document.getElementById('btnLimpiarFiltros');
+    const btnExportExcel = document.getElementById('btnExportarExcel');
     
-    // ============================================
-    // ACTUALIZAR ESTADÍSTICAS
-    // ============================================
-    
-    function updateStats() {
-        const stats = {
-            pendientes: pedidos.filter(p => p.estado === 'pendiente').length,
-            enTransito: pedidos.filter(p => p.estado === 'en_transito').length,
-            entregados: pedidos.filter(p => p.estado === 'entregado').length,
-            total: pedidos.length
-        };
-        
-        document.getElementById('totalPendientes').textContent = stats.pendientes;
-        document.getElementById('totalEnTransito').textContent = stats.enTransito;
-        document.getElementById('totalEntregados').textContent = stats.entregados;
-        document.getElementById('totalPedidos').textContent = stats.total;
-    }
-    
-    // ============================================
-    // RENDERIZAR PEDIDOS
-    // ============================================
-    
-    function renderPedidos() {
-        loading.style.display = 'none';
-        
-        if (filteredPedidos.length === 0) {
-            pedidosContainer.innerHTML = '';
-            noResults.style.display = 'block';
-            return;
-        }
-        
-        noResults.style.display = 'none';
-        
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const paginatedPedidos = filteredPedidos.slice(startIndex, endIndex);
-        
-        pedidosContainer.innerHTML = paginatedPedidos.map(pedido => `
-            <tr onclick="verDetalle(${pedido.id})" style="cursor: pointer;">
-                <td><input type="checkbox" class="pedido-checkbox" value="${pedido.id}" onclick="event.stopPropagation()"></td>
-                <td><span class="pedido-guia">${pedido.guia}</span></td>
-                <td>${formatDate(pedido.fecha)}</td>
-                <td>${pedido.destinatario.nombre}</td>
-                <td>${pedido.destinatario.direccion}</td>
-                <td><span class="status-badge status-${pedido.estado}">${getEstadoTexto(pedido.estado)}</span></td>
-                <td>$${pedido.paquete.costo.toLocaleString('es-CO')}</td>
-                <td class="actions-cell" onclick="event.stopPropagation()">
-                    <button class="btn-icon" title="Ver Rótulo" onclick="openRotuloModal(${pedido.id})">
-                        🏷️
-                    </button>
-                    <button class="btn-icon" title="Ver Detalles" onclick="verDetalle(${pedido.id})">
-                        👁️
-                    </button>
-                    ${pedido.estado === 'entregado' ? `
-                        <button class="btn-icon" title="Descargar PDF" onclick="descargarComprobante(${pedido.id})">
-                            ⬇️
-                        </button>
-                    ` : ''}
-                    ${pedido.estado === 'pendiente' || pedido.estado === 'en_proceso' ? `
-                        <button class="btn-icon delete" title="Cancelar Pedido" onclick="cancelarPedido(${pedido.id})">
-                            ❌
-                        </button>
-                    ` : ''}
-                </td>
-            </tr>
-        `).join('');
-        
-        renderPagination();
-    }
-    
-    // ============================================
-    // PAGINACIÓN
-    // ============================================
-    
-    function renderPagination() {
-        const totalPages = Math.ceil(filteredPedidos.length / itemsPerPage);
-        const btnPrevPage = document.getElementById('btnPrevPage');
-        const btnNextPage = document.getElementById('btnNextPage');
-        
-        document.getElementById('currentPage').textContent = currentPage;
-        document.getElementById('totalPages').textContent = totalPages;
-        
-        btnPrevPage.disabled = currentPage === 1;
-        btnNextPage.disabled = currentPage === totalPages;
-        
-        btnPrevPage.onclick = () => {
-            if (currentPage > 1) {
-                currentPage--;
-                renderPedidos();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        };
-        
-        btnNextPage.onclick = () => {
-            if (currentPage < totalPages) {
-                currentPage++;
-                renderPedidos();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        };
-    }
-    
-    // ============================================
-    // FILTROS Y BÚSQUEDA
-    // ============================================
-    
-    function applyFilters() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const estado = filterEstado.value;
-        const fecha = filterFecha.value;
-        const orden = filterOrden.value;
-        
-        filteredPedidos = pedidos.filter(pedido => {
-            const matchSearch = pedido.guia.toLowerCase().includes(searchTerm) ||
-                              pedido.destinatario.nombre.toLowerCase().includes(searchTerm);
-            
-            const matchEstado = estado === 'all' || pedido.estado === estado;
-            
-            let matchFecha = true;
-            if (fecha !== 'all') {
-                const pedidoDate = new Date(pedido.fecha);
-                const today = new Date();
-                
-                if (fecha === 'today') {
-                    matchFecha = pedidoDate.toDateString() === today.toDateString();
-                } else if (fecha === 'week') {
-                    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-                    matchFecha = pedidoDate >= weekAgo;
-                } else if (fecha === 'month') {
-                    matchFecha = pedidoDate.getMonth() === today.getMonth() && 
-                               pedidoDate.getFullYear() === today.getFullYear();
-                } else if (fecha === 'year') {
-                    matchFecha = pedidoDate.getFullYear() === today.getFullYear();
-                }
-            }
-            
-            return matchSearch && matchEstado && matchFecha;
-        });
-        
-        // Ordenar
-        filteredPedidos.sort((a, b) => {
-            const dateA = new Date(a.fecha);
-            const dateB = new Date(b.fecha);
-            return orden === 'desc' ? dateB - dateA : dateA - dateB;
-        });
-        
-        currentPage = 1;
-        renderPedidos();
-    }
-    
-    // ============================================
-    // TABS DE ESTADO
-    // ============================================
-    
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            tabBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            const filter = this.dataset.filter;
-            filterEstado.value = filter;
-            applyFilters();
-        });
-    });
-    
-    // ============================================
-    // VER DETALLE
-    // ============================================
-    
-    window.verDetalle = function(id) {
-        const pedido = pedidos.find(p => p.id === id);
-        if (!pedido) return;
-        
-        // Guía y estado
-        document.getElementById('modal_guia').textContent = pedido.guia;
-        const estadoBadge = document.getElementById('modal_estado_badge');
-        estadoBadge.className = `modal-status status-${pedido.estado}`;
-        estadoBadge.textContent = getEstadoTexto(pedido.estado);
-        
-        // Timeline
-        const timelineHTML = pedido.timeline.map(item => `
-            <div class="timeline-item ${item.activo ? 'active' : ''}">
-                <div class="timeline-content">
-                    <div class="timeline-title">${item.estado}</div>
-                    <div class="timeline-time">${formatDateFull(item.fecha)}</div>
-                </div>
-            </div>
-        `).join('');
-        document.getElementById('timeline').innerHTML = timelineHTML;
-        
-        // Remitente
-        document.getElementById('modal_remitente_nombre').textContent = pedido.remitente.nombre;
-        document.getElementById('modal_remitente_telefono').textContent = pedido.remitente.telefono;
-        document.getElementById('modal_remitente_direccion').textContent = pedido.remitente.direccion;
-        
-        // Destinatario
-        document.getElementById('modal_destinatario_nombre').textContent = pedido.destinatario.nombre;
-        document.getElementById('modal_destinatario_telefono').textContent = pedido.destinatario.telefono;
-        document.getElementById('modal_destinatario_direccion').textContent = pedido.destinatario.direccion;
-        
-        // Paquete
-        document.getElementById('modal_descripcion').textContent = pedido.paquete.descripcion;
-        document.getElementById('modal_peso').textContent = pedido.paquete.peso;
-        document.getElementById('modal_tipo').textContent = pedido.paquete.tipo;
-        document.getElementById('modal_costo').textContent = '$' + pedido.paquete.costo.toLocaleString('es-CO');
-        
-        // Comprobante (solo si está entregado)
-        const comprobanteSection = document.getElementById('comprobanteSection');
-        const btnDescargarComprobante = document.getElementById('btnDescargarComprobante');
-        const btnImprimirComprobante = document.getElementById('btnImprimirComprobante');
-        const btnCancelar = document.getElementById('btnCancelar');
-        
-        if (pedido.estado === 'entregado' && pedido.comprobante) {
-            comprobanteSection.style.display = 'block';
-            btnDescargarComprobante.style.display = 'block';
-            btnImprimirComprobante.style.display = 'block';
-            btnCancelar.style.display = 'none';
-            
-            document.getElementById('modal_quien_recibio').textContent = pedido.comprobante.quienRecibio;
-            document.getElementById('modal_parentesco').textContent = pedido.comprobante.parentesco;
-            document.getElementById('modal_fecha_entrega').textContent = formatDateFull(pedido.comprobante.fechaEntrega);
-            document.getElementById('modal_recaudo').textContent = pedido.comprobante.recaudo > 0 ? 
-                '$' + pedido.comprobante.recaudo.toLocaleString('es-CO') : 'Sin recaudo';
-            document.getElementById('modal_observaciones').textContent = pedido.comprobante.observaciones;
-            document.getElementById('modal_foto_entrega').src = pedido.comprobante.foto;
-        } else {
-            comprobanteSection.style.display = 'none';
-            btnDescargarComprobante.style.display = 'none';
-            btnImprimirComprobante.style.display = 'none';
-            btnCancelar.style.display = (pedido.estado === 'pendiente' || pedido.estado === 'en_proceso') ? 'block' : 'none';
-        }
-        
-        detalleModal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        
-        // Guardar ID actual
-        detalleModal.dataset.currentId = id;
+    // Filtros
+    const inputs = {
+        search: document.getElementById('searchInput'),
+        fechaDesde: document.getElementById('filtroFechaDesde'),
+        fechaHasta: document.getElementById('filtroFechaHasta'),
+        estado: document.getElementById('filtroEstado'),
+        monto: document.getElementById('filtroMonto')
     };
-    
-    // ============================================
-    // DESCARGAR COMPROBANTE PDF
-    // ============================================
-    
-    window.descargarComprobante = async function(id) {
-        const pedido = pedidos.find(p => p.id === id);
-        if (!pedido || !pedido.comprobante) return;
-        
-        const btn = event.target;
-        const originalText = btn.textContent;
-        btn.textContent = 'Generando...';
-        btn.disabled = true;
-        
-        try {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            let yPos = 20;
-            
-            // Header
-            doc.setFontSize(20);
-            doc.setTextColor(92, 184, 92);
-            doc.text('EcoBikeMess', 20, yPos);
-            yPos += 10;
-            
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.text('Comprobante de Entrega', 20, yPos);
-            yPos += 10;
-            
-            doc.setFontSize(11);
-            doc.setTextColor(92, 184, 92);
-            doc.text(`Guía: ${pedido.guia}`, 20, yPos);
-            yPos += 15;
-            
-            // Cliente
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.text('Cliente:', 20, yPos);
-            yPos += 7;
-            doc.setFontSize(10);
-            doc.text(pedido.remitente.nombre, 25, yPos);
-            yPos += 6;
-            doc.text(pedido.remitente.direccion, 25, yPos);
-            yPos += 12;
-            
-            // Datos de entrega
-            doc.setFontSize(12);
-            doc.text('Datos de Entrega:', 20, yPos);
-            yPos += 7;
-            doc.setFontSize(10);
-            doc.text(`Recibió: ${pedido.comprobante.quienRecibio}`, 25, yPos);
-            yPos += 6;
-            doc.text(`Parentesco: ${pedido.comprobante.parentesco}`, 25, yPos);
-            yPos += 6;
-            doc.text(`Fecha: ${formatDateFull(pedido.comprobante.fechaEntrega)}`, 25, yPos);
-            yPos += 6;
-            doc.text(`Recaudo: ${pedido.comprobante.recaudo > 0 ? '$' + pedido.comprobante.recaudo.toLocaleString('es-CO') : 'Sin recaudo'}`, 25, yPos);
-            yPos += 12;
-            
-            // Observaciones
-            doc.setFontSize(12);
-            doc.text('Observaciones:', 20, yPos);
-            yPos += 7;
-            doc.setFontSize(10);
-            const splitObs = doc.splitTextToSize(pedido.comprobante.observaciones, 170);
-            doc.text(splitObs, 25, yPos);
-            
-            doc.save(`Comprobante-${pedido.guia}.pdf`);
-            
-            btn.textContent = originalText;
-            btn.disabled = false;
-            showToast('✓ PDF descargado exitosamente');
-            
-        } catch (error) {
-            console.error('Error generando PDF:', error);
-            alert('Error al generar el PDF');
-            btn.textContent = originalText;
-            btn.disabled = false;
-        }
-    };
-    
-    // Botón de descarga en modal
-    document.getElementById('btnDescargarComprobante').addEventListener('click', function() {
-        const id = parseInt(detalleModal.dataset.currentId);
-        descargarComprobante(id);
+
+    const btnNueva = document.getElementById('btnNuevaFactura');
+    if (btnNueva) btnNueva.style.display = 'none'; 
+
+    // --- INICIALIZACIÓN ---
+    cargarEstadisticas();
+    listarFacturas();
+    setupModalClosers();
+
+    // --- EVENTOS ---
+    Object.values(inputs).forEach(input => {
+        if (input) input.addEventListener('change', () => {
+            listarFacturas();
+            cargarEstadisticas(); // Recargar estadísticas al filtrar
+        });
     });
-    
-    // ============================================
-    // IMPRIMIR COMPROBANTE
-    // ============================================
-    
-    document.getElementById('btnImprimirComprobante').addEventListener('click', function() {
-        window.print();
-    });
-    
-    // ============================================
-    // CANCELAR PEDIDO
-    // ============================================
-    
-    window.cancelarPedido = function(id) {
-        if (confirm('¿Estás seguro de cancelar este pedido?')) {
-            const pedido = pedidos.find(p => p.id === id);
-            if (pedido) {
-                pedido.estado = 'cancelado';
-                updateStats();
-                applyFilters();
-                showToast('Pedido cancelado', 'info');
-            }
-        }
-    };
-    
-    document.getElementById('btnCancelar').addEventListener('click', function() {
-        const id = parseInt(detalleModal.dataset.currentId);
-        cancelarPedido(id);
-        detalleModal.classList.remove('active');
-        document.body.style.overflow = '';
-    });
-    
-    // ============================================
-    // EXPORTAR
-    // ============================================
-    
-    function getPedidosParaExportar() {
-        const selectedCheckboxes = document.querySelectorAll('.pedido-checkbox:checked');
-        let lista = [];
 
-        // Si hay seleccionados, exportamos esos. Si no, exportamos la lista filtrada actual.
-        if (selectedCheckboxes.length > 0) {
-            const selectedIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
-            lista = pedidos.filter(p => selectedIds.includes(p.id));
-        } else {
-            lista = filteredPedidos;
-        }
-        return lista;
-    }
-
-    // --- EXPORTAR PDF ---
-    if (btnExportPDF) {
-        btnExportPDF.addEventListener('click', function() {
-            const pedidosAExportar = getPedidosParaExportar();
-
-            if (pedidosAExportar.length === 0) {
-                showToast('No hay pedidos para exportar', 'error');
-                return;
-            }
-
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-
-                // Encabezado del PDF
-                doc.setFontSize(18);
-                doc.text('Reporte de Pedidos - EcoBikeMess', 14, 22);
-                doc.setFontSize(11);
-                doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 30);
-
-                // Definir columnas y filas para la tabla
-                const tableColumn = ["Guía", "Fecha", "Destinatario", "Dirección", "Estado", "Costo"];
-                const tableRows = pedidosAExportar.map(pedido => [
-                    pedido.guia,
-                    formatDate(pedido.fecha),
-                    pedido.destinatario.nombre,
-                    pedido.destinatario.direccion,
-                    getEstadoTexto(pedido.estado),
-                    '$' + pedido.paquete.costo.toLocaleString('es-CO')
-                ]);
-
-                doc.autoTable({
-                    head: [tableColumn],
-                    body: tableRows,
-                    startY: 40,
-                });
-
-                doc.save('Reporte_Pedidos.pdf');
-                showToast('✓ Reporte PDF generado exitosamente');
-            } catch (error) {
-                console.error('Error generando reporte:', error);
-                alert('Error al generar el PDF. Verifica la consola.');
-            }
+    if (inputs.search) {
+        inputs.search.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') listarFacturas();
         });
     }
 
-    // --- EXPORTAR EXCEL ---
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', function() {
+            Object.values(inputs).forEach(input => { if(input) input.value = ''; });
+            listarFacturas();
+            cargarEstadisticas();
+        });
+    }
+
     if (btnExportExcel) {
-        btnExportExcel.addEventListener('click', function() {
-            const pedidosAExportar = getPedidosParaExportar();
-
-            if (pedidosAExportar.length === 0) {
-                showToast('No hay pedidos para exportar', 'error');
-                return;
-            }
-
-            try {
-                // Preparar datos para Excel (aplanar objetos para que se vean bien en las celdas)
-                const datosExcel = pedidosAExportar.map(p => ({
-                    "Guía": p.guia,
-                    "Fecha": formatDate(p.fecha),
-                    "Estado": getEstadoTexto(p.estado),
-                    "Remitente": p.remitente.nombre,
-                    "Destinatario": p.destinatario.nombre,
-                    "Dirección Destino": p.destinatario.direccion,
-                    "Descripción Paquete": p.paquete.descripcion,
-                    "Costo": p.paquete.costo
-                }));
-
-                // Crear hoja de trabajo
-                const worksheet = XLSX.utils.json_to_sheet(datosExcel);
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos");
-
-                // Descargar archivo
-                XLSX.writeFile(workbook, `Reporte_Pedidos_${new Date().toISOString().slice(0,10)}.xlsx`);
-                showToast('✓ Reporte Excel generado exitosamente');
-            } catch (error) {
-                console.error('Error generando Excel:', error);
-                alert('Error al generar el Excel. Verifica la consola.');
-            }
-        });
+        btnExportExcel.addEventListener('click', exportarExcel);
     }
-    
-    /* Bloque anterior eliminado para evitar duplicados
-    btnExport.addEventListener('click', function() {
-        const selectedCheckboxes = document.querySelectorAll('.pedido-checkbox:checked');
-        let pedidosAExportar = [];
 
-        // Si hay seleccionados, exportamos esos. Si no, exportamos la lista filtrada actual.
-        if (selectedCheckboxes.length > 0) {
-            const selectedIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
-            pedidosAExportar = pedidos.filter(p => selectedIds.includes(p.id));
-        } else {
-            pedidosAExportar = filteredPedidos;
+    // --- FUNCIONES ---
+
+    function cargarEstadisticas() {
+        const params = new URLSearchParams();
+        params.append('action', 'estadisticas');
+        for (const [key, input] of Object.entries(inputs)) {
+            if (input && input.value) params.append(key, input.value);
         }
 
-        if (pedidosAExportar.length === 0) {
-            showToast('No hay pedidos para exportar', 'error');
+        fetch(`../../controller/misPedidosController.php?${params.toString()}`)
+            .then(res => res.json())
+            .then(response => {
+                if (response.success && response.data) {
+                    const s = response.data;
+                    
+                    const elPagar = document.getElementById('statSaldoPagar');
+                    const elFavor = document.getElementById('statSaldoFavor');
+
+                    if (elPagar) elPagar.textContent = formatCurrency(s.saldo_pagar || 0);
+                    if (elFavor) elFavor.textContent = formatCurrency(s.saldo_favor || 0);
+                }
+            })
+            .catch(err => console.error('Error cargando estadísticas:', err));
+    }
+
+    function listarFacturas() {
+        if (tableBody) tableBody.innerHTML = '<tr><td colspan="11" class="text-center">Cargando datos...</td></tr>';
+
+        const params = new URLSearchParams();
+        params.append('action', 'listar');
+        for (const [key, input] of Object.entries(inputs)) {
+            if (input && input.value) params.append(key, input.value);
+        }
+
+        fetch(`../../controller/misPedidosController.php?${params.toString()}`)
+            .then(res => res.json())
+            .then(response => {
+                if (response.data) {
+                    renderizarTabla(response.data);
+                } else if (response.error) {
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="11" class="text-center text-danger">${response.error}</td></tr>`;
+                } else {
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="11" class="text-center">No se encontraron datos</td></tr>`;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (tableBody) tableBody.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Error de conexión con el servidor</td></tr>';
+            });
+    }
+
+    function renderizarTabla(data) {
+        if (!tableBody) return;
+        
+        if (data.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="11" class="text-center">No se encontraron facturas.</td></tr>';
             return;
         }
 
-        try {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            // Encabezado del PDF
-            doc.setFontSize(18);
-            doc.text('Reporte de Pedidos - EcoBikeMess', 14, 22);
-            doc.setFontSize(11);
-            doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 30);
-
-            // Definir columnas y filas para la tabla
-            const tableColumn = ["Guía", "Fecha", "Destinatario", "Dirección", "Estado", "Costo"];
-            const tableRows = pedidosAExportar.map(pedido => [
-                pedido.guia,
-                formatDate(pedido.fecha),
-                pedido.destinatario.nombre,
-                pedido.destinatario.direccion,
-                getEstadoTexto(pedido.estado),
-                '$' + pedido.paquete.costo.toLocaleString('es-CO')
-            ]);
-
-            doc.autoTable({
-                head: [tableColumn],
-                body: tableRows,
-                startY: 40,
-            });
-
-            doc.save('Reporte_Pedidos.pdf');
-            showToast('✓ Reporte PDF generado exitosamente');
-        } catch (error) {
-            console.error('Error generando reporte:', error);
-            alert('Error al generar el PDF. Verifica la consola.');
-        }
-    });
-    */
-
-    // ============================================
-    // MODAL RÓTULO (GUÍA)
-    // ============================================
-    const rotuloModal = document.getElementById('rotuloModal');
-    const closeRotuloModal = document.getElementById('closeRotuloModal');
-    const btnDownloadRotulo = document.getElementById('btnDownloadRotulo');
-
-    if (closeRotuloModal) {
-        closeRotuloModal.addEventListener('click', () => {
-            rotuloModal.style.display = 'none';
-        });
-    }
-
-    if (rotuloModal) {
-        rotuloModal.addEventListener('click', (e) => {
-            if (e.target === rotuloModal) {
-                rotuloModal.style.display = 'none';
+        let html = '';
+        data.forEach(f => {
+            let badgeClass = 'secondary';
+            switch(f.estado) {
+                case 'entregado': badgeClass = 'success'; break;
+                case 'pendiente': 
+                case 'asignado':
+                case 'en_transito': badgeClass = 'warning'; break;
+                case 'cancelado': badgeClass = 'danger'; break;
             }
+
+            const fechaIngresoFormateada = formatDateTimeEs(f.fecha_creacion);
+            const fechaEntregaFormateada = formatDateTimeEs(f.fecha_entrega);
+            const valorEnvio = formatCurrency(f.costo_envio);
+            const agregadoRecaudo = String(f.envio_destinatario).toLowerCase() === 'si' ? 'Sí' : 'No';
+
+            html += `
+                <tr>
+                    <td><input type="checkbox" class="factura-checkbox" value="${f.id}"></td>
+                    <td><strong>${f.numero_guia}</strong></td>
+                    <td>${fechaIngresoFormateada}</td>
+                    <td>${f.destinatario_nombre}</td>
+                    <td>${f.direccion_destino}</td>
+                    <td style="font-weight:bold;">${valorEnvio}</td>
+                    <td>${agregadoRecaudo}</td>
+                    <td>${formatCurrency(f.recaudo_esperado)}</td>
+                    <td><span class="badge badge-${badgeClass}">${f.estado.toUpperCase()}</span></td>
+                    <td>${fechaEntregaFormateada}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="cargarRotulo(${f.id})" title="Ver Rótulo" style="margin-right:3px;">🏷️ Rótulo</button>
+                        <button class="btn btn-sm btn-info" onclick="verDetalle(${f.id})" title="Ver Detalle">👁️</button>
+                        <button class="btn btn-sm btn-secondary" title="Descargar PDF">⬇️</button>
+                    </td>
+                </tr>
+            `;
         });
+        tableBody.innerHTML = html;
+        
+        // Actualizar contadores
+        document.getElementById('showingFrom').textContent = '1';
+        document.getElementById('showingTo').textContent = data.length;
+        document.getElementById('totalResults').textContent = data.length;
     }
 
-    window.openRotuloModal = function(id) {
-        const pedido = pedidos.find(p => p.id === id);
-        if (!pedido) return;
-
-        // Llenar datos del rótulo
-        document.getElementById('rotulo_guia_num').textContent = pedido.guia;
-        document.getElementById('rotulo_fecha_creacion').textContent = formatDate(pedido.fecha);
-        document.getElementById('rotulo_tipo_paquete').textContent = (pedido.paquete.tipo || 'Normal').toUpperCase();
+    // Función global para ver detalle
+    window.verDetalle = function(id) {
+        const modal = document.getElementById('modalDetalles');
+        const container = document.getElementById('detallesFactura');
         
-        document.getElementById('rotulo_remitente').textContent = pedido.remitente.nombre;
-        document.getElementById('rotulo_dir_remitente').textContent = pedido.remitente.direccion;
-        document.getElementById('rotulo_tel_remitente').textContent = 'Tel: ' + pedido.remitente.telefono;
-        
-        document.getElementById('rotulo_destinatario').textContent = pedido.destinatario.nombre;
-        document.getElementById('rotulo_dir_destinatario').textContent = pedido.destinatario.direccion;
-        document.getElementById('rotulo_tel_destinatario').textContent = 'Tel: ' + pedido.destinatario.telefono;
-        
-        document.getElementById('rotulo_peso').textContent = (pedido.paquete.peso || '0') + ' kg';
-        document.getElementById('rotulo_notas').textContent = pedido.instrucciones_entrega || 'Sin observaciones';
+        if (modal) {
+            modal.style.display = 'flex';
+            container.innerHTML = '<p class="text-center">Cargando detalles...</p>';
 
-        // Generar QR
-        const qrContainer = document.getElementById('rotulo_qr_code');
-        qrContainer.innerHTML = ''; // Limpiar anterior
-        
-        // Construir datos completos para el QR
-        const qrData = `GUIA: ${pedido.guia}
-REM: ${pedido.remitente.nombre}
-DEST: ${pedido.destinatario.nombre}
-DIR: ${pedido.destinatario.direccion}
-TEL: ${pedido.destinatario.telefono}
-TIPO: ${pedido.paquete.tipo || 'Normal'}
-FECHA: ${formatDate(pedido.fecha)}`;
-
-        const qrCode = new QRCodeStyling({
-            width: 160,
-            height: 160,
-            type: "canvas",
-            data: qrData,
-            dotsOptions: { color: "#000", type: "square" },
-            backgroundOptions: { color: "#fff" }
-        });
-        qrCode.append(qrContainer);
-
-        // Mostrar modal
-        rotuloModal.style.display = 'flex';
+            fetch(`../../controller/misPedidosController.php?action=detalle&id=${id}`)
+                .then(res => res.json())
+                .then(response => {
+                    if (response.success) {
+                        const info = response.data.info;
+                        
+                        container.innerHTML = `
+                            <div class="invoice-header" style="border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
+                                <div style="display:flex; justify-content:space-between;">
+                                    <div>
+                                        <h3 style="margin:0; color:#2c3e50;">Guía ${info.numero_guia}</h3>
+                                        <p style="margin:5px 0; color:#7f8c8d;">Estado: <strong>${info.estado.toUpperCase()}</strong></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p style="margin:0;"><strong>Fecha:</strong> ${info.fecha_creacion}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <table class="table" style="width:100%; border-collapse: collapse;">
+                                <tbody>
+                                    <tr>
+                                        <td style="padding:8px;"><strong>Destinatario:</strong></td>
+                                        <td style="padding:8px;">${info.destinatario_nombre}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:8px;"><strong>Dirección:</strong></td>
+                                        <td style="padding:8px;">${info.direccion_destino}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:8px;"><strong>Contenido:</strong></td>
+                                        <td style="padding:8px;">${info.descripcion_contenido}</td>
+                                    </tr>
+                                    <tr style="background:#f8f9fa;">
+                                        <td style="padding:8px;"><strong>Costo Envío:</strong></td>
+                                        <td style="padding:8px;"><strong>${formatCurrency(info.costo_envio)}</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        `;
+                    } else {
+                        container.innerHTML = `<p class="text-danger text-center">${response.error}</p>`;
+                    }
+                });
+        }
     };
 
-    if (btnDownloadRotulo) {
-        btnDownloadRotulo.addEventListener('click', async () => {
-            const element = document.getElementById('rotuloPreview');
-            const guia = document.getElementById('rotulo_guia_num').textContent;
-            
-            try {
-                const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff' });
-                const imgData = canvas.toDataURL('image/png');
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a6'); // Tamaño A6 para etiquetas
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                pdf.save(`Rotulo_${guia}.pdf`);
-            } catch (error) {
-                console.error('Error al generar PDF:', error);
-                alert('Hubo un error al generar el PDF.');
-            }
-        });
-    }
-    
-    // ============================================
-    // EVENT LISTENERS
-    // ============================================
-    
-    function setupEventListeners() {
-        searchInput.addEventListener('input', applyFilters);
-        filterEstado.addEventListener('change', applyFilters);
-        filterFecha.addEventListener('change', applyFilters);
-        filterOrden.addEventListener('change', applyFilters);
-        
-        if (selectAllCheckbox) {
-            selectAllCheckbox.addEventListener('change', function() {
-                const checkboxes = document.querySelectorAll('.pedido-checkbox');
-                checkboxes.forEach(cb => cb.checked = this.checked);
+    // Función para cargar datos y abrir el rótulo
+    window.cargarRotulo = function(id) {
+        // Feedback visual en el botón
+        const btn = event.currentTarget;
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '⌛';
+        btn.disabled = true;
+
+        fetch(`../../controller/misPedidosController.php?action=detalle&id=${id}`)
+            .then(res => res.json())
+            .then(response => {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+
+                if (response.success) {
+                    const info = response.data.info;
+                    // Preparar datos para el modal
+                    const datos = {
+                        guia: info.numero_guia,
+                        remitente_nombre: info.remitente_nombre || 'EcoBikeMess', // Fallback si no viene del back
+                        tienda_nombre: info.nombre_emprendimiento || info.remitente_nombre || 'Tienda',
+                        remitente_direccion: info.remitente_direccion || '',
+                        remitente_telefono: info.remitente_telefono || '',
+                        destinatario_nombre: info.destinatario_nombre,
+                        destinatario_direccion: info.direccion_destino,
+                        destinatario_telefono: info.destinatario_telefono || '',
+                        destinatario_observaciones: info.instrucciones_entrega || 'Sin observaciones',
+                        contenido: info.descripcion_contenido || '',
+                        cambios: info.recoger_cambios ? 'Sí' : 'No',
+                        costo_envio: info.costo_envio,
+                        recaudo: info.recaudo_esperado || 0
+                    };
+                    // Llamar a la función del PHP
+                    if (typeof window.verRotulo === 'function') window.verRotulo(datos);
+                } else {
+                    alert('No se pudieron cargar los datos: ' + response.error);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
             });
-        }
-        
-        btnNuevoPedido.addEventListener('click', function() {
-            window.location.href = 'enviarPaquete.php';
-        });
-        
-        closeDetalleModal.addEventListener('click', function() {
-            detalleModal.classList.remove('active');
-            document.body.style.overflow = '';
-        });
-        
-        detalleModal.addEventListener('click', function(e) {
-            if (e.target === detalleModal) {
-                detalleModal.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        });
-        
-        document.getElementById('btnRastrear').addEventListener('click', function() {
-            const id = parseInt(detalleModal.dataset.currentId);
-            const pedido = pedidos.find(p => p.id === id);
-            if (pedido) {
-                showToast('Abriendo mapa de rastreo...', 'info');
-                // window.location.href = `seguimiento.php?guia=${pedido.guia}`;
-            }
+    };
+
+    function formatCurrency(val) {
+        return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val);
+    }
+
+    function formatDateTimeEs(dateValue) {
+        if (!dateValue) return 'Pendiente';
+        const raw = String(dateValue).replace('T', ' ').substring(0, 19);
+        const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})\s*(\d{2}):(\d{2})(?::(\d{2}))?$/);
+        if (!match) return raw;
+        const [, y, m, d, hh, mm] = match;
+        return `${d}/${m}/${y} ${hh}:${mm}`;
+    }
+
+    function setupModalClosers() {
+        document.querySelectorAll('.btn-close').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.closest('.modal').style.display = 'none';
+            });
         });
     }
-    
-    // ============================================
-    // UTILIDADES
-    // ============================================
-    
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('es-CO', { 
-            day: '2-digit', 
-            month: '2-digit', 
-            year: 'numeric' 
-        });
+
+    function exportarExcel() {
+        alert('Funcionalidad de exportación en desarrollo.');
     }
-    
-    function formatDateFull(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleString('es-CO', {
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-    
-    function getEstadoTexto(estado) {
-        const estados = {
-            'pendiente': 'Pendiente',
-            'en_proceso': 'En Proceso',
-            'en_transito': 'En Tránsito',
-            'entregado': 'Entregado',
-            'cancelado': 'Cancelado'
-        };
-        return estados[estado] || estado;
-    }
-    
-    function showToast(message, type = 'success') {
-        // Implementar toast (similar a otros archivos)
-        alert(message);
-    }
-    
-    function simulateNotification() {
-        setTimeout(() => {
-            showToast('🔔 Tu pedido ECO-2024-12346 está en camino', 'info');
-        }, 3000);
-    }
-    
-    // Inicializar
-    init();
-    
-    console.log('Mis Pedidos cargado ✓');
 });

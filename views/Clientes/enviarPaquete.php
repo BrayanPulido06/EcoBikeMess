@@ -61,6 +61,7 @@ $remitente_data = [
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/enviarPaquete.css">
+    <link rel="stylesheet" href="../../public/css/clientesTheme.css">
     <style>
         .guia-section {
             display: flex;
@@ -403,68 +404,47 @@ $remitente_data = [
                             </button>
                         </div>
                         <div class="card-body">
-                            <div class="confirmation-section">
-                                <h3>📤 Remitente</h3>
-                                <div class="info-grid">
-                                    <div class="info-item">
-                                        <span class="info-label">Tienda:</span>
-                                        <span id="confirm_tienda_nombre"></span>
+                            <div class="confirm-guide-sheet">
+                                <div class="confirm-guide-header">
+                                    <div>
+                                        <h3 class="confirm-guide-brand">🚴 EcoBikeMess</h3>
+                                        <p class="confirm-guide-subtitle">Guía de Envío</p>
+                                    </div>
+                                    <div class="confirm-guide-number-block">
+                                        <span>Número de Guía:</span>
+                                        <strong id="numeroGuia">ECO-2024-XXXXX</strong>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="confirmation-section">
-                                <h3>📥 Destinatario</h3>
-                                <div class="info-grid">
-                                    <div class="info-item">
-                                        <span class="info-label">Nombre:</span>
-                                        <span id="confirm_destinatario_nombre"></span>
+                                <div class="confirm-guide-grid">
+                                    <div class="confirm-guide-card">
+                                        <h4>📤 Remitente</h4>
+                                        <p><strong>Tienda:</strong> <span id="confirm_tienda_nombre"></span></p>
                                     </div>
-                                    <div class="info-item">
-                                        <span class="info-label">Teléfono:</span>
-                                        <span id="confirm_destinatario_telefono"></span>
-                                    </div>
-                                    <div class="info-item full-width">
-                                        <span class="info-label">Dirección:</span>
-                                        <span id="confirm_destinatario_direccion"></span>
-                                    </div>
-                                    <div class="info-item full-width">
-                                        <span class="info-label">Observaciones:</span>
-                                        <span id="confirm_destinatario_observaciones"></span>
+                                    <div class="confirm-guide-card">
+                                        <h4>📥 Destinatario</h4>
+                                        <p><strong>Dirección:</strong> <span id="confirm_destinatario_direccion"></span></p>
+                                        <p><strong>Nombre:</strong> <span id="confirm_destinatario_nombre"></span></p>
+                                        <p><strong>Teléfono:</strong> <span id="confirm_destinatario_telefono"></span></p>
+                                        <p><strong>Observaciones:</strong> <span id="confirm_destinatario_observaciones"></span></p>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="confirmation-section">
-                                <h3>📦 Paquete</h3>
-                                <div class="info-grid">
-                                    <div class="info-item">
-                                        <span class="info-label">Descripción:</span>
-                                        <span id="confirm_descripcion"></span>
-                                    </div>
-                                <div class="info-item">
-                                    <span class="info-label">Cambios por recoger:</span>
-                                    <span id="confirm_recoger_cambios"></span>
+                                <div class="confirm-guide-card full-width">
+                                    <h4>📦 Detalles del Paquete</h4>
+                                    <p><strong>Descripción:</strong> <span id="confirm_descripcion"></span></p>
+                                    <p><strong>Cambios por recoger:</strong> <span id="confirm_recoger_cambios"></span></p>
                                 </div>
-                                </div>
-                            </div>
 
-                            <div class="confirmation-total">
-                                <h3>Total a Cobrar</h3>
-                                <div class="total-amount" id="confirm_total_cobrar">$0</div>
-                            </div>
-
-                            <div class="guia-section">
-                                <div class="guia-preview">
-                                    <div class="guia-icon">🎫</div>
-                                    <div class="guia-info">
-                                        <span class="guia-label">Número de Guía:</span>
-                                        <span class="guia-number" id="numeroGuia">ECO-2024-XXXXX</span>
+                                <div class="confirm-guide-footer">
+                                    <div class="confirm-guide-financial">
+                                        <h4>💰 Total a Cobrar</h4>
+                                        <p class="confirm-guide-total" id="confirm_total_cobrar">$0</p>
                                     </div>
-                                </div>
-                                <div class="qr-code-container">
-                                    <div id="qrcode"></div>
-                                    <small>Escanea para ver detalles</small>
+                                    <div class="qr-code-container">
+                                        <div id="qrcode"></div>
+                                        <small>Escanea para ver detalles</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -547,3 +527,4 @@ $remitente_data = [
     <script src="../../public/js/enviarPaquete.js"></script>
 </body>
 </html>
+

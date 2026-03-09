@@ -45,6 +45,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Esto corresponde a la pregunta de si el costo del envío se suma al recaudo.
         $datos['envio_destinatario'] = $_POST['envio_destinatario'] ?? 'no';
 
+        // Guardar dimensiones en formato legible según la opción seleccionada
+        $dimensionesMap = [
+            '0' => 'Menor o igual a 20 x 20 cm',
+            '2000' => 'Entre 21x21 y 30x30 cm',
+            '4000' => 'Entre 31x31 y 35x35 cm',
+            '7000' => 'Entre 36x36 y 40x40 cm',
+            '10000' => 'Entre 41x41 y 45x45 cm',
+            '12000' => 'Entre 46x46 y 49x49 cm',
+            'notificar' => 'Igual o mayor a 50 x 50 cm'
+        ];
+        $dimKey = $_POST['dimensiones_paquete'] ?? '';
+        $datos['dimensiones'] = $dimensionesMap[$dimKey] ?? null;
+
         // Limpieza de moneda (por si el JS envía '$ 10.000')
         $datos['valor_recaudo'] = str_replace(['$', '.', ','], '', $datos['valor_recaudo'] ?? '0');
         $datos['costo_total'] = str_replace(['$', '.', ','], '', $datos['costo_total'] ?? '0');

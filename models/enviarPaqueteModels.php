@@ -38,11 +38,8 @@ class EnvioModel {
                         direccion_destino, 
                         instrucciones_entrega,
                         descripcion_contenido, 
-                        peso, 
-                        tipo_paquete,
-                        largo, 
-                        ancho, 
-                        alto,
+                        dimensiones,
+                        envio_destinatario,
                         tipo_servicio, 
                         recaudo_esperado, 
                         costo_envio, 
@@ -54,8 +51,7 @@ class EnvioModel {
                         :numero_guia,
                         :remitente_nombre, :remitente_telefono, :remitente_email, :remitente_direccion,
                         :destinatario_nombre, :destinatario_telefono, :destinatario_direccion, :instrucciones_entrega,
-                        :descripcion_contenido, :peso_paquete, :tipo_paquete,
-                        :dimension_largo, :dimension_ancho, :dimension_alto,
+                        :descripcion_contenido, :dimensiones, :envio_destinatario,
                         :tipo_servicio, :valor_recaudo, :costo_total, 'pendiente', NOW()
                     )";
         
@@ -74,11 +70,8 @@ class EnvioModel {
                 ':destinatario_direccion' => $datos['destinatario_direccion'],
                 ':instrucciones_entrega' => $datos['instrucciones_entrega'],
                 ':descripcion_contenido' => $datos['descripcion_contenido'],
-                ':peso_paquete' => $datos['peso_paquete'],
-                ':tipo_paquete' => $datos['tipo_paquete'],
-                ':dimension_largo' => $datos['dimension_largo'],
-                ':dimension_ancho' => $datos['dimension_ancho'],
-                ':dimension_alto' => $datos['dimension_alto'],
+                ':dimensiones' => $datos['dimensiones'] ?? null,
+                ':envio_destinatario' => $datos['envio_destinatario'] ?? 'no',
                 ':tipo_servicio' => $tipo_servicio,
                 ':valor_recaudo' => $datos['valor_recaudo'],
                 ':costo_total' => $datos['costo_total']

@@ -10,53 +10,24 @@ document.addEventListener('DOMContentLoaded', function() {
     let isFlashOn = false;
     let ubicacionActual = null;
     let watchId = null;
+    const STORAGE_SCANNED_QR_KEY = 'ecobikemess_mensajero_scanned_qr_v1';
+    const STORAGE_ROUTE_MODE_KEY = 'ecobikemess_mensajero_route_mode_v1';
     
-    // Datos de ejemplo
-    const statsData = {
-        entregadas: 12,
-        pendientes: 3,
-        ganancias: 85000,
-        kilometros: 24.5
+    const API_INICIO_MENSAJERO = '../../controller/inicioMensajeroController.php';
+
+    // Datos dinámicos
+    let statsData = {
+        entregadas: 0,
+        pendientes: 0,
+        ganancias: 0,
+        kilometros: 0
     };
     
-    const collectionsData = [
-        {
-            id: 1,
-            guia: 'ECO-2024-12350',
-            address: 'Calle 100 #15-30, Zona Norte',
-            time: '10:00 AM',
-            status: 'pending'
-        },
-        {
-            id: 2,
-            guia: 'ECO-2024-12351',
-            address: 'Carrera 7 #80-45, Zona Centro',
-            time: '11:30 AM',
-            status: 'pending'
-        },
-        {
-            id: 3,
-            guia: 'ECO-2024-12352',
-            address: 'Avenida 68 #25-10, Zona Sur',
-            time: '09:00 AM',
-            status: 'completed'
-        }
-    ];
+    let collectionsData = [];
     
-    const deliveriesData = [
-        {
-            id: 1,
-            guia: 'ECO-2024-12340',
-            address: 'Calle 26 #68-91',
-            progress: 60
-        },
-        {
-            id: 2,
-            guia: 'ECO-2024-12341',
-            address: 'Transversal 45 #12-67',
-            progress: 30
-        }
-    ];
+    let deliveriesData = [];
+    let routeDeliveriesData = [];
+    let isRouteMode = false;
     
     // Elementos del DOM
     const menuBtn = document.getElementById('menuBtn');
@@ -77,6 +48,68 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnDeliver = document.getElementById('btnDeliver');
     const deliverCount = document.getElementById('deliverCount');
     const btnResetCounter = document.getElementById('btnResetCounter');
+    const routeDetailModal = document.getElementById('routeDetailModal');
+    const closeRouteDetailModal = document.getElementById('closeRouteDetailModal');
+    const btnCloseRouteDetail = document.getElementById('btnCloseRouteDetail');
+    const routeDetailBody = document.getElementById('routeDetailBody');
+
+    function guardarEstadoEscaneoLocal() {
+        try {
+            localStorage.setItem(STORAGE_SCANNED_QR_KEY, JSON.stringify(scannedQRs));
+            localStorage.setItem(STORAGE_ROUTE_MODE_KEY, isRouteMode ? '1' : '0');
+        } catch (error) {
+            console.warn('No se pudo guardar estado local de escaneo', error);
+        }
+    }
+
+    function normalizarItemEscaneado(item) {
+        if (!item || !item.code) return null;
+
+        const rawTimestamp = item.timestamp ? new Date(item.timestamp) : new Date();
+        const safeDate = isNaN(rawTimestamp.getTime()) ? new Date() : rawTimestamp;
+        const timeString = item.time || safeDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+        const dateString = item.date || safeDate.toLocaleDateString('es-CO');
+        const dateTimeString = item.dateTime || `${dateString} ${timeString}`;
+
+        return {
+            code: String(item.code).trim().toUpperCase(),
+            time: timeString,
+            date: dateString,
+            dateTime: dateTimeString,
+            timestamp: safeDate.toISOString(),
+            rawText: item.rawText || '',
+            details: {
+                nombre: item.details?.nombre || null,
+                direccion: item.details?.direccion || null,
+                remitente: item.details?.remitente || null,
+                telefono: item.details?.telefono || null,
+                total: item.details?.total || null,
+                campos: item.details?.campos || {}
+            }
+        };
+    }
+
+    function cargarEstadoEscaneoLocal() {
+        try {
+            const savedScanned = localStorage.getItem(STORAGE_SCANNED_QR_KEY);
+            const savedRouteMode = localStorage.getItem(STORAGE_ROUTE_MODE_KEY);
+
+            if (savedScanned) {
+                const parsed = JSON.parse(savedScanned);
+                if (Array.isArray(parsed)) {
+                    scannedQRs = parsed
+                        .map(normalizarItemEscaneado)
+                        .filter(Boolean);
+                }
+            }
+
+            isRouteMode = savedRouteMode === '1';
+        } catch (error) {
+            console.warn('No se pudo cargar estado local de escaneo', error);
+            scannedQRs = [];
+            isRouteMode = false;
+        }
+    }
     
     // ============================================
     // MENÚ LATERAL
@@ -216,24 +249,151 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function extraerCodigoDesdeTexto(rawText) {
+        if (!rawText) return null;
+        const text = String(rawText).trim();
+        if (!text) return null;
+
+        // 1) Formato etiqueta: "Guía: ECO-2024-001"
+        const matchGuia = text.match(/(?:gu[ií]a)\s*[:#-]?\s*(ECO-[A-Z0-9-]+)/i);
+        if (matchGuia && matchGuia[1]) return matchGuia[1].toUpperCase();
+
+        // 2) Guía directa en cualquier parte del texto
+        const matchEco = text.match(/\b(ECO-[A-Z0-9-]{3,})\b/i);
+        if (matchEco && matchEco[1]) return matchEco[1].toUpperCase();
+
+        // 3) Compatibilidad con códigos guardados como QR-ECO-XXX
+        const matchQrEco = text.match(/\b(QR-ECO-[A-Z0-9-]{2,})\b/i);
+        if (matchQrEco && matchQrEco[1]) return matchQrEco[1].toUpperCase();
+
+        return null;
+    }
+
+    function normalizarCodigoEscaneado(decodedText) {
+        if (!decodedText) return null;
+        const raw = String(decodedText).trim();
+        if (!raw) return null;
+
+        // A) Intentar como URL con parámetros (ej: ?guia=ECO-2024-001)
+        try {
+            const maybeUrl = new URL(raw);
+            const keys = ['guia', 'numero_guia', 'codigo', 'code', 'qr_code'];
+            for (const key of keys) {
+                const value = maybeUrl.searchParams.get(key);
+                const parsed = extraerCodigoDesdeTexto(value);
+                if (parsed) return parsed;
+            }
+        } catch (_) {
+            // No es URL válida, continuar
+        }
+
+        // B) Intentar como JSON
+        if (raw.startsWith('{') && raw.endsWith('}')) {
+            try {
+                const json = JSON.parse(raw);
+                const keys = ['numero_guia', 'guia', 'codigo', 'qr_code', 'code'];
+                for (const key of keys) {
+                    const parsed = extraerCodigoDesdeTexto(json[key]);
+                    if (parsed) return parsed;
+                }
+            } catch (_) {
+                // No es JSON válido, continuar
+            }
+        }
+
+        // C) Texto plano (incluye multilinea)
+        return extraerCodigoDesdeTexto(raw);
+    }
+
+    function normalizarEtiquetaCampo(key) {
+        return (key || '')
+            .toString()
+            .trim()
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function extraerInformacionQR(rawText) {
+        const info = {
+            rawText: rawText ? String(rawText).trim() : '',
+            guia: null,
+            nombre: null,
+            direccion: null,
+            remitente: null,
+            telefono: null,
+            total: null,
+            campos: {}
+        };
+
+        if (!info.rawText) return info;
+        info.guia = normalizarCodigoEscaneado(info.rawText);
+
+        // JSON
+        if (info.rawText.startsWith('{') && info.rawText.endsWith('}')) {
+            try {
+                const json = JSON.parse(info.rawText);
+                Object.keys(json).forEach(k => {
+                    const key = normalizarEtiquetaCampo(k);
+                    const value = json[k];
+                    if (value === undefined || value === null || value === '') return;
+                    info.campos[key] = String(value);
+                });
+            } catch (_) {}
+        } else {
+            // Texto multilinea tipo "Campo: Valor"
+            info.rawText.split(/\r?\n/).forEach(line => {
+                const parts = line.split(':');
+                if (parts.length < 2) return;
+                const key = normalizarEtiquetaCampo(parts.shift());
+                const value = parts.join(':').trim();
+                if (!value) return;
+                info.campos[key] = value;
+            });
+        }
+
+        const tomar = (keys) => {
+            for (const k of keys) {
+                const kk = normalizarEtiquetaCampo(k);
+                if (info.campos[kk]) return info.campos[kk];
+            }
+            return null;
+        };
+
+        info.guia = info.guia || tomar(['guia', 'numero_guia', 'codigo', 'qr_code', 'code']);
+        info.nombre = tomar(['destinatario', 'destinatario_nombre', 'nombre_destinatario', 'nombre_receptor', 'nombre']);
+        info.direccion = tomar(['direccion', 'direccion_destino', 'direccion_entrega']);
+        info.remitente = tomar(['remitente', 'remitente_nombre', 'tienda', 'cliente']);
+        info.telefono = tomar(['telefono', 'destinatario_telefono', 'telefono_destinatario']);
+        info.total = tomar(['total', 'total_a_cobrar', 'recaudo', 'valor_recaudo']);
+
+        // Si vino "Guía: ECO..." en campos, normalizarla también
+        if (info.guia) info.guia = normalizarCodigoEscaneado(info.guia) || String(info.guia).toUpperCase();
+
+        return info;
+    }
+
     function onScanSuccess(decodedText, decodedResult) {
         const now = Date.now();
+        const normalizedCode = normalizarCodigoEscaneado(decodedText);
+        const qrInfo = extraerInformacionQR(decodedText);
+
         // Evitar lecturas múltiples del mismo código en menos de 2 segundos
-        if (decodedText === lastScannedCode && (now - lastScannedTime) < 2000) {
+        if (normalizedCode && normalizedCode === lastScannedCode && (now - lastScannedTime) < 2000) {
             return;
         }
-        lastScannedCode = decodedText;
+        lastScannedCode = normalizedCode || decodedText;
         lastScannedTime = now;
 
         // 1. Validar formato del sistema
-        if (!decodedText.startsWith('ECO-')) {
+        if (!normalizedCode) {
             playScanSound('error');
-            showToast('Código inválido. Debe iniciar con ECO-', 'error');
+            showToast('Código inválido. No se encontró una guía válida', 'error');
             return;
         }
 
         // 2. Verificar duplicados
-        if (scannedQRs.find(qr => qr.code === decodedText)) {
+        if (scannedQRs.find(qr => qr.code === normalizedCode)) {
             playScanSound('error');
             showToast('Este paquete ya fue escaneado', 'warning');
             return;
@@ -241,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 3. Éxito: Agregar y continuar escaneando (No cerramos el modal)
         playScanSound('success');
-        addScannedQR(decodedText);
+        addScannedQR(normalizedCode, qrInfo);
         
         // Actualizar contador dentro del modal
         const modalCounter = document.getElementById('modalQrCounter');
@@ -275,18 +435,18 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     btnConfirmManual.addEventListener('click', function() {
-        const code = manualCodeInput.value.trim().toUpperCase();
+        const code = normalizarCodigoEscaneado(manualCodeInput.value);
         const errorSpan = document.getElementById('manualError');
         
         errorSpan.textContent = '';
         
-        if (!code) {
+        if (!manualCodeInput.value.trim()) {
             errorSpan.textContent = 'Por favor ingresa un código';
             return;
         }
         
-        if (!code.startsWith('ECO-')) {
-            errorSpan.textContent = 'Código inválido. Debe comenzar con ECO-';
+        if (!code) {
+            errorSpan.textContent = 'Código inválido. Debe incluir una guía válida';
             return;
         }
         
@@ -295,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        addScannedQR(code);
+        addScannedQR(code, extraerInformacionQR(manualCodeInput.value));
         manualModal.classList.remove('active');
     });
     
@@ -310,21 +470,37 @@ document.addEventListener('DOMContentLoaded', function() {
     // AGREGAR QR ESCANEADO
     // ============================================
     
-    function addScannedQR(code) {
+    function addScannedQR(code, qrInfo = null) {
         const now = new Date();
         const timeString = now.toLocaleTimeString('es-CO', { 
             hour: '2-digit', 
             minute: '2-digit' 
         });
+        const dateString = now.toLocaleDateString('es-CO');
+        const dateTimeString = `${dateString} ${timeString}`;
+        const parsedInfo = qrInfo || {};
         
         scannedQRs.push({
             code: code,
             time: timeString,
-            timestamp: now
+            date: dateString,
+            dateTime: dateTimeString,
+            timestamp: now.toISOString(),
+            rawText: parsedInfo.rawText || '',
+            details: {
+                nombre: parsedInfo.nombre || null,
+                direccion: parsedInfo.direccion || null,
+                remitente: parsedInfo.remitente || null,
+                telefono: parsedInfo.telefono || null,
+                total: parsedInfo.total || null,
+                campos: parsedInfo.campos || {}
+            }
         });
         
         updateQRCounter();
         renderScannedList();
+        if (isRouteMode) construirRutaDesdeEscaneados();
+        guardarEstadoEscaneoLocal();
         showToast('✓ QR escaneado correctamente', 'success');
         
         // Vibración (si está disponible)
@@ -372,7 +548,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="scanned-item">
                 <div>
                     <div class="scanned-code">${qr.code}</div>
-                    <div class="scanned-time">Escaneado a las ${qr.time}</div>
+                    <div class="scanned-time">Escaneado: ${qr.dateTime}</div>
                 </div>
                 <button class="btn-remove" onclick="removeQR(${index})">×</button>
             </div>
@@ -387,6 +563,8 @@ document.addEventListener('DOMContentLoaded', function() {
         scannedQRs.splice(index, 1);
         updateQRCounter();
         renderScannedList();
+        if (isRouteMode) construirRutaDesdeEscaneados();
+        guardarEstadoEscaneoLocal();
         showToast('QR eliminado', 'info');
     };
     
@@ -397,8 +575,12 @@ document.addEventListener('DOMContentLoaded', function() {
     btnResetCounter.addEventListener('click', function() {
         if (confirm('¿Estás seguro de limpiar todos los códigos escaneados?')) {
             scannedQRs = [];
+            routeDeliveriesData = [];
+            isRouteMode = false;
             updateQRCounter();
             renderScannedList();
+            renderDeliveries();
+            guardarEstadoEscaneoLocal();
             showToast('Contador limpiado', 'info');
         }
     });
@@ -407,20 +589,44 @@ document.addEventListener('DOMContentLoaded', function() {
     // ENTREGAR PAQUETES
     // ============================================
     
+    function normalizarGuiaParaCruce(value) {
+        const raw = (value || '').toString().trim().toUpperCase();
+        if (!raw) return '';
+        return raw.startsWith('QR-') ? raw.substring(3) : raw;
+    }
+
+    function construirRutaDesdeEscaneados() {
+        routeDeliveriesData = scannedQRs.map((qr, index) => {
+            const qrNormalizado = normalizarGuiaParaCruce(qr.code);
+            const entregaEncontrada = deliveriesData.find(d => {
+                return normalizarGuiaParaCruce(d.guia) === qrNormalizado;
+            });
+
+            return {
+                id: entregaEncontrada ? entregaEncontrada.id : null,
+                guia: qr.code,
+                guiaBase: qrNormalizado,
+                nombre: qr.details?.nombre || qr.details?.remitente || 'Nombre no disponible',
+                address: entregaEncontrada ? entregaEncontrada.address : (qr.details?.direccion || 'Dirección no disponible'),
+                estado: entregaEncontrada ? (entregaEncontrada.estado || 'pendiente') : 'sin_asignar',
+                scannedAt: qr.time,
+                scannedDate: qr.date || '',
+                scannedDateTime: qr.dateTime || '',
+                details: qr.details || {},
+                rawText: qr.rawText || '',
+                orden: index + 1
+            };
+        });
+
+        isRouteMode = true;
+        renderDeliveries();
+        guardarEstadoEscaneoLocal();
+    }
+
     btnDeliver.addEventListener('click', function() {
         if (scannedQRs.length === 0) return;
-        
-        if (confirm(`¿Iniciar proceso de entrega para ${scannedQRs.length} paquete(s)?`)) {
-            // Aquí iría la lógica de entrega
-            showToast(`Iniciando entrega de ${scannedQRs.length} paquetes...`, 'success');
-            
-            // Simular inicio de entrega
-            setTimeout(() => {
-                // Redirigir a página de entregas
-                // window.location.href = 'procesarEntregas.php';
-                console.log('Procesando entregas:', scannedQRs);
-            }, 1000);
-        }
+        construirRutaDesdeEscaneados();
+        showToast(`Ruta lista con ${scannedQRs.length} paquete(s)`, 'success');
     });
     
     // ============================================
@@ -428,10 +634,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     function updateStats() {
-        document.getElementById('statEntregadas').textContent = statsData.entregadas;
-        document.getElementById('statPendientes').textContent = statsData.pendientes;
-        document.getElementById('statGanancias').textContent = '$' + statsData.ganancias.toLocaleString('es-CO');
-        document.getElementById('statKilometros').textContent = statsData.kilometros + ' km';
+        const statEntregadas = document.getElementById('statEntregadas');
+        const statPendientes = document.getElementById('statPendientes');
+        const statGanancias = document.getElementById('statGanancias');
+        const statKilometros = document.getElementById('statKilometros');
+
+        if (statEntregadas) statEntregadas.textContent = statsData.entregadas;
+        if (statPendientes) statPendientes.textContent = statsData.pendientes;
+        if (statGanancias) statGanancias.textContent = '$' + Number(statsData.ganancias || 0).toLocaleString('es-CO');
+        if (statKilometros) statKilometros.textContent = (statsData.kilometros || 0) + ' km';
     }
     
     // ============================================
@@ -487,35 +698,167 @@ document.addEventListener('DOMContentLoaded', function() {
             alert(`Detalles de ${collection.guia}\n\nDirección: ${collection.address}\nHora: ${collection.time}`);
         }
     };
+
+    async function cargarDashboard() {
+        try {
+            const resp = await fetch(`${API_INICIO_MENSAJERO}?action=dashboard`);
+            const json = await resp.json();
+            if (!json.success) {
+                throw new Error(json.message || 'No se pudo cargar el dashboard');
+            }
+
+            if (json.mensajero?.nombre) {
+                const userName = document.querySelector('.user-name');
+                if (userName) userName.textContent = json.mensajero.nombre;
+            }
+
+            statsData = json.stats || statsData;
+            collectionsData = (json.recolecciones || []).map(r => ({
+                id: Number(r.id),
+                guia: r.numero_orden,
+                address: r.direccion_recoleccion,
+                time: r.horario_preferido || 'Sin hora',
+                status: r.estado === 'completada' ? 'completed' : 'pending'
+            }));
+            deliveriesData = (json.entregas || []).map(d => ({
+                id: Number(d.id),
+                guia: d.numero_guia,
+                address: d.direccion_destino,
+                estado: d.estado,
+                progress: d.estado === 'pendiente' ? 25 : 50
+            }));
+
+            updateStats();
+            renderCollections();
+            if (isRouteMode && scannedQRs.length > 0) {
+                construirRutaDesdeEscaneados();
+            } else {
+                renderDeliveries();
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('No se pudo cargar la información del dashboard', 'warning');
+        }
+    }
     
     // ============================================
     // RENDERIZAR ENTREGAS ACTIVAS
     // ============================================
     
     function renderDeliveries() {
-        if (deliveriesData.length === 0) {
+        const dataToRender = isRouteMode ? routeDeliveriesData : deliveriesData;
+
+        if (dataToRender.length === 0) {
             document.getElementById('deliveriesList').innerHTML = '<p style="text-align: center; color: #6c757d; padding: 1rem;">No hay entregas en curso</p>';
             return;
         }
-        
-        const listHTML = deliveriesData.map(del => `
+
+        const listHTML = dataToRender.map((del, index) => `
             <div class="delivery-item">
                 <div class="delivery-header">
                     <div class="delivery-id">${del.guia}</div>
-                    <div class="delivery-badge">En tránsito</div>
+                    <div class="delivery-badge">${isRouteMode ? `Parada ${del.orden || (index + 1)}` : 'En tránsito'}</div>
                 </div>
+                ${isRouteMode ? `<div class="delivery-address">👤 ${del.nombre || 'Nombre no disponible'}</div>` : ''}
                 <div class="delivery-address">📍 ${del.address}</div>
+                ${isRouteMode ? `<div class="delivery-address">🗓️ Escaneado: ${del.scannedDateTime || `${del.scannedDate || '--/--/----'} ${del.scannedAt || '--:--'}`}</div>` : ''}
+                ${isRouteMode ? `<div class="delivery-address">📌 Estado: ${del.estado === 'sin_asignar' ? 'Sin información en entregas en curso' : (del.estado || 'pendiente')}</div>` : ''}
+                ${isRouteMode ? `<div style="margin-top: 8px;"><button class="btn-secondary" onclick="verDetalleRuta(${index})">Ver detalles</button></div>` : ''}
                 <div class="delivery-progress">
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${del.progress}%"></div>
+                        <div class="progress-fill" style="width: ${isRouteMode ? Math.min(100, ((index + 1) / dataToRender.length) * 100) : del.progress}%"></div>
                     </div>
-                    <div class="progress-text">${del.progress}%</div>
+                    <div class="progress-text">${isRouteMode ? `${index + 1}/${dataToRender.length}` : `${del.progress}%`}</div>
                 </div>
             </div>
         `).join('');
         
         document.getElementById('deliveriesList').innerHTML = listHTML;
     }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    window.verDetalleRuta = function(index) {
+        const data = routeDeliveriesData[index];
+        if (!data || !routeDetailBody || !routeDetailModal) return;
+
+        const campos = data.details?.campos || {};
+        const camposHtml = Object.keys(campos).length
+            ? Object.entries(campos).map(([k, v]) => `
+                <div><strong>${escapeHtml(k)}:</strong> ${escapeHtml(v)}</div>
+            `).join('')
+            : '<div>No hay campos adicionales detectados.</div>';
+
+        routeDetailBody.innerHTML = `
+            <div class="route-guide-sheet">
+                <div class="route-guide-header">
+                    <div>
+                        <h3 class="route-guide-brand">EcoBikeMess</h3>
+                        <p class="route-guide-subtitle">Guía de Entrega</p>
+                    </div>
+                    <div class="route-guide-number">
+                        <small>Número de Guía</small>
+                        <strong>${escapeHtml(data.guia || 'N/A')}</strong>
+                    </div>
+                </div>
+
+                <div class="route-guide-grid">
+                    <div class="route-guide-card">
+                        <h4>Destinatario</h4>
+                        <p><strong>Nombre:</strong> ${escapeHtml(data.nombre || 'No disponible')}</p>
+                        <p><strong>Dirección:</strong> ${escapeHtml(data.address || 'No disponible')}</p>
+                        ${data.details?.telefono ? `<p><strong>Teléfono:</strong> ${escapeHtml(data.details.telefono)}</p>` : ''}
+                    </div>
+
+                    <div class="route-guide-card">
+                        <h4>Información del Envío</h4>
+                        <p><strong>Estado:</strong> ${escapeHtml(data.estado || 'pendiente')}</p>
+                        <p><strong>Escaneado:</strong> ${escapeHtml(data.scannedDateTime || 'No disponible')}</p>
+                        ${data.details?.remitente ? `<p><strong>Remitente:</strong> ${escapeHtml(data.details.remitente)}</p>` : ''}
+                        ${data.details?.total ? `<p><strong>Total a cobrar:</strong> ${escapeHtml(data.details.total)}</p>` : ''}
+                    </div>
+
+                    <div class="route-guide-card">
+                        <h4>Datos completos del QR</h4>
+                        ${camposHtml}
+                    </div>
+                </div>
+
+                <div class="route-guide-meta">
+                    ${data.rawText ? `<div><strong>Texto bruto QR:</strong> ${escapeHtml(data.rawText)}</div>` : ''}
+                </div>
+
+                <div class="route-guide-actions">
+                    <button class="btn-secondary" onclick="cerrarDetalleRutaDesdeBoton()">Cerrar</button>
+                    <button class="btn-primary" onclick="irAEntregarGuia(${index})">Entregar</button>
+                </div>
+            </div>
+        `;
+
+        routeDetailModal.classList.add('active');
+    };
+
+    window.irAEntregarGuia = function(index) {
+        const data = routeDeliveriesData[index];
+        if (!data || !data.guia) return;
+        const guia = encodeURIComponent(data.guia);
+        window.location.href = `misPaquetesMensajeros.php?guia=${guia}&accion=entregar`;
+    };
+
+    function cerrarDetalleRuta() {
+        if (routeDetailModal) routeDetailModal.classList.remove('active');
+    }
+    window.cerrarDetalleRutaDesdeBoton = cerrarDetalleRuta;
+
+    if (closeRouteDetailModal) closeRouteDetailModal.addEventListener('click', cerrarDetalleRuta);
+    if (btnCloseRouteDetail) btnCloseRouteDetail.addEventListener('click', cerrarDetalleRuta);
     
     // ============================================
     // TOAST NOTIFICATIONS
@@ -619,10 +962,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     function init() {
-        updateStats();
-        renderCollections();
-        renderDeliveries();
+        cargarEstadoEscaneoLocal();
+        cargarDashboard();
+        updateQRCounter();
         renderScannedList(); // LocalStorage o sesión actual
+        if (isRouteMode && scannedQRs.length > 0) {
+            construirRutaDesdeEscaneados();
+        }
         simulateNotifications();
         solicitarPermisosGPS(); // Solicitar GPS apenas carga el dashboard
         
@@ -654,6 +1000,14 @@ document.addEventListener('DOMContentLoaded', function() {
             manualModal.classList.remove('active');
         }
     });
+
+    if (routeDetailModal) {
+        routeDetailModal.addEventListener('click', function(e) {
+            if (e.target === routeDetailModal) {
+                cerrarDetalleRuta();
+            }
+        });
+    }
     
     // Prevenir zoom en inputs (iOS)
     document.querySelectorAll('input').forEach(input => {

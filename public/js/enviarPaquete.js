@@ -454,16 +454,14 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                         <tr>
                             <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
                                 <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
-                                <p><strong>Nombre:</strong> ${item.remitente_nombre}</p>
-                                <p><strong>Teléfono:</strong> ${item.remitente_telefono}</p>
-                                <p><strong>Dirección:</strong> ${item.remitente_direccion}</p>
+                                <p><strong>Tienda:</strong> ${item.remitente_nombre}</p>
                             </td>
                             <td style="width: 4%;"></td>
                             <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
                                 <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
+                                <p><strong>Dirección:</strong> ${item.destinatario_direccion}</p>
                                 <p><strong>Nombre:</strong> ${item.destinatario_nombre}</p>
                                 <p><strong>Teléfono:</strong> ${item.destinatario_telefono}</p>
-                                <p><strong>Dirección:</strong> ${item.destinatario_direccion}</p>
                             </td>
                         </tr>
                     </table>
@@ -474,12 +472,11 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                     <table style="width: 100%; margin-top: 20px; border-top: 2px solid #5cb85c; padding-top: 10px;">
                         <tr>
                             <td style="width: 60%; vertical-align: top; font-size: 11px;">
-                                <h3 style="margin: 0 0 10px; font-size: 14px;">💰 Resumen Financiero</h3>
-                                <p><strong>Costo Envío:</strong> $${item.costo_total.toLocaleString('es-CO')}</p>
-                                <p><strong>Valor a Recaudar:</strong> ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}</p>
+                                <h3 style="margin: 0 0 10px; font-size: 14px;">💰 Total a Cobrar</h3>
+                                <p style="margin: 4px 0; font-size: 32px; font-weight: 800; color: #28a745;">$${(item.valor_recaudo > 0 ? item.valor_recaudo : 0).toLocaleString('es-CO')}</p>
                             </td>
                             <td style="width: 40%; text-align: right;">
-                                <img src="${qrImageDataUrl}" style="width: 180px; height: 180px;">
+                                <img src="${qrImageDataUrl}" style="width: 190px; height: 190px;">
                             </td>
                         </tr>
                     </table>
@@ -718,8 +715,9 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
             valorEnvio = 0;
         }
 
-        document.getElementById('confirm_total_cobrar').textContent = `$${totalCobrar.toLocaleString('es-CO')}`;
-        
+        const totalCobrarTexto = `$${totalCobrar.toLocaleString('es-CO')}`;
+        document.getElementById('confirm_total_cobrar').textContent = totalCobrarTexto;
+
         const date = new Date();
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -735,15 +733,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         // Lógica para mostrar información financiera en el QR
         let qrFinanciero = '';
 
-        if (sumar === 'si') {
-            // Si se suma el envío, mostramos el total unificado a recaudar
-            qrFinanciero = `Total a Recaudar: $${totalCobrar.toLocaleString('es-CO')}`;
-        } else {
-            // Si NO se suma, mostramos por separado
-            const textoRecaudo = (valorProducto > 0) ? `$${valorProducto.toLocaleString('es-CO')}` : 'No aplica';
-            qrFinanciero = `Costo Envío: $${costoEnvioNum.toLocaleString('es-CO')}
-Recaudo: ${textoRecaudo}`;
-        }
+        qrFinanciero = `Total a Cobrar: ${totalCobrarTexto}`;
 
         // --- QR CODE GENERATION ---
         const infoParaQR = `
@@ -792,7 +782,6 @@ ${qrFinanciero}
                 const { jsPDF } = window.jspdf;
                 const numeroGuia = document.getElementById('numeroGuia').textContent;
                 
-                // Lógica para el Resumen Financiero en el PDF
                 const costoEnvioNum = parseFloat(document.getElementById('costoTotalHidden').value) || 0;
                 const baseRecaudoNum = baseRecaudo || 0;
                 const sumarOption = document.querySelector('input[name="envio_destinatario"]:checked');
@@ -800,27 +789,17 @@ ${qrFinanciero}
                 const tieneRecaudo = document.getElementById('tiene_recaudo').checked;
 
                 let totalCobrar = 0;
-                let valorProducto = 0;
-                let valorEnvio = 0;
-
                 if (tieneRecaudo) {
-                    valorProducto = baseRecaudoNum;
                     if (sumar === 'si') {
-                        valorEnvio = costoEnvioNum;
-                        totalCobrar = valorProducto + valorEnvio;
+                        totalCobrar = baseRecaudoNum + costoEnvioNum;
                     } else {
-                        valorEnvio = 0;
-                        totalCobrar = valorProducto;
+                        totalCobrar = baseRecaudoNum;
                     }
                 }
 
-                let htmlResumenFinanciero = '';
-                htmlResumenFinanciero = `
-                    <p style="font-size: 18px; font-weight: bold; color: #28a745; margin-top: 5px;">$${totalCobrar.toLocaleString('es-CO')}</p>
-                `;
+                const totalCobrarTexto = `$${totalCobrar.toLocaleString('es-CO')}`;
 
                 const recogerCambiosChecked = document.getElementById('recoger_cambios').checked;
-                const textoRecogerCambiosPDF = `<p><strong>Cambios por recoger:</strong> ${recogerCambiosChecked ? 'Sí' : 'No'}</p>`;
 
                 // Obtener la imagen del QR como Data URL
                 if (!qrCodeStylingInstance) {
@@ -840,47 +819,54 @@ ${qrFinanciero}
                 document.body.appendChild(pdfTemplate); // Añadir al DOM para que html2canvas lo renderice
                 
                 pdfTemplate.innerHTML = `
-                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                        <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 10px;">
+                    <div style="font-family: Arial, sans-serif; color: #1f2a37; padding: 14px; border: 1px solid #d9dde2; border-radius: 8px; background: #fff;">
+                        <table style="width: 100%; border-bottom: 1px solid #e7eaee; padding-bottom: 10px;">
                             <tr>
-                                <td style="width: 50%;">
-                                    <h1 style="font-size: 24px; margin: 0; color: #5cb85c;">🚴 EcoBikeMess</h1>
-                                    <p style="margin: 0; font-size: 12px;">Guía de Envío</p>
+                                <td style="width: 60%; vertical-align: top;">
+                                    <h1 style="margin: 0; font-size: 32px; color: #34a853;">🚴 EcoBikeMess</h1>
+                                    <p style="margin: 6px 0 0; font-size: 20px; font-weight: 700; color: #2d3e50;">Guía de Envío</p>
                                 </td>
-                                <td style="width: 50%; text-align: right;">
-                                    <p style="margin: 0; font-size: 12px;">Número de Guía:</p>
-                                    <h2 style="margin: 0; font-size: 18px;">${numeroGuia}</h2>
+                                <td style="width: 40%; text-align: right; vertical-align: top;">
+                                    <p style="margin: 0; font-size: 18px; color: #495057;">Número de Guía:</p>
+                                    <h2 style="margin: 4px 0 0; font-size: 34px; color: #12263a;">${numeroGuia}</h2>
                                 </td>
                             </tr>
                         </table>
 
-                        <div style="margin-top: 20px; border: 1px solid #eee; padding: 10px; border-radius: 8px; font-size: 11px;">
-                            <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
-                            <p><strong>Tienda:</strong> ${window.remitenteData?.nombre_tienda || 'Tienda'}</p>
-                        </div>
-
-                        <div style="margin-top: 15px; border: 1px solid #eee; padding: 10px; border-radius: 8px; font-size: 11px;">
-                            <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
-                            <p><strong>Nombre:</strong> ${document.getElementById('destinatario_nombre').value}</p>
-                            <p><strong>Teléfono:</strong> ${document.getElementById('destinatario_telefono').value}</p>
-                            <p><strong>Dirección:</strong> ${document.getElementById('destinatario_direccion').value}</p>
-                            <p><strong>Observaciones:</strong> ${document.getElementById('instrucciones_entrega').value || 'Sin observaciones'}</p>
-                        </div>
-
-                        <div style="margin-top: 20px; border: 1px solid #eee; padding: 10px; border-radius: 8px; font-size: 11px;">
-                            <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">� Detalles del Paquete</h3>
-                            <p><strong>Descripción:</strong> ${document.getElementById('descripcion_contenido').value}</p>
-                            ${textoRecogerCambiosPDF}
-                        </div>
-
-                        <table style="width: 100%; margin-top: 20px; border-top: 2px solid #5cb85c; padding-top: 10px;">
+                        <table style="width: 100%; margin-top: 14px;">
                             <tr>
-                                <td style="width: 60%; vertical-align: top; font-size: 11px;">
-                                    <h3 style="margin: 0 0 10px; font-size: 14px;">💰 Total a Cobrar</h3>
-                                    ${htmlResumenFinanciero}
+                                <td style="width: 50%; vertical-align: top; padding-right: 8px;">
+                                    <div style="border: 1px solid #e0e5ea; border-radius: 8px; padding: 10px; font-size: 14px;">
+                                        <h3 style="margin: 0 0 8px; font-size: 18px; color: #1c2f44; border-bottom: 1px solid #edf0f2; padding-bottom: 6px;">📤 Remitente</h3>
+                                        <p style="margin: 5px 0;"><strong>Tienda:</strong> ${window.remitenteData?.nombre_tienda || 'Tienda'}</p>
+                                    </div>
                                 </td>
-                                <td style="width: 40%; text-align: right;">
-                                    <img src="${qrImageDataUrl}" style="width: 180px; height: 180px;">
+                                <td style="width: 50%; vertical-align: top; padding-left: 8px;">
+                                    <div style="border: 1px solid #e0e5ea; border-radius: 8px; padding: 10px; font-size: 14px;">
+                                        <h3 style="margin: 0 0 8px; font-size: 18px; color: #1c2f44; border-bottom: 1px solid #edf0f2; padding-bottom: 6px;">📥 Destinatario</h3>
+                                        <p style="margin: 5px 0;"><strong>Dirección:</strong> ${document.getElementById('destinatario_direccion').value}</p>
+                                        <p style="margin: 5px 0;"><strong>Nombre:</strong> ${document.getElementById('destinatario_nombre').value}</p>
+                                        <p style="margin: 5px 0;"><strong>Teléfono:</strong> ${document.getElementById('destinatario_telefono').value}</p>
+                                        <p style="margin: 5px 0;"><strong>Observaciones:</strong> ${document.getElementById('instrucciones_entrega').value || 'Sin observaciones'}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <div style="margin-top: 12px; border: 1px solid #e0e5ea; border-radius: 8px; padding: 10px; font-size: 14px;">
+                            <h3 style="margin: 0 0 8px; font-size: 18px; color: #1c2f44; border-bottom: 1px solid #edf0f2; padding-bottom: 6px;">📦 Detalles del Paquete</h3>
+                            <p style="margin: 5px 0;"><strong>Descripción:</strong> ${document.getElementById('descripcion_contenido').value}</p>
+                            <p style="margin: 5px 0;"><strong>Cambios por recoger:</strong> ${recogerCambiosChecked ? 'Sí' : 'No'}</p>
+                        </div>
+
+                        <table style="width: 100%; margin-top: 14px; border-top: 2px solid #79c27d; padding-top: 12px;">
+                            <tr>
+                                <td style="width: 58%; vertical-align: top; font-size: 14px;">
+                                    <h3 style="margin: 0 0 8px; font-size: 20px; color: #1c2f44;">💰 Total a Cobrar</h3>
+                                    <p style="margin: 5px 0; font-size: 36px; font-weight: 800; color: #28a745;">${totalCobrarTexto}</p>
+                                </td>
+                                <td style="width: 42%; text-align: right;">
+                                    <img src="${qrImageDataUrl}" style="width: 190px; height: 190px; border: 1px solid #d6dbe1; border-radius: 4px; padding: 4px;">
                                 </td>
                             </tr>
                         </table>

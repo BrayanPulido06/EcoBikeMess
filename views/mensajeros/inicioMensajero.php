@@ -1,3 +1,15 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajero') {
+    header("Location: ../login.php");
+    exit();
+}
+
+$nombreCompleto = trim(($_SESSION['user_name'] ?? '') . ' ' . ($_SESSION['user_lastname'] ?? ''));
+if ($nombreCompleto === '') {
+    $nombreCompleto = 'Mensajero';
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,6 +20,88 @@
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
     <!-- Librería para escaneo de QR -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        .route-guide-sheet {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 14px;
+            background: #fff;
+        }
+        .route-guide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #eef2f7;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .route-guide-brand {
+            margin: 0;
+            font-size: 1rem;
+            color: #1f2937;
+        }
+        .route-guide-subtitle {
+            margin: 2px 0 0;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        .route-guide-number {
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 8px 10px;
+            text-align: right;
+        }
+        .route-guide-number small {
+            display: block;
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
+        .route-guide-number strong {
+            color: #111827;
+            font-size: 0.95rem;
+        }
+        .route-guide-grid {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 1fr;
+        }
+        .route-guide-card {
+            border: 1px solid #eef2f7;
+            border-radius: 10px;
+            padding: 10px;
+            background: #fbfdff;
+        }
+        .route-guide-card h4 {
+            margin: 0 0 6px;
+            font-size: 0.92rem;
+            color: #1f2937;
+        }
+        .route-guide-card p {
+            margin: 4px 0;
+            font-size: 0.88rem;
+            color: #334155;
+        }
+        .route-guide-meta {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #d1d5db;
+            font-size: 0.85rem;
+            color: #475569;
+            display: grid;
+            gap: 4px;
+        }
+        .route-guide-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+        .route-guide-actions .btn-primary,
+        .route-guide-actions .btn-secondary {
+            min-width: 120px;
+        }
+    </style>
 </head>
 <body>
     <!-- Header Móvil -->
@@ -17,7 +111,7 @@
         </button>
         <div class="header-info">
             <h1>🚴 EcoBikeMess</h1>
-            <p class="user-name">Carlos Rodríguez</p>
+            <p class="user-name"><?php echo htmlspecialchars($nombreCompleto); ?></p>
         </div>
         <button class="notif-btn" id="notifBtn">
             <span class="notif-icon">🔔</span>
@@ -78,11 +172,11 @@
             </div>
         </div>
 
-        <!-- Botón Entregar Paquetes -->
+        <!-- Botón Realizar Ruta -->
         <div class="deliver-section" id="deliverSection" style="display: none;">
             <button class="btn-deliver" id="btnDeliver">
                 <span class="deliver-icon">📦</span>
-                <span class="deliver-text">Entregar Paquetes</span>
+                <span class="deliver-text">Realizar Ruta</span>
                 <span class="deliver-count" id="deliverCount">0 paquetes</span>
             </button>
         </div>
@@ -165,6 +259,18 @@
     <div class="toast" id="toast">
         <span class="toast-icon" id="toastIcon">✓</span>
         <span class="toast-message" id="toastMessage"></span>
+    </div>
+
+    <!-- Modal Detalle de Ruta -->
+    <div class="modal" id="routeDetailModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeRouteDetailModal">×</button>
+            <h2>Detalle del Paquete</h2>
+            <div id="routeDetailBody" style="display: grid; gap: 8px; margin-top: 10px;"></div>
+            <div class="modal-actions">
+                <button class="btn-primary" id="btnCloseRouteDetail">Cerrar</button>
+            </div>
+        </div>
     </div>
 
     <script src="../../public/js/inicioMensajero.js"></script>

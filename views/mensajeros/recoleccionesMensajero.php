@@ -39,7 +39,18 @@
     <?php include '../layouts/mensajeroSidebar.php'; ?>
 
     <!-- Vista Principal: Lista de Recolecciones -->
-    <main id="vistaLista" class="vista-activa main-content" style="padding-top: 80px;">
+    <main id="vistaLista" class="vista-activa main-content">
+        <div class="session-status">
+            <div class="status-indicator online">
+                <span class="status-dot"></span>
+                <span class="status-text">Recolecciones Activas</span>
+            </div>
+            <div class="session-time">
+                <span class="time-icon">📥</span>
+                <span>Rutas asignadas</span>
+            </div>
+        </div>
+
         <div class="filtros">
             <button class="filtro-btn activo" data-filtro="todas">Todas</button>
             <button class="filtro-btn" data-filtro="pendiente">Pendientes</button>
@@ -258,6 +269,7 @@
         <p>Procesando...</p>
     </div>
 
+    <script src="../../public/js/mensajeroLayout.js"></script>
     <script src="../../public/js/recoleccionesMensajero.js"></script>
 </body>
 </html>

@@ -50,7 +50,18 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
     <!-- Sidebar -->
     <?php include '../layouts/mensajeroSidebar.php'; ?>
 
-    <main class="main-content" style="padding-top: 80px;">
+    <main class="main-content">
+        <div class="session-status">
+            <div class="status-indicator online">
+                <span class="status-dot"></span>
+                <span class="status-text">Perfil Activo</span>
+            </div>
+            <div class="session-time">
+                <span class="time-icon">👤</span>
+                <span>Datos del mensajero</span>
+            </div>
+        </div>
+
         <div class="profile-container">
             <form action="../../controller/perfilController.php" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="update_profile_mensajero">
@@ -191,6 +202,6 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
         </div>
     </main>
 
-    <script src="../../public/js/inicioMensajero.js"></script>
+    <script src="../../public/js/mensajeroLayout.js"></script>
 </body>
 </html>

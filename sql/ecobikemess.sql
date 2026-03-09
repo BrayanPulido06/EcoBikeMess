@@ -170,11 +170,12 @@ CREATE TABLE IF NOT EXISTS paquetes (
     direccion_destino TEXT NOT NULL,
     instrucciones_entrega TEXT,
     descripcion_contenido TEXT NOT NULL,
+    dimensiones VARCHAR(100),
     envio_destinatario ENUM('si', 'no') DEFAULT 'no',
     tipo_servicio ENUM('entrega_simple', 'contraentrega') DEFAULT 'entrega_simple',
     costo_envio DECIMAL(10,2) NOT NULL,
     recaudo_esperado DECIMAL(10,2) DEFAULT 0.00,
-    estado ENUM('pendiente', 'asignado', 'en_transito', 'entregado', 'devuelto', 'cancelado') DEFAULT 'pendiente',
+    estado ENUM('pendiente', 'entregado', 'cancelado') DEFAULT 'pendiente',
     mensajero_id INT NULL,
     mensajero_recoleccion_id INT NULL,
     creado_por INT NOT NULL,
@@ -254,6 +255,20 @@ CREATE TABLE IF NOT EXISTS comprobantes (
     fecha_notificacion TIMESTAMP NULL,
     FOREIGN KEY (paquete_id) REFERENCES paquetes(id),
     FOREIGN KEY (cliente_id) REFERENCES clientes(id)
+);
+
+-- Tabla para almacenar evidencias (imagenes/PDF) con metadatos de carga
+CREATE TABLE IF NOT EXISTS imagenes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    comprobante_id INT NULL,
+    ruta_archivo VARCHAR(255) NOT NULL,
+    tipo_archivo ENUM('imagen', 'pdf') NOT NULL DEFAULT 'imagen',
+    nombre_persona VARCHAR(200) NOT NULL,
+    rol_persona VARCHAR(50) NOT NULL,
+    fecha_subida DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (comprobante_id) REFERENCES comprobantes(id) ON DELETE SET NULL,
+    INDEX idx_imagenes_comprobante (comprobante_id),
+    INDEX idx_imagenes_fecha_subida (fecha_subida)
 );
 
 CREATE TABLE IF NOT EXISTS facturas (
@@ -893,7 +908,7 @@ BEGIN
             descripcion_paquetes, cantidad_estimada, 
             estado, creada_por, fecha_creacion
         ) VALUES (
-            CONCAT('REC-AUTO-', UUID_SHORT()), -- Generar ID único
+            CONCAT('REC-AUTO-', LPAD(NEW.id, 10, '0')), -- ID único basado en el paquete recién creado
             NEW.cliente_id, NEW.direccion_origen,
             NEW.remitente_nombre, NEW.remitente_telefono,
             CONCAT('Auto-generada: ', NEW.descripcion_contenido), 1,

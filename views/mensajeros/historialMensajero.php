@@ -29,21 +29,33 @@
     <!-- Menu Lateral -->
     <?php include '../layouts/mensajeroSidebar.php'; ?>
 
-
-    <!-- Filtros de Historial -->
-    <div class="filtros-container" style="margin-top: 80px;">
-        <div class="filtros">
-            <button class="filtro-btn activo" data-filtro="todos">Todos</button>
-            <button class="filtro-btn" data-filtro="hoy">Hoy</button>
-            <button class="filtro-btn" data-filtro="semana">Esta Semana</button>
-            <button class="filtro-btn" data-filtro="mes">Este Mes</button>
+    <main class="main-content">
+        <div class="session-status">
+            <div class="status-indicator online">
+                <span class="status-dot"></span>
+                <span class="status-text">Historial Activo</span>
+            </div>
+            <div class="session-time">
+                <span class="time-icon">📚</span>
+                <span>Comprobantes de entrega</span>
+            </div>
         </div>
-    </div>
 
-    <!-- Lista de Historial -->
-    <main id="vistaLista" class="vista-activa main-content" style="padding-top: 0;">
+        <!-- Filtros de Historial -->
+        <div class="filtros-container">
+            <div class="filtros">
+                <button class="filtro-btn activo" data-filtro="todos">Todos</button>
+                <button class="filtro-btn" data-filtro="hoy">Hoy</button>
+                <button class="filtro-btn" data-filtro="semana">Esta Semana</button>
+                <button class="filtro-btn" data-filtro="mes">Este Mes</button>
+            </div>
+        </div>
+
+        <!-- Lista de Historial -->
+        <div id="vistaLista" class="vista-activa" style="padding-top: 0;">
         <div id="listaHistorial" class="lista-paquetes">
             <!-- Los paquetes entregados se cargarán aquí -->
+        </div>
         </div>
     </main>
 
@@ -103,24 +115,7 @@
         </div>
     </div>
 
+    <script src="../../public/js/mensajeroLayout.js"></script>
     <script src="../../public/js/historialMensajero.js"></script>
-    
-    <script>
-        // Lógica del Sidebar
-        document.addEventListener('DOMContentLoaded', function() {
-            const menuBtn = document.getElementById('menuBtn');
-            const sideMenu = document.getElementById('sideMenu');
-            const menuOverlay = document.getElementById('menuOverlay');
-            
-            if (menuBtn && sideMenu && menuOverlay) {
-                menuBtn.addEventListener('click', () => { sideMenu.classList.add('active'); menuOverlay.classList.add('active'); });
-                menuOverlay.addEventListener('click', () => { sideMenu.classList.remove('active'); menuOverlay.classList.remove('active'); });
-                
-                // Marcar activo
-                sideMenu.querySelectorAll('a').forEach(link => link.classList.remove('active'));
-                sideMenu.querySelector('a[href*="historialMensajero.php"]')?.classList.add('active');
-            }
-        });
-    </script>
 </body>
 </html>

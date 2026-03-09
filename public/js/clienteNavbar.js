@@ -170,11 +170,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         logoutLink.addEventListener('click', function(e) {
             e.preventDefault();
-            
-            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-                // Aquí iría la lógica de logout
-                window.location.href = this.getAttribute('href');
-            }
             targetUrl = this.getAttribute('href');
             modal.style.display = 'flex';
             setTimeout(() => {

@@ -44,6 +44,7 @@ foreach ($chartDataRaw as $row) {
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/inicioCliente.css">
+    <link rel="stylesheet" href="../../public/css/clientesTheme.css">
 </head>
 <body>
     <!-- Sidebar -->

@@ -7,6 +7,10 @@ let fotosEntrega = [];
 let ubicacionActual = null;
 let watchId = null;
 let totalRecaudoHoy = 0;
+const API_MIS_PAQUETES = '../../controller/misPaquetesMensajerosController.php';
+let deepLinkProcesado = false;
+const STORAGE_SCANNED_QR_KEY = 'ecobikemess_mensajero_scanned_qr_v1';
+let qrEscaneadosMap = new Map();
 
 // ============================================
 // FUNCIONES DE FEEDBACK TÁCTIL
@@ -34,6 +38,7 @@ function feedbackClick() {
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     inicializarApp();
+    cargarQREscaneadosLocales();
     cargarPaquetes();
     configurarEventListeners();
     inicializarGeolocalización();
@@ -105,82 +110,113 @@ function actualizarInfoGPS() {
 // ============================================
 // CARGA DE DATOS
 // ============================================
-function cargarPaquetes() {
-    // Datos de ejemplo - En producción vendrían de API
-    paquetes = [
-        {
-            id: 1,
-            guia: 'GUA-2024-0001',
-            nombreDestinatario: 'María González Pérez',
-            telefono: '+57 300 123 4567',
-            direccion: 'Calle 72 #10-34, Apartamento 302, Edificio Torres del Parque, Bogotá',
-            coordenadas: { lat: 4.6537, lng: -74.0577 },
-            contenido: 'Documentos legales',
-            valorDeclarado: 50000,
-            observaciones: 'Tocar el timbre. No dejar en portería.',
-            estado: 'pendiente'
-        },
-        {
-            id: 2,
-            guia: 'GUA-2024-0002',
-            nombreDestinatario: 'Carlos Rodríguez',
-            telefono: '+57 310 987 6543',
-            direccion: 'Carrera 15 #93-40, Of. 501, Centro Empresarial, Bogotá',
-            coordenadas: { lat: 4.6764, lng: -74.0533 },
-            contenido: 'Equipos electrónicos',
-            valorDeclarado: 2500000,
-            observaciones: 'URGENTE: Entregar antes de 12pm. Preguntar en recepción.',
-            estado: 'en_ruta'
-        },
-        {
-            id: 3,
-            guia: 'GUA-2024-0003',
-            nombreDestinatario: 'Ana Martínez López',
-            telefono: '+57 320 456 7890',
-            direccion: 'Avenida 68 #45-23, Casa 12, Conjunto Residencial Los Pinos, Bogotá',
-            coordenadas: { lat: 4.6583, lng: -74.0856 },
-            contenido: 'Ropa y accesorios',
-            valorDeclarado: 150000,
-            observaciones: 'Llamar 10 minutos antes de llegar.',
-            estado: 'pendiente'
-        },
-        {
-            id: 4,
-            guia: 'GUA-2024-0004',
-            nombreDestinatario: 'Pedro Sánchez',
-            telefono: '+57 315 234 5678',
-            direccion: 'Calle 100 #19-61, Bogotá',
-            coordenadas: { lat: 4.6870, lng: -74.0470 },
-            contenido: 'Medicamentos',
-            valorDeclarado: 80000,
-            observaciones: 'Requiere recaudo de $80.000 en efectivo.',
-            estado: 'entregado',
-            infoEntrega: {
-                nombreRecibe: 'Pedro Sánchez',
-                parentesco: 'destinatario',
-                documento: '1234567890',
-                recaudo: 80000,
-                observaciones: 'Entrega exitosa',
-                fecha: '2024-02-05 09:30',
-                fotos: []
-            }
-        },
-        {
-            id: 5,
-            guia: 'GUA-2024-0005',
-            nombreDestinatario: 'Laura Ramírez',
-            telefono: '+57 301 654 3210',
-            direccion: 'Transversal 45 #123-89, Bogotá',
-            coordenadas: { lat: 4.6920, lng: -74.0420 },
-            contenido: 'Libros y material educativo',
-            valorDeclarado: 120000,
-            observaciones: 'Horario preferido: 2pm - 5pm',
-            estado: 'pendiente'
+async function cargarPaquetes() {
+    try {
+        const resp = await fetch(`${API_MIS_PAQUETES}?action=listar`);
+        const json = await resp.json();
+        if (!json.success) {
+            throw new Error(json.message || 'No se pudieron cargar los paquetes');
         }
-    ];
-    
-    mostrarPaquetes();
-    actualizarEstadisticas();
+
+        const paquetesDB = (json.data || []).map(row => {
+            const estadoFront = row.estado === 'entregado' ? 'entregado' : 'pendiente';
+            const guiaNormalizada = normalizarGuia(row.numero_guia);
+            const qrData = qrEscaneadosMap.get(guiaNormalizada);
+
+            const item = {
+                id: Number(row.id),
+                guia: row.numero_guia,
+                nombreDestinatario: row.destinatario_nombre,
+                telefono: row.destinatario_telefono,
+                direccion: row.direccion_destino,
+                coordenadas: { lat: 4.65, lng: -74.06 },
+                contenido: row.descripcion_contenido || 'Sin descripción',
+                valorDeclarado: Number(row.costo_envio || 0),
+                totalCobrar: Number(row.recaudo_esperado || 0),
+                observaciones: row.instrucciones_entrega || '',
+                estado: estadoFront,
+                qrEscaneado: !!qrData,
+                qrScanData: qrData || null
+            };
+
+            if (row.nombre_receptor) {
+                item.infoEntrega = {
+                    nombreRecibe: row.nombre_receptor,
+                    parentesco: row.parentesco_cargo || 'N/A',
+                    documento: row.documento_receptor || 'N/A',
+                    recaudo: Number(row.recaudo_real || 0),
+                    fecha: row.fecha_entrega ? formatearFechaHora(row.fecha_entrega) : '',
+                    fotos: []
+                };
+            }
+            return item;
+        });
+
+        // Agregar guias escaneadas que no estén en la consulta del backend
+        const guiasEnDB = new Set(paquetesDB.map(p => normalizarGuia(p.guia)));
+        const paquetesVirtuales = [];
+        qrEscaneadosMap.forEach((qrData, guiaNorm) => {
+            if (guiasEnDB.has(guiaNorm)) return;
+            paquetesVirtuales.push({
+                id: null,
+                guia: qrData.code || guiaNorm,
+                nombreDestinatario: qrData.details?.nombre || 'Destinatario QR',
+                telefono: qrData.details?.telefono || 'No disponible',
+                direccion: qrData.details?.direccion || 'Dirección no disponible',
+                coordenadas: { lat: 4.65, lng: -74.06 },
+                contenido: 'Sin descripción',
+                valorDeclarado: parsearMonto(qrData.details?.total),
+                totalCobrar: parsearMonto(qrData.details?.total),
+                observaciones: 'Registro escaneado desde QR (sin coincidencia en paquetes asignados)',
+                estado: 'pendiente',
+                qrEscaneado: true,
+                qrScanData: qrData,
+                esVirtualQR: true
+            });
+        });
+
+        paquetes = [...paquetesDB, ...paquetesVirtuales];
+
+        mostrarPaquetes();
+        actualizarEstadisticas();
+        aplicarDeepLinkDesdeURL();
+    } catch (error) {
+        console.error(error);
+        document.getElementById('listaPaquetes').innerHTML = '<p style="padding:1rem;color:#b91c1c;">Error cargando paquetes.</p>';
+    }
+}
+
+function normalizarGuia(valor) {
+    const raw = (valor || '').toString().trim().toUpperCase();
+    if (!raw) return '';
+    return raw.startsWith('QR-') ? raw.substring(3) : raw;
+}
+
+function aplicarDeepLinkDesdeURL() {
+    if (deepLinkProcesado) return;
+    const params = new URLSearchParams(window.location.search);
+    const guiaParam = params.get('guia');
+    if (!guiaParam) return;
+
+    const accion = (params.get('accion') || '').toLowerCase();
+    const guiaBuscada = normalizarGuia(decodeURIComponent(guiaParam));
+    if (!guiaBuscada) return;
+
+    const paquete = paquetes.find(p => normalizarGuia(p.guia) === guiaBuscada);
+    if (!paquete) {
+        alert(`No se encontró la guía ${guiaBuscada} en tus paquetes asignados.`);
+        deepLinkProcesado = true;
+        return;
+    }
+
+    deepLinkProcesado = true;
+    const paqueteRef = paquete.id === null ? `virtual_${paquete.guia}` : paquete.id;
+
+    if (accion === 'entregar' && paquete.estado !== 'entregado') {
+        abrirFormularioEntrega(paqueteRef);
+    } else {
+        verDetallePaquete(paqueteRef);
+    }
 }
 
 // ============================================
@@ -196,6 +232,16 @@ function mostrarPaquetes(filtro = 'todos') {
     } else {
         paquetesFiltrados = paquetes.filter(p => p.estado === filtro);
     }
+
+    // Si hay QR escaneados, priorizar esos sin ocultar todo si no hubo coincidencia
+    if (qrEscaneadosMap.size > 0) {
+        const soloEscaneados = paquetesFiltrados.filter(p => p.qrEscaneado);
+        if (soloEscaneados.length > 0) {
+            paquetesFiltrados = soloEscaneados;
+        }
+    }
+
+    paquetesFiltrados.sort((a, b) => Number(b.qrEscaneado) - Number(a.qrEscaneado));
     
     if (paquetesFiltrados.length === 0) {
         contenedor.innerHTML = `
@@ -216,7 +262,8 @@ function mostrarPaquetes(filtro = 'todos') {
         
         const botonEntregar = paquete.estado === 'entregado' 
             ? '<button class="btn-entregar-rapido" disabled>✓ Entregado</button>'
-            : `<button class="btn-entregar-rapido" onclick="abrirFormularioEntrega(${paquete.id})">✓ Entregar</button>`;
+            : `<button class="btn-entregar-rapido" onclick="abrirFormularioEntrega(${paquete.id === null ? `'virtual_${paquete.guia}'` : paquete.id})">✓ Entregar</button>`;
+        const accionDetalle = paquete.id === null ? `'virtual_${paquete.guia}'` : paquete.id;
         
         return `
             <div class="tarjeta-paquete ${paquete.estado}">
@@ -224,11 +271,16 @@ function mostrarPaquetes(filtro = 'todos') {
                     <div class="guia-numero">${paquete.guia}</div>
                     <span class="badge ${paquete.estado}">${estadoTexto[paquete.estado]}</span>
                 </div>
-                
+                ${paquete.qrEscaneado ? `<div class="info-row"><span class="info-row-label">QR:</span><span class="info-row-valor" style="color:#059669;font-weight:600;">Escaneado</span></div>` : ''}
                 <div class="paquete-info">
                     <div class="info-row">
                         <span class="info-row-label">Destinatario</span>
                         <span class="info-row-valor destinatario-nombre">${paquete.nombreDestinatario}</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-row-label">Teléfono</span>
+                        <span class="info-row-valor">${paquete.telefono || 'No disponible'}</span>
                     </div>
                     
                     <div class="info-row">
@@ -242,13 +294,13 @@ function mostrarPaquetes(filtro = 'todos') {
                     </div>
                     
                     <div class="info-row">
-                        <span class="info-row-label">Valor Declarado</span>
-                        <span class="info-row-valor valor-declarado">${formatearMoneda(paquete.valorDeclarado)}</span>
+                        <span class="info-row-label">Total a Cobrar</span>
+                        <span class="info-row-valor valor-declarado">${formatearMoneda(paquete.totalCobrar || 0)}</span>
                     </div>
                 </div>
                 
                 <div class="paquete-acciones">
-                    <button class="btn-ver-detalle" onclick="verDetallePaquete(${paquete.id})">
+                    <button class="btn-ver-detalle" onclick="verDetallePaquete(${accionDetalle})">
                         👁️ Ver Detalle
                     </button>
                     ${botonEntregar}
@@ -262,12 +314,16 @@ function mostrarPaquetes(filtro = 'todos') {
 // ESTADÍSTICAS
 // ============================================
 function actualizarEstadisticas() {
-    const total = paquetes.length;
-    const pendientes = paquetes.filter(p => p.estado === 'pendiente').length;
-    const enRuta = paquetes.filter(p => p.estado === 'en_ruta').length;
-    const entregados = paquetes.filter(p => p.estado === 'entregado').length;
+    const baseStats = (qrEscaneadosMap.size > 0 && paquetes.some(p => p.qrEscaneado))
+        ? paquetes.filter(p => p.qrEscaneado)
+        : paquetes;
+
+    const total = baseStats.length;
+    const pendientes = baseStats.filter(p => p.estado === 'pendiente').length;
+    const enRuta = baseStats.filter(p => p.estado === 'en_ruta').length;
+    const entregados = baseStats.filter(p => p.estado === 'entregado').length;
     
-    totalRecaudoHoy = paquetes
+    totalRecaudoHoy = baseStats
         .filter(p => p.estado === 'entregado' && p.infoEntrega)
         .reduce((sum, p) => sum + (p.infoEntrega.recaudo || 0), 0);
     
@@ -285,7 +341,7 @@ function actualizarEstadisticas() {
 // ============================================
 function verDetallePaquete(id) {
     feedbackClick();
-    paqueteActual = paquetes.find(p => p.id === id);
+    paqueteActual = paquetes.find(p => p.id === id || `virtual_${p.guia}` === id);
     
     if (!paqueteActual) return;
     
@@ -374,7 +430,7 @@ function llamarDestinatario(telefono = paqueteActual?.telefono) {
 // ============================================
 function abrirFormularioEntrega(id) {
     feedbackClick();
-    paqueteActual = paquetes.find(p => p.id === id);
+    paqueteActual = paquetes.find(p => p.id === id || `virtual_${p.guia}` === id);
     
     if (!paqueteActual || paqueteActual.estado === 'entregado') {
         alert('Este paquete ya fue entregado');
@@ -391,6 +447,24 @@ function abrirFormularioEntrega(id) {
     document.getElementById('formEntrega').reset();
     fotosEntrega = [];
     document.getElementById('previsualizacionFotosEntrega').innerHTML = '';
+
+    // Prefill desde datos escaneados del QR si existen
+    const qrData = paqueteActual.qrScanData;
+    if (qrData) {
+        const nombre = qrData.details?.nombre || paqueteActual.nombreDestinatario || '';
+        const recaudo = parsearMonto(qrData.details?.total);
+        const observacionBase = qrData.rawText ? `QR: ${qrData.rawText}` : '';
+
+        const elNombre = document.getElementById('nombreRecibe');
+        const elParentesco = document.getElementById('parentesco');
+        const elRecaudo = document.getElementById('recaudo');
+        const elObs = document.getElementById('observacionesEntrega');
+
+        if (elNombre && nombre) elNombre.value = nombre;
+        if (elParentesco) elParentesco.value = 'destinatario';
+        if (elRecaudo && recaudo > 0) elRecaudo.value = recaudo;
+        if (elObs && observacionBase) elObs.value = observacionBase;
+    }
     
     actualizarFechaHora();
     actualizarInfoGPS();
@@ -543,29 +617,46 @@ document.getElementById('formEntrega')?.addEventListener('submit', function(e) {
     completarEntrega(datosEntrega);
 });
 
-function completarEntrega(datosEntrega) {
+async function completarEntrega(datosEntrega) {
     feedbackClick();
     mostrarLoading(true, 'Registrando entrega...');
-    
-    setTimeout(() => {
-        // Actualizar paquete
+
+    try {
+        const payload = {
+            paquete_id: paqueteActual.id || 0,
+            numero_guia: paqueteActual.guia,
+            ...datosEntrega
+        };
+
+        const resp = await fetch(`${API_MIS_PAQUETES}?action=entregar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const json = await resp.json();
+        if (!json.success) {
+            throw new Error(json.message || 'No se pudo registrar la entrega');
+        }
+
         paqueteActual.estado = 'entregado';
         paqueteActual.infoEntrega = {
             ...datosEntrega,
             fecha: formatearFechaHora(new Date(datosEntrega.fecha))
         };
-        
+        eliminarQREscaneadoLocal(paqueteActual.guia);
+        cargarQREscaneadosLocales();
         actualizarPaqueteEnLista(paqueteActual);
         actualizarEstadisticas();
-        
-        mostrarLoading(false);
+        refrescarListaActual();
         document.getElementById('vistaFormularioEntrega').classList.add('oculto');
-        
         feedbackExito();
         mostrarConfirmacionEntrega(datosEntrega);
-        
-        console.log('Entrega completada:', datosEntrega);
-    }, 2000);
+    } catch (error) {
+        feedbackError();
+        alert(error.message);
+    } finally {
+        mostrarLoading(false);
+    }
 }
 
 function mostrarConfirmacionEntrega(datos) {
@@ -772,6 +863,48 @@ function mostrarLoading(mostrar, texto = 'Procesando...') {
     } else {
         overlay.classList.add('oculto');
     }
+}
+
+function cargarQREscaneadosLocales() {
+    qrEscaneadosMap = new Map();
+    try {
+        const raw = localStorage.getItem(STORAGE_SCANNED_QR_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (!Array.isArray(data)) return;
+        data.forEach(item => {
+            const guia = normalizarGuia(item?.code);
+            if (!guia) return;
+            qrEscaneadosMap.set(guia, item);
+        });
+    } catch (error) {
+        console.warn('No se pudieron cargar QR escaneados locales', error);
+    }
+}
+
+function eliminarQREscaneadoLocal(guia) {
+    try {
+        const raw = localStorage.getItem(STORAGE_SCANNED_QR_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (!Array.isArray(data)) return;
+        const normalizada = normalizarGuia(guia);
+        const nuevaLista = data.filter(item => normalizarGuia(item?.code) !== normalizada);
+        localStorage.setItem(STORAGE_SCANNED_QR_KEY, JSON.stringify(nuevaLista));
+    } catch (error) {
+        console.warn('No se pudo limpiar QR local entregado', error);
+    }
+}
+
+function parsearMonto(valor) {
+    if (valor === null || valor === undefined) return 0;
+    const limpio = String(valor).replace(/[^\d]/g, '');
+    return limpio ? Number(limpio) : 0;
+}
+
+function refrescarListaActual() {
+    const filtroActivo = document.querySelector('.filtro-btn.activo')?.dataset?.filtro || 'todos';
+    mostrarPaquetes(filtroActivo);
 }
 
 // ============================================

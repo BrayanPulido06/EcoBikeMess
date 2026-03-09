@@ -339,109 +339,142 @@
 
 /* Confirmation Card */
 .confirmation-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fdf9 100%);
+    background: #f6f7f8;
 }
 
-.confirmation-section {
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background: white;
-    border-radius: 10px;
+.confirm-guide-sheet {
+    border: 1px solid #d9dde2;
+    border-radius: 8px;
+    background: #fff;
+    padding: 18px;
 }
 
-.confirmation-section h3 {
-    color: #2d3e50;
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
+.confirm-guide-header {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    border-bottom: 1px solid #e7eaee;
+    padding-bottom: 14px;
+    margin-bottom: 16px;
 }
 
-.info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+.confirm-guide-brand {
+    margin: 0;
+    color: #34a853;
+    font-size: 2rem;
+    font-weight: 700;
 }
 
-.info-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-}
-
-.info-item.full-width {
-    grid-column: 1 / -1;
-}
-
-.info-label {
-    font-size: 0.85rem;
-    color: #6c757d;
-    font-weight: 500;
-}
-
-.info-item span:last-child {
+.confirm-guide-subtitle {
+    margin: 6px 0 0;
     color: #2d3e50;
+    font-size: 1.4rem;
     font-weight: 600;
 }
 
-.confirmation-total {
+.confirm-guide-number-block {
+    text-align: right;
+}
+
+.confirm-guide-number-block span {
+    display: block;
+    font-size: 1.3rem;
+    color: #495057;
+    margin-bottom: 4px;
+}
+
+.confirm-guide-number-block strong {
+    font-size: 2.2rem;
+    letter-spacing: 0.5px;
+    color: #12263a;
+}
+
+.confirm-guide-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.confirm-guide-card {
+    border: 1px solid #e0e5ea;
+    border-radius: 8px;
+    padding: 14px;
+    background: #fff;
+}
+
+.confirm-guide-card.full-width {
+    margin-bottom: 14px;
+}
+
+.confirm-guide-card h4 {
+    margin: 0 0 10px;
+    color: #1c2f44;
+    font-size: 1.15rem;
+    font-weight: 700;
+    border-bottom: 1px solid #edf0f2;
+    padding-bottom: 8px;
+}
+
+.confirm-guide-card p {
+    margin: 6px 0;
+    color: #1f2a37;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.confirm-guide-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    border-top: 2px solid #79c27d;
+    padding-top: 16px;
+}
+
+.confirm-guide-financial h4 {
+    margin: 0 0 10px;
+    color: #1c2f44;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.confirm-guide-financial p {
+    margin: 8px 0;
+    font-size: 0.98rem;
+    color: #1f2a37;
+}
+
+.confirm-guide-financial .confirm-guide-total {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #28a745;
+    margin-top: 8px;
+}
+
+.confirmation-card .qr-code-container {
     text-align: center;
-    padding: 2rem;
-    background: linear-gradient(135deg, #e8f5f1 0%, #f8fdf9 100%);
-    border-radius: 10px;
-    margin: 2rem 0;
 }
 
-.confirmation-total h3 {
-    color: #2d3e50;
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
+.confirmation-card #qrcode {
+    width: 170px !important;
+    height: 170px !important;
+    padding: 5px;
+    border: 1px solid #d6dbe1;
+    border-radius: 4px;
+    background: #fff;
+    margin: 0 auto 6px;
 }
 
-.total-amount {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #5cb85c;
-    margin-bottom: 0.5rem;
+.confirmation-card #qrcode canvas {
+    width: 100%;
+    height: 100%;
 }
 
-.total-note {
-    font-size: 0.9rem;
+.confirmation-card .qr-code-container small {
     color: #6c757d;
-}
-
-/* Guía Preview */
-.guia-preview {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    padding: 1.5rem;
-    background: white;
-    border: 2px dashed #5cb85c;
-    border-radius: 10px;
-}
-
-.guia-icon {
-    font-size: 3rem;
-}
-
-.guia-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-}
-
-.guia-label {
-    font-size: 0.9rem;
-    color: #6c757d;
-}
-
-.guia-number {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #5cb85c;
-    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
 }
 
 /* Form Navigation */
@@ -528,8 +561,20 @@
         padding: 1.5rem;
     }
     
-    .info-grid {
+    .confirm-guide-grid {
         grid-template-columns: 1fr;
+    }
+
+    .confirm-guide-header {
+        flex-direction: column;
+    }
+
+    .confirm-guide-number-block {
+        text-align: left;
+    }
+
+    .confirm-guide-footer {
+        flex-direction: column;
     }
     
     .form-navigation {

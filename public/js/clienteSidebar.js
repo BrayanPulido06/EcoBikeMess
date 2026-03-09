@@ -2,6 +2,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
     const navLinks = document.querySelectorAll('.nav-link');
+    const body = document.body;
+    
+    function syncSidebarState() {
+        const isCollapsed = sidebar && sidebar.classList.contains('collapsed');
+        body.classList.toggle('sidebar-collapsed', !!isCollapsed);
+    }
     
     // Toggle Sidebar
     if (sidebarToggle) {
@@ -11,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Guardar estado en localStorage
             const isCollapsed = sidebar.classList.contains('collapsed');
             localStorage.setItem('sidebarCollapsed', isCollapsed);
+            syncSidebarState();
         });
     }
     
@@ -19,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (savedState === 'true') {
         sidebar.classList.add('collapsed');
     }
+    syncSidebarState();
     
     // Marcar link activo según la URL actual
     const currentPage = window.location.pathname.split('/').pop();
@@ -37,6 +45,23 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Para móvil: crear overlay y manejar clics
+    // Toggle sidebar en móvil desde navbar (disponible siempre)
+    window.toggleSidebarMobile = function() {
+        if (!sidebar) return;
+        let overlay = document.querySelector('.sidebar-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', function() {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+        }
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+    };
+
     if (window.innerWidth <= 768) {
         // Crear overlay si no existe
         let overlay = document.querySelector('.sidebar-overlay');
@@ -45,12 +70,6 @@ document.addEventListener('DOMContentLoaded', function() {
             overlay.className = 'sidebar-overlay';
             document.body.appendChild(overlay);
         }
-        
-        // Toggle sidebar en móvil desde navbar
-        window.toggleSidebarMobile = function() {
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
-        };
         
         // Cerrar sidebar al hacer clic en overlay
         overlay.addEventListener('click', function() {
@@ -81,6 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     overlay.classList.remove('active');
                 }
             }
+            syncSidebarState();
         }, 250);
     });
     

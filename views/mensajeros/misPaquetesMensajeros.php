@@ -36,40 +36,50 @@
     <!-- Menu Lateral -->
     <?php include '../layouts/mensajeroSidebar.php'; ?>
 
-    <!-- Estadísticas del Día -->
-    <section class="estadisticas-dia" style="margin-top: 80px;">
-        <div class="stat-item">
-            <div class="stat-valor" id="totalPaquetes">0</div>
-            <div class="stat-label">Total</div>
+    <main id="vistaLista" class="vista-activa main-content">
+        <div class="session-status">
+            <div class="status-indicator online">
+                <span class="status-dot"></span>
+                <span class="status-text">Operación Activa</span>
+            </div>
+            <div class="session-time">
+                <span class="time-icon">📦</span>
+                <span>Gestión de paquetes</span>
+            </div>
         </div>
-        <div class="stat-item">
-            <div class="stat-valor" id="enRuta">0</div>
-            <div class="stat-label">En Ruta</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-valor" id="entregados">0</div>
-            <div class="stat-label">Entregados</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-valor recaudo" id="totalRecaudo">$0</div>
-            <div class="stat-label">Recaudado</div>
-        </div>
-    </section>
 
-    <!-- Filtros -->
-    <div class="filtros-container">
-        <div class="filtros">
-            <button class="filtro-btn activo" data-filtro="todos">Todos</button>
-            <button class="filtro-btn" data-filtro="pendiente">Pendientes</button>
-            <button class="filtro-btn" data-filtro="en_ruta">En Ruta</button>
-        </div>
-        <button id="btnOrdenarRuta" class="btn-ordenar">
-            🎯 Optimizar Ruta
-        </button>
-    </div>
+        <!-- Estadísticas del Día -->
+        <section class="estadisticas-dia">
+            <div class="stat-item">
+                <div class="stat-valor" id="totalPaquetes">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-valor" id="enRuta">0</div>
+                <div class="stat-label">En Ruta</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-valor" id="entregados">0</div>
+                <div class="stat-label">Entregados</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-valor recaudo" id="totalRecaudo">$0</div>
+                <div class="stat-label">Recaudado</div>
+            </div>
+        </section>
 
-    <!-- Vista Principal: Lista de Paquetes -->
-    <main id="vistaLista" class="vista-activa main-content" style="padding-top: 0;">
+        <!-- Filtros -->
+        <div class="filtros-container">
+            <div class="filtros">
+                <button class="filtro-btn activo" data-filtro="todos">Todos</button>
+                <button class="filtro-btn" data-filtro="pendiente">Pendientes</button>
+                <button class="filtro-btn" data-filtro="en_ruta">En Ruta</button>
+            </div>
+            <button id="btnOrdenarRuta" class="btn-ordenar">
+                🎯 Optimizar Ruta
+            </button>
+        </div>
+    
         <!-- Controles Superiores (Movidos del Header antiguo) -->
         <div class="resumen-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; background: white; padding: 1rem; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
             <div class="contador-resumen">
@@ -324,36 +334,7 @@
         <p id="loadingTexto">Procesando...</p>
     </div>
 
+    <script src="../../public/js/mensajeroLayout.js"></script>
     <script src="../../public/js/misPaquetesMensajeros.js"></script>
-    
-    <!-- Script para funcionalidad del Sidebar -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const menuBtn = document.getElementById('menuBtn');
-            const sideMenu = document.getElementById('sideMenu');
-            const menuOverlay = document.getElementById('menuOverlay');
-            
-            if (menuBtn && sideMenu && menuOverlay) {
-                menuBtn.addEventListener('click', () => {
-                    sideMenu.classList.add('active');
-                    menuOverlay.classList.add('active');
-                });
-                
-                menuOverlay.addEventListener('click', () => {
-                    sideMenu.classList.remove('active');
-                    menuOverlay.classList.remove('active');
-                });
-
-                // Marcar link activo
-                const links = sideMenu.querySelectorAll('a');
-                links.forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('href').includes('misPaquetesMensajeros.php')) {
-                        link.classList.add('active');
-                    }
-                });
-            }
-        });
-    </script>
 </body>
 </html>

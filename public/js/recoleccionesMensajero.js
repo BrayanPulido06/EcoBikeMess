@@ -7,6 +7,7 @@ let fotosRecoleccion = [];
 let ubicacionActual = null;
 let mensajeroId = 'MENSAJERO_001'; // Se obtendría dinámicamente en producción
 let watchId = null; // Para tracking de GPS continuo
+const API_RECOLECCIONES = '../../controller/recoleccionesMensajeroController.php';
 
 // ============================================
 // FUNCIONES DE FEEDBACK TÁCTIL
@@ -37,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarRecolecciones();
     configurarEventListeners();
     solicitarPermisos();
-    configurarSidebar();
+    configurarNotificaciones();
     inicializarGeolocalización();
 });
 
@@ -151,97 +152,48 @@ function mostrarNotificacionPush(titulo, mensaje, datos) {
 }
 
 // ============================================
-// CARGA DE DATOS (Simulación - En producción sería API)
+// CARGA DE DATOS
 // ============================================
-function cargarRecolecciones() {
-    // Datos de ejemplo - En producción vendrían de una API
-    recolecciones = [
-        {
-            id: 1,
-            numeroOrden: 'REC-2024-001',
-            estado: 'pendiente',
-            prioridad: 'urgente',
-            fechaAsignacion: '2024-02-05 08:30',
-            distancia: 2.3,
-            direccion: 'Calle 72 #10-34, Bogotá',
-            coordenadas: { lat: 4.6537, lng: -74.0577 },
-            nombreContacto: 'María González',
-            telefono: '+57 300 123 4567',
-            cantidadPaquetes: 5,
-            horarioSugerido: '09:00 AM - 11:00 AM',
-            instrucciones: 'Tocar el timbre del apartamento 302. Los paquetes están en la portería.'
-        },
-        {
-            id: 2,
-            numeroOrden: 'REC-2024-002',
-            estado: 'pendiente',
-            prioridad: 'normal',
-            fechaAsignacion: '2024-02-05 09:00',
-            distancia: 4.7,
-            direccion: 'Carrera 15 #93-40, Bogotá',
-            coordenadas: { lat: 4.6764, lng: -74.0533 },
-            nombreContacto: 'Carlos Rodríguez',
-            telefono: '+57 310 987 6543',
-            cantidadPaquetes: 3,
-            horarioSugerido: '10:00 AM - 12:00 PM',
-            instrucciones: 'Empresa de tecnología. Preguntar en recepción por el área de logística.'
-        },
-        {
-            id: 3,
-            numeroOrden: 'REC-2024-003',
-            estado: 'en_curso',
-            prioridad: 'normal',
-            fechaAsignacion: '2024-02-05 07:45',
-            distancia: 0.8,
-            direccion: 'Avenida 68 #45-23, Bogotá',
-            coordenadas: { lat: 4.6583, lng: -74.0856 },
-            nombreContacto: 'Ana Martínez',
-            telefono: '+57 320 456 7890',
-            cantidadPaquetes: 2,
-            horarioSugerido: '08:00 AM - 10:00 AM',
-            instrucciones: 'Casa particular. Paquetes frágiles - manejar con cuidado.'
+async function cargarRecolecciones() {
+    try {
+        const resp = await fetch(`${API_RECOLECCIONES}?action=listar`);
+        const json = await resp.json();
+        if (!json.success) {
+            throw new Error(json.message || 'No se pudieron cargar recolecciones');
         }
-    ];
-    
-    mostrarRecolecciones();
-    simularNuevaAsignacion();
-}
 
-function simularNuevaAsignacion() {
-    // Simular nueva asignación después de 10 segundos
-    setTimeout(() => {
-        const nuevaRecoleccion = {
-            id: 4,
-            numeroOrden: 'REC-2024-004',
-            estado: 'pendiente',
-            prioridad: 'urgente',
-            fechaAsignacion: new Date().toISOString().slice(0, 16).replace('T', ' '),
-            distancia: 1.5,
-            direccion: 'Calle 100 #19-61, Bogotá',
-            coordenadas: { lat: 4.6870, lng: -74.0470 },
-            nombreContacto: 'Pedro Sánchez',
-            telefono: '+57 315 234 5678',
-            cantidadPaquetes: 8,
-            horarioSugerido: 'Inmediato',
-            instrucciones: 'URGENTE: Medicamentos. Contactar inmediatamente al llegar.'
-        };
-        
-        recolecciones.unshift(nuevaRecoleccion);
-        mostrarRecolecciones();
-        
-        // Mostrar notificación push
-        mostrarNotificacionPush(
-            '📦 Nueva Recolección Asignada',
-            `${nuevaRecoleccion.numeroOrden} - Prioridad: ${nuevaRecoleccion.prioridad.toUpperCase()}`,
-            nuevaRecoleccion
-        );
-        
-        // Actualizar badge de notificaciones
-        const badge = document.querySelector('.notification-badge');
-        if (badge) {
-            badge.textContent = parseInt(badge.textContent) + 1;
+        if (json.mensajero) {
+            mensajeroId = String(json.mensajero.id);
+            const nombreEl = document.getElementById('mensajeroNombre');
+            if (nombreEl) {
+                nombreEl.textContent = json.mensajero.nombre || 'Mis Recolecciones';
+            }
         }
-    }, 10000);
+
+        recolecciones = (json.data || []).map(r => ({
+            id: Number(r.id),
+            numeroOrden: r.numero_orden,
+            estado: r.estado === 'asignada' ? 'pendiente' : r.estado,
+            prioridad: r.prioridad || 'normal',
+            fechaAsignacion: r.fecha_asignacion,
+            distancia: 0,
+            direccion: r.direccion_recoleccion,
+            coordenadas: {
+                lat: Number(r.coordenadas_lat || 0),
+                lng: Number(r.coordenadas_lng || 0)
+            },
+            nombreContacto: r.nombre_contacto,
+            telefono: r.telefono_contacto,
+            cantidadPaquetes: Number(r.cantidad_estimada || 0),
+            horarioSugerido: r.horario_preferido || 'Sin horario',
+            instrucciones: r.descripcion_paquetes || r.observaciones_recoleccion || ''
+        }));
+
+        mostrarRecolecciones();
+    } catch (error) {
+        console.error(error);
+        document.getElementById('listaRecolecciones').innerHTML = '<p style="padding:1rem;color:#b91c1c;">Error cargando recolecciones.</p>';
+    }
 }
 
 // ============================================
@@ -376,20 +328,32 @@ function calcularRutaOptimizada() {
 // ============================================
 // ACCIONES DE RECOLECCIÓN
 // ============================================
-function iniciarRecoleccion() {
+async function iniciarRecoleccion() {
     feedbackTactilClick();
     mostrarLoading(true);
-    
-    setTimeout(() => {
+
+    try {
+        const resp = await fetch(`${API_RECOLECCIONES}?action=iniciar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ recoleccion_id: recoleccionActual.id })
+        });
+        const json = await resp.json();
+        if (!json.success) {
+            throw new Error(json.message || 'No se pudo iniciar');
+        }
+
         recoleccionActual.estado = 'en_curso';
         actualizarRecoleccionEnLista(recoleccionActual);
-        
-        mostrarLoading(false);
         verDetalleRecoleccion(recoleccionActual.id);
-        
         feedbackTactilExito();
         mostrarNotificacion('Recolección iniciada. Dirígete al punto de recolección.', 'exito');
-    }, 1000);
+    } catch (error) {
+        feedbackTactilError();
+        alert(error.message);
+    } finally {
+        mostrarLoading(false);
+    }
 }
 
 function llegueAlPunto() {
@@ -660,7 +624,7 @@ document.getElementById('formRecoleccion')?.addEventListener('submit', function(
     completarRecoleccion();
 });
 
-function completarRecoleccion() {
+async function completarRecoleccion() {
     feedbackTactilClick();
     mostrarLoading(true);
     
@@ -679,26 +643,35 @@ function completarRecoleccion() {
         mensajero: mensajeroId
     };
     
-    // Simular envío a servidor
-    setTimeout(() => {
-        // Actualizar estado
+    try {
+        const resp = await fetch(`${API_RECOLECCIONES}?action=completar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                recoleccion_id: recoleccionActual.id,
+                cantidad_real: datosRecoleccion.cantidadReal,
+                observaciones: datosRecoleccion.observaciones,
+                conformidad: datosRecoleccion.conformidad,
+                fotos: datosRecoleccion.fotos
+            })
+        });
+        const json = await resp.json();
+        if (!json.success) {
+            throw new Error(json.message || 'No se pudo completar la recolección');
+        }
+
         recoleccionActual.estado = 'completada';
         recoleccionActual.datosCompletada = datosRecoleccion;
         actualizarRecoleccionEnLista(recoleccionActual);
-        
-        mostrarLoading(false);
-        
-        // Ocultar formulario
         document.getElementById('vistaFormulario').classList.add('oculto');
-        
-        // Feedback de éxito
         feedbackTactilExito();
-        
-        // Mostrar confirmación
         mostrarConfirmacion(datosRecoleccion);
-        
-        console.log('Recolección completada:', datosRecoleccion);
-    }, 2000);
+    } catch (error) {
+        feedbackTactilError();
+        alert(error.message);
+    } finally {
+        mostrarLoading(false);
+    }
 }
 
 function mostrarConfirmacion(datos) {
@@ -838,35 +811,9 @@ function configurarEventListeners() {
 }
 
 // ============================================
-// SIDEBAR
+// NOTIFICACIONES
 // ============================================
-function configurarSidebar() {
-    const menuBtn = document.getElementById('menuBtn');
-    const sideMenu = document.getElementById('sideMenu');
-    const menuOverlay = document.getElementById('menuOverlay');
-    
-    if (menuBtn && sideMenu && menuOverlay) {
-        menuBtn.addEventListener('click', () => {
-            sideMenu.classList.add('active');
-            menuOverlay.classList.add('active');
-        });
-        
-        menuOverlay.addEventListener('click', () => {
-            sideMenu.classList.remove('active');
-            menuOverlay.classList.remove('active');
-        });
-
-        // Marcar link activo en el sidebar
-        const links = sideMenu.querySelectorAll('a');
-        links.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href').includes('recoleccionesMensajero.php')) {
-                link.classList.add('active');
-            }
-        });
-    }
-
-    // Listener para el botón de notificaciones (Nuevo diseño)
+function configurarNotificaciones() {
     const notifBtn = document.getElementById('notifBtn');
     if (notifBtn) {
         notifBtn.addEventListener('click', () => {
@@ -936,9 +883,6 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 }
 
 function inicializarApp() {
-    // Configurar nombre del mensajero
-    document.getElementById('mensajeroNombre').textContent = 'Juan Pérez'; // Vendría de sesión
-    
     // Prevenir que la pantalla se apague durante uso activo
     if ('wakeLock' in navigator) {
         let wakeLock = null;

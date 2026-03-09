@@ -106,7 +106,7 @@ body {
 
 .content-grid-2 {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 1.5rem;
 }
 
@@ -422,7 +422,8 @@ body {
     
     .data-table th,
     .data-table td {
-        padding: 0.8rem 1rem;
+        padding: 0.7rem 0.75rem;
+        font-size: 0.82rem;
     }
 }
 
