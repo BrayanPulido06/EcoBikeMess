@@ -29,10 +29,6 @@
             <h1>🚴 EcoBikeMess</h1>
             <p class="user-name" id="mensajeroNombre">Mis Recolecciones</p>
         </div>
-        <button class="notif-btn" id="notifBtn">
-            <span class="notif-icon">🔔</span>
-            <span class="notif-badge">3</span>
-        </button>
     </header>
 
     <!-- Menu Lateral -->
@@ -144,16 +140,26 @@
                 </div>
             </section>
 
+            <!-- Paquetes asignados -->
+            <section class="seccion-detalle oculto" id="seccionPaquetesAsignados">
+                <h3>📌 Paquetes asignados</h3>
+                <div class="info-item">
+                    <span class="info-label">Total a recoger:</span>
+                    <span id="detalleTotalPaquetes" class="cantidad-grande"></span>
+                </div>
+                <div id="detalleListaPaquetes" class="lista-paquetes-recoleccion"></div>
+            </section>
+
             <!-- Acciones -->
             <div class="acciones-detalle">
                 <button id="btnIniciarRecoleccion" class="btn-primario btn-grande">
-                    🚀 Iniciar Recolección
+                    ✅ Confirmar Recolección
                 </button>
                 <button id="btnLleguePunto" class="btn-exito btn-grande oculto">
-                    ✓ Llegué al Punto de Recolección
+                    📦 Recibido
                 </button>
                 <button id="btnCancelar" class="btn-peligro">
-                    ✕ Cancelar Recolección
+                    ✕ No puedo realizar
                 </button>
             </div>
         </div>
@@ -162,22 +168,22 @@
     <!-- Vista Formulario de Recolección -->
     <div id="vistaFormulario" class="vista-formulario oculto">
         <div class="formulario-header">
-            <h2>📝 Completar Recolección</h2>
+            <h2>📝 Registrar Recolección</h2>
             <p id="formNumeroOrden">Orden #</p>
         </div>
 
         <form id="formRecoleccion" class="formulario-recoleccion">
             <!-- Fotos -->
             <div class="form-group">
-                <label class="obligatorio">Fotos de la Recolección</label>
+                <label class="obligatorio">Foto de los paquetes</label>
                 <div class="fotos-container">
                     <input type="file" id="inputFotos" accept="image/*" capture="environment" multiple style="display: none;">
                     <button type="button" id="btnTomarFoto" class="btn-foto">
-                        📷 Tomar Foto con Cámara
+                        📷 Tomar Foto
                     </button>
                     <div id="previsualizacionFotos" class="previsualizacion-fotos"></div>
                 </div>
-                <small class="ayuda-texto">📸 Obligatorio: al menos una foto del lugar/persona</small>
+                <small class="ayuda-texto">📸 Obligatorio: se debe colocar foto de los paquetes</small>
             </div>
 
             <!-- Cantidad Real de Paquetes -->
@@ -188,41 +194,13 @@
                     <input type="number" id="cantidadReal" name="cantidadReal" value="0" min="0" required>
                     <button type="button" class="btn-cantidad" data-accion="incrementar">+</button>
                 </div>
-                <small id="cantidadEsperada" class="ayuda-texto"></small>
-            </div>
-
-            <!-- Alerta de Diferencia -->
-            <div id="alertaDiferencia" class="alerta alerta-advertencia oculto">
-                <p>⚠️ La cantidad recibida no coincide con la solicitada</p>
-                <div class="form-group">
-                    <label for="explicacionDiferencia" class="obligatorio">Explicación de la Diferencia</label>
-                    <textarea id="explicacionDiferencia" name="explicacionDiferencia" rows="3" 
-                              placeholder="Explique por qué hay diferencia en la cantidad..."></textarea>
-                </div>
             </div>
 
             <!-- Observaciones -->
             <div class="form-group">
-                <label for="observaciones">Observaciones del Proceso</label>
+                <label for="observaciones">Observaciones</label>
                 <textarea id="observaciones" name="observaciones" rows="4" 
-                          placeholder="Ingrese cualquier observación relevante sobre la recolección..."></textarea>
-            </div>
-
-            <!-- Conformidad -->
-            <div class="form-group">
-                <label class="obligatorio">Conformidad de la Recolección</label>
-                <div class="radio-group">
-                    <label class="radio-label">
-                        <input type="radio" name="conformidad" value="si" required>
-                        <span class="radio-custom"></span>
-                        ✓ Sí, todo conforme
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="conformidad" value="no">
-                        <span class="radio-custom"></span>
-                        ✕ No, hay inconformidades
-                    </label>
-                </div>
+                          placeholder="Agrega una descripción si se necesita..."></textarea>
             </div>
 
             <!-- Botones de Acción -->
@@ -231,7 +209,7 @@
                     Cancelar
                 </button>
                 <button type="submit" class="btn-exito btn-grande">
-                    ✓ Completar Recolección
+                    ✓ Recolección Exitosa
                 </button>
             </div>
         </form>

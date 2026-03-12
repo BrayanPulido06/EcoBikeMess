@@ -69,5 +69,60 @@ class InicioMensajeroModels
         $stmt->execute([':mensajero_id' => $mensajeroId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-}
 
+    public function validarGuiaParaEscaneo($mensajeroId, $numeroGuia)
+    {
+        $guia = trim((string) $numeroGuia);
+        if ($guia === '') {
+            return ['status' => 'invalid'];
+        }
+
+        $guia = strtoupper($guia);
+        $guiaBase = preg_replace('/^QR-/', '', $guia);
+
+        $sql = "SELECT id, numero_guia, estado, mensajero_id
+                FROM paquetes
+                WHERE numero_guia IN (:guia, :guia_base)
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([
+            ':guia' => $guia,
+            ':guia_base' => $guiaBase
+        ]);
+        $paquete = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$paquete) {
+            return ['status' => 'not_found'];
+        }
+
+        if (($paquete['estado'] ?? '') === 'entregado') {
+            return ['status' => 'delivered'];
+        }
+
+        $prevMensajeroId = $paquete['mensajero_id'] !== null ? (int) $paquete['mensajero_id'] : null;
+        $mensajeroId = (int) $mensajeroId;
+        $reassigned = $prevMensajeroId !== $mensajeroId;
+
+        if ($reassigned) {
+            $sqlUpdate = "UPDATE paquetes
+                          SET mensajero_id = :mensajero_id
+                          WHERE id = :id";
+            $stmtUpdate = $this->conn->prepare($sqlUpdate);
+            $stmtUpdate->execute([
+                ':mensajero_id' => $mensajeroId,
+                ':id' => (int) $paquete['id']
+            ]);
+        }
+
+        return [
+            'status' => 'ok',
+            'reassigned' => $reassigned,
+            'prev_mensajero_id' => $prevMensajeroId,
+            'paquete' => [
+                'id' => (int) $paquete['id'],
+                'numero_guia' => $paquete['numero_guia'],
+                'estado' => $paquete['estado']
+            ]
+        ];
+    }
+}

@@ -230,6 +230,27 @@ input, select, textarea, button {
     transform: scale(0.98);
 }
 
+.cierre-jornada {
+    padding: 0 1rem 1rem;
+}
+
+.btn-guardar-cierre {
+    width: 100%;
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    color: var(--color-blanco);
+    border: none;
+    padding: 0.9rem 1rem;
+    border-radius: var(--radio-md);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transicion);
+}
+
+.btn-guardar-cierre:active {
+    transform: scale(0.98);
+}
+
 /* ============================================
    LISTA DE PAQUETES
    ============================================ */
@@ -258,6 +279,10 @@ input, select, textarea, button {
 
 .tarjeta-paquete.en_ruta {
     border-left: 4px solid #0ea5e9;
+}
+
+.tarjeta-paquete.aplazado {
+    border-left: 4px solid #f97316;
 }
 
 .tarjeta-paquete.entregado {
@@ -299,6 +324,10 @@ input, select, textarea, button {
 .badge.entregado {
     background: #dcfce7;
     color: #166534;
+}
+.badge.aplazado {
+    background: #ffedd5;
+    color: #9a3412;
 }
 
 .paquete-info {
@@ -344,15 +373,20 @@ input, select, textarea, button {
 
 .paquete-acciones {
     display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
     margin-top: 1rem;
 }
 
-.btn-ver-detalle {
-    background: var(--color-blanco);
-    color: var(--color-primario);
-    border: 2px solid var(--color-primario);
+.paquete-acciones-secundarias {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.btn-aplazar {
+    background: #fff7ed;
+    color: #b45309;
+    border: 2px solid #fdba74;
     padding: 0.75rem;
     border-radius: var(--radio-md);
     font-size: 0.9rem;
@@ -362,8 +396,26 @@ input, select, textarea, button {
     min-height: var(--touch-target-min);
 }
 
-.btn-ver-detalle:active {
-    background: var(--color-fondo);
+.btn-aplazar:active {
+    background: #ffedd5;
+    transform: scale(0.97);
+}
+
+.btn-cancelar-paquete {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 2px solid #fca5a5;
+    padding: 0.75rem;
+    border-radius: var(--radio-md);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transicion);
+    min-height: var(--touch-target-min);
+}
+
+.btn-cancelar-paquete:active {
+    background: #fee2e2;
     transform: scale(0.97);
 }
 
@@ -388,6 +440,13 @@ input, select, textarea, button {
 .btn-entregar-rapido:disabled {
     background: var(--color-borde);
     color: var(--color-texto-claro);
+    cursor: not-allowed;
+}
+.btn-aplazar:disabled,
+.btn-cancelar-paquete:disabled {
+    background: var(--color-borde);
+    color: var(--color-texto-claro);
+    border-color: var(--color-borde);
     cursor: not-allowed;
 }
 
@@ -470,6 +529,14 @@ input, select, textarea, button {
 .badge-grande.entregado {
     background: #dcfce7;
     color: #166534;
+}
+.badge-grande.aplazado {
+    background: #ffedd5;
+    color: #9a3412;
+}
+.badge-grande.cancelado {
+    background: #fee2e2;
+    color: #b91c1c;
 }
 
 .info-item {
@@ -570,7 +637,7 @@ input, select, textarea, button {
 .vista-formulario {
     max-width: 800px;
     margin: 0 auto;
-    padding: 1rem;
+    padding: calc(72px + 1rem) 1rem 1rem;
 }
 
 .formulario-header {
@@ -580,12 +647,21 @@ input, select, textarea, button {
     margin-bottom: 1.5rem;
     text-align: center;
     box-shadow: var(--sombra-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .formulario-header h2 {
     font-size: 1.5rem;
     margin-bottom: 0.5rem;
     color: var(--color-exito);
+}
+
+.formulario-volver {
+    align-self: flex-start;
+    margin-bottom: 0.25rem;
 }
 
 .formulario-entrega {
@@ -656,6 +732,86 @@ select {
     color: var(--color-exito);
 }
 
+.input-dinero-bloqueado input {
+    background: #f8fafc;
+    color: #0f172a;
+    cursor: default;
+}
+
+.campo-toggle-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--color-texto);
+}
+
+.sin-margen {
+    margin-bottom: 0;
+}
+
+.confirmacion-linea {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.switch-si-no {
+    position: relative;
+    display: inline-flex;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.switch-si-no input {
+    display: none;
+}
+
+.switch-pill {
+    display: inline-grid;
+    grid-template-columns: 1fr 1fr;
+    min-width: 110px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    padding: 4px;
+    position: relative;
+}
+
+.switch-pill::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    height: calc(100% - 8px);
+    background: var(--color-blanco);
+    border-radius: 999px;
+    transition: var(--transicion);
+    box-shadow: var(--sombra-sm);
+}
+
+.switch-si-no input:checked + .switch-pill::before {
+    transform: translateX(100%);
+}
+
+.switch-opcion {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-texto);
+}
+
+.switch-si-no input:not(:checked) + .switch-pill .switch-no {
+    color: var(--color-primario);
+}
+
+.switch-si-no input:checked + .switch-pill .switch-si {
+    color: var(--color-primario);
+}
+
 .ayuda-texto {
     display: block;
     margin-top: 0.5rem;
@@ -689,6 +845,15 @@ select {
 .btn-foto:active {
     background: var(--color-primario-hover);
     transform: scale(0.98);
+}
+
+.btn-foto-secundaria {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.btn-foto-secundaria:active {
+    background: #cbd5e1;
 }
 
 .previsualizacion-fotos {
@@ -830,10 +995,12 @@ select {
     display: flex;
     gap: 1rem;
     margin-top: 2rem;
+    justify-content: center;
 }
 
 .form-acciones button {
-    flex: 1;
+    width: 100%;
+    max-width: 360px;
 }
 
 /* ============================================
@@ -882,6 +1049,12 @@ select {
 .modal-contenido h2 {
     margin-bottom: 1rem;
     color: var(--color-exito);
+}
+
+.modal-mensaje {
+    color: var(--color-texto);
+    text-align: left;
+    margin-bottom: 1rem;
 }
 
 .resumen-entrega {
@@ -1049,6 +1222,10 @@ select {
     .form-acciones {
         flex-direction: column;
     }
+
+    .confirmacion-linea {
+        align-items: flex-start;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1058,6 +1235,15 @@ select {
     
     .paquete-acciones {
         grid-template-columns: 1fr;
+    }
+
+    .confirmacion-linea {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .switch-si-no {
+        align-self: flex-end;
     }
 }
 

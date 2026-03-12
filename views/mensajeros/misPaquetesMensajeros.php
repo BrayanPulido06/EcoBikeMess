@@ -27,57 +27,19 @@
             <h1>🚴 EcoBikeMess</h1>
             <p class="user-name">Mis Paquetes</p>
         </div>
-        <button class="notif-btn" id="notifBtn">
-            <span class="notif-icon">🔔</span>
-            <span class="notif-badge">3</span>
-        </button>
     </header>
 
     <!-- Menu Lateral -->
     <?php include '../layouts/mensajeroSidebar.php'; ?>
 
     <main id="vistaLista" class="vista-activa main-content">
-        <div class="session-status">
-            <div class="status-indicator online">
-                <span class="status-dot"></span>
-                <span class="status-text">Operación Activa</span>
-            </div>
-            <div class="session-time">
-                <span class="time-icon">📦</span>
-                <span>Gestión de paquetes</span>
-            </div>
-        </div>
-
-        <!-- Estadísticas del Día -->
-        <section class="estadisticas-dia">
-            <div class="stat-item">
-                <div class="stat-valor" id="totalPaquetes">0</div>
-                <div class="stat-label">Total</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-valor" id="enRuta">0</div>
-                <div class="stat-label">En Ruta</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-valor" id="entregados">0</div>
-                <div class="stat-label">Entregados</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-valor recaudo" id="totalRecaudo">$0</div>
-                <div class="stat-label">Recaudado</div>
-            </div>
-        </section>
-
         <!-- Filtros -->
         <div class="filtros-container">
             <div class="filtros">
                 <button class="filtro-btn activo" data-filtro="todos">Todos</button>
                 <button class="filtro-btn" data-filtro="pendiente">Pendientes</button>
-                <button class="filtro-btn" data-filtro="en_ruta">En Ruta</button>
+                <button class="filtro-btn" data-filtro="aplazado">Aplazados</button>
             </div>
-            <button id="btnOrdenarRuta" class="btn-ordenar">
-                🎯 Optimizar Ruta
-            </button>
         </div>
     
         <!-- Controles Superiores (Movidos del Header antiguo) -->
@@ -87,13 +49,16 @@
                 <span id="contadorEntregados" class="contador-badge entregado">0</span>
             </div>
             <div class="header-actions" style="display: flex; gap: 10px;">
-                <button id="btnVerMapa" class="btn-icon" title="Ver Mapa de Entregas" style="background: #f8fdf9; color: #2d3e50; width: 40px; height: 40px; border-radius: 10px; border: 1px solid #e8f5f1;">
-                    🗺️
-                </button>
                 <button id="btnActualizar" class="btn-icon" title="Actualizar" style="background: #f8fdf9; color: #2d3e50; width: 40px; height: 40px; border-radius: 10px; border: 1px solid #e8f5f1;">
                     🔄
                 </button>
             </div>
+        </div>
+
+        <div id="cierreJornadaSection" class="cierre-jornada oculto">
+            <button id="btnGuardarCierreJornada" class="btn-guardar-cierre">
+                Guardar cierre de jornada
+            </button>
         </div>
 
         <div id="listaPaquetes" class="lista-paquetes">
@@ -119,6 +84,10 @@
             <!-- Información del Destinatario -->
             <section class="seccion-detalle">
                 <h3>👤 Destinatario</h3>
+                <div class="info-item">
+                    <span class="info-label">Pedido a nombre de:</span>
+                    <span id="detalleRemitente" class="info-valor"></span>
+                </div>
                 <div class="info-item">
                     <span class="info-label">Nombre:</span>
                     <span id="detalleNombreDestinatario" class="info-valor"></span>
@@ -147,7 +116,7 @@
             <section class="seccion-detalle">
                 <h3>📦 Información del Paquete</h3>
                 <div class="info-item">
-                    <span class="info-label">Contenido:</span>
+                    <span class="info-label">Instrucciones de Entrega:</span>
                     <span id="detalleContenido" class="info-valor"></span>
                 </div>
                 <div class="info-item">
@@ -197,11 +166,18 @@
     <!-- Vista Formulario de Entrega -->
     <div id="vistaFormularioEntrega" class="vista-formulario oculto">
         <div class="formulario-header">
+            <button type="button" id="btnVolverEntrega" class="btn-volver formulario-volver">← Volver</button>
             <h2>✓ Entregar Paquete</h2>
             <p id="formGuia">Guía #</p>
         </div>
 
         <form id="formEntrega" class="formulario-entrega">
+            <!-- Destinatario (solo lectura) -->
+            <div class="form-group">
+                <label for="nombreDestinatarioEntrega">Destinatario</label>
+                <input type="text" id="nombreDestinatarioEntrega" name="nombreDestinatarioEntrega"
+                       value="" readonly>
+            </div>
             <!-- Nombre de Quien Recibe -->
             <div class="form-group">
                 <label for="nombreRecibe" class="obligatorio">Nombre de Quien Recibe</label>
@@ -234,13 +210,34 @@
 
             <!-- Recaudo -->
             <div class="form-group">
-                <label for="recaudo" class="obligatorio">Recaudo (Efectivo)</label>
+                <label for="totalRecaudar">Total a Recaudar</label>
+                <div class="input-dinero input-dinero-bloqueado">
+                    <span class="simbolo-dinero">$</span>
+                    <input type="text" id="totalRecaudar" name="totalRecaudar"
+                           value="$ 0" readonly>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="totalRecaudado" class="obligatorio">Total Recaudado</label>
                 <div class="input-dinero">
                     <span class="simbolo-dinero">$</span>
-                    <input type="number" id="recaudo" name="recaudo" 
-                           placeholder="0" min="0" step="100" value="0" required>
+                    <input type="text" id="totalRecaudado" name="totalRecaudado"
+                           placeholder="0" inputmode="numeric" autocomplete="off" required>
                 </div>
-                <small class="ayuda-texto">Monto recibido en efectivo. Si no hay recaudo, dejar en 0</small>
+            </div>
+
+            <div class="form-group">
+                <div class="confirmacion-linea">
+                    <label class="campo-toggle-label sin-margen" for="recibioCambios">¿Recibió cambios?</label>
+                    <label class="switch-si-no">
+                        <input type="checkbox" id="recibioCambios" name="recibioCambios">
+                        <span class="switch-pill">
+                            <span class="switch-opcion switch-no">No</span>
+                            <span class="switch-opcion switch-si">Sí</span>
+                        </span>
+                    </label>
+                </div>
             </div>
 
             <!-- Observaciones -->
@@ -254,32 +251,27 @@
             <div class="form-group">
                 <label class="obligatorio">Foto de la Entrega</label>
                 <div class="fotos-container">
-                    <input type="file" id="inputFotosEntrega" accept="image/*" capture="environment" multiple style="display: none;">
+                    <input type="file" id="inputFotoEntrega" accept="image/*" capture="environment" style="display: none;">
                     <button type="button" id="btnTomarFotoEntrega" class="btn-foto">
                         📷 Tomar Foto de la Entrega
                     </button>
-                    <div id="previsualizacionFotosEntrega" class="previsualizacion-fotos"></div>
+                    <div id="previsualizacionFotoEntrega" class="previsualizacion-fotos"></div>
                 </div>
-                <small class="ayuda-texto">📸 Obligatorio: al menos una foto de la persona que recibe o evidencia de entrega</small>
             </div>
 
-            <!-- Información Automática -->
-            <div class="info-automatica">
-                <div class="info-auto-item">
-                    <span>📍 Ubicación GPS:</span>
-                    <span id="infoGPSEntrega">Obteniendo...</span>
-                </div>
-                <div class="info-auto-item">
-                    <span>🕐 Fecha/Hora:</span>
-                    <span id="infoFechaEntrega">--</span>
+            <div class="form-group">
+                <label>Foto adicional</label>
+                <div class="fotos-container">
+                    <input type="file" id="inputFotoEntregaAdicional" accept="image/*" capture="environment" style="display: none;">
+                    <button type="button" id="btnTomarFotoEntregaAdicional" class="btn-foto btn-foto-secundaria">
+                        📷 Tomar Foto Adicional
+                    </button>
+                    <div id="previsualizacionFotoEntregaAdicional" class="previsualizacion-fotos"></div>
                 </div>
             </div>
 
             <!-- Botones de Acción -->
             <div class="form-acciones">
-                <button type="button" id="btnCancelarEntrega" class="btn-secundario">
-                    Cancelar
-                </button>
                 <button type="submit" class="btn-exito btn-grande">
                     ✓ Confirmar Entrega
                 </button>
@@ -287,33 +279,50 @@
         </form>
     </div>
 
-    <!-- Vista Mapa de Entregas -->
-    <div id="vistaMapa" class="vista-mapa oculto">
-        <div class="mapa-header">
-            <button id="btnCerrarMapa" class="btn-volver">← Volver</button>
-            <h2>🗺️ Mapa de Entregas</h2>
+    <!-- Vista Formulario de Novedad -->
+    <div id="vistaFormularioNovedad" class="vista-formulario oculto">
+        <div class="formulario-header">
+            <button type="button" id="btnVolverNovedad" class="btn-volver formulario-volver">← Volver</button>
+            <h2 id="novedadTitulo">Novedad de Entrega</h2>
+            <p id="novedadGuia">Guía #</p>
         </div>
-        <div id="mapaContainer" class="mapa-container">
-            <div class="mapa-placeholder">
-                <p>🗺️</p>
-                <p>El mapa interactivo se mostraría aquí</p>
-                <p class="texto-pequeno">Integración con Google Maps API</p>
+
+        <form id="formNovedad" class="formulario-entrega">
+            <div class="form-group">
+                <label for="descripcionNovedad" class="obligatorio">Descripción</label>
+                <textarea id="descripcionNovedad" name="descripcionNovedad" rows="4"
+                          placeholder="Describe por qué se aplaza o cancela la entrega..." required></textarea>
             </div>
-        </div>
-        <div class="mapa-leyenda">
-            <div class="leyenda-item">
-                <span class="punto pendiente"></span>
-                <span>Pendiente</span>
+
+            <div class="form-group">
+                <label class="obligatorio">Evidencia Fotográfica</label>
+                <div class="fotos-container">
+                    <input type="file" id="inputFotoNovedad" accept="image/*" capture="environment" style="display: none;">
+                    <button type="button" id="btnTomarFotoNovedad" class="btn-foto">
+                        📷 Tomar Foto de Evidencia
+                    </button>
+                    <div id="previsualizacionFotoNovedad" class="previsualizacion-fotos"></div>
+                </div>
+                <small class="ayuda-texto">📸 Obligatorio: una foto como evidencia</small>
             </div>
-            <div class="leyenda-item">
-                <span class="punto en-ruta"></span>
-                <span>En Ruta</span>
+
+            <div class="info-automatica">
+                <div class="info-auto-item">
+                    <span>📍 Ubicación GPS:</span>
+                    <span id="infoGPSNovedad">Obteniendo...</span>
+                </div>
+                <div class="info-auto-item">
+                    <span>🕐 Fecha/Hora:</span>
+                    <span id="infoFechaNovedad">--</span>
+                </div>
             </div>
-            <div class="leyenda-item">
-                <span class="punto entregado"></span>
-                <span>Entregado</span>
+
+            <div class="form-acciones">
+                <button type="submit" id="btnEnviarNovedad" class="btn-exito btn-grande">
+                    Enviar
+                </button>
             </div>
-        </div>
+        </form>
     </div>
 
     <!-- Modal de Confirmación -->
@@ -325,6 +334,17 @@
             <button id="btnCerrarConfirmacion" class="btn-primario btn-grande">
                 Continuar con Entregas
             </button>
+        </div>
+    </div>
+
+    <div id="modalDecision" class="modal oculto">
+        <div class="modal-contenido">
+            <h2 id="modalDecisionTitulo">Confirmar acción</h2>
+            <p id="modalDecisionMensaje" class="modal-mensaje"></p>
+            <div class="form-acciones">
+                <button type="button" id="btnDecisionCancelar" class="btn-secundario">Cancelar</button>
+                <button type="button" id="btnDecisionAceptar" class="btn-primario">Aceptar</button>
+            </div>
         </div>
     </div>
 

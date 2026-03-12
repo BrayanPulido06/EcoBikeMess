@@ -175,9 +175,10 @@ CREATE TABLE IF NOT EXISTS paquetes (
     tipo_servicio ENUM('entrega_simple', 'contraentrega') DEFAULT 'entrega_simple',
     costo_envio DECIMAL(10,2) NOT NULL,
     recaudo_esperado DECIMAL(10,2) DEFAULT 0.00,
-    estado ENUM('pendiente', 'entregado', 'cancelado') DEFAULT 'pendiente',
+    estado ENUM('pendiente', 'asignado', 'en_transito', 'en_ruta', 'entregado', 'cancelado', 'devuelto') DEFAULT 'pendiente',
     mensajero_id INT NULL,
     mensajero_recoleccion_id INT NULL,
+    recoleccion_id INT NULL,
     creado_por INT NOT NULL,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_asignacion TIMESTAMP NULL,
@@ -209,6 +210,40 @@ CREATE TABLE IF NOT EXISTS entregas (
     FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id)
 );
 
+CREATE TABLE IF NOT EXISTS novedades_entrega (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    paquete_id INT NOT NULL,
+    mensajero_id INT NOT NULL,
+    tipo ENUM('aplazado', 'cancelado') NOT NULL,
+    descripcion TEXT NOT NULL,
+    foto_evidencia VARCHAR(255) NOT NULL,
+    coordenada_lat DECIMAL(10, 8),
+    coordenada_lng DECIMAL(11, 8),
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (paquete_id) REFERENCES paquetes(id) ON DELETE CASCADE,
+    FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id) ON DELETE CASCADE,
+    INDEX idx_novedades_paquete_fecha (paquete_id, fecha_registro),
+    INDEX idx_novedades_tipo (tipo)
+);
+
+CREATE TABLE IF NOT EXISTS cierres_jornada_mensajero (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    mensajero_id INT NOT NULL,
+    fecha_jornada DATE NOT NULL,
+    total_paquetes INT NOT NULL DEFAULT 0,
+    entregados INT NOT NULL DEFAULT 0,
+    aplazados INT NOT NULL DEFAULT 0,
+    cancelados INT NOT NULL DEFAULT 0,
+    recaudo_total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    observacion VARCHAR(255),
+    detalle_json LONGTEXT,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_mensajero_fecha (mensajero_id, fecha_jornada),
+    INDEX idx_cierres_fecha (fecha_jornada),
+    FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS recolecciones (
     id INT PRIMARY KEY AUTO_INCREMENT,
     numero_orden VARCHAR(20) UNIQUE NOT NULL,
@@ -237,6 +272,9 @@ CREATE TABLE IF NOT EXISTS recolecciones (
     FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id),
     FOREIGN KEY (creada_por) REFERENCES usuarios(id)
 );
+
+-- CORRECCIÓN: Agregar la relación FK aquí, ahora que ambas tablas existen
+ALTER TABLE paquetes ADD FOREIGN KEY (recoleccion_id) REFERENCES recolecciones(id);
 
 CREATE TABLE IF NOT EXISTS comprobantes (
     id INT PRIMARY KEY AUTO_INCREMENT,

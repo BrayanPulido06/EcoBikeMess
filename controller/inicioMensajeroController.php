@@ -42,6 +42,48 @@ try {
             ]);
             break;
 
+        case 'scan':
+            $rawInput = file_get_contents('php://input');
+            $input = json_decode($rawInput, true);
+            if (!is_array($input)) {
+                $input = $_POST;
+            }
+
+            $guia = trim((string) ($input['guia'] ?? ''));
+            if ($guia === '') {
+                echo json_encode(['success' => false, 'message' => 'Guía inválida']);
+                break;
+            }
+
+            $result = $model->validarGuiaParaEscaneo((int) $mensajero['id'], $guia);
+
+            if ($result['status'] === 'not_found') {
+                echo json_encode(['success' => false, 'message' => 'Paquete no encontrado']);
+                break;
+            }
+
+            if ($result['status'] === 'delivered') {
+                echo json_encode(['success' => false, 'message' => 'Paquete entregado']);
+                break;
+            }
+
+            if ($result['status'] === 'invalid') {
+                echo json_encode(['success' => false, 'message' => 'Guía inválida']);
+                break;
+            }
+
+            $notice = null;
+            if (!empty($result['reassigned'])) {
+                $notice = 'Paquete reasignado a tu cuenta';
+            }
+
+            echo json_encode([
+                'success' => true,
+                'notice' => $notice,
+                'paquete' => $result['paquete'] ?? null
+            ]);
+            break;
+
         default:
             echo json_encode(['success' => false, 'message' => 'Acción no válida']);
             break;
@@ -49,4 +91,3 @@ try {
 } catch (Throwable $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
-

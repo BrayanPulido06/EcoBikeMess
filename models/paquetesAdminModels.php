@@ -45,10 +45,9 @@ class PaquetesAdminModel {
                        CONCAT(um.nombres, ' ', um.apellidos) as mensajero,
                        p.costo_envio as valor, 
                        p.recaudo_esperado as recaudo,
-                       p.tipo_paquete as tipo, 
-                       p.peso as peso,
+                       p.tipo_servicio as tipo, 
                        p.instrucciones_entrega as observaciones,
-                       CASE WHEN p.tipo_paquete = 'urgente' THEN 1 ELSE 0 END as urgente,
+                       CASE WHEN p.tipo_servicio = 'urgente' THEN 1 ELSE 0 END as urgente,
                        0 as problema
                 FROM paquetes p
                 LEFT JOIN clientes c ON p.cliente_id = c.id
@@ -90,7 +89,7 @@ class PaquetesAdminModel {
             $params[':mensajero_id'] = $filters['mensajero_id'];
         }
         if (!empty($filters['tipo'])) {
-            $sql .= " AND p.tipo_paquete = :tipo";
+            $sql .= " AND p.tipo_servicio = :tipo";
             $params[':tipo'] = $filters['tipo'];
         }
 
@@ -115,8 +114,7 @@ class PaquetesAdminModel {
                                p.destinatario_telefono,
                                p.direccion_destino, 
                                p.descripcion_contenido,
-                               p.peso,
-                               p.tipo_paquete,
+                               p.tipo_servicio as tipo_paquete,
                                p.costo_envio,
                                p.recaudo_esperado,
                                p.instrucciones_entrega,
@@ -132,6 +130,26 @@ class PaquetesAdminModel {
             $stmtInfo = $this->conn->prepare($sqlInfo);
             $stmtInfo->execute([':id' => $id]);
             $info = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+
+            if ($info && $info['estado'] === 'entregado') {
+                $sqlEntrega = "SELECT * FROM entregas WHERE paquete_id = :id";
+                $stmtEntrega = $this->conn->prepare($sqlEntrega);
+                $stmtEntrega->execute([':id' => $id]);
+                $entrega = $stmtEntrega->fetch(PDO::FETCH_ASSOC);
+
+                if ($entrega) {
+                    $info['infoEntrega'] = [
+                        'nombreRecibe' => $entrega['nombre_receptor'] ?? '',
+                        'parentesco' => $entrega['parentesco_cargo'] ?? '',
+                        'documento' => $entrega['documento_receptor'] ?? '',
+                        'recaudo' => $entrega['recaudo_real'] ?? 0,
+                        'fecha' => $entrega['fecha_entrega'] ?? '',
+                        'observaciones' => $entrega['observaciones'] ?? '',
+                        'fotoPrincipal' => $entrega['foto_entrega'] ?? '',
+                        'fotoAdicional' => $entrega['foto_adicional'] ?? ''
+                    ];
+                }
+            }
         } catch (PDOException $e) {
             $error = "Error al obtener info: " . $e->getMessage();
         }
@@ -165,9 +183,8 @@ class PaquetesAdminModel {
                     destinatario_nombre = :destinatario,
                     destinatario_telefono = :telefono,
                     direccion_destino = :direccion,
-                    tipo_paquete = :tipo,
+                    tipo_servicio = :tipo,
                     costo_envio = :valor,
-                    peso = :peso,
                     instrucciones_entrega = :observaciones
                 WHERE id = :id";
         
@@ -178,7 +195,6 @@ class PaquetesAdminModel {
             ':direccion' => $data['direccion'],
             ':tipo' => $data['tipo'],
             ':valor' => $data['valor'],
-            ':peso' => $data['peso'],
             ':observaciones' => $data['observaciones'],
             ':id' => $id
         ]);

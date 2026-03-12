@@ -3,7 +3,10 @@
 // ============================================
 let paquetes = [];
 let paqueteActual = null;
-let fotosEntrega = [];
+let fotoEntregaPrincipal = null;
+let fotoEntregaAdicional = null;
+let fotoNovedad = null;
+let tipoNovedadActual = null;
 let ubicacionActual = null;
 let watchId = null;
 let totalRecaudoHoy = 0;
@@ -80,7 +83,7 @@ function inicializarGeolocalización() {
             },
             error => {
                 console.error('Error GPS:', error);
-                document.getElementById('infoGPSEntrega').textContent = 'GPS no disponible';
+                actualizarInfoGPS();
             },
             opciones
         );
@@ -101,10 +104,12 @@ function inicializarGeolocalización() {
 }
 
 function actualizarInfoGPS() {
-    const elemento = document.getElementById('infoGPSEntrega');
-    if (elemento && ubicacionActual) {
-        elemento.textContent = `${ubicacionActual.lat.toFixed(6)}, ${ubicacionActual.lng.toFixed(6)}`;
-    }
+    const textoGPS = ubicacionActual
+        ? `${ubicacionActual.lat.toFixed(6)}, ${ubicacionActual.lng.toFixed(6)}`
+        : 'GPS no disponible';
+
+    const elementoNovedad = document.getElementById('infoGPSNovedad');
+    if (elementoNovedad) elementoNovedad.textContent = textoGPS;
 }
 
 // ============================================
@@ -119,24 +124,36 @@ async function cargarPaquetes() {
         }
 
         const paquetesDB = (json.data || []).map(row => {
-            const estadoFront = row.estado === 'entregado' ? 'entregado' : 'pendiente';
+            const estadoBase = row.estado || 'pendiente';
+            const estadoFront = estadoBase === 'entregado'
+                ? 'entregado'
+                : (estadoBase === 'cancelado' ? 'cancelado' : 'pendiente');
+            const estadoVisual = (row.ultima_novedad_tipo === 'aplazado' && estadoFront === 'pendiente')
+                ? 'aplazado'
+                : estadoFront;
             const guiaNormalizada = normalizarGuia(row.numero_guia);
             const qrData = qrEscaneadosMap.get(guiaNormalizada);
 
             const item = {
                 id: Number(row.id),
                 guia: row.numero_guia,
+                remitente: row.remitente || 'Cliente no disponible',
                 nombreDestinatario: row.destinatario_nombre,
                 telefono: row.destinatario_telefono,
                 direccion: row.direccion_destino,
                 coordenadas: { lat: 4.65, lng: -74.06 },
                 contenido: row.descripcion_contenido || 'Sin descripción',
+                instruccionesEntrega: row.instrucciones_entrega || 'Sin instrucciones de entrega',
                 valorDeclarado: Number(row.costo_envio || 0),
                 totalCobrar: Number(row.recaudo_esperado || 0),
                 observaciones: row.instrucciones_entrega || '',
-                estado: estadoFront,
+                estado: estadoVisual,
+                estadoBase: estadoFront,
                 qrEscaneado: !!qrData,
-                qrScanData: qrData || null
+                qrScanData: qrData || null,
+                ultimaNovedadTipo: row.ultima_novedad_tipo || null,
+                ultimaNovedadDescripcion: row.ultima_novedad_descripcion || null,
+                ultimaNovedadFecha: row.ultima_novedad_fecha || null
             };
 
             if (row.nombre_receptor) {
@@ -146,7 +163,10 @@ async function cargarPaquetes() {
                     documento: row.documento_receptor || 'N/A',
                     recaudo: Number(row.recaudo_real || 0),
                     fecha: row.fecha_entrega ? formatearFechaHora(row.fecha_entrega) : '',
-                    fotos: []
+                    fotos: [],
+                    observaciones: row.observaciones_entrega || null,
+                    fotoPrincipal: row.foto_entrega || null,
+                    fotoAdicional: row.foto_adicional || null
                 };
             }
             return item;
@@ -160,15 +180,18 @@ async function cargarPaquetes() {
             paquetesVirtuales.push({
                 id: null,
                 guia: qrData.code || guiaNorm,
+                remitente: 'Cliente no disponible',
                 nombreDestinatario: qrData.details?.nombre || 'Destinatario QR',
                 telefono: qrData.details?.telefono || 'No disponible',
                 direccion: qrData.details?.direccion || 'Dirección no disponible',
                 coordenadas: { lat: 4.65, lng: -74.06 },
                 contenido: 'Sin descripción',
+                instruccionesEntrega: qrData.details?.direccion ? `Entregar en: ${qrData.details.direccion}` : 'Sin instrucciones de entrega',
                 valorDeclarado: parsearMonto(qrData.details?.total),
                 totalCobrar: parsearMonto(qrData.details?.total),
                 observaciones: 'Registro escaneado desde QR (sin coincidencia en paquetes asignados)',
                 estado: 'pendiente',
+                estadoBase: 'pendiente',
                 qrEscaneado: true,
                 qrScanData: qrData,
                 esVirtualQR: true
@@ -227,17 +250,13 @@ function mostrarPaquetes(filtro = 'todos') {
     let paquetesFiltrados = paquetes;
     
     if (filtro === 'todos') {
-        // En la vista principal ocultamos los entregados (ahora están en Historial)
-        paquetesFiltrados = paquetes.filter(p => p.estado !== 'entregado');
+        // En la vista principal ocultamos entregados y cancelados.
+        paquetesFiltrados = paquetes.filter(p => p.estado !== 'entregado' && p.estado !== 'cancelado');
     } else {
-        paquetesFiltrados = paquetes.filter(p => p.estado === filtro);
-    }
-
-    // Si hay QR escaneados, priorizar esos sin ocultar todo si no hubo coincidencia
-    if (qrEscaneadosMap.size > 0) {
-        const soloEscaneados = paquetesFiltrados.filter(p => p.qrEscaneado);
-        if (soloEscaneados.length > 0) {
-            paquetesFiltrados = soloEscaneados;
+        if (filtro === 'pendiente') {
+            paquetesFiltrados = paquetes.filter(p => p.estado === 'pendiente' || p.estado === 'aplazado');
+        } else {
+            paquetesFiltrados = paquetes.filter(p => p.estado === filtro);
         }
     }
 
@@ -257,13 +276,25 @@ function mostrarPaquetes(filtro = 'todos') {
         const estadoTexto = {
             'pendiente': 'Pendiente',
             'en_ruta': 'En Ruta',
-            'entregado': 'Entregado'
+            'aplazado': 'Aplazado',
+            'entregado': 'Entregado',
+            'cancelado': 'Cancelado'
         };
-        
-        const botonEntregar = paquete.estado === 'entregado' 
-            ? '<button class="btn-entregar-rapido" disabled>✓ Entregado</button>'
-            : `<button class="btn-entregar-rapido" onclick="abrirFormularioEntrega(${paquete.id === null ? `'virtual_${paquete.guia}'` : paquete.id})">✓ Entregar</button>`;
-        const accionDetalle = paquete.id === null ? `'virtual_${paquete.guia}'` : paquete.id;
+
+        const referenciaPaquete = paquete.id === null ? `'virtual_${paquete.guia}'` : paquete.id;
+        const bloqueado = paquete.estado === 'entregado' || paquete.estado === 'cancelado';
+        const botonEntregar = bloqueado
+            ? `<button class="btn-entregar-rapido" disabled>${paquete.estado === 'cancelado' ? '✕ Cancelado' : '✓ Entregado'}</button>`
+            : `<button class="btn-entregar-rapido" onclick="abrirFormularioEntrega(${referenciaPaquete})">✓ Entregar</button>`;
+        const botonesNovedad = bloqueado
+            ? `
+                <button class="btn-aplazar" disabled>Aplazado</button>
+                <button class="btn-cancelar-paquete" disabled>Cancelado</button>
+            `
+            : `
+                <button class="btn-aplazar" onclick="abrirFormularioNovedad(${referenciaPaquete}, 'aplazado')">Aplazado</button>
+                <button class="btn-cancelar-paquete" onclick="abrirFormularioNovedad(${referenciaPaquete}, 'cancelado')">Cancelado</button>
+            `;
         
         return `
             <div class="tarjeta-paquete ${paquete.estado}">
@@ -289,8 +320,8 @@ function mostrarPaquetes(filtro = 'todos') {
                     </div>
                     
                     <div class="info-row">
-                        <span class="info-row-label">Contenido</span>
-                        <span class="info-row-valor">${paquete.contenido}</span>
+                        <span class="info-row-label">Instrucciones de Entrega</span>
+                        <span class="info-row-valor">${paquete.instruccionesEntrega || 'Sin instrucciones de entrega'}</span>
                     </div>
                     
                     <div class="info-row">
@@ -300,10 +331,10 @@ function mostrarPaquetes(filtro = 'todos') {
                 </div>
                 
                 <div class="paquete-acciones">
-                    <button class="btn-ver-detalle" onclick="verDetallePaquete(${accionDetalle})">
-                        👁️ Ver Detalle
-                    </button>
                     ${botonEntregar}
+                    <div class="paquete-acciones-secundarias">
+                        ${botonesNovedad}
+                    </div>
                 </div>
             </div>
         `;
@@ -314,26 +345,62 @@ function mostrarPaquetes(filtro = 'todos') {
 // ESTADÍSTICAS
 // ============================================
 function actualizarEstadisticas() {
-    const baseStats = (qrEscaneadosMap.size > 0 && paquetes.some(p => p.qrEscaneado))
-        ? paquetes.filter(p => p.qrEscaneado)
-        : paquetes;
+    const paquetesActivos = paquetes.filter(p => p.estado !== 'cancelado');
 
-    const total = baseStats.length;
-    const pendientes = baseStats.filter(p => p.estado === 'pendiente').length;
-    const enRuta = baseStats.filter(p => p.estado === 'en_ruta').length;
-    const entregados = baseStats.filter(p => p.estado === 'entregado').length;
+    const total = paquetesActivos.length;
+    const pendientes = paquetesActivos.filter(p => p.estado === 'pendiente' || p.estado === 'aplazado').length;
+    const enRuta = paquetesActivos.filter(p => p.estado === 'en_ruta').length;
+    const entregados = paquetesActivos.filter(p => p.estado === 'entregado').length;
     
-    totalRecaudoHoy = baseStats
+    totalRecaudoHoy = paquetesActivos
         .filter(p => p.estado === 'entregado' && p.infoEntrega)
         .reduce((sum, p) => sum + (p.infoEntrega.recaudo || 0), 0);
-    
-    document.getElementById('totalPaquetes').textContent = total;
-    document.getElementById('enRuta').textContent = enRuta;
-    document.getElementById('entregados').textContent = entregados;
-    document.getElementById('totalRecaudo').textContent = formatearMoneda(totalRecaudoHoy);
-    
-    document.getElementById('contadorPendientes').textContent = pendientes;
-    document.getElementById('contadorEntregados').textContent = entregados;
+
+    const totalPaquetesEl = document.getElementById('totalPaquetes');
+    const enRutaEl = document.getElementById('enRuta');
+    const entregadosEl = document.getElementById('entregados');
+    const totalRecaudoEl = document.getElementById('totalRecaudo');
+    const contadorPendientesEl = document.getElementById('contadorPendientes');
+    const contadorEntregadosEl = document.getElementById('contadorEntregados');
+
+    if (totalPaquetesEl) totalPaquetesEl.textContent = total;
+    if (enRutaEl) enRutaEl.textContent = enRuta;
+    if (entregadosEl) entregadosEl.textContent = entregados;
+    if (totalRecaudoEl) totalRecaudoEl.textContent = formatearMoneda(totalRecaudoHoy);
+    if (contadorPendientesEl) contadorPendientesEl.textContent = pendientes;
+    if (contadorEntregadosEl) contadorEntregadosEl.textContent = entregados;
+
+    actualizarVisibilidadCierreJornada();
+}
+
+function obtenerResumenCierre(baseStats = null) {
+    const fuente = Array.isArray(baseStats) ? baseStats : paquetes.filter(p => p.estado !== 'cancelado');
+    const total = fuente.length;
+    const entregados = fuente.filter(p => p.estado === 'entregado').length;
+    const aplazados = fuente.filter(p => p.estado === 'aplazado').length;
+    const cancelados = paquetes.filter(p => p.estado === 'cancelado').length;
+    const pendientesReales = fuente.filter(p => p.estado === 'pendiente' || p.estado === 'en_ruta').length;
+    const recaudo_total = fuente
+        .filter(p => p.estado === 'entregado' && p.infoEntrega)
+        .reduce((sum, p) => sum + (p.infoEntrega.recaudo || 0), 0);
+
+    return {
+        total,
+        entregados,
+        aplazados,
+        cancelados,
+        pendientesReales,
+        recaudo_total
+    };
+}
+
+function actualizarVisibilidadCierreJornada() {
+    const section = document.getElementById('cierreJornadaSection');
+    if (!section) return;
+
+    const resumen = obtenerResumenCierre();
+    const habilitado = resumen.total > 0 && resumen.pendientesReales === 0;
+    section.classList.toggle('oculto', !habilitado);
 }
 
 // ============================================
@@ -351,10 +418,14 @@ function verDetallePaquete(id) {
     const estadoTexto = {
         'pendiente': 'Pendiente',
         'en_ruta': 'En Ruta',
-        'entregado': 'Entregado'
+        'aplazado': 'Aplazado',
+        'entregado': 'Entregado',
+        'cancelado': 'Cancelado'
     };
     
     document.getElementById('detalleGuia').textContent = paqueteActual.guia;
+    const detalleRemitente = document.getElementById('detalleRemitente');
+    if (detalleRemitente) detalleRemitente.textContent = paqueteActual.remitente || 'Cliente no disponible';
     
     const badgeEstado = document.getElementById('detalleEstadoBadge');
     badgeEstado.className = `badge-grande ${paqueteActual.estado}`;
@@ -363,8 +434,9 @@ function verDetallePaquete(id) {
     document.getElementById('detalleNombreDestinatario').textContent = paqueteActual.nombreDestinatario;
     document.getElementById('detalleTelefono').textContent = paqueteActual.telefono;
     document.getElementById('detalleDireccion').textContent = paqueteActual.direccion;
-    document.getElementById('detalleContenido').textContent = paqueteActual.contenido;
+    document.getElementById('detalleContenido').textContent = paqueteActual.instruccionesEntrega || 'Sin instrucciones de entrega';
     document.getElementById('detalleValorDeclarado').textContent = formatearMoneda(paqueteActual.valorDeclarado);
+    document.getElementById('detalleTotalCobrar').textContent = formatearMoneda(paqueteActual.totalCobrar);
     document.getElementById('detalleObservaciones').textContent = paqueteActual.observaciones;
     
     // Mostrar/ocultar botón de entrega según estado
@@ -381,6 +453,21 @@ function verDetallePaquete(id) {
         document.getElementById('entregaDocumento').textContent = info.documento;
         document.getElementById('entregaRecaudo').textContent = formatearMoneda(info.recaudo);
         document.getElementById('entregaFecha').textContent = info.fecha;
+        document.getElementById('entregaObservaciones').textContent = info.observaciones || 'Sin observaciones.';
+
+        const fotosContainer = document.getElementById('entregaFotos');
+        if (fotosContainer) {
+            fotosContainer.innerHTML = '';
+            if (info.fotoPrincipal) {
+                fotosContainer.innerHTML += `<a href="${info.fotoPrincipal}" target="_blank" rel="noopener noreferrer"><img src="${info.fotoPrincipal}" alt="Foto de entrega" class="foto-evidencia"></a>`;
+            }
+            if (info.fotoAdicional) {
+                fotosContainer.innerHTML += `<a href="${info.fotoAdicional}" target="_blank" rel="noopener noreferrer"><img src="${info.fotoAdicional}" alt="Foto adicional" class="foto-evidencia"></a>`;
+            }
+            if (!info.fotoPrincipal && !info.fotoAdicional) {
+                fotosContainer.innerHTML = '<p class="text-muted">No hay fotos de evidencia.</p>';
+            }
+        }
     } else {
         btnContainer.classList.remove('oculto');
         infoEntrega.classList.add('oculto');
@@ -436,6 +523,10 @@ function abrirFormularioEntrega(id) {
         alert('Este paquete ya fue entregado');
         return;
     }
+    if (paqueteActual.estado === 'cancelado') {
+        alert('Este paquete está cancelado');
+        return;
+    }
     
     document.getElementById('vistaLista').classList.add('oculto');
     document.getElementById('vistaDetalle').classList.add('oculto');
@@ -445,8 +536,21 @@ function abrirFormularioEntrega(id) {
     
     // Resetear formulario
     document.getElementById('formEntrega').reset();
-    fotosEntrega = [];
-    document.getElementById('previsualizacionFotosEntrega').innerHTML = '';
+    const destinatarioEntrega = document.getElementById('nombreDestinatarioEntrega');
+    if (destinatarioEntrega) {
+        destinatarioEntrega.value = paqueteActual.nombreDestinatario || '';
+    }
+    fotoEntregaPrincipal = null;
+    fotoEntregaAdicional = null;
+    document.getElementById('previsualizacionFotoEntrega').innerHTML = '';
+    document.getElementById('previsualizacionFotoEntregaAdicional').innerHTML = '';
+    const recaudoEsperado = Number(paqueteActual.totalCobrar || 0);
+    const elTotalRecaudar = document.getElementById('totalRecaudar');
+    const elTotalRecaudado = document.getElementById('totalRecaudado');
+    const elRecibioCambios = document.getElementById('recibioCambios');
+    if (elTotalRecaudar) elTotalRecaudar.value = formatearMontoInput(recaudoEsperado);
+    if (elTotalRecaudado) elTotalRecaudado.value = formatearMontoInput(recaudoEsperado);
+    if (elRecibioCambios) elRecibioCambios.checked = false;
 
     // Prefill desde datos escaneados del QR si existen
     const qrData = paqueteActual.qrScanData;
@@ -457,13 +561,17 @@ function abrirFormularioEntrega(id) {
 
         const elNombre = document.getElementById('nombreRecibe');
         const elParentesco = document.getElementById('parentesco');
-        const elRecaudo = document.getElementById('recaudo');
         const elObs = document.getElementById('observacionesEntrega');
 
-        if (elNombre && nombre) elNombre.value = nombre;
-        if (elParentesco) elParentesco.value = 'destinatario';
-        if (elRecaudo && recaudo > 0) elRecaudo.value = recaudo;
-        if (elObs && observacionBase) elObs.value = observacionBase;
+        // Se comenta para que el campo "Nombre de quien recibe" quede vacío y deba llenarse manualmente
+        // if (elNombre && nombre) elNombre.value = nombre;
+        // if (elParentesco) elParentesco.value = 'destinatario';
+        
+        if (elTotalRecaudar && recaudo > 0 && recaudoEsperado === 0) elTotalRecaudar.value = formatearMontoInput(recaudo);
+        if (elTotalRecaudado && recaudo > 0) elTotalRecaudado.value = formatearMontoInput(recaudo);
+
+        // Se comenta para que el campo de observaciones no se llene con los datos del QR
+        // if (elObs && observacionBase) elObs.value = observacionBase;
     }
     
     actualizarFechaHora();
@@ -474,20 +582,30 @@ function abrirFormularioEntrega(id) {
 // MANEJO DE FOTOS
 // ============================================
 document.getElementById('btnTomarFotoEntrega')?.addEventListener('click', function() {
-    document.getElementById('inputFotosEntrega').click();
+    document.getElementById('inputFotoEntrega').click();
 });
 
-document.getElementById('inputFotosEntrega')?.addEventListener('change', function(e) {
-    const archivos = Array.from(e.target.files);
-    archivos.forEach(archivo => {
-        if (archivo.type.startsWith('image/')) {
-            procesarFoto(archivo);
-        }
-    });
+document.getElementById('btnTomarFotoEntregaAdicional')?.addEventListener('click', function() {
+    document.getElementById('inputFotoEntregaAdicional').click();
+});
+
+document.getElementById('inputFotoEntrega')?.addEventListener('change', function(e) {
+    const archivo = e.target.files?.[0];
+    if (archivo && archivo.type.startsWith('image/')) {
+        procesarFotoEntrega(archivo, 'principal');
+    }
     e.target.value = '';
 });
 
-function procesarFoto(archivo) {
+document.getElementById('inputFotoEntregaAdicional')?.addEventListener('change', function(e) {
+    const archivo = e.target.files?.[0];
+    if (archivo && archivo.type.startsWith('image/')) {
+        procesarFotoEntrega(archivo, 'adicional');
+    }
+    e.target.value = '';
+});
+
+function procesarFotoEntrega(archivo, tipo = 'principal') {
     const reader = new FileReader();
     
     reader.onload = function(e) {
@@ -527,8 +645,13 @@ function procesarFoto(archivo) {
                 nombreArchivo: archivo.name
             };
             
-            fotosEntrega.push(foto);
-            mostrarPreviewFoto(foto);
+            if (tipo === 'adicional') {
+                fotoEntregaAdicional = foto;
+                mostrarPreviewFotoEntrega(foto, 'adicional');
+            } else {
+                fotoEntregaPrincipal = foto;
+                mostrarPreviewFotoEntrega(foto, 'principal');
+            }
             feedbackExito();
         };
         img.src = e.target.result;
@@ -537,8 +660,12 @@ function procesarFoto(archivo) {
     reader.readAsDataURL(archivo);
 }
 
-function mostrarPreviewFoto(foto) {
-    const contenedor = document.getElementById('previsualizacionFotosEntrega');
+function mostrarPreviewFotoEntrega(foto, tipo = 'principal') {
+    const contenedor = document.getElementById(
+        tipo === 'adicional' ? 'previsualizacionFotoEntregaAdicional' : 'previsualizacionFotoEntrega'
+    );
+    if (!contenedor) return;
+    contenedor.innerHTML = '';
     
     const div = document.createElement('div');
     div.className = 'foto-item';
@@ -548,19 +675,24 @@ function mostrarPreviewFoto(foto) {
             ${formatearFechaHora(foto.fecha)}<br>
             ${foto.ubicacion ? `${foto.ubicacion.lat.toFixed(6)}, ${foto.ubicacion.lng.toFixed(6)}` : 'Sin GPS'}
         </div>
-        <button type="button" class="btn-eliminar-foto" onclick="eliminarFotoEntrega(${foto.id})">×</button>
+        <button type="button" class="btn-eliminar-foto" onclick="eliminarFotoEntrega('${tipo}')">×</button>
     `;
     
     contenedor.appendChild(div);
 }
 
-function eliminarFotoEntrega(fotoId) {
+function eliminarFotoEntrega(tipo = 'principal') {
     feedbackClick();
-    fotosEntrega = fotosEntrega.filter(f => f.id !== fotoId);
-    
-    const contenedor = document.getElementById('previsualizacionFotosEntrega');
-    contenedor.innerHTML = '';
-    fotosEntrega.forEach(foto => mostrarPreviewFoto(foto));
+    if (tipo === 'adicional') {
+        fotoEntregaAdicional = null;
+        const contenedorAdicional = document.getElementById('previsualizacionFotoEntregaAdicional');
+        if (contenedorAdicional) contenedorAdicional.innerHTML = '';
+        return;
+    }
+
+    fotoEntregaPrincipal = null;
+    const contenedor = document.getElementById('previsualizacionFotoEntrega');
+    if (contenedor) contenedor.innerHTML = '';
 }
 
 // ============================================
@@ -585,9 +717,9 @@ document.getElementById('formEntrega')?.addEventListener('submit', function(e) {
     e.preventDefault();
     
     // Validar fotos
-    if (fotosEntrega.length === 0) {
+    if (!fotoEntregaPrincipal) {
         feedbackError();
-        alert('Debes tomar al menos una foto de la entrega');
+        alert('Debes tomar la foto principal de la entrega');
         return;
     }
     
@@ -602,14 +734,21 @@ document.getElementById('formEntrega')?.addEventListener('submit', function(e) {
     const parentescoFinal = parentesco === 'otro' 
         ? document.getElementById('parentescoOtro').value 
         : parentesco;
+    const observacionesBase = document.getElementById('observacionesEntrega').value.trim();
+    const recibioCambios = !!document.getElementById('recibioCambios').checked;
+    const observacionesFinal = [observacionesBase, `Recibio cambios: ${recibioCambios ? 'Si' : 'No'}`]
+        .filter(Boolean)
+        .join('\n');
     
     const datosEntrega = {
         nombreRecibe: document.getElementById('nombreRecibe').value.trim(),
         parentesco: parentescoFinal,
         documento: document.getElementById('documento').value.trim(),
-        recaudo: parseFloat(document.getElementById('recaudo').value) || 0,
-        observaciones: document.getElementById('observacionesEntrega').value.trim(),
-        fotos: fotosEntrega,
+        recaudoEsperado: parsearMonto(document.getElementById('totalRecaudar').value),
+        recaudo: parsearMonto(document.getElementById('totalRecaudado').value),
+        recibioCambios,
+        observaciones: observacionesFinal,
+        fotos: [fotoEntregaPrincipal, fotoEntregaAdicional].filter(Boolean),
         fecha: new Date().toISOString(),
         ubicacion: ubicacionActual ? {...ubicacionActual} : null
     };
@@ -650,6 +789,7 @@ async function completarEntrega(datosEntrega) {
         refrescarListaActual();
         document.getElementById('vistaFormularioEntrega').classList.add('oculto');
         feedbackExito();
+        alert('Entrega exitosa');
         mostrarConfirmacionEntrega(datosEntrega);
     } catch (error) {
         feedbackError();
@@ -677,8 +817,16 @@ function mostrarConfirmacionEntrega(datos) {
             <strong>${datos.documento}</strong>
         </div>
         <div class="resumen-item">
+            <span>Total a recaudar:</span>
+            <strong>${formatearMoneda(datos.recaudoEsperado || 0)}</strong>
+        </div>
+        <div class="resumen-item">
             <span>Recaudo:</span>
             <strong style="color: var(--color-exito);">${formatearMoneda(datos.recaudo)}</strong>
+        </div>
+        <div class="resumen-item">
+            <span>Recibió cambios:</span>
+            <strong>${datos.recibioCambios ? 'Sí' : 'No'}</strong>
         </div>
         <div class="resumen-item">
             <span>Fotos:</span>
@@ -690,60 +838,252 @@ function mostrarConfirmacionEntrega(datos) {
 }
 
 // ============================================
-// OPTIMIZACIÓN DE RUTA
+// NOVEDADES DE ENTREGA (APLAZADO / CANCELADO)
 // ============================================
-document.getElementById('btnOrdenarRuta')?.addEventListener('click', function() {
+function abrirFormularioNovedad(id, tipo) {
     feedbackClick();
-    
-    if (!ubicacionActual) {
-        alert('Necesitas activar el GPS para optimizar la ruta');
+    paqueteActual = paquetes.find(p => p.id === id || `virtual_${p.guia}` === id);
+    if (!paqueteActual) return;
+
+    if (paqueteActual.estado === 'entregado') {
+        alert('Este paquete ya fue entregado.');
         return;
     }
-    
-    mostrarLoading(true, 'Optimizando ruta...');
-    
-    setTimeout(() => {
-        // Ordenar por distancia (simple)
-        const pendientes = paquetes.filter(p => p.estado === 'pendiente' || p.estado === 'en_ruta');
-        
-        pendientes.sort((a, b) => {
-            const distA = calcularDistancia(
-                ubicacionActual.lat, ubicacionActual.lng,
-                a.coordenadas.lat, a.coordenadas.lng
-            );
-            const distB = calcularDistancia(
-                ubicacionActual.lat, ubicacionActual.lng,
-                b.coordenadas.lat, b.coordenadas.lng
-            );
-            return distA - distB;
-        });
-        
-        // Reorganizar array
-        const entregados = paquetes.filter(p => p.estado === 'entregado');
-        paquetes = [...pendientes, ...entregados];
-        
-        mostrarLoading(false);
-        mostrarPaquetes();
-        feedbackExito();
-        
-        alert(`✓ Ruta optimizada\n\nSe organizaron ${pendientes.length} paquetes por distancia desde tu ubicación actual.`);
-    }, 1500);
-});
+    if (paqueteActual.estado === 'cancelado') {
+        alert('Este paquete ya fue cancelado.');
+        return;
+    }
 
-// ============================================
-// VISTA MAPA
-// ============================================
-document.getElementById('btnVerMapa')?.addEventListener('click', function() {
-    feedbackClick();
+    tipoNovedadActual = tipo === 'cancelado' ? 'cancelado' : 'aplazado';
+    fotoNovedad = null;
+
     document.getElementById('vistaLista').classList.add('oculto');
-    document.getElementById('vistaMapa').classList.remove('oculto');
+    document.getElementById('vistaDetalle').classList.add('oculto');
+    document.getElementById('vistaFormularioEntrega').classList.add('oculto');
+    document.getElementById('vistaFormularioNovedad').classList.remove('oculto');
+
+    document.getElementById('novedadTitulo').textContent = tipoNovedadActual === 'cancelado'
+        ? '✕ Cancelar Entrega'
+        : '⏳ Aplazar Entrega';
+    document.getElementById('novedadGuia').textContent = `Guía: ${paqueteActual.guia}`;
+    document.getElementById('btnEnviarNovedad').textContent = tipoNovedadActual === 'cancelado' ? 'Cancelar paquete' : 'Registrar aplazamiento';
+    document.getElementById('descripcionNovedad').value = '';
+    document.getElementById('previsualizacionFotoNovedad').innerHTML = '';
+
+    actualizarFechaHora();
+    actualizarInfoGPS();
+}
+
+document.getElementById('btnTomarFotoNovedad')?.addEventListener('click', function() {
+    document.getElementById('inputFotoNovedad').click();
 });
 
-document.getElementById('btnCerrarMapa')?.addEventListener('click', function() {
-    feedbackClick();
-    document.getElementById('vistaMapa').classList.add('oculto');
-    document.getElementById('vistaLista').classList.remove('oculto');
+document.getElementById('inputFotoNovedad')?.addEventListener('change', function(e) {
+    const archivo = e.target.files?.[0];
+    if (!archivo || !archivo.type.startsWith('image/')) return;
+    procesarFotoNovedad(archivo);
+    e.target.value = '';
 });
+
+function procesarFotoNovedad(archivo) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const maxWidth = 1920;
+            const maxHeight = 1920;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+            } else if (height > maxHeight) {
+                width *= maxHeight / height;
+                height = maxHeight;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            fotoNovedad = {
+                id: Date.now(),
+                data: canvas.toDataURL('image/jpeg', 0.85),
+                fecha: new Date(),
+                ubicacion: ubicacionActual ? { ...ubicacionActual } : null
+            };
+            renderPreviewFotoNovedad();
+            feedbackExito();
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(archivo);
+}
+
+function renderPreviewFotoNovedad() {
+    const contenedor = document.getElementById('previsualizacionFotoNovedad');
+    if (!contenedor) return;
+    if (!fotoNovedad) {
+        contenedor.innerHTML = '';
+        return;
+    }
+
+    contenedor.innerHTML = `
+        <div class="foto-item">
+            <img src="${fotoNovedad.data}" alt="Foto de evidencia">
+            <div class="foto-meta">
+                ${formatearFechaHora(fotoNovedad.fecha)}<br>
+                ${fotoNovedad.ubicacion ? `${fotoNovedad.ubicacion.lat.toFixed(6)}, ${fotoNovedad.ubicacion.lng.toFixed(6)}` : 'Sin GPS'}
+            </div>
+            <button type="button" class="btn-eliminar-foto" onclick="eliminarFotoNovedad()">×</button>
+        </div>
+    `;
+}
+
+function eliminarFotoNovedad() {
+    feedbackClick();
+    fotoNovedad = null;
+    renderPreviewFotoNovedad();
+}
+
+document.getElementById('formNovedad')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    registrarNovedad();
+});
+
+async function registrarNovedad() {
+    const descripcion = document.getElementById('descripcionNovedad').value.trim();
+    if (!tipoNovedadActual) {
+        alert('No se definió el tipo de novedad.');
+        return;
+    }
+    if (tipoNovedadActual === 'cancelado') {
+        const confirmar = confirm('¿Seguro que deseas cancelar esta entrega?');
+        if (!confirmar) return;
+    }
+    if (!descripcion) {
+        feedbackError();
+        alert('Debes ingresar una descripción.');
+        return;
+    }
+    if (!fotoNovedad) {
+        feedbackError();
+        alert('Debes tomar una foto de evidencia.');
+        return;
+    }
+
+    mostrarLoading(true, tipoNovedadActual === 'cancelado' ? 'Cancelando paquete...' : 'Registrando aplazamiento...');
+    try {
+        const payload = {
+            paquete_id: paqueteActual.id || 0,
+            numero_guia: paqueteActual.guia,
+            tipo: tipoNovedadActual,
+            descripcion,
+            foto: { data: fotoNovedad.data },
+            ubicacion: ubicacionActual ? { ...ubicacionActual } : null
+        };
+
+        const resp = await fetch(`${API_MIS_PAQUETES}?action=registrar_novedad`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const json = await resp.json();
+        if (!json.success) {
+            throw new Error(json.message || 'No se pudo registrar la novedad');
+        }
+
+        if (tipoNovedadActual === 'cancelado') {
+            paqueteActual.estado = 'cancelado';
+            paqueteActual.estadoBase = 'cancelado';
+            eliminarQREscaneadoLocal(paqueteActual.guia);
+            cargarQREscaneadosLocales();
+        } else {
+            paqueteActual.estado = 'aplazado';
+            paqueteActual.estadoBase = 'pendiente';
+        }
+        paqueteActual.ultimaNovedadTipo = tipoNovedadActual;
+        paqueteActual.ultimaNovedadDescripcion = descripcion;
+        paqueteActual.ultimaNovedadFecha = new Date().toISOString();
+
+    actualizarPaqueteEnLista(paqueteActual);
+    actualizarEstadisticas();
+    refrescarListaActual();
+    feedbackExito();
+    alert(tipoNovedadActual === 'cancelado' ? 'La entrega se canceló' : 'Entrega aplazada');
+    volverALista();
+} catch (error) {
+    feedbackError();
+    alert(error.message);
+    } finally {
+        mostrarLoading(false);
+    }
+}
+
+// ============================================
+// OPTIMIZACIÓN DE RUTA
+// ============================================
+// ============================================
+// OPTIMIZACIÓN DE RUTA (Deshabilitado)
+// ============================================
+
+async function guardarCierreJornada() {
+    const resumen = obtenerResumenCierre();
+    if (resumen.total === 0 || resumen.pendientesReales > 0) {
+        alert('Aún no cumples las condiciones para guardar el cierre de jornada.');
+        return;
+    }
+
+    const observacionDefault = resumen.aplazados > 0
+        ? `Cierre con ${resumen.aplazados} paquete(s) aplazado(s).`
+        : 'Cierre con todas las entregas completadas.';
+    const observacion = prompt('Observación del cierre (opcional):', observacionDefault);
+    if (observacion === null) return;
+
+    const detalle = paquetes.map(p => ({
+        id: p.id,
+        guia: p.guia,
+        estado: p.estado,
+        estado_base: p.estadoBase || p.estado,
+        qr_escaneado: !!p.qrEscaneado
+    }));
+
+    mostrarLoading(true, 'Guardando cierre de jornada...');
+    try {
+        const payload = {
+            total_paquetes: resumen.total,
+            entregados: resumen.entregados,
+            aplazados: resumen.aplazados,
+            cancelados: resumen.cancelados,
+            recaudo_total: resumen.recaudo_total,
+            observacion: (observacion || '').trim(),
+            detalle
+        };
+
+        const resp = await fetch(`${API_MIS_PAQUETES}?action=guardar_cierre_jornada`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const json = await resp.json();
+        if (!json.success) {
+            throw new Error(json.message || 'No se pudo guardar el cierre');
+        }
+
+        feedbackExito();
+        alert('Cierre de jornada guardado correctamente.');
+    } catch (error) {
+        feedbackError();
+        alert(error.message);
+    } finally {
+        mostrarLoading(false);
+    }
+}
 
 // ============================================
 // CONFIGURACIÓN DE EVENT LISTENERS
@@ -768,14 +1108,41 @@ function configurarEventListeners() {
     document.getElementById('btnNavegar')?.addEventListener('click', () => abrirNavegacion());
     document.getElementById('btnLlamarDetalle')?.addEventListener('click', () => llamarDestinatario());
     document.getElementById('btnEntregar')?.addEventListener('click', function() {
-        abrirFormularioEntrega(paqueteActual.id);
+        if (!paqueteActual) return;
+        const ref = paqueteActual.id === null ? `virtual_${paqueteActual.guia}` : paqueteActual.id;
+        abrirFormularioEntrega(ref);
     });
     
     // Formulario
-    document.getElementById('btnCancelarEntrega')?.addEventListener('click', function() {
+    document.getElementById('btnVolverEntrega')?.addEventListener('click', function() {
         feedbackClick();
-        if (confirm('¿Estás seguro de cancelar? Se perderán los datos ingresados.')) {
-            volverALista();
+        mostrarModalDecision('Volver al listado', 'Si vuelves ahora, se perderán los datos ingresados en este formulario.').then(aceptado => {
+            if (aceptado) volverALista();
+        });
+    });
+
+    document.getElementById('btnVolverNovedad')?.addEventListener('click', function() {
+        feedbackClick();
+        mostrarModalDecision('Volver al listado', 'Si vuelves ahora, se perderán los datos ingresados en este formulario.').then(aceptado => {
+            if (aceptado) volverALista();
+        });
+    });
+
+    document.getElementById('totalRecaudado')?.addEventListener('input', function() {
+        this.value = formatearMontoInput(parsearMonto(this.value));
+    });
+
+    document.getElementById('btnDecisionCancelar')?.addEventListener('click', function() {
+        resolverModalDecision(false);
+    });
+
+    document.getElementById('btnDecisionAceptar')?.addEventListener('click', function() {
+        resolverModalDecision(true);
+    });
+
+    document.getElementById('modalDecision')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            resolverModalDecision(false);
         }
     });
     
@@ -796,6 +1163,11 @@ function configurarEventListeners() {
             feedbackExito();
         }, 1000);
     });
+
+    document.getElementById('btnGuardarCierreJornada')?.addEventListener('click', function() {
+        feedbackClick();
+        guardarCierreJornada();
+    });
 }
 
 // ============================================
@@ -804,13 +1176,17 @@ function configurarEventListeners() {
 function volverALista() {
     document.getElementById('vistaDetalle').classList.add('oculto');
     document.getElementById('vistaFormularioEntrega').classList.add('oculto');
+    document.getElementById('vistaFormularioNovedad').classList.add('oculto');
     document.getElementById('vistaLista').classList.remove('oculto');
     paqueteActual = null;
-    fotosEntrega = [];
+    fotoEntregaPrincipal = null;
+    fotoEntregaAdicional = null;
+    fotoNovedad = null;
+    tipoNovedadActual = null;
 }
 
 function actualizarPaqueteEnLista(paquete) {
-    const index = paquetes.findIndex(p => p.id === paquete.id);
+    const index = paquetes.findIndex(p => p.id === paquete.id || (p.id === null && paquete.id === null && p.guia === paquete.guia));
     if (index !== -1) {
         paquetes[index] = paquete;
     }
@@ -835,11 +1211,16 @@ function formatearFechaHora(fecha) {
 }
 
 function actualizarFechaHora() {
-    const elemento = document.getElementById('infoFechaEntrega');
-    if (elemento) {
-        elemento.textContent = formatearFechaHora(new Date());
-    }
+    const fechaActual = formatearFechaHora(new Date());
+    const elementoEntrega = document.getElementById('infoFechaEntrega');
+    if (elementoEntrega) elementoEntrega.textContent = fechaActual;
+    const elementoNovedad = document.getElementById('infoFechaNovedad');
+    if (elementoNovedad) elementoNovedad.textContent = fechaActual;
     setTimeout(actualizarFechaHora, 1000);
+}
+
+function formatearMontoInput(valor) {
+    return '$ ' + Number(valor || 0).toLocaleString('es-CO');
 }
 
 function calcularDistancia(lat1, lon1, lat2, lon2) {
@@ -907,9 +1288,38 @@ function refrescarListaActual() {
     mostrarPaquetes(filtroActivo);
 }
 
+let resolverDecisionActual = null;
+
+function mostrarModalDecision(titulo, mensaje) {
+    const modal = document.getElementById('modalDecision');
+    const tituloEl = document.getElementById('modalDecisionTitulo');
+    const mensajeEl = document.getElementById('modalDecisionMensaje');
+    if (!modal || !tituloEl || !mensajeEl) return Promise.resolve(false);
+
+    tituloEl.textContent = titulo;
+    mensajeEl.textContent = mensaje;
+    modal.classList.remove('oculto');
+
+    return new Promise(resolve => {
+        resolverDecisionActual = resolve;
+    });
+}
+
+function resolverModalDecision(valor) {
+    const modal = document.getElementById('modalDecision');
+    if (modal) modal.classList.add('oculto');
+    if (resolverDecisionActual) {
+        const resolve = resolverDecisionActual;
+        resolverDecisionActual = null;
+        resolve(valor);
+    }
+}
+
 // ============================================
 // FUNCIONES GLOBALES
 // ============================================
 window.verDetallePaquete = verDetallePaquete;
 window.abrirFormularioEntrega = abrirFormularioEntrega;
+window.abrirFormularioNovedad = abrirFormularioNovedad;
 window.eliminarFotoEntrega = eliminarFotoEntrega;
+window.eliminarFotoNovedad = eliminarFotoNovedad;

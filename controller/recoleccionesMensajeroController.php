@@ -79,6 +79,19 @@ try {
             echo json_encode(['success' => true, 'message' => 'Recolección iniciada']);
             break;
 
+        case 'detalle':
+            $recoleccionId = (int) ($_GET['recoleccion_id'] ?? 0);
+            if ($recoleccionId <= 0) {
+                throw new Exception('ID de recolección inválido');
+            }
+
+            $paquetes = $model->listarPaquetesRecoleccion($recoleccionId, (int) $mensajero['id']);
+            echo json_encode([
+                'success' => true,
+                'paquetes' => $paquetes
+            ]);
+            break;
+
         case 'completar':
             $raw = file_get_contents('php://input');
             $input = json_decode($raw, true);
@@ -119,6 +132,28 @@ try {
             echo json_encode(['success' => true, 'message' => 'Recolección completada']);
             break;
 
+        case 'cancelar':
+            $raw = file_get_contents('php://input');
+            $input = json_decode($raw, true);
+            if (!is_array($input)) {
+                throw new Exception('Payload inválido');
+            }
+            $recoleccionId = (int) ($input['recoleccion_id'] ?? 0);
+            if ($recoleccionId <= 0) {
+                throw new Exception('ID de recolección inválido');
+            }
+            $motivo = trim((string) ($input['motivo'] ?? ''));
+            if ($motivo === '') {
+                throw new Exception('Motivo requerido');
+            }
+
+            $ok = $model->cancelarRecoleccion($recoleccionId, (int) $mensajero['id'], $motivo);
+            if (!$ok) {
+                throw new Exception('No se pudo cancelar la recolección');
+            }
+            echo json_encode(['success' => true, 'message' => 'Recolección cancelada']);
+            break;
+
         default:
             echo json_encode(['success' => false, 'message' => 'Acción no válida']);
             break;
@@ -126,4 +161,3 @@ try {
 } catch (Throwable $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
-

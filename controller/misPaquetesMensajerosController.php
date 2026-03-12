@@ -109,6 +109,75 @@ try {
             echo json_encode(['success' => true, 'message' => 'Entrega registrada']);
             break;
 
+        case 'registrar_novedad':
+            $raw = file_get_contents('php://input');
+            $input = json_decode($raw, true);
+            if (!is_array($input)) {
+                throw new Exception('Payload inválido');
+            }
+
+            $tipo = trim((string) ($input['tipo'] ?? ''));
+            if (!in_array($tipo, ['aplazado', 'cancelado'], true)) {
+                throw new Exception('Tipo de novedad no válido');
+            }
+
+            $descripcion = trim((string) ($input['descripcion'] ?? ''));
+            if ($descripcion === '') {
+                throw new Exception('La descripción es obligatoria');
+            }
+
+            $fotoData = $input['foto']['data'] ?? null;
+            if (!$fotoData) {
+                throw new Exception('Debes adjuntar una evidencia fotográfica');
+            }
+
+            $rutaFoto = guardarImagenBase64($fotoData, 'novedades');
+            if (!$rutaFoto) {
+                throw new Exception('No se pudo guardar la foto de evidencia');
+            }
+
+            $payload = [
+                'paquete_id' => (int) ($input['paquete_id'] ?? 0),
+                'numero_guia' => trim($input['numero_guia'] ?? ''),
+                'tipo' => $tipo,
+                'descripcion' => $descripcion,
+                'foto_evidencia' => $rutaFoto,
+                'lat' => isset($input['ubicacion']['lat']) ? (float) $input['ubicacion']['lat'] : null,
+                'lng' => isset($input['ubicacion']['lng']) ? (float) $input['ubicacion']['lng'] : null
+            ];
+
+            if ($payload['paquete_id'] <= 0 && $payload['numero_guia'] === '') {
+                throw new Exception('No se identificó el paquete');
+            }
+
+            $model->registrarNovedad((int) $mensajero['id'], $payload);
+            echo json_encode([
+                'success' => true,
+                'message' => $tipo === 'cancelado' ? 'Paquete cancelado correctamente' : 'Novedad registrada correctamente'
+            ]);
+            break;
+
+        case 'guardar_cierre_jornada':
+            $raw = file_get_contents('php://input');
+            $input = json_decode($raw, true);
+            if (!is_array($input)) {
+                throw new Exception('Payload inválido');
+            }
+
+            $payload = [
+                'total_paquetes' => (int) ($input['total_paquetes'] ?? 0),
+                'entregados' => (int) ($input['entregados'] ?? 0),
+                'aplazados' => (int) ($input['aplazados'] ?? 0),
+                'cancelados' => (int) ($input['cancelados'] ?? 0),
+                'recaudo_total' => (float) ($input['recaudo_total'] ?? 0),
+                'observacion' => trim((string) ($input['observacion'] ?? '')) ?: null,
+                'detalle_json' => isset($input['detalle']) ? json_encode($input['detalle'], JSON_UNESCAPED_UNICODE) : null
+            ];
+
+            $model->guardarCierreJornada((int) $mensajero['id'], $payload);
+            echo json_encode(['success' => true, 'message' => 'Cierre de jornada guardado']);
+            break;
+
         default:
             echo json_encode(['success' => false, 'message' => 'Acción no válida']);
             break;

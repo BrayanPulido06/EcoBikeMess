@@ -76,6 +76,7 @@ async function cargarMensajerosEnModal() {
 // Renderizar tabla de recolecciones
 function renderRecolecciones() {
     const tbody = document.getElementById('tablaRecoleccionesBody');
+    const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
     
     if (!recolecciones || recolecciones.length === 0) {
         tbody.innerHTML = `
@@ -93,7 +94,7 @@ function renderRecolecciones() {
             <td>${rec.mensajero_nombre}</td>
             <td>
                 <span class="badge estado-${rec.estado}">
-                    ${rec.estado.replace('_', ' ').toUpperCase()}
+                    ${(rec.estado === 'entregado' || rec.estado === 'completada') ? 'Finalizada' : capitalize(rec.estado.replace('_', ' '))}
                 </span>
             </td>
             <td>
@@ -106,11 +107,13 @@ function renderRecolecciones() {
             <td>
                 <div class="actions">
                     <button class="btn btn-sm btn-info" title="Ver Paquetes" onclick="verDetallesPaquetes('${rec.ids}')">👁️</button>
-                    ${rec.estado === 'pendiente' ? 
-                        `<button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('${rec.ids}')">🚴</button>` : 
-                        `<button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('${rec.ids}')">🔄</button>`
-                    }
-                    <button class="btn btn-sm btn-danger" title="Eliminar" onclick="cancelarRecoleccion('${rec.ids}')">🗑️</button>
+                    ${!['entregado', 'completada', 'cancelado'].includes(rec.estado) ? `
+                        ${rec.estado === 'pendiente' ? 
+                            `<button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('${rec.ids}', '${rec.direccion_origen.replace(/'/g, "\\'")}', '${rec.cliente_nombre.replace(/'/g, "\\'")}')">🚴</button>` : 
+                            `<button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('${rec.ids}', '${rec.direccion_origen.replace(/'/g, "\\'")}', '${rec.cliente_nombre.replace(/'/g, "\\'")}')">🔄</button>`
+                        }
+                        <button class="btn btn-sm btn-danger" title="Cancelar" onclick="cancelarRecoleccion('${rec.ids}')">🗑️</button>
+                    ` : ''}
                 </div>
             </td>
         </tr>
@@ -138,13 +141,14 @@ function applyFilters() {
     
     // Renderizar filtrados
     const temp = recolecciones;
+    const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
     
     // Hack temporal para usar la misma función de renderizado
     const tbody = document.getElementById('tablaRecoleccionesBody');
     if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">No se encontraron resultados.</td></tr>`;
     } else {
-        // Renderizar manualmente los filtrados
+        // Renderizar manualmente los filtrados (con la lógica corregida)
         tbody.innerHTML = filtered.map(rec => `
             <tr>
                 <td>${rec.direccion_origen}</td>
@@ -152,7 +156,7 @@ function applyFilters() {
                 <td>${rec.mensajero_nombre}</td>
                 <td>
                     <span class="badge estado-${rec.estado}">
-                        ${rec.estado.replace('_', ' ').toUpperCase()}
+                        ${(rec.estado === 'entregado' || rec.estado === 'completada') ? 'Finalizada' : capitalize(rec.estado.replace('_', ' '))}
                     </span>
                 </td>
                 <td>
@@ -165,11 +169,13 @@ function applyFilters() {
                 <td>
                     <div class="actions">
                         <button class="btn btn-sm btn-info" title="Ver Paquetes" onclick="verDetallesPaquetes('${rec.ids}')">👁️</button>
-                        ${rec.estado === 'pendiente' ? 
-                            `<button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('${rec.ids}')">🚴</button>` : 
-                            `<button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('${rec.ids}')">🔄</button>`
-                        }
-                        <button class="btn btn-sm btn-danger" title="Eliminar" onclick="cancelarRecoleccion('${rec.ids}')">🗑️</button>
+                        ${!['entregado', 'completada', 'cancelado'].includes(rec.estado) ? `
+                            ${rec.estado === 'pendiente' ? 
+                                `<button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('${rec.ids}', '${rec.direccion_origen.replace(/'/g, "\\'")}', '${rec.cliente_nombre.replace(/'/g, "\\'")}')">🚴</button>` : 
+                                `<button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('${rec.ids}', '${rec.direccion_origen.replace(/'/g, "\\'")}', '${rec.cliente_nombre.replace(/'/g, "\\'")}')">🔄</button>`
+                            }
+                            <button class="btn btn-sm btn-danger" title="Cancelar" onclick="cancelarRecoleccion('${rec.ids}')">🗑️</button>
+                        ` : ''}
                     </div>
                 </td>
             </tr>
@@ -177,59 +183,99 @@ function applyFilters() {
     }
 }
 
-// Funciones globales para los botones de la tabla
 window.verDetallesPaquetes = async function(ids) {
     const modal = document.getElementById('modalDetalles');
     const container = document.getElementById('detallesRecoleccionBody');
     
     if (modal && container) {
         modal.style.display = 'flex';
-        container.innerHTML = '<p style="text-align:center">Cargando detalles de la base de datos...</p>';
+        container.innerHTML = '<p style="text-align:center; padding: 2rem;">Cargando detalles de la base de datos...</p>';
 
         try {
-            const response = await fetch(`../../controller/asignarRecoleccionesController.php?action=detalles&ids=${ids}`);
-            const result = await response.json();
+            // 1. Obtener detalles de los paquetes
+            const responsePaquetes = await fetch(`../../controller/asignarRecoleccionesController.php?action=detalles&ids=${ids}`);
+            const resultPaquetes = await responsePaquetes.json();
 
-            if (result.success && result.data.length > 0) {
-                const primerPaquete = result.data[0];
+            let recoleccionData = null;
+            // 2. Si hay paquetes, obtener detalles de la recolección asociada
+            if (resultPaquetes.success && resultPaquetes.data.length > 0) {
+                const primerPaqueteId = resultPaquetes.data[0].id;
+                const responseRecoleccion = await fetch(`../../controller/asignarRecoleccionesController.php?action=detalles_recoleccion&paquete_id=${primerPaqueteId}`);
+                const resultRecoleccion = await responseRecoleccion.json();
+                if (resultRecoleccion.success) {
+                    recoleccionData = resultRecoleccion.data;
+                }
+            }
+
+            // 3. Renderizar el HTML del modal
+            if (resultPaquetes.success && resultPaquetes.data.length > 0) {
+                const primerPaquete = resultPaquetes.data[0];
                 const clienteNombre = primerPaquete.nombre_emprendimiento || (primerPaquete.cli_nombres + ' ' + primerPaquete.cli_apellidos);
                 
+                // HTML para la información de la recolección
+                let recoleccionInfoHtml = '<p>No se encontraron detalles de la recolección en la tabla `recolecciones`.</p>';
+                if (recoleccionData) {
+                    recoleccionInfoHtml = `
+                        <div class="detalle-grid">
+                            <div class="detalle-item"><div class="detalle-label">Orden N°</div><div class="detalle-value">${recoleccionData.numero_orden || 'N/A'}</div></div>
+                            <div class="detalle-item"><div class="detalle-label">Horario</div><div class="detalle-value">${recoleccionData.horario_preferido || 'N/A'}</div></div>
+                            <div class="detalle-item"><div class="detalle-label">Paquetes Recogidos</div><div class="detalle-value">${recoleccionData.cantidad_real || 'No registrado'}</div></div>
+                            <div class="detalle-item"><div class="detalle-label">Fecha Completada</div><div class="detalle-value">${recoleccionData.fecha_completada ? new Date(recoleccionData.fecha_completada).toLocaleString() : 'N/A'}</div></div>
+                        </div>
+                        <h4 style="margin-top:1rem; margin-bottom:0.5rem;">Observaciones del Mensajero</h4>
+                        <p style="background:#f8f9fa; padding:10px; border-radius:5px; min-height: 40px;">${recoleccionData.observaciones_recoleccion || 'No hay observaciones.'}</p>
+                    `;
+                }
+
+                // HTML para las fotos
+                let fotosHtml = '<p>No hay fotos adjuntas.</p>';
+                if (recoleccionData && recoleccionData.foto_recoleccion) {
+                    let fotos = [];
+                    try {
+                        fotos = JSON.parse(recoleccionData.foto_recoleccion);
+                    } catch (e) {
+                        if (typeof recoleccionData.foto_recoleccion === 'string' && recoleccionData.foto_recoleccion.trim() !== '') {
+                            fotos = [recoleccionData.foto_recoleccion];
+                        }
+                    }
+
+                    if (Array.isArray(fotos) && fotos.length > 0 && fotos[0]) {
+                        fotosHtml = '<div class="fotos-grid" style="display:flex; gap:10px; flex-wrap:wrap;">';
+                        fotos.forEach(fotoUrl => {
+                            if (fotoUrl) {
+                                const fullUrl = `../../${fotoUrl}`; // Asume que la ruta es desde la raíz del proyecto
+                                fotosHtml += `<a href="${fullUrl}" target="_blank"><img src="${fullUrl}" alt="Foto de recolección" style="width:100px; height:100px; object-fit:cover; border-radius:5px;"></a>`;
+                            }
+                        });
+                        fotosHtml += '</div>';
+                    }
+                }
+
+                // HTML final
                 let html = `
                     <div class="detalle-section">
-                        <h3 style="margin-bottom: 15px;">📍 Información de Recolección</h3>
+                        <h3 style="margin-bottom: 15px;">ℹ️ Información General</h3>
                         <div class="detalle-grid">
-                            <div class="detalle-item">
-                                <div class="detalle-label">Cliente</div>
-                                <div class="detalle-value">${clienteNombre}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Dirección de Origen</div>
-                                <div class="detalle-value">${primerPaquete.direccion_origen}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Teléfono Contacto</div>
-                                <div class="detalle-value">${primerPaquete.cli_telefono || 'N/A'}</div>
-                            </div>
+                            <div class="detalle-item"><div class="detalle-label">Cliente</div><div class="detalle-value">${clienteNombre}</div></div>
+                            <div class="detalle-item"><div class="detalle-label">Dirección</div><div class="detalle-value">${primerPaquete.direccion_origen}</div></div>
+                            <div class="detalle-item"><div class="detalle-label">Teléfono</div><div class="detalle-value">${primerPaquete.cli_telefono || 'N/A'}</div></div>
                         </div>
-                        
-                        <h3 style="margin-top: 20px;">📦 Paquetes a Recoger (${result.data.length})</h3>
-                        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px;">
+                    </div>
+                    <div class="detalle-section"><h3 style="margin-top: 20px;">📝 Detalles de la Recolección</h3>${recoleccionInfoHtml}</div>
+                    <div class="detalle-section"><h3 style="margin-top: 20px;">📸 Fotos de Evidencia</h3>${fotosHtml}</div>
+                    <div class="detalle-section">
+                        <h3 style="margin-top: 20px;">📦 Paquetes Incluidos (${resultPaquetes.data.length})</h3>
+                        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px;">
                             <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
                                 <thead style="background: #f8f9fa; position: sticky; top: 0;">
-                                    <tr>
-                                        <th style="padding: 8px; text-align: left;">Guía</th>
-                                        <th style="padding: 8px; text-align: left;">Destinatario</th>
-                                        <th style="padding: 8px; text-align: left;">Descripción</th>
-                                        <th style="padding: 8px; text-align: left;">Peso</th>
-                                    </tr>
+                                    <tr><th style="padding: 8px; text-align: left;">Guía</th><th style="padding: 8px; text-align: left;">Destinatario</th><th style="padding: 8px; text-align: left;">Descripción</th></tr>
                                 </thead>
                                 <tbody>
-                                    ${result.data.map(p => `
+                                    ${resultPaquetes.data.map(p => `
                                         <tr style="border-bottom: 1px solid #eee;">
                                             <td style="padding: 8px;"><strong>${p.numero_guia}</strong></td>
                                             <td style="padding: 8px;">${p.destinatario_nombre}<br><small>${p.direccion_destino}</small></td>
                                             <td style="padding: 8px;">${p.descripcion_contenido || '-'}</td>
-                                            <td style="padding: 8px;">${p.peso_paquete} kg</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
@@ -239,7 +285,7 @@ window.verDetallesPaquetes = async function(ids) {
                 `;
                 container.innerHTML = html;
             } else {
-                container.innerHTML = '<p class="text-danger text-center">No se encontraron detalles.</p>';
+                container.innerHTML = '<p class="text-danger text-center">No se encontraron detalles de los paquetes.</p>';
             }
         } catch (error) {
             console.error(error);
@@ -248,10 +294,24 @@ window.verDetallesPaquetes = async function(ids) {
     }
 }
 
+
 // Abrir modal de asignación y preparar lista
-window.asignarRecoleccion = function(ids) {
+window.asignarRecoleccion = function(ids, direccion, cliente) {
     const modal = document.getElementById('modalAsignarRapido');
     if (modal) {
+        // Poblar información de la recolección
+        const infoContainer = document.getElementById('infoRecoleccionAsignar');
+        if (infoContainer) {
+            if (direccion && cliente) {
+                infoContainer.innerHTML = `
+                    <p style="margin:0; font-size: 0.9em; color: #6c757d;">Asignando recolección para:</p>
+                    <p style="margin:2px 0 0; font-weight: 600;"><strong>Cliente:</strong> ${cliente}</p>
+                    <p style="margin:2px 0 0; font-weight: 600;"><strong>Dirección:</strong> ${direccion}</p>`;
+            } else {
+                infoContainer.innerHTML = '<p>Información de recolección no disponible.</p>';
+            }
+        }
+
         // Resetear formulario
         document.getElementById('idsPaquetesHidden').value = ids;
         document.getElementById('mensajeroIdHidden').value = '';

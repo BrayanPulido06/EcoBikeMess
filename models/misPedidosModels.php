@@ -26,7 +26,12 @@ class MisPedidosModel {
 
     // Listar paquetes (adaptado para la vista de facturación)
     public function listarFacturas($cliente_id, $filtros = []) {
-        $sql = "SELECT * FROM paquetes WHERE cliente_id = :cliente_id";
+        $sql = "SELECT p.*, CONCAT(um.nombres, ' ', um.apellidos) as mensajero_nombre
+                FROM paquetes p
+                LEFT JOIN mensajeros m ON p.mensajero_id = m.id
+                LEFT JOIN usuarios um ON m.usuario_id = um.id
+                WHERE p.cliente_id = :cliente_id";
+
         $params = [':cliente_id' => $cliente_id];
 
         // Filtro por búsqueda (guía o destinatario)
@@ -71,9 +76,11 @@ class MisPedidosModel {
     // Obtener detalles de un paquete específico
     public function obtenerDetalleFactura($factura_id, $cliente_id) {
         // 1. Obtener info del paquete
-        $sql = "SELECT p.*, c.nombre_emprendimiento 
+        $sql = "SELECT p.*, c.nombre_emprendimiento, CONCAT(um.nombres, ' ', um.apellidos) as mensajero_nombre
                 FROM paquetes p
                 JOIN clientes c ON p.cliente_id = c.id
+                LEFT JOIN mensajeros m ON p.mensajero_id = m.id
+                LEFT JOIN usuarios um ON m.usuario_id = um.id
                 WHERE p.id = :id AND p.cliente_id = :cliente_id";
         
         $stmt = $this->conn->prepare($sql);
@@ -81,6 +88,27 @@ class MisPedidosModel {
         $factura = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$factura) return null;
+
+        // Obtener información de la entrega si existe
+        if ($factura['estado'] === 'entregado') {
+            $sqlEntrega = "SELECT * FROM entregas WHERE paquete_id = :id";
+            $stmtEntrega = $this->conn->prepare($sqlEntrega);
+            $stmtEntrega->execute([':id' => $factura_id]);
+            $entrega = $stmtEntrega->fetch(PDO::FETCH_ASSOC);
+            
+            if ($entrega) {
+                $factura['infoEntrega'] = [
+                    'nombreRecibe' => $entrega['nombre_receptor'] ?? '',
+                    'parentesco' => $entrega['parentesco_cargo'] ?? '',
+                    'documento' => $entrega['documento_receptor'] ?? '',
+                    'recaudo' => $entrega['recaudo_real'] ?? 0,
+                    'fecha' => $entrega['fecha_entrega'] ?? '',
+                    'observaciones' => $entrega['observaciones_entrega'] ?? '',
+                    'fotoPrincipal' => $entrega['foto_entrega'] ?? '',
+                    'fotoAdicional' => $entrega['foto_adicional'] ?? ''
+                ];
+            }
+        }
 
         // 2. Obtener historial como "items" para mantener estructura
         // Si tienes tabla historial_paquetes úsala, si no, devolvemos array vacío

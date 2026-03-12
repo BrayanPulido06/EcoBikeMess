@@ -6,7 +6,6 @@
     <title>Historial - EcoBikeMess</title>
     
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
-    <link rel="stylesheet" href="../../public/css/misPaquetesMensajeros.css">
     <link rel="stylesheet" href="../../public/css/historialMensajero.css">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
 </head>
@@ -20,42 +19,88 @@
             <h1>🚴 EcoBikeMess</h1>
             <p class="user-name">Historial de Entregas</p>
         </div>
-        <button class="notif-btn" id="notifBtn">
-            <span class="notif-icon">🔔</span>
-            <span class="notif-badge">3</span>
-        </button>
     </header>
 
     <!-- Menu Lateral -->
     <?php include '../layouts/mensajeroSidebar.php'; ?>
 
     <main class="main-content">
-        <div class="session-status">
-            <div class="status-indicator online">
-                <span class="status-dot"></span>
-                <span class="status-text">Historial Activo</span>
-            </div>
-            <div class="session-time">
-                <span class="time-icon">📚</span>
-                <span>Comprobantes de entrega</span>
-            </div>
-        </div>
+        <div class="container">
+            <!-- Header -->
+            <header class="page-header">
+                <div>
+                    <h1>📦 Historial de Entregas</h1>
+                    <p>Comprobantes y recaudos del mensajero</p>
+                </div>
+            </header>
 
-        <!-- Filtros de Historial -->
-        <div class="filtros-container">
-            <div class="filtros">
-                <button class="filtro-btn activo" data-filtro="todos">Todos</button>
-                <button class="filtro-btn" data-filtro="hoy">Hoy</button>
-                <button class="filtro-btn" data-filtro="semana">Esta Semana</button>
-                <button class="filtro-btn" data-filtro="mes">Este Mes</button>
+            <!-- Resumen -->
+            <div class="stats-quick">
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Entregas Totales</span>
+                        <span class="stat-value" id="totalHistorico">0</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Recaudo Total</span>
+                        <span class="stat-value" id="totalRecaudoHistorico">$0</span>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Lista de Historial -->
-        <div id="vistaLista" class="vista-activa" style="padding-top: 0;">
-        <div id="listaHistorial" class="lista-paquetes">
-            <!-- Los paquetes entregados se cargarán aquí -->
-        </div>
+            <!-- Filtros y Búsqueda -->
+            <div class="filters-section">
+                <div class="search-container">
+                    <input type="text" id="searchHistorial" placeholder="🔍 Buscar por guía o destinatario..." class="search-input">
+                </div>
+
+                <div class="filters-grid">
+                    <div class="filtros">
+                        <button class="filtro-btn activo" data-filtro="todos">Todos</button>
+                        <button class="filtro-btn" data-filtro="hoy">Hoy</button>
+                        <button class="filtro-btn" data-filtro="semana">Esta Semana</button>
+                        <button class="filtro-btn" data-filtro="mes">Este Mes</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla -->
+            <div id="vistaLista" class="table-section">
+                <div class="table-header">
+                    <h2>Listado de Entregas</h2>
+                    <div class="pagination-info">
+                        Mostrando <span id="showingFrom">0</span> - <span id="showingTo">0</span> de <span id="totalResults">0</span> resultados
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="tablaHistorial">
+                        <thead>
+                            <tr>
+                                <th>Guía</th>
+                                <th>Destinatario</th>
+                                <th>Dirección</th>
+                                <th>Fecha Entrega</th>
+                                <th>Recaudo</th>
+                                <th>Recibió</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaHistorialBody">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Cards Mobile -->
+                <div id="cardsHistorial" class="cards-historial">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
         </div>
     </main>
 

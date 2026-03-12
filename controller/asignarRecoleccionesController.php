@@ -66,12 +66,10 @@ try {
         case 'asignar':
             $ids = $_POST['ids_paquetes'];
             $mensajeroId = $_POST['mensajero_id'];
+            $creadoPor = $_SESSION['user_id']; // El ID del usuario que realiza la acción
             
-            if ($model->asignarMensajeroPaquetes($ids, $mensajeroId)) {
-                echo json_encode(['success' => true, 'message' => 'Mensajero asignado correctamente']);
-            } else {
-                throw new Exception('Error al asignar el mensajero');
-            }
+            $model->asignarMensajeroPaquetes($ids, $mensajeroId, $creadoPor);
+            echo json_encode(['success' => true, 'message' => 'Mensajero asignado correctamente']);
             break;
 
         // Nuevo caso: Obtener detalles para el modal
@@ -79,6 +77,20 @@ try {
             $ids = $_GET['ids'] ?? '';
             $detalles = $model->obtenerDetallesPaquetes($ids);
             echo json_encode(['success' => true, 'data' => $detalles]);
+            break;
+
+        // Nuevo caso: Obtener detalles de la recolección (para fotos, etc.)
+        case 'detalles_recoleccion':
+            if (isset($_GET['paquete_id'])) {
+                $recoleccion = $model->getRecoleccionPorPaquete($_GET['paquete_id']);
+                if ($recoleccion) {
+                    echo json_encode(['success' => true, 'data' => $recoleccion]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'No se encontró recolección asociada.']);
+                }
+            } else {
+                echo json_encode(['success' => false, 'message' => 'ID de paquete no proporcionado.']);
+            }
             break;
 
         // Nuevo caso: Cancelar recolección (Eliminar de la vista)

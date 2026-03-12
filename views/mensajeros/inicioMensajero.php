@@ -124,18 +124,6 @@ if ($nombreCompleto === '') {
 
     <!-- Contenido Principal -->
     <main class="main-content">
-        <!-- Estado de Sesión -->
-        <div class="session-status">
-            <div class="status-indicator online" id="statusIndicator">
-                <span class="status-dot"></span>
-                <span class="status-text">En línea</span>
-            </div>
-            <div class="session-time">
-                <span class="time-icon">⏱️</span>
-                <span id="sessionTime">00:00:00</span>
-            </div>
-        </div>
-
         <!-- Botón Principal - Escanear QR -->
         <div class="main-action">
             <button class="btn-scan-qr" id="btnScanQR">
@@ -181,38 +169,6 @@ if ($nombreCompleto === '') {
             </button>
         </div>
 
-        <!-- Recolecciones Pendientes -->
-        <div class="collections-section">
-            <div class="section-header">
-                <h2 class="section-title">📥 Recolecciones Pendientes</h2>
-                <div class="collection-counter">
-                    <span class="counter-badge" id="collectionsBadge">0</span>
-                </div>
-            </div>
-            
-            <div class="collection-stats">
-                <div class="collection-stat">
-                    <span class="stat-label">Asignadas:</span>
-                    <span class="stat-value" id="collectionAsignadas">0</span>
-                </div>
-                <div class="collection-stat">
-                    <span class="stat-label">Completadas:</span>
-                    <span class="stat-value success" id="collectionCompletadas">0</span>
-                </div>
-            </div>
-
-            <div class="collections-list" id="collectionsList">
-                <!-- Lista de recolecciones -->
-            </div>
-        </div>
-
-        <!-- Entregas Activas -->
-        <div class="active-deliveries">
-            <h2 class="section-title">🚚 Entregas en Curso</h2>
-            <div class="deliveries-list" id="deliveriesList">
-                <!-- Lista de entregas activas -->
-            </div>
-        </div>
     </main>
 
     <!-- Modal Escanear QR -->

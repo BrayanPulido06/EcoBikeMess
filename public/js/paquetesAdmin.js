@@ -393,6 +393,50 @@ function verDetalle(id) {
                         </div>
                     </div>
 
+                    ${info.estado === 'entregado' && info.infoEntrega ? `
+                    <div class="detalle-section" style="margin-top: 20px; background-color: #f8fff9; border: 1px solid #c3e6cb;">
+                        <h3 style="color: #155724;">✅ Detalles de la Entrega</h3>
+                        <div class="detalle-grid">
+                            <div class="detalle-item">
+                                <div class="detalle-label">Recibido por</div>
+                                <div class="detalle-value"><strong>${info.infoEntrega.nombreRecibe || 'N/A'}</strong></div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Parentesco/Cargo</div>
+                                <div class="detalle-value">${info.infoEntrega.parentesco || 'N/A'}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Documento</div>
+                                <div class="detalle-value">${info.infoEntrega.documento || 'N/A'}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Fecha Entrega</div>
+                                <div class="detalle-value">${info.infoEntrega.fecha || 'N/A'}</div>
+                            </div>
+                            <div class="detalle-item" style="grid-column: span 2;">
+                                <div class="detalle-label">Observaciones de Entrega</div>
+                                <div class="detalle-value">${info.infoEntrega.observaciones || 'Sin observaciones'}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 15px;">
+                            <h4 style="font-size: 0.9em; text-transform: uppercase; color: #666; margin-bottom: 10px;">Evidencia Fotográfica</h4>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                ${info.infoEntrega.fotoPrincipal ? `
+                                    <a href="../../${info.infoEntrega.fotoPrincipal}" target="_blank" rel="noopener noreferrer" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                                        <img src="../../${info.infoEntrega.fotoPrincipal}" alt="Evidencia Principal" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </a>
+                                ` : '<span class="text-muted">Sin foto principal</span>'}
+                                ${info.infoEntrega.fotoAdicional ? `
+                                    <a href="../../${info.infoEntrega.fotoAdicional}" target="_blank" rel="noopener noreferrer" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                                        <img src="../../${info.infoEntrega.fotoAdicional}" alt="Evidencia Adicional" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+
                     <div class="detalle-section" style="margin-top: 20px;">
                         <h3>🕒 Historial de Movimientos</h3>
                         <div class="timeline-container" style="max-height: 300px; overflow-y: auto; padding-right: 10px;">

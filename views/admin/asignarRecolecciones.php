@@ -34,6 +34,7 @@ $recolecciones = $model->listarRecolecciones([]);
         .badge.estado-asignado { background-color: #17a2b8; }    /* Cian */
         .badge.estado-en_transito { background-color: #007bff; } /* Azul */
         .badge.estado-en_ruta { background-color: #007bff; }     /* Azul */
+        .badge.estado-completada { background-color: #28a745; }  /* Verde para Recolección */
         .badge.estado-entregado { background-color: #28a745; }   /* Verde */
 
         .badge.prioridad-urgente { background-color: #dc3545; }
@@ -282,6 +283,9 @@ $recolecciones = $model->listarRecolecciones([]);
                     <button class="btn-close" id="btnCerrarAsignar">&times;</button>
                 </div>
                 <div class="modal-body">
+                    <div id="infoRecoleccionAsignar" class="info-recoleccion-asignar" style="margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px solid #eee;">
+                        <!-- La información de la recolección se cargará aquí -->
+                    </div>
                     <form id="formAsignarRapido">
                         <input type="hidden" id="idsPaquetesHidden" name="ids_paquetes">
                         <input type="hidden" id="mensajeroIdHidden" name="mensajero_id" required>
@@ -367,7 +371,13 @@ $recolecciones = $model->listarRecolecciones([]);
                                     <td><?php echo htmlspecialchars($rec['mensajero_nombre']); ?></td>
                                     <td>
                                         <span class="badge estado-<?php echo htmlspecialchars($rec['estado']); ?>">
-                                            <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $rec['estado']))); ?>
+                                            <?php
+                                                if ($rec['estado'] === 'entregado' || $rec['estado'] === 'completada') {
+                                                    echo 'Finalizada';
+                                                } else {
+                                                    echo htmlspecialchars(ucfirst(str_replace('_', ' ', $rec['estado'])));
+                                                }
+                                            ?>
                                         </span>
                                     </td>
                                     <td>
@@ -382,12 +392,14 @@ $recolecciones = $model->listarRecolecciones([]);
                                     <td>
                                         <div class="actions">
                                             <button class="btn btn-sm btn-info" title="Ver Paquetes" onclick="verDetallesPaquetes('<?php echo $rec['ids']; ?>')">👁️</button>
-                                            <?php if ($rec['estado'] === 'pendiente'): ?>
-                                                <button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('<?php echo $rec['ids']; ?>')">🚴</button>
-                                            <?php else: ?>
-                                                <button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('<?php echo $rec['ids']; ?>')">🔄</button>
+                                            <?php if (!in_array($rec['estado'], ['entregado', 'completada', 'cancelado'])): ?>
+                                                <?php if ($rec['estado'] === 'pendiente'): ?>
+                                                    <button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('<?php echo $rec['ids']; ?>', '<?php echo htmlspecialchars($rec['direccion_origen'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($rec['cliente_nombre'], ENT_QUOTES); ?>')">🚴</button>
+                                                <?php else: ?>
+                                                    <button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('<?php echo $rec['ids']; ?>', '<?php echo htmlspecialchars($rec['direccion_origen'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($rec['cliente_nombre'], ENT_QUOTES); ?>')">🔄</button>
+                                                <?php endif; ?>
+                                                <button class="btn btn-sm btn-danger" title="Cancelar" onclick="cancelarRecoleccion('<?php echo $rec['ids']; ?>')">🗑️</button>
                                             <?php endif; ?>
-                                            <button class="btn btn-sm btn-danger" title="Eliminar" onclick="cancelarRecoleccion('<?php echo $rec['ids']; ?>')">🗑️</button>
                                         </div>
                                     </td>
                                 </tr>

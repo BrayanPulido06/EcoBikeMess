@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function listarFacturas() {
-        if (tableBody) tableBody.innerHTML = '<tr><td colspan="11" class="text-center">Cargando datos...</td></tr>';
+        if (tableBody) tableBody.innerHTML = '<tr><td colspan="12" class="text-center">Cargando datos...</td></tr>';
 
         const params = new URLSearchParams();
         params.append('action', 'listar');
@@ -89,14 +89,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.data) {
                     renderizarTabla(response.data);
                 } else if (response.error) {
-                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="11" class="text-center text-danger">${response.error}</td></tr>`;
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="12" class="text-center text-danger">${response.error}</td></tr>`;
                 } else {
-                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="11" class="text-center">No se encontraron datos</td></tr>`;
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="12" class="text-center">No se encontraron datos</td></tr>`;
                 }
             })
             .catch(err => {
                 console.error(err);
-                if (tableBody) tableBody.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Error de conexión con el servidor</td></tr>';
+                if (tableBody) tableBody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">Error de conexión con el servidor</td></tr>';
             });
     }
 
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!tableBody) return;
         
         if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="11" class="text-center">No se encontraron facturas.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="12" class="text-center">No se encontraron facturas.</td></tr>';
             return;
         }
 
@@ -135,6 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${agregadoRecaudo}</td>
                     <td>${formatCurrency(f.recaudo_esperado)}</td>
                     <td><span class="badge badge-${badgeClass}">${f.estado.toUpperCase()}</span></td>
+                    <td>${f.mensajero_nombre || '<span class="text-muted">Sin asignar</span>'}</td>
                     <td>${fechaEntregaFormateada}</td>
                     <td>
                         <button class="btn btn-sm btn-warning" onclick="cargarRotulo(${f.id})" title="Ver Rótulo" style="margin-right:3px;">🏷️ Rótulo</button>
@@ -191,15 +192,70 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <td style="padding:8px;">${info.direccion_destino}</td>
                                     </tr>
                                     <tr>
+                                        <td style="padding:8px;"><strong>Mensajero:</strong></td>
+                                        <td style="padding:8px;">${info.mensajero_nombre || 'Sin asignar'}</td>
+                                    </tr>
+                                    <tr>
                                         <td style="padding:8px;"><strong>Contenido:</strong></td>
                                         <td style="padding:8px;">${info.descripcion_contenido}</td>
                                     </tr>
                                     <tr style="background:#f8f9fa;">
-                                        <td style="padding:8px;"><strong>Costo Envío:</strong></td>
-                                        <td style="padding:8px;"><strong>${formatCurrency(info.costo_envio)}</strong></td>
+                                        <td style="padding:8px;"><strong>Total Recaudado:</strong></td>
+                                        <td style="padding:8px;"><strong>${info.estado === 'entregado' && info.infoEntrega ? formatCurrency(info.infoEntrega.recaudo) : 'Pendiente'}</strong></td>
                                     </tr>
                                 </tbody>
                             </table>
+
+                            ${info.estado === 'entregado' && info.infoEntrega ? `
+                                <div class="detalle-section" style="margin-top: 20px;">
+                                    <h3>✅ Detalles de Entrega</h3>
+                                    <div class="detalle-grid">
+                                        <div class="detalle-item">
+                                            <div class="detalle-label">Recibió</div>
+                                            <div class="detalle-value">${info.infoEntrega.nombreRecibe || 'N/A'}</div>
+                                        </div>
+                                        <div class="detalle-item">
+                                            <div class="detalle-label">Parentesco</div>
+                                            <div class="detalle-value">${info.infoEntrega.parentesco || 'N/A'}</div>
+                                        </div>
+                                        <div class="detalle-item">
+                                            <div class="detalle-label">Documento</div>
+                                            <div class="detalle-value">${info.infoEntrega.documento || 'N/A'}</div>
+                                        </div>
+                                        <div class="detalle-item">
+                                            <div class="detalle-label">Fecha de Entrega</div>
+                                            <div class="detalle-value">${formatDateTimeEs(info.infoEntrega.fecha)}</div>
+                                        </div>
+                                        <div class="detalle-item">
+                                            <div class="detalle-label">Recaudo Realizado</div>
+                                            <div class="detalle-value">${formatCurrency(info.infoEntrega.recaudo || 0)}</div>
+                                        </div>
+                                        <div class="detalle-item" style="grid-column: span 2;">
+                                            <div class="detalle-label">Observaciones de Entrega</div>
+                                            <div class="detalle-value">${info.infoEntrega.observaciones || 'Sin observaciones.'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="detalle-section" style="margin-top: 20px;">
+                                    <h3>📸 Evidencia Fotográfica</h3>
+                                    <div class="fotos-evidencia-container" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+                                        ${info.infoEntrega.fotoPrincipal ? `
+                                            <a href="../../${info.infoEntrega.fotoPrincipal}" target="_blank" rel="noopener noreferrer" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                                <img src="../../${info.infoEntrega.fotoPrincipal}" alt="Foto Principal" style="width: 100%; height: 100%; object-fit: cover;">
+                                            </a>
+                                        ` : ''}
+                                        ${info.infoEntrega.fotoAdicional ? `
+                                            <a href="../../${info.infoEntrega.fotoAdicional}" target="_blank" rel="noopener noreferrer" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                                <img src="../../${info.infoEntrega.fotoAdicional}" alt="Foto Adicional" style="width: 100%; height: 100%; object-fit: cover;">
+                                            </a>
+                                        ` : ''}
+                                        ${!info.infoEntrega.fotoPrincipal && !info.infoEntrega.fotoAdicional ? `
+                                            <p class="text-muted" style="width: 100%; text-align: center;">No hay fotos de evidencia disponibles.</p>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            ` : ''}
                         `;
                     } else {
                         container.innerHTML = `<p class="text-danger text-center">${response.error}</p>`;

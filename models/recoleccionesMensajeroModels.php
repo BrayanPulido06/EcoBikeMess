@@ -87,5 +87,42 @@ class RecoleccionesMensajeroModels
         ]);
         return $stmt->rowCount() > 0;
     }
-}
 
+    public function listarPaquetesRecoleccion($recoleccionId, $mensajeroId)
+    {
+        $sql = "SELECT p.numero_guia, p.destinatario_nombre
+                FROM recolecciones r
+                INNER JOIN paquetes p
+                    ON p.cliente_id = r.cliente_id
+                   AND p.direccion_origen = r.direccion_recoleccion
+                WHERE r.id = :recoleccion_id
+                  AND r.mensajero_id = :mensajero_id
+                  AND (p.mensajero_recoleccion_id = :mensajero_id OR p.mensajero_id = :mensajero_id)
+                  AND p.estado IN ('pendiente', 'asignado', 'en_transito', 'en_ruta')
+                ORDER BY p.id DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([
+            ':recoleccion_id' => $recoleccionId,
+            ':mensajero_id' => $mensajeroId
+        ]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function cancelarRecoleccion($recoleccionId, $mensajeroId, $motivo)
+    {
+        $sql = "UPDATE recolecciones
+                SET estado = 'cancelada',
+                    observaciones_recoleccion = :motivo,
+                    fecha_completada = NOW()
+                WHERE id = :id
+                  AND mensajero_id = :mensajero_id
+                  AND estado IN ('asignada', 'en_curso')";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([
+            ':motivo' => $motivo ?: null,
+            ':id' => $recoleccionId,
+            ':mensajero_id' => $mensajeroId
+        ]);
+        return $stmt->rowCount() > 0;
+    }
+}

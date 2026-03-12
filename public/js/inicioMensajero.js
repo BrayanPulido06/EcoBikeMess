@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let isFlashOn = false;
     let ubicacionActual = null;
     let watchId = null;
+    const pendingValidations = new Set();
     const STORAGE_SCANNED_QR_KEY = 'ecobikemess_mensajero_scanned_qr_v1';
     const STORAGE_ROUTE_MODE_KEY = 'ecobikemess_mensajero_route_mode_v1';
     
@@ -52,6 +53,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeRouteDetailModal = document.getElementById('closeRouteDetailModal');
     const btnCloseRouteDetail = document.getElementById('btnCloseRouteDetail');
     const routeDetailBody = document.getElementById('routeDetailBody');
+    const collectionsBadge = document.getElementById('collectionsBadge');
+    const collectionAsignadas = document.getElementById('collectionAsignadas');
+    const collectionCompletadas = document.getElementById('collectionCompletadas');
+    const collectionsList = document.getElementById('collectionsList');
+    const deliveriesList = document.getElementById('deliveriesList');
 
     function guardarEstadoEscaneoLocal() {
         try {
@@ -137,7 +143,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const seconds = Math.floor((diff % 60000) / 1000);
         
         const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        document.getElementById('sessionTime').textContent = timeString;
+        const sessionTime = document.getElementById('sessionTime');
+        if (sessionTime) sessionTime.textContent = timeString;
     }
     
     sessionTimer = setInterval(updateSessionTime, 1000);
@@ -373,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return info;
     }
 
-    function onScanSuccess(decodedText, decodedResult) {
+    async function onScanSuccess(decodedText, decodedResult) {
         const now = Date.now();
         const normalizedCode = normalizarCodigoEscaneado(decodedText);
         const qrInfo = extraerInformacionQR(decodedText);
@@ -397,6 +404,19 @@ document.addEventListener('DOMContentLoaded', function() {
             playScanSound('error');
             showToast('Este paquete ya fue escaneado', 'warning');
             return;
+        }
+
+        const validation = await validarGuiaEnServidor(normalizedCode);
+        if (!validation.ok) {
+            playScanSound('error');
+            const message = validation.message || 'No se pudo validar el paquete';
+            const type = validation.type || 'warning';
+            showToast(message, type);
+            return;
+        }
+
+        if (validation.notice) {
+            showToast(validation.notice, 'info');
         }
 
         // 3. Éxito: Agregar y continuar escaneando (No cerramos el modal)
@@ -454,9 +474,20 @@ document.addEventListener('DOMContentLoaded', function() {
             errorSpan.textContent = 'Este código ya fue escaneado';
             return;
         }
-        
-        addScannedQR(code, extraerInformacionQR(manualCodeInput.value));
-        manualModal.classList.remove('active');
+
+        validarGuiaEnServidor(code).then(result => {
+            if (!result.ok) {
+                errorSpan.textContent = result.message || 'No se pudo validar el paquete';
+                return;
+            }
+
+            if (result.notice) {
+                showToast(result.notice, 'info');
+            }
+
+            addScannedQR(code, extraerInformacionQR(manualCodeInput.value));
+            manualModal.classList.remove('active');
+        });
     });
     
     // Enter para confirmar
@@ -626,7 +657,7 @@ document.addEventListener('DOMContentLoaded', function() {
     btnDeliver.addEventListener('click', function() {
         if (scannedQRs.length === 0) return;
         construirRutaDesdeEscaneados();
-        showToast(`Ruta lista con ${scannedQRs.length} paquete(s)`, 'success');
+        window.location.href = 'misPaquetesMensajeros.php';
     });
     
     // ============================================
@@ -650,12 +681,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     function renderCollections() {
+        if (!collectionsBadge || !collectionAsignadas || !collectionCompletadas || !collectionsList) {
+            return;
+        }
+
         const pending = collectionsData.filter(c => c.status === 'pending').length;
         const completed = collectionsData.filter(c => c.status === 'completed').length;
         
-        document.getElementById('collectionsBadge').textContent = pending;
-        document.getElementById('collectionAsignadas').textContent = collectionsData.length;
-        document.getElementById('collectionCompletadas').textContent = completed;
+        collectionsBadge.textContent = pending;
+        collectionAsignadas.textContent = collectionsData.length;
+        collectionCompletadas.textContent = completed;
         
         const listHTML = collectionsData.map(col => `
             <div class="collection-item">
@@ -680,7 +715,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `).join('');
         
-        document.getElementById('collectionsList').innerHTML = listHTML;
+        collectionsList.innerHTML = listHTML;
     }
     
     window.startCollection = function(id) {
@@ -746,10 +781,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     function renderDeliveries() {
+        if (!deliveriesList) {
+            return;
+        }
+
         const dataToRender = isRouteMode ? routeDeliveriesData : deliveriesData;
 
         if (dataToRender.length === 0) {
-            document.getElementById('deliveriesList').innerHTML = '<p style="text-align: center; color: #6c757d; padding: 1rem;">No hay entregas en curso</p>';
+            deliveriesList.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 1rem;">No hay entregas en curso</p>';
             return;
         }
 
@@ -773,7 +812,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `).join('');
         
-        document.getElementById('deliveriesList').innerHTML = listHTML;
+        deliveriesList.innerHTML = listHTML;
     }
 
     function escapeHtml(value) {
@@ -887,18 +926,42 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ============================================
-    // NOTIFICACIONES
+    // VALIDACIÓN EN SERVIDOR
     // ============================================
-    
-    function simulateNotifications() {
-        setTimeout(() => {
-            showToast('Nueva recolección asignada', 'info');
-            
-            // Actualizar badge
-            const badge = document.querySelector('.notif-badge');
-            const currentCount = parseInt(badge.textContent);
-            badge.textContent = currentCount + 1;
-        }, 5000);
+
+    async function validarGuiaEnServidor(guia) {
+        if (!guia) {
+            return { ok: false, message: 'Código inválido', type: 'warning' };
+        }
+
+        if (pendingValidations.has(guia)) {
+            return { ok: false, message: 'Validando guía, intenta de nuevo', type: 'info' };
+        }
+
+        pendingValidations.add(guia);
+
+        try {
+            const resp = await fetch(`${API_INICIO_MENSAJERO}?action=scan`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ guia })
+            });
+            const json = await resp.json();
+            if (!json.success) {
+                return { ok: false, message: json.message || 'No se pudo validar el paquete', type: 'warning' };
+            }
+
+            if (json.notice) {
+                return { ok: true, notice: json.notice };
+            }
+
+            return { ok: true };
+        } catch (error) {
+            console.error('Error validando guía:', error);
+            return { ok: false, message: 'No se pudo validar el paquete', type: 'warning' };
+        } finally {
+            pendingValidations.delete(guia);
+        }
     }
 
     // ============================================
@@ -969,7 +1032,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isRouteMode && scannedQRs.length > 0) {
             construirRutaDesdeEscaneados();
         }
-        simulateNotifications();
         solicitarPermisosGPS(); // Solicitar GPS apenas carga el dashboard
         
         // Animación de entrada

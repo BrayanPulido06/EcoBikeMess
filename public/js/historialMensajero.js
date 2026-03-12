@@ -33,17 +33,26 @@ async function cargarHistorial() {
         }));
 
         actualizarEstadisticas();
-        mostrarHistorial('todos');
+        aplicarFiltros();
     } catch (error) {
         console.error(error);
-        document.getElementById('listaHistorial').innerHTML = '<p style="padding:1rem;color:#b91c1c;">Error cargando historial.</p>';
+        const tbody = document.getElementById('tablaHistorialBody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="padding:1rem;color:#b91c1c;">Error cargando historial.</td></tr>';
     }
 }
 
-function mostrarHistorial(filtro) {
-    const contenedor = document.getElementById('listaHistorial');
-    let paquetesFiltrados = historialPaquetes;
+let filtroActual = 'todos';
 
+function aplicarFiltros() {
+    const searchValue = (document.getElementById('searchHistorial')?.value || '').trim().toLowerCase();
+    const paquetesFiltrados = filtrarHistorial(filtroActual, searchValue);
+    renderTablaHistorial(paquetesFiltrados);
+    renderCardsHistorial(paquetesFiltrados);
+    actualizarConteoTabla(paquetesFiltrados.length);
+}
+
+function filtrarHistorial(filtro, searchValue) {
+    let paquetesFiltrados = historialPaquetes;
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 
@@ -63,43 +72,86 @@ function mostrarHistorial(filtro) {
         paquetesFiltrados = historialPaquetes.filter(p => p.infoEntrega.fechaObj >= mesAtras);
     }
 
-    if (paquetesFiltrados.length === 0) {
+    if (searchValue) {
+        paquetesFiltrados = paquetesFiltrados.filter(p => {
+            const guia = (p.guia || '').toLowerCase();
+            const destinatario = (p.nombreDestinatario || '').toLowerCase();
+            const receptor = (p.infoEntrega?.nombreRecibe || '').toLowerCase();
+            return guia.includes(searchValue) || destinatario.includes(searchValue) || receptor.includes(searchValue);
+        });
+    }
+
+    return paquetesFiltrados;
+}
+
+function renderTablaHistorial(paquetes) {
+    const tbody = document.getElementById('tablaHistorialBody');
+    if (!tbody) return;
+
+    if (paquetes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:#64748b;">No hay entregas en este periodo</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = paquetes.map(paquete => `
+        <tr>
+            <td>${paquete.guia}</td>
+            <td>${paquete.nombreDestinatario || '-'}</td>
+            <td>${paquete.direccion || '-'}</td>
+            <td>${formatearFecha(paquete.infoEntrega.fecha)}</td>
+            <td>${formatearMoneda(paquete.infoEntrega.recaudo)}</td>
+            <td>${paquete.infoEntrega.nombreRecibe || '-'}</td>
+            <td>
+                <button class="btn-ver-detalle" onclick="verDetalleHistorial(${paquete.id})">
+                    Ver comprobante
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function renderCardsHistorial(paquetes) {
+    const contenedor = document.getElementById('cardsHistorial');
+    if (!contenedor) return;
+
+    if (paquetes.length === 0) {
         contenedor.innerHTML = `
-            <div style="text-align: center; padding: 3rem; color: #64748b;">
-                <p style="font-size: 3rem; margin-bottom: 1rem;">📭</p>
-                <p>No hay entregas en este periodo</p>
+            <div class="card-empty">
+                <p>📭</p>
+                <span>No hay entregas en este periodo</span>
             </div>
         `;
         return;
     }
 
-    contenedor.innerHTML = paquetesFiltrados.map(paquete => `
-        <div class="tarjeta-paquete entregado">
-            <div class="paquete-header">
-                <div class="guia-numero">${paquete.guia}</div>
+    contenedor.innerHTML = paquetes.map(paquete => `
+        <div class="historial-card">
+            <div class="card-header">
+                <div class="card-title">${paquete.guia}</div>
                 <span class="badge entregado">Entregado</span>
             </div>
-            <div class="paquete-info">
-                <div class="info-row">
-                    <span class="info-row-label">Entregado a:</span>
-                    <span class="info-row-valor destinatario-nombre">${paquete.infoEntrega.nombreRecibe}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-row-label">Fecha:</span>
-                    <span class="info-row-valor">${formatearFecha(paquete.infoEntrega.fecha)}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-row-label">Recaudo:</span>
-                    <span class="info-row-valor valor-declarado">${formatearMoneda(paquete.infoEntrega.recaudo)}</span>
-                </div>
+            <div class="card-body">
+                <div><strong>Destinatario:</strong> ${paquete.nombreDestinatario || '-'}</div>
+                <div><strong>Recibió:</strong> ${paquete.infoEntrega.nombreRecibe || '-'}</div>
+                <div><strong>Fecha:</strong> ${formatearFecha(paquete.infoEntrega.fecha)}</div>
+                <div><strong>Recaudo:</strong> ${formatearMoneda(paquete.infoEntrega.recaudo)}</div>
             </div>
-            <div class="paquete-acciones">
-                <button class="btn-ver-detalle" onclick="verDetalleHistorial(${paquete.id})" style="width:100%">
-                    👁️ Ver Comprobante
-                </button>
-            </div>
+            <button class="btn-ver-detalle" onclick="verDetalleHistorial(${paquete.id})">
+                Ver comprobante
+            </button>
         </div>
     `).join('');
+}
+
+function actualizarConteoTabla(total) {
+    const showingFrom = document.getElementById('showingFrom');
+    const showingTo = document.getElementById('showingTo');
+    const totalResults = document.getElementById('totalResults');
+    if (!showingFrom || !showingTo || !totalResults) return;
+    const from = total > 0 ? 1 : 0;
+    showingFrom.textContent = from;
+    showingTo.textContent = total;
+    totalResults.textContent = total;
 }
 
 function verDetalleHistorial(id) {
@@ -136,7 +188,8 @@ function configurarFiltros() {
         btn.addEventListener('click', function () {
             document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('activo'));
             this.classList.add('activo');
-            mostrarHistorial(this.dataset.filtro);
+            filtroActual = this.dataset.filtro;
+            aplicarFiltros();
         });
     });
 
@@ -144,6 +197,11 @@ function configurarFiltros() {
         document.getElementById('vistaDetalle').classList.add('oculto');
         document.getElementById('vistaLista').classList.remove('oculto');
     });
+
+    const search = document.getElementById('searchHistorial');
+    if (search) {
+        search.addEventListener('input', () => aplicarFiltros());
+    }
 }
 
 function formatearMoneda(valor) {

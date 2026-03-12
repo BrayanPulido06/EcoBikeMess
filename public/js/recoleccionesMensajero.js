@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarRecolecciones();
     configurarEventListeners();
     solicitarPermisos();
-    configurarNotificaciones();
     inicializarGeolocalización();
 });
 
@@ -186,7 +185,8 @@ async function cargarRecolecciones() {
             telefono: r.telefono_contacto,
             cantidadPaquetes: Number(r.cantidad_estimada || 0),
             horarioSugerido: r.horario_preferido || 'Sin horario',
-            instrucciones: r.descripcion_paquetes || r.observaciones_recoleccion || ''
+            instrucciones: r.descripcion_paquetes || r.observaciones_recoleccion || '',
+            paquetes: []
         }));
 
         mostrarRecolecciones();
@@ -301,22 +301,63 @@ function verDetalleRecoleccion(id) {
     // Mostrar/ocultar botones según estado
     const btnIniciar = document.getElementById('btnIniciarRecoleccion');
     const btnLlegue = document.getElementById('btnLleguePunto');
+    const seccionPaquetes = document.getElementById('seccionPaquetesAsignados');
     
     if (recoleccionActual.estado === 'pendiente') {
         btnIniciar.classList.remove('oculto');
         btnLlegue.classList.add('oculto');
+        if (seccionPaquetes) seccionPaquetes.classList.add('oculto');
     } else if (recoleccionActual.estado === 'en_curso') {
         btnIniciar.classList.add('oculto');
         btnLlegue.classList.remove('oculto');
+        if (seccionPaquetes) seccionPaquetes.classList.remove('oculto');
     } else {
         btnIniciar.classList.add('oculto');
         btnLlegue.classList.add('oculto');
+        if (seccionPaquetes) seccionPaquetes.classList.remove('oculto');
     }
     
     // Calcular ruta si hay ubicación actual
     if (ubicacionActual) {
         calcularRutaOptimizada();
     }
+
+    cargarDetalleRecoleccion();
+}
+
+async function cargarDetalleRecoleccion() {
+    if (!recoleccionActual) return;
+    try {
+        const resp = await fetch(`${API_RECOLECCIONES}?action=detalle&recoleccion_id=${recoleccionActual.id}`);
+        const json = await resp.json();
+        if (!json.success) return;
+        recoleccionActual.paquetes = json.paquetes || [];
+        renderPaquetesAsignados();
+    } catch (error) {
+        console.error('Error cargando detalle de recolección', error);
+    }
+}
+
+function renderPaquetesAsignados() {
+    const totalEl = document.getElementById('detalleTotalPaquetes');
+    const listaEl = document.getElementById('detalleListaPaquetes');
+    if (!totalEl || !listaEl) return;
+
+    const paquetes = Array.isArray(recoleccionActual?.paquetes) ? recoleccionActual.paquetes : [];
+    const total = paquetes.length || recoleccionActual.cantidadPaquetes || 0;
+    totalEl.textContent = total;
+
+    if (paquetes.length === 0) {
+        listaEl.innerHTML = '<p style="color:#64748b;">No hay guías asociadas.</p>';
+        return;
+    }
+
+    listaEl.innerHTML = paquetes.map(p => `
+        <div class="paquete-recoleccion-item">
+            <strong>${p.numero_guia}</strong>
+            <span>${p.destinatario_nombre || 'Sin nombre'}</span>
+        </div>
+    `).join('');
 }
 
 function calcularRutaOptimizada() {
@@ -347,7 +388,7 @@ async function iniciarRecoleccion() {
         actualizarRecoleccionEnLista(recoleccionActual);
         verDetalleRecoleccion(recoleccionActual.id);
         feedbackTactilExito();
-        mostrarNotificacion('Recolección iniciada. Dirígete al punto de recolección.', 'exito');
+        mostrarNotificacion('Recolección confirmada.', 'exito');
     } catch (error) {
         feedbackTactilError();
         alert(error.message);
@@ -356,71 +397,8 @@ async function iniciarRecoleccion() {
     }
 }
 
-function llegueAlPunto() {
+function marcarRecibido() {
     feedbackTactilClick();
-    
-    // 1. Si no tenemos ubicación guardada, intentamos obtenerla ahora mismo
-    if (!ubicacionActual) {
-        mostrarLoading(true); // Mostrar spinner mientras buscamos GPS
-        
-        if ('geolocation' in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                position => {
-                    ubicacionActual = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude,
-                        accuracy: position.coords.accuracy
-                    };
-                    mostrarLoading(false);
-                    validarProximidadYContinuar(); // Continuar con la lógica ahora que tenemos ubicación
-                },
-                error => {
-                    mostrarLoading(false);
-                    feedbackTactilError();
-                    console.error("Error GPS:", error);
-                    
-                    let msg = 'No se puede obtener tu ubicación GPS.';
-                    if (error.code === 1) msg = 'Permiso de GPS denegado. Por favor actívalo en tu navegador.';
-                    else if (error.code === 2) msg = 'Ubicación no disponible. Verifica tu señal GPS.';
-                    else if (error.code === 3) msg = 'Tiempo de espera agotado obteniendo GPS.';
-                    
-                    alert(msg + '\n\nAsegúrate de tener el GPS encendido y dar permisos al sitio.');
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-        } else {
-            mostrarLoading(false);
-            alert('Tu navegador no soporta geolocalización.');
-        }
-        return;
-    }
-    
-    validarProximidadYContinuar();
-}
-
-function validarProximidadYContinuar() {
-    // Verificar proximidad con mejor precisión para móvil
-    const distancia = calcularDistancia(
-        ubicacionActual.lat,
-        ubicacionActual.lng,
-        recoleccionActual.coordenadas.lat,
-        recoleccionActual.coordenadas.lng
-    );
-    
-    const distanciaMetros = (distancia * 1000).toFixed(0);
-    
-    if (distancia > 0.5) { // Más de 500 metros
-        feedbackTactilError();
-        if (!confirm(`Estás a ${distanciaMetros} metros del punto de recolección. ¿Deseas continuar de todos modos?`)) {
-            return;
-        }
-    } else if (distancia > 0.1) { // Entre 100 y 500 metros
-        if (!confirm(`Estás a ${distanciaMetros} metros del punto. Confirma que has llegado.`)) {
-            return;
-        }
-    }
-    
-    feedbackTactilExito();
     mostrarFormularioRecoleccion();
 }
 
@@ -432,13 +410,10 @@ function mostrarFormularioRecoleccion() {
     // Configurar formulario
     document.getElementById('formNumeroOrden').textContent = recoleccionActual.numeroOrden;
     document.getElementById('cantidadReal').value = recoleccionActual.cantidadPaquetes;
-    document.getElementById('cantidadEsperada').textContent = 
-        `Cantidad esperada: ${recoleccionActual.cantidadPaquetes} paquetes`;
     
     // Resetear fotos
     fotosRecoleccion = [];
     document.getElementById('previsualizacionFotos').innerHTML = '';
-    document.getElementById('alertaDiferencia').classList.add('oculto');
 }
 
 // ============================================
@@ -569,23 +544,7 @@ document.querySelectorAll('.btn-cantidad').forEach(btn => {
     });
 });
 
-document.getElementById('cantidadReal')?.addEventListener('input', validarCantidad);
-
-function validarCantidad() {
-    const cantidadReal = parseInt(document.getElementById('cantidadReal').value) || 0;
-    const cantidadEsperada = recoleccionActual.cantidadPaquetes;
-    const alerta = document.getElementById('alertaDiferencia');
-    const explicacion = document.getElementById('explicacionDiferencia');
-    
-    if (cantidadReal !== cantidadEsperada) {
-        alerta.classList.remove('oculto');
-        explicacion.required = true;
-    } else {
-        alerta.classList.add('oculto');
-        explicacion.required = false;
-        explicacion.value = '';
-    }
-}
+document.getElementById('cantidadReal')?.addEventListener('input', function() {});
 
 // ============================================
 // ENVÍO DE FORMULARIO
@@ -606,21 +565,6 @@ document.getElementById('formRecoleccion')?.addEventListener('submit', function(
         return;
     }
     
-    // Validar explicación si hay diferencia
-    const cantidadEsperada = recoleccionActual.cantidadPaquetes;
-    const explicacion = document.getElementById('explicacionDiferencia').value.trim();
-    if (cantidadReal !== cantidadEsperada && !explicacion) {
-        alert('Debes explicar la diferencia en la cantidad de paquetes');
-        return;
-    }
-    
-    // Validar conformidad
-    const conformidad = document.querySelector('input[name="conformidad"]:checked');
-    if (!conformidad) {
-        alert('Debes indicar la conformidad de la recolección');
-        return;
-    }
-    
     completarRecoleccion();
 });
 
@@ -633,10 +577,7 @@ async function completarRecoleccion() {
         recoleccionId: recoleccionActual.id,
         numeroOrden: recoleccionActual.numeroOrden,
         cantidadReal: parseInt(document.getElementById('cantidadReal').value),
-        cantidadEsperada: recoleccionActual.cantidadPaquetes,
-        explicacionDiferencia: document.getElementById('explicacionDiferencia').value,
         observaciones: document.getElementById('observaciones').value,
-        conformidad: document.querySelector('input[name="conformidad"]:checked').value,
         fotos: fotosRecoleccion,
         fechaCompletada: new Date(),
         ubicacionCompletada: ubicacionActual ? {...ubicacionActual} : null,
@@ -651,7 +592,7 @@ async function completarRecoleccion() {
                 recoleccion_id: recoleccionActual.id,
                 cantidad_real: datosRecoleccion.cantidadReal,
                 observaciones: datosRecoleccion.observaciones,
-                conformidad: datosRecoleccion.conformidad,
+                conformidad: 'si',
                 fotos: datosRecoleccion.fotos
             })
         });
@@ -681,11 +622,42 @@ function mostrarConfirmacion(datos) {
     mensaje.innerHTML = `
         <strong>${datos.numeroOrden}</strong><br>
         Paquetes recibidos: ${datos.cantidadReal}<br>
-        Conformidad: ${datos.conformidad === 'si' ? 'Sí' : 'No'}<br>
         Fotos adjuntas: ${datos.fotos.length}
     `;
     
     modal.classList.remove('oculto');
+}
+
+async function cancelarRecoleccion() {
+    if (!recoleccionActual) return;
+    const motivo = (document.getElementById('motivoCancelacion')?.value || '').trim();
+    if (!motivo) {
+        alert('Debes ingresar el motivo de cancelación');
+        return;
+    }
+
+    try {
+        const resp = await fetch(`${API_RECOLECCIONES}?action=cancelar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                recoleccion_id: recoleccionActual.id,
+                motivo
+            })
+        });
+        const json = await resp.json();
+        if (!json.success) {
+            throw new Error(json.message || 'No se pudo cancelar la recolección');
+        }
+
+        recoleccionActual.estado = 'cancelada';
+        actualizarRecoleccionEnLista(recoleccionActual);
+        document.getElementById('modalCancelacion').classList.add('oculto');
+        volverALista();
+        alert('Recolección cancelada');
+    } catch (error) {
+        alert(error.message);
+    }
 }
 
 // ============================================
@@ -785,7 +757,14 @@ function configurarEventListeners() {
     
     // Acciones de recolección
     document.getElementById('btnIniciarRecoleccion')?.addEventListener('click', iniciarRecoleccion);
-    document.getElementById('btnLleguePunto')?.addEventListener('click', llegueAlPunto);
+    document.getElementById('btnLleguePunto')?.addEventListener('click', marcarRecibido);
+    document.getElementById('btnCancelar')?.addEventListener('click', () => {
+        document.getElementById('modalCancelacion').classList.remove('oculto');
+    });
+    document.getElementById('btnCerrarCancelacion')?.addEventListener('click', () => {
+        document.getElementById('modalCancelacion').classList.add('oculto');
+    });
+    document.getElementById('btnConfirmarCancelacion')?.addEventListener('click', cancelarRecoleccion);
     
     // Formulario
     document.getElementById('btnCancelarFormulario')?.addEventListener('click', function() {
@@ -813,14 +792,7 @@ function configurarEventListeners() {
 // ============================================
 // NOTIFICACIONES
 // ============================================
-function configurarNotificaciones() {
-    const notifBtn = document.getElementById('notifBtn');
-    if (notifBtn) {
-        notifBtn.addEventListener('click', () => {
-            mostrarNotificacion('No tienes notificaciones nuevas', 'info');
-        });
-    }
-}
+function configurarNotificaciones() {}
 
 // ============================================
 // UTILIDADES

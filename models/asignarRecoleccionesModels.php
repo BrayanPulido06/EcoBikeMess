@@ -53,7 +53,8 @@ class AsignarRecoleccionesModel {
         // Consultamos la tabla paquetes agrupando por dirección de origen
         $sql = "SELECT 
                     p.direccion_origen,
-                    p.estado,
+                    p.estado as estado_paquete,
+                    MAX(r.estado) as estado_recoleccion,
                     p.mensajero_id,
                     COUNT(*) as cantidad,
                     GROUP_CONCAT(p.id) as ids,
@@ -62,13 +63,20 @@ class AsignarRecoleccionesModel {
                     c.nombre_emprendimiento,
                     u_cli.nombres as cli_nombres, 
                     u_cli.apellidos as cli_apellidos,
-                    CONCAT(u_mens.nombres, ' ', u_mens.apellidos) as mensajero_nombre
+                    CONCAT(u_mens.nombres, ' ', u_mens.apellidos) as mensajero_nombre,
+                    CASE
+                        WHEN DATE(p.fecha_creacion) < CURDATE() THEN 'verde'
+                        WHEN HOUR(p.fecha_creacion) < 13 THEN 'verde'
+                        WHEN HOUR(p.fecha_creacion) < 17 THEN 'amarillo'
+                        ELSE 'rojo'
+                    END as color_prioridad
                 FROM paquetes p
                 LEFT JOIN clientes c ON p.cliente_id = c.id
                 LEFT JOIN usuarios u_cli ON c.usuario_id = u_cli.id
                 LEFT JOIN mensajeros m ON p.mensajero_id = m.id
                 LEFT JOIN usuarios u_mens ON m.usuario_id = u_mens.id
-                WHERE p.estado IN ('pendiente', 'asignado', 'en_transito', 'en_ruta')";
+                LEFT JOIN recolecciones r ON p.recoleccion_id = r.id
+                WHERE p.estado IN ('pendiente', 'asignado', 'en_transito', 'en_ruta', 'entregado')";
         
         $params = [];
 
@@ -79,7 +87,7 @@ class AsignarRecoleccionesModel {
 
         // Agrupar por dirección, estado, mensajero, fecha y franja horaria (antes/después 1 PM)
         $sql .= " GROUP BY p.direccion_origen, 
-                           p.estado, 
+                           IFNULL(p.recoleccion_id, p.estado), 
                            p.mensajero_id, 
                            DATE(p.fecha_creacion), 
                            CASE WHEN HOUR(p.fecha_creacion) < 13 THEN 'AM' ELSE 'PM' END 
@@ -96,23 +104,78 @@ class AsignarRecoleccionesModel {
             $row['cliente_nombre'] = $cliente;
             $row['mensajero_nombre'] = $row['mensajero_nombre'] ? $row['mensajero_nombre'] : 'Sin asignar';
             
+            // Si tiene un estado de recolección real (ej: completada), usamos ese. Si no, usamos el del paquete.
+            if (!empty($row['estado_recoleccion'])) {
+                $row['estado'] = $row['estado_recoleccion'];
+            } else {
+                $row['estado'] = $row['estado_paquete'];
+            }
+            
             $result[] = $row;
         }
         return $result;
     }
 
     // Nueva función: Asignar mensajero a un grupo de paquetes
-    public function asignarMensajeroPaquetes($ids, $mensajeroId) {
+    public function asignarMensajeroPaquetes($ids, $mensajeroId, $creadoPor) {
         // Convertimos la lista de IDs "1,2,3" en un array seguro para SQL si fuera necesario,
         // pero FIND_IN_SET o IN() con parámetros es mejor. Aquí usaremos IN con string directo validado.
         
         // Validar que ids sean solo números y comas para evitar inyección
         if (!preg_match('/^[0-9,]+$/', $ids)) return false;
+        
+        try {
+            $this->conn->beginTransaction();
 
-        // Asignamos tanto al mensajero actual (para que le aparezca en la app) como al histórico de recolección
-        $sql = "UPDATE paquetes SET mensajero_id = :mensajero_id, mensajero_recoleccion_id = :mensajero_id, estado = 'asignado' WHERE id IN ($ids)";
-        $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([':mensajero_id' => $mensajeroId]);
+            // 1. Obtener datos clave de los paquetes (Cliente, Dirección, Contacto) para crear la recolección
+            // Usamos LIMIT 1 porque asumimos que los paquetes agrupados pertenecen al mismo origen
+            $sqlInfo = "SELECT p.cliente_id, p.direccion_origen, c.nombre_emprendimiento, u.nombres, u.apellidos, u.telefono 
+                        FROM paquetes p 
+                        LEFT JOIN clientes c ON p.cliente_id = c.id
+                        LEFT JOIN usuarios u ON c.usuario_id = u.id
+                        WHERE p.id IN ($ids) LIMIT 1";
+            $stmtInfo = $this->conn->query($sqlInfo);
+            $info = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+
+            if ($info) {
+                // Generar número de orden único
+                $numeroOrden = 'REC-' . date('ymd') . '-' . rand(1000, 9999);
+                $contacto = !empty($info['nombre_emprendimiento']) ? $info['nombre_emprendimiento'] : ($info['nombres'] . ' ' . $info['apellidos']);
+                $cantidad = count(explode(',', $ids));
+
+                // 2. Insertar en la tabla 'recolecciones'
+                $sqlInsert = "INSERT INTO recolecciones 
+                              (numero_orden, cliente_id, mensajero_id, direccion_recoleccion, nombre_contacto, telefono_contacto, cantidad_estimada, estado, fecha_asignacion, creada_por)
+                              VALUES 
+                              (:orden, :cliente, :mensajero, :direccion, :contacto, :telefono, :cantidad, 'asignada', NOW(), :creada_por)";
+                
+                $stmtInsert = $this->conn->prepare($sqlInsert);
+                $stmtInsert->execute([
+                    ':orden' => $numeroOrden,
+                    ':cliente' => $info['cliente_id'],
+                    ':mensajero' => $mensajeroId,
+                    ':direccion' => $info['direccion_origen'],
+                    ':contacto' => $contacto,
+                    ':telefono' => $info['telefono'],
+                    ':cantidad' => $cantidad,
+                    ':creada_por' => $creadoPor
+                ]);
+                
+                $recoleccionId = $this->conn->lastInsertId();
+
+                // 3. Actualizar paquetes vinculándolos a esta recolección
+                // Nota: Asegúrate de haber ejecutado el ALTER TABLE para agregar recoleccion_id
+                $sql = "UPDATE paquetes SET mensajero_id = :mensajero_id, mensajero_recoleccion_id = :mensajero_id, recoleccion_id = :recoleccion_id, estado = 'asignado' WHERE id IN ($ids)";
+                $stmt = $this->conn->prepare($sql);
+                $stmt->execute([':mensajero_id' => $mensajeroId, ':recoleccion_id' => $recoleccionId]);
+            }
+
+            return $this->conn->commit();
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            // Re-lanzamos la excepción para que el controlador pueda capturar el mensaje de error específico.
+            throw $e;
+        }
     }
 
     // Nueva función: Obtener detalles completos de los paquetes por IDs
@@ -140,6 +203,18 @@ class AsignarRecoleccionesModel {
         $sql = "UPDATE paquetes SET estado = 'cancelado' WHERE id IN ($ids)";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute();
+    }
+
+    // Obtener detalles de una recolección asociada a un paquete
+    public function getRecoleccionPorPaquete($paqueteId) {
+        $sql = "SELECT r.* 
+                FROM recolecciones r
+                JOIN paquetes p ON p.recoleccion_id = r.id
+                WHERE p.id = :paquete_id
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':paquete_id' => $paqueteId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }
 ?>
