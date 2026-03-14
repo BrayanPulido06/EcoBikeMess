@@ -46,6 +46,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_email'] = $usuario['correo'];
             $_SESSION['user_phone'] = $usuario['telefono'];
             $_SESSION['user_role'] = $usuario['tipo_usuario'];
+
+            // Lógica de "Recordarme" para email y contraseña
+            if (isset($_POST['remember_me'])) {
+                // Guardar el correo y la contraseña en cookies por 30 días
+                setcookie('remember_email', $correo, time() + (86400 * 30), "/"); 
+                setcookie('remember_password', $password, time() + (86400 * 30), "/"); // ¡Advertencia de seguridad!
+            } else {
+                // Si no se marca, borrar las cookies si existen
+                if (isset($_COOKIE['remember_email'])) {
+                    setcookie('remember_email', '', time() - 3600, "/");
+                }
+                if (isset($_COOKIE['remember_password'])) {
+                    setcookie('remember_password', '', time() - 3600, "/");
+                }
+            }
             
             // Redireccionar según el rol del usuario
             // Ajusta las rutas según donde tengas guardadas las vistas de cada rol
@@ -73,8 +88,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     } catch (Exception $e) {
         // Error en la base de datos (No mostrar detalles técnicos al usuario final)
-        error_log("Error de Login: " . $e->getMessage()); 
-        header("Location: ../views/login.php?mensaje=Error: " . urlencode($e->getMessage()));
+        error_log("Error de conexión o SQL en Login: " . $e->getMessage()); 
+        header("Location: ../views/login.php?mensaje=Error de conexión con el servidor. Intente más tarde.");
         exit();
     }
 } else {

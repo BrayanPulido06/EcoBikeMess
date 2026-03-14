@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function listarPaquetes() {
         // Mostrar indicador de carga
         if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="11" style="text-align:center;">Cargando datos...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="13" style="text-align:center;">Cargando datos...</td></tr>';
         }
 
         // Construir URL con los parámetros de los filtros
@@ -121,12 +121,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     renderizarTabla(response.data);
                 } else if (response.error) {
                     console.error('Error del servidor:', response.error);
-                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="11" class="text-danger text-center">Error: ${response.error}</td></tr>`;
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="13" class="text-danger text-center">Error: ${response.error}</td></tr>`;
                 }
             })
             .catch(error => {
                 console.error('Error en la petición:', error);
-                if (tableBody) tableBody.innerHTML = '<tr><td colspan="11" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>';
+                if (tableBody) tableBody.innerHTML = `<tr><td colspan="13" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
             });
     }
 
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!tableBody) return;
 
         if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="11" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="13" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
             return;
         }
 
@@ -155,9 +155,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 case 'devuelto': badgeClass = 'dark'; break;       // Oscuro
             }
 
+            // Definir color del badge para estado de recolección
+            let badgeRecoleccion = 'secondary';
+            const estadoRec = p.estado_recoleccion || 'pendiente';
+            switch(estadoRec) {
+                case 'completada': badgeRecoleccion = 'success'; break;
+                case 'cancelada': badgeRecoleccion = 'danger'; break;
+                case 'en_curso': badgeRecoleccion = 'primary'; break;
+                case 'asignada': badgeRecoleccion = 'info'; break;
+            }
+
             // Formatear valor a moneda
             const valorFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.valor);
             const recaudoFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.recaudo || 0);
+
+            const mensajeroEntrega = p.mensajero || '<span class="text-muted font-italic">Sin asignar</span>';
+            const mensajeroRecoleccion = p.mensajero_recoleccion || '<span class="text-muted font-italic">Sin asignar</span>';
 
             html += `
                 <tr>
@@ -167,11 +180,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${p.remitente || '<span class="text-muted">N/A</span>'}</td>
                     <td>${p.destinatario}</td>
                     <td>${p.direccion}</td>
-                    <td><span class="badge badge-${badgeClass}">${p.estado.toUpperCase()}</span></td>
-                    <td>${p.mensajero || '<span class="text-muted font-italic">Sin asignar</span>'}</td>
+                    <td>${mensajeroRecoleccion}</td>
+                    <td><span class="badge badge-${badgeRecoleccion}">${estadoRec.toUpperCase().replace('_', ' ')}</span></td>
+                    <td>${mensajeroEntrega}</td>
+                    <td><span class="badge badge-${badgeClass}">${p.estado.toUpperCase().replace('_', ' ')}</span></td>
                     <td>${valorFormateado}</td>
                     <td>${recaudoFormateado}</td>
-                    <td>${p.tipo || '-'}</td>
                     <td>
                         <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})" title="Ver Detalle">👁️</button>
                         ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar">🚴</button>` : ''}
@@ -210,11 +224,12 @@ document.addEventListener('DOMContentLoaded', function() {
             "Remitente": p.remitente,
             "Destinatario": p.destinatario,
             "Dirección": p.direccion,
-            "Estado": p.estado,
-            "Mensajero": p.mensajero,
+            "Mensajero Recoge": p.mensajero_recoleccion || 'Sin asignar',
+            "Estado Rec.": p.estado_recoleccion || 'pendiente',
+            "Mensajero Entrega": p.mensajero || 'Sin asignar',
+            "Estado Paq.": p.estado,
             "Valor": p.valor,
-            "Recaudo": p.recaudo,
-            "Tipo": p.tipo
+            "Recaudo": p.recaudo
         }));
 
         const ws = XLSX.utils.json_to_sheet(exportData);
@@ -365,7 +380,11 @@ function verDetalle(id) {
                                 <div class="detalle-value">${info.direccion_destino}</div>
                             </div>
                             <div class="detalle-item">
-                                <div class="detalle-label">Mensajero Asignado</div>
+                                <div class="detalle-label">Mensajero Recolección</div>
+                                <div class="detalle-value">${info.mensajero_recoleccion || '<span class="text-muted">Sin asignar</span>'}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Mensajero Entrega</div>
                                 <div class="detalle-value">${info.mensajero || '<span class="text-muted">Sin asignar</span>'}</div>
                             </div>
                             <div class="detalle-item">

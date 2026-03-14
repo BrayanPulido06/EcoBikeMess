@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
 
                 // 4. Generar enlace (En producción, aquí enviarías el correo con mail() o PHPMailer)
-                $link = "http://localhost/ecobikemess/views/recovery.php?token=" . $token;
+                $link = "http://localhost/ecobikemess/views/cambioContraseña.php?token=" . $token;
                 
                 // NOTA: Como estamos en local, redirigimos con el link visible en la URL para que puedas probarlo
                 // En producción, cambia esto por un mensaje genérico y envía el correo real.

@@ -104,31 +104,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     if (forgotPasswordForm) {
         forgotPasswordForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+            const emailInput = document.getElementById('forgotEmail');
+            const email = emailInput.value;
+            const errorSpan = document.getElementById('forgotEmailError');
             
-            const email = document.getElementById('forgotEmail').value;
-            
-            // Limpiar errores previos
-            document.getElementById('forgotEmailError').textContent = '';
-            
-            let isValid = true;
-            
-            // Validar email
             if (!validateEmail(email)) {
-                document.getElementById('forgotEmailError').textContent = 'Por favor ingresa un email válido';
-                isValid = false;
+                e.preventDefault(); // Solo detenemos el envío si el formato es inválido
+                errorSpan.textContent = 'Por favor ingresa un email válido';
             }
-            
-            if (isValid) {
-                // Aquí iría la lógica de recuperación de contraseña
-                console.log('Recuperación de contraseña para:', email);
-                showSuccessMessage('¡Enlace de recuperación enviado! Revisa tu correo electrónico.');
-                
-                // Volver al login después de 3 segundos
-                setTimeout(() => {
-                    window.location.href = 'login.php';
-                }, 3000);
-            }
+            // Si es válido, el formulario continuará hacia recovery.php
         });
     }
     

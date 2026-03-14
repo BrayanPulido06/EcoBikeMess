@@ -21,6 +21,40 @@ if ($nombreCompleto === '') {
     <!-- Librería para escaneo de QR -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
+        /* Estilos para la tarjeta de información importante */
+        .info-card {
+            background: #fff;
+            border-radius: 15px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #eef2f7;
+        }
+        .info-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .info-card-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+        .btn-details {
+            background: none;
+            border: none;
+            color: #5cb85c;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .info-details {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eef2f7;
+            font-size: 0.9rem;
+            color: #334155;
+            line-height: 1.5;
+        }
         .route-guide-sheet {
             border: 1px solid #e5e7eb;
             border-radius: 12px;
@@ -113,10 +147,6 @@ if ($nombreCompleto === '') {
             <h1>🚴 EcoBikeMess</h1>
             <p class="user-name"><?php echo htmlspecialchars($nombreCompleto); ?></p>
         </div>
-        <button class="notif-btn" id="notifBtn">
-            <span class="notif-icon">🔔</span>
-            <span class="notif-badge">3</span>
-        </button>
     </header>
 
     <!-- Menu Lateral -->
@@ -124,6 +154,17 @@ if ($nombreCompleto === '') {
 
     <!-- Contenido Principal -->
     <main class="main-content">
+        <!-- Tarjeta de Información Importante -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <h3>📢 Información Importante</h3>
+                <button class="btn-details" id="toggleInfoBtn">Ver detalles ▼</button>
+            </div>
+            <div class="info-details" style="display: none;">
+                <p><strong>Recordatorio:</strong> Notificar antes de pasar (llamar o escribir por Whatsapp) con mínimo 40 min de anticipación para que los clientes o vendedores estén atentos a recibir o entregar, de no responder notificar al despacho para hablar con tienda</p>
+            </div>
+        </div>
+
         <!-- Botón Principal - Escanear QR -->
         <div class="main-action">
             <button class="btn-scan-qr" id="btnScanQR">
@@ -229,6 +270,21 @@ if ($nombreCompleto === '') {
         </div>
     </div>
 
+    <script>
+        // Script para la tarjeta de información
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('toggleInfoBtn');
+            const infoDetails = document.querySelector('.info-card .info-details');
+
+            if (toggleBtn && infoDetails) {
+                toggleBtn.addEventListener('click', function() {
+                    const isVisible = infoDetails.style.display === 'block';
+                    infoDetails.style.display = isVisible ? 'none' : 'block';
+                    toggleBtn.textContent = isVisible ? 'Ver detalles ▼' : 'Ocultar detalles ▲';
+                });
+            }
+        });
+    </script>
     <script src="../../public/js/inicioMensajero.js"></script>
 </body>
 </html>

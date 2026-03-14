@@ -5,18 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoBikeMess - Mensajería Ecológica en Bicicleta</title>
     <link rel="stylesheet" href="public/css/styles.css">
+    <style>
+        /* Aumentamos el límite de altura para que no se corte el texto al desplegar */
+        .service-details.show {
+            max-height: 2000px !important;
+        }
+
+        /* Estilos del Botón Flotante de WhatsApp */
+        .whatsapp-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #25d366;
+            color: #FFF;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 30px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        .whatsapp-btn:hover {
+            background-color: #128c7e;
+            transform: scale(1.1);
+            box-shadow: 2px 2px 15px rgba(0,0,0,0.3);
+        }
+        .whatsapp-btn img {
+            width: 35px;
+            height: 35px;
+        }
+
+        /* Ajustes de Responsividad */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 992px) {
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                padding: 15px;
+                text-align: center;
+            }
+            .nav-links {
+                margin: 15px 0;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+            }
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero h2 {
+                font-size: 1.8rem;
+            }
+            .btn-login {
+                width: 100%;
+                display: block;
+                box-sizing: border-box;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
         <nav class="navbar">
             <div class="logo">
-                <h1><img src="../public/img/Logo_Circulo_Fondoblanco.png" alt="Logo EcoBikeMess" style="height: 40px; vertical-align: middle; margin-right: 5px;"> EcoBikeMess</h1>
+                <h1><img src="public/img/Logo_Circulo_Fondoblanco.png" alt="Logo EcoBikeMess" style="height: 40px; vertical-align: middle; margin-right: 5px;"> EcoBikeMess</h1>
             </div>
             <div class="nav-links">
                 <a href="#inicio">Inicio</a>
                 <a href="#about">Nosotros</a>
                 <a href="#services">Servicios</a>
-                <a href="#pricing">Tarifas</a>
+                <a href="#pricing">Cobertura</a>
                 <a href="#contact">Contacto</a>
             </div>
             <a href="views/login.php" class="btn-login" id="btnLogin">Iniciar Sesión</a>
@@ -25,7 +106,7 @@
 
     <main>
         <!-- Sección Hero -->
-        <section class="hero">
+        <section class="hero" id="inicio">
             <div class="hero-content">
                 <h2>Mensajería Rápida y Ecológica</h2>
                 <p>Entregas sostenibles en bicicleta por toda Bogotá</p>
@@ -33,7 +114,7 @@
         </section>
 
         <!-- Información de EcoBikeMess -->
-        <section class="about">
+        <section class="about" id="about">
             <div class="container">
                 <h2>¿Quiénes Somos?</h2>
                 <p>EcoBikeMess es una empresa de mensajería urbana comprometida con el medio ambiente. Utilizamos bicicletas para realizar entregas rápidas, eficientes y sin emisiones de CO2 en toda Bogotá.</p>
@@ -42,86 +123,226 @@
         </section>
 
         <!-- Servicios -->
-        <section class="services">
+        <section class="services" id="services">
             <div class="container">
                 <h2>Nuestros Servicios</h2>
                 <div class="services-grid">
                     <div class="service-card">
-                        <h3>📦 Cobertura y precios base</h3>
-                        <p>$8.000: Envío estándar en Bogotá</p>
+                        <h3>Tarifa Emprendedor</h3>
+                        <p>Ideal para tus envios con una tarfia fija</p>
                         <button class="btn-expand" data-service="express">
                             <span>Ver más detalles</span>
                             <span class="arrow">▼</span>
                         </button>
                         <div class="service-details" id="details-express">
-                            <p><strong>Características:</strong></p>
+                            <p><strong>Entregas:</strong></p>
                             <ul>
-                                <li>Todo paquete que sean menores o iguales a 20x20x20 cm</li>
-                                <li>Para Soacha y zonas verdes oscuras en Bogotá tendra un adicional de $4.000</li>
+                                <li>Mismo día o siguiente: Gestionamos tu pedido en el transcurso del día (sin horario fijo).</li>
+                                <li>Prioridad same-day: Asegura tu envío el mismo día por $10.000 (Bogotá) o $14.000 (Soacha/zonas verde oscuro).</li>
+                            </ul>
+                            <p><strong>Cobertura y precios base:</strong></p>
+                            <ul>
+                                <li>$8.000: Envío estándar en Bogotá (paquetes hasta 2kg y 20x20x20cm).</li>
+                                <li>$12.000: Para Soacha y zonas verdes oscuras en Bogotá (ver mapa de cobertura).</li>
                                 <li>Todo paquete con tarifa plena tendra entre 1 a 2 dias de entrega</li>
-                                <li>Garantía de entrega en 2 horas</li>
-                                <li>Servicio disponible de lunes a sábado de 8:00 AM a 6:00 PM</li>
-                                <li>Notificación por SMS y correo electrónico</li>
+                            </ul>
+                            <p><strong>⚠️ Importante:</strong></p>
+                            <ul>
+                                <li>Programación: Solicita tu envío antes de las 10:00 a.m. (después de esta hora, queda sujeto a disponibilidad).</li>
+                                <li>Horarios específicos: Si necesitas una hora  de máxima de entrega, puede tener un adicional o aplicar la tarfia oportuna</li>
+                                <li>Factores externos: Lluvia, tráfico u alta demanda pueden retrasar tu envío al día siguiente.</li>
                             </ul>
                         </div>
                     </div>
 
                     <div class="service-card">
-                        <h3>🏢 Mensajería Corporativa</h3>
-                        <p>Soluciones personalizadas para empresas</p>
+                        <h3>Tarifa Oportuna</h3>
+                        <p>Entregas rápidas y/o con horarios</p>
                         <button class="btn-expand" data-service="corporate">
                             <span>Ver más detalles</span>
                             <span class="arrow">▼</span>
                         </button>
                         <div class="service-details" id="details-corporate">
+                            <p><strong>Valor del servicio:</strong></p>
+                            <ul>
+                                <li>$12.000: Cubre los primeros 7 km (desde el punto de recogida hasta la entrega).</li>
+                                <li>$1.500 Por cada km adicional.</li>
+                            </ul>
+                            <p><strong>Especificaciones del paquete:</strong></p>
+                            <ul>
+                                <li>Tamaño maximo: 30x30x30 cm.</li>
+                                <li>Peso máximo: 3 kg.(Si tu paquete excede estas medidas, puede tener un adicional). </li>
+                            </ul>
+                            <p><strong>¿Cómo funciona?</strong></p>
+                            <ul>
+                                <li>Asignamos un mensajero exclusivo para gestionar tu envío.</li>
+                                <li>Entrega express: Lo más rápido posible o en el horario que nos indiques.</li>
+                                <li>Ruta optimizada: Calculamos la tarifa con base en la distancia real (Google Maps/Waze).</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <h3>Servicio Contraentrega</h3>
+                        <p>¡Para que tu cliente cancele al recibir!</p>
+                        <button class="btn-expand" data-service="contraentrega">
+                            <span>Ver más detalles</span>
+                            <span class="arrow">▼</span>
+                        </button>
+                        <div class="service-details" id="details-contraentrega">
+                            <p><strong>¿Cómo funciona?</strong></p>
+                            <ul>
+                                <li>Al solicitar el servicio, indícanos el monto total a cobrar a tu cliente.</li>
+                                <li>Nuestro mensajero recogerá el pago al entregar el paquete (nos pueden pagar en efectivo o transferencia ).</li>
+                            </ul>
+                            <p><strong>Devolución del dinero:</strong></p>
+                            <ul>
+                                <li>Máximo en 2 días hábiles después de la entrega.</li>
+                                <li>Métodos: Transferencia a Nequi, Daviplata, Davivienda o Bancolombia (o efectivo si es posible).</li>
+                            </ul>
+                            <p><strong>Tarifas transparentes:</strong></p>
+                            <ul>
+                                <li>Costo fijo: $3.000 adicionales al valor del envío.</li>
+                                <li>Para recaudos mayores a $300.000 equivale al 1% del monto ($1.000 por cada $100.000).</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <h3>Retorno de Paquetes</h3>
+                        <p>Servicios donde se entrega un paquete y se recoge otro con dimensiones similares.</p>
+                        <button class="btn-expand" data-service="retorno">
+                            <span>Ver más detalles</span>
+                            <span class="arrow">▼</span>
+                        </button>
+                        <div class="service-details" id="details-retorno">
+                            <p><strong>¿Cómo funciona?</strong></p>
+                            <ul>
+                                <li>Entregamos un paquete a tu cliente.</li>
+                                <li>Recogemos otro paquete de dimensiones similares en el mismo lugar.</li>
+                            </ul>
+                            <p><strong>Tarifas:</strong></p>
+                            <ul>
+                                <li>Retorno en 3 días hábiles: $5.000 adicionales al servicio original.</li>
+                                <li>Retorno al día siguiente: Aplica tarifa normal (Emprendedor u Oportuna).</li>
+                            </ul>
+                            <p><strong>⚠️ Importante:</strong></p>
+                            <ul>
+                                <li>El paquete a recoger debe tener un tamaño/peso similar al entregado</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="service-card">
+                        <h3>Servicios Cancelados y/o Devoluciones</h3>
+                        <p>Cuando el cliente no recibe, no aparece y no se logra llevar a cabo la entrega.</p>
+                        <button class="btn-expand" data-service="cancelados">
+                            <span>Ver más detalles</span>
+                            <span class="arrow">▼</span>
+                        </button>
+                        <div class="service-details" id="details-cancelados">
                             <p><strong>Características:</strong></p>
                             <ul>
-                                <li>Planes mensuales con tarifas preferenciales</li>
-                                <li>Mensajero dedicado para tu empresa</li>
                                 <li>Facturación electrónica</li>
                                 <li>Reporte de entregas mensual</li>
                                 <li>Atención prioritaria</li>
-                                <li>Integración con sistemas de gestión empresarial</li>
+                            </ul>
+                            <p><strong>Características:</strong></p>
+                            <ul>
+                                <li>Facturación electrónica</li>
+                                <li>Reporte de entregas mensual</li>
+                                <li>Atención prioritaria</li>
+                            </ul>
+                            <p><strong>Características:</strong></p>
+                            <ul>
+                                <li>Facturación electrónica</li>
+                                <li>Reporte de entregas mensual</li>
+                                <li>Atención prioritaria</li>
                             </ul>
                         </div>
                     </div>
 
                     <div class="service-card">
-                        <h3>🍔 Delivery de Alimentos</h3>
-                        <p>Comida fresca y caliente a tu puerta</p>
-                        <button class="btn-expand" data-service="food">
+                        <h3>Servicio de Packing</h3>
+                        <p>Paquetes sin sellar o sin información del destinatario.</p>
+                        <button class="btn-expand" data-service="extra">
                             <span>Ver más detalles</span>
                             <span class="arrow">▼</span>
                         </button>
-                        <div class="service-details" id="details-food">
-                            <p><strong>Características:</strong></p>
+                        <div class="service-details" id="details-extra">
+                            <p><strong>Tarifas simples:</strong></p>
                             <ul>
-                                <li>Bolsas térmicas especializadas</li>
-                                <li>Entrega en máximo 45 minutos</li>
-                                <li>Manejo especial para bebidas</li>
-                                <li>Servicio disponible de 11:00 AM a 10:00 PM</li>
-                                <li>Sin costos adicionales en pedidos mayores a $30.000</li>
-                                <li>Alianzas con restaurantes locales</li>
+                                <li>$2.000 Incluye: embalaje + sellado + rotulado* con los datos del cliente.</li>
+                                <li>$1.000: Solo rotulado (si el paquete ya está empacado).</li>
+                            </ul>
+                            <p><strong>Datos requeridos:</strong></p>
+                            <ul>
+                                <li>Dirección exacta (torre/apto si aplica)</li>
+                                <li>Nombre y teléfono del destinatario.</li>
+                                <li>Observaciones (ej.: "entregar solo a nombre de...").</li>
+                                <li>Indicar si es contraentrega (especificar el valor del recaudo).</li>
+                            </ul>
+                            <p><strong>Beneficios:</strong></p>
+                            <ul>
+                                <li>Prevención de pérdidas: Etiquetamos claramente tu paquete.</li>
+                                <li>Protección básica: Sellado seguro para evitar aperturas accidentales.</li>
+                                <li>Ahorro de tiempo: Nos ocupamos de lo técnico, tú enfócate en lo importante</li>
+                            </ul>
+                            <p><strong>⚠️ No Embalamos:</strong></p>
+                            <ul>
+                                <li>Objetos delicados (vidrio, cerámica, porcelana).</li>
+                                <li>Alimentos o líquidos.</li>
                             </ul>
                         </div>
                     </div>
-
                     <div class="service-card">
-                        <h3>📄 Documentos Urgentes</h3>
-                        <p>Envíos seguros y confidenciales</p>
-                        <button class="btn-expand" data-service="documents">
+                        <h3>Tiempo de Espera</h3>
+                        <p>Servicios que requieran esperar en un mismo punto.</p>
+                        <button class="btn-expand" data-service="espera">
                             <span>Ver más detalles</span>
                             <span class="arrow">▼</span>
                         </button>
-                        <div class="service-details" id="details-documents">
+                        <div class="service-details" id="details-espera">
+                            <p><strong>¿Cómo funciona?</strong></p>
+                            <ul>
+                                <li>Primeros 20 minutos: Incluidos en el servicio sin costo adicional.</li>
+                                <li>Después de 20 minutos: Se aplica un recargo de $2.000 por cada 10 minutos de espera.</li>
+                            </ul>
+                            <p><strong> Recomendaciones:</strong></p>
+                            <ul>
+                                <li>Programa entregas con tiempo suficiente para evitar esperas.</li>
+                                <li>Comunica cambios de horario con anticipación.</li>
+                            </ul>
+                            <p><strong>Mensaje amigable:</strong></p>
+                            <ul>
+                                <li>"Valoramos el tiempo de todos. ¡Coordina con tu destinatario para que todo esté listo al llegar nuestro mensajero! 🚴‍♂️💨"</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="service-card">
+                        <h3>Adicionales</h3>
+                        <p>Informacion a tener en cuenta.</p>
+                        <button class="btn-expand" data-service="adicionales">
+                            <span>Ver más detalles</span>
+                            <span class="arrow">▼</span>
+                        </button>
+                        <div class="service-details" id="details-adicionales">
                             <p><strong>Características:</strong></p>
                             <ul>
-                                <li>Sobres sellados con código de seguridad</li>
-                                <li>Entrega con firma digital</li>
-                                <li>Seguro incluido</li>
-                                <li>Confidencialidad garantizada</li>
-                                <li>Servicio express en 1 hora</li>
-                                <li>Certificado de entrega en PDF</li>
+                                <li>Facturación electrónica</li>
+                                <li>Reporte de entregas mensual</li>
+                                <li>Atención prioritaria</li>
+                            </ul>
+                            <p><strong>Características:</strong></p>
+                            <ul>
+                                <li>Facturación electrónica</li>
+                                <li>Reporte de entregas mensual</li>
+                                <li>Atención prioritaria</li>
+                            </ul>
+                            <p><strong>Características:</strong></p>
+                            <ul>
+                                <li>Facturación electrónica</li>
+                                <li>Reporte de entregas mensual</li>
+                                <li>Atención prioritaria</li>
                             </ul>
                         </div>
                     </div>
@@ -130,127 +351,41 @@
         </section>
 
         <!-- Tarifas y Zonas -->
-        <section class="pricing">
+        <section class="pricing" id="pricing">
             <div class="container">
-                <h2>Tarifas y Zonas de Cobertura</h2>
-                
-                <div class="pricing-content">
-                    <div class="pricing-table">
-                        <h3>Tarifas por Zona</h3>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Zona</th>
-                                    <th>Precio Base</th>
-                                    <th>Tiempo Estimado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Zona Norte</td>
-                                    <td>$8.000</td>
-                                    <td>45-60 min</td>
-                                </tr>
-                                <tr>
-                                    <td>Zona Centro</td>
-                                    <td>$6.000</td>
-                                    <td>30-45 min</td>
-                                </tr>
-                                <tr>
-                                    <td>Zona Sur</td>
-                                    <td>$7.500</td>
-                                    <td>45-60 min</td>
-                                </tr>
-                                <tr>
-                                    <td>Zona Occidente</td>
-                                    <td>$7.000</td>
-                                    <td>40-55 min</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <p class="note">*Precios sujetos a peso y dimensiones del paquete</p>
-                    </div>
-
+                <h2>Zonas de Cobertura</h2>
                     <div class="map-container">
-                        <h3>Mapa de Cobertura - Bogotá</h3>
-                        <svg id="bogotaMap" viewBox="0 0 400 500">
-                            <!-- Contorno de Bogotá simplificado -->
-                            <path d="M 200 50 L 250 80 L 280 120 L 300 180 L 310 250 L 300 320 L 280 380 L 250 430 L 200 470 L 150 450 L 120 400 L 100 340 L 90 280 L 100 220 L 120 160 L 150 100 L 200 50 Z" 
-                                  fill="#e8f5e9" 
-                                  stroke="#2e7d32" 
-                                  stroke-width="2"/>
-                            
-                            <!-- Zona Norte -->
-                            <path class="zone zone-north" data-zone="norte"
-                                  d="M 200 50 L 250 80 L 280 120 L 270 140 L 200 120 L 130 140 L 120 120 L 150 100 L 200 50 Z"/>
-                            <text x="200" y="110" class="zone-label">NORTE</text>
-                            
-                            <!-- Zona Centro -->
-                            <path class="zone zone-center" data-zone="centro"
-                                  d="M 130 140 L 200 120 L 270 140 L 280 220 L 200 240 L 120 220 L 130 140 Z"/>
-                            <text x="200" y="190" class="zone-label">CENTRO</text>
-                            
-                            <!-- Zona Sur -->
-                            <path class="zone zone-south" data-zone="sur"
-                                  d="M 120 220 L 200 240 L 280 220 L 280 320 L 250 380 L 200 420 L 150 380 L 120 320 L 120 220 Z"/>
-                            <text x="200" y="310" class="zone-label">SUR</text>
-                            
-                            <!-- Zona Occidente -->
-                            <path class="zone zone-west" data-zone="occidente"
-                                  d="M 90 180 L 120 140 L 120 320 L 100 340 L 90 280 L 90 180 Z"/>
-                            <text x="105" y="240" class="zone-label-small">OCCIDENTE</text>
-                        </svg>
-                        <div class="map-legend">
-                            <div class="legend-item">
-                                <span class="legend-color" style="background: #4CAF50;"></span>
-                                <span>Zona Norte (Usaquén, Chapinero)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background: #2196F3;"></span>
-                                <span>Zona Centro (Teusaquillo, Santa Fe)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background: #FF9800;"></span>
-                                <span>Zona Sur (Kennedy, Bosa, Usme)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background: #9C27B0;"></span>
-                                <span>Zona Occidente (Fontibón, Engativá)</span>
-                            </div>
-                        </div>
+                        <img src="public/img/mapa.jpg" alt="Mapa de cobertura de EcoBikeMess en Bogotá" style="width: 100%; max-width: 800px; height: auto; margin: 20px auto; display: block; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     </div>
-                </div>
+                    <div class="map-container">
+                        <p>Con la finalidad de expandir nuestra cobertura de zonas de entrega, hemos diseñado nuestro mapa de cobertura dentro de la ciudad de Bogotá y el municipio de Soacha en Cundinamarca</p>
+                        <p>La zona en verde claro cuenta con distribución para la tarifa fija de $8.000 (Tener en cuenta los términos y condiciones para esta tarifa) 
+                        La zona en verde oscuro tiene una tarifa fija de $12.000, por temas de difícil acceso, seguridad, o ser sitios de alta montaña (Tener en cuenta los términos y condiciones para esta tarifa) </p>
+                        <p>En los sectores que no están demarcados en el mapa no tenemos cobertura al ser zonas catalogadas como zonas rojas en temas de seguridad (Como son Altos de Cazuca, Ciudadela Sucre, Altos de la Florida, etc.)</p>
+                    </div>
             </div>
         </section>
 
         <!-- Contacto -->
-        <section class="contact">
+        <section class="contact" id="contact">
             <div class="container">
                 <h2>Contáctanos</h2>
                 <div class="contact-grid">
                     <div class="contact-item">
                         <div class="contact-icon">📞</div>
-                        <h3>Teléfono</h3>
-                        <p>+57 (1) 234-5678</p>
-                        <p>+57 300 123-4567</p>
-                    </div>
-                    <div class="contact-item">
-                        <div class="contact-icon">📍</div>
-                        <h3>Dirección</h3>
-                        <p>Calle 26 # 68-91</p>
-                        <p>Bogotá, Colombia</p>
+                        <h3>Nuestro WhatsApp</h3>
+                        
+                        <p>+57 31235180619</p>
                     </div>
                     <div class="contact-item">
                         <div class="contact-icon">✉️</div>
                         <h3>Email</h3>
-                        <p>info@ecobikemess.com</p>
-                        <p>soporte@ecobikemess.com</p>
+                        <p>Eco.bikemess@gmail.com</p>
                     </div>
                     <div class="contact-item">
                         <div class="contact-icon">🕒</div>
                         <h3>Horario</h3>
-                        <p>Lun - Sáb: 8:00 AM - 8:00 PM</p>
-                        <p>Dom: 10:00 AM - 4:00 PM</p>
+                        <p>De Lunes a Sábado</p>
                     </div>
                 </div>
             </div>
@@ -259,10 +394,18 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2024 EcoBikeMess. Todos los derechos reservados.</p>
+            <p>&copy; 2020 EcoBikeMess. Todos los derechos reservados.</p>
             <p>Mensajería ecológica para un futuro sostenible 🌱</p>
         </div>
     </footer>
+
+    <!-- Botón Flotante de WhatsApp -->
+    <a href="https://wa.link/49g8jg" class="whatsapp-container" target="_blank">
+        <div class="whatsapp-btn">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+        </div>
+        <span class="whatsapp-text">Chatea con nosotros</span>
+    </a>
 
     <script src="public/js/script.js"></script>
 </body>

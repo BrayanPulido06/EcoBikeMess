@@ -11,7 +11,8 @@
 
         <!-- Header con logo -->
         <div class="login-header">
-            <h1>🚴 EcoBikeMess</h1>
+            <h1>
+                <img src="../public/img/Logo_Circulo_Fondoblanco.png" alt="Logo" style="width: 70px; vertical-align: middle;">EcoBikeMess</h1>
             <p>Mensajería Ecológica para un Futuro Sostenible</p>
         </div>
 
@@ -30,14 +31,14 @@
 
                     <div class="form-group">
                         <label for="loginEmail">Correo Electrónico</label>
-                        <input type="email" id="loginEmail" name="correo" placeholder="tu@email.com" required>
+                        <input type="email" id="loginEmail" name="correo" placeholder="tu@email.com" value="<?php echo isset($_COOKIE['remember_email']) ? htmlspecialchars($_COOKIE['remember_email']) : ''; ?>" required>
                         <span class="error-message" id="loginEmailError"></span>
                     </div>
 
                     <div class="form-group">
                         <label for="loginPassword">Contraseña</label>
                         <div class="password-input">
-                            <input type="password" id="loginPassword" name="password" placeholder="••••••••" required>
+                            <input type="password" id="loginPassword" name="password" placeholder="••••••••" value="<?php echo isset($_COOKIE['remember_password']) ? htmlspecialchars($_COOKIE['remember_password']) : ''; ?>" required>
                             <button type="button" class="toggle-password" data-target="loginPassword">
                                 <span class="eye-icon">👁️</span>
                             </button>
@@ -47,7 +48,7 @@
 
                     <div class="form-options">
                         <label class="remember-me">
-                            <input type="checkbox" id="rememberMe">
+                            <input type="checkbox" id="rememberMe" name="remember_me" <?php echo isset($_COOKIE['remember_email']) ? 'checked' : ''; ?>>
                             <span>Recordarme</span>
                         </label>
                         <a href="recuperarContraseña.php" class="link">¿Olvidaste tu contraseña?</a>

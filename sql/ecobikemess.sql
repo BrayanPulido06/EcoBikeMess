@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     correo VARCHAR(150) UNIQUE NOT NULL,
     telefono VARCHAR(20) NOT NULL,
     password VARCHAR(255) NOT NULL,
+    token VARCHAR(255) DEFAULT NULL,
+    token_expiracion DATETIME DEFAULT NULL,
     tipo_usuario ENUM('cliente', 'mensajero', 'administrador', 'colaborador') NOT NULL,
     estado ENUM('activo', 'inactivo', 'pendiente_aprobacion', 'bloqueado') DEFAULT 'activo',
     correo_verificado BOOLEAN DEFAULT FALSE,

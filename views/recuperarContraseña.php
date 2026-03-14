@@ -10,7 +10,10 @@
     <div class="login-container">
         <!-- Header con logo -->
         <div class="login-header">
-            <h1>🚴 EcoBikeMess</h1>
+            <h1>
+                <img src="../public/img/Logo_Circulo_Fondoblanco.png" alt="Logo" style="width: 50px; vertical-align: middle;"> 
+                EcoBikeMess
+            </h1>
             <p>Mensajería Ecológica para un Futuro Sostenible</p>
         </div>
 
@@ -30,6 +33,12 @@
                                 <a href="<?php echo htmlspecialchars($_GET['debug_link']); ?>">LINK DE PRUEBA (Click aquí)</a>
                             </p>
                         <?php endif; ?>
+                    <?php endif; ?>
+
+                    <?php if (isset($_GET['error'])): ?>
+                        <p class="error-message" style="color: #c62828; background: #ffebee; padding: 10px; border-radius: 5px; text-align: center; margin-bottom: 10px; display: block;">
+                            <?php echo htmlspecialchars($_GET['error']); ?>
+                        </p>
                     <?php endif; ?>
 
                     <div class="form-group">

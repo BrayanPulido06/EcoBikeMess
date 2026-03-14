@@ -45,6 +45,38 @@ foreach ($chartDataRaw as $row) {
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/inicioCliente.css">
     <link rel="stylesheet" href="../../public/css/clientesTheme.css">
+    <style>
+        /* Estilos para la nueva tarjeta de información */
+        .important-info-card {
+            grid-column: 1 / -1; /* Ocupa todo el ancho de la fila */
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .important-info-card .stat-card-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+        }
+        .important-info-card .info-details {
+            display: none; /* Oculto por defecto */
+            width: 100%;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eef2f7;
+            font-size: 0.95rem;
+            color: #5a6c7d;
+            line-height: 1.5;
+        }
+        .important-info-card .btn-details {
+            margin-top: 1rem;
+            background: none;
+            border: none;
+            color: #5cb85c;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <!-- Sidebar -->
@@ -59,6 +91,27 @@ foreach ($chartDataRaw as $row) {
         <div class="dashboard-container">
             <!-- Stats Cards -->
             <div class="stats-grid">
+                <!-- Tarjeta de Información Importante -->
+                <div class="stat-card important-info-card">
+                    <div class="stat-card-header">
+                        <div class="stat-info">
+                            <h2>Asi es como gestionamos tu pedido</h2>
+                        </div>
+                    </div>
+                    <div class="info-details">
+                        <p>1. Recolección: Pasaremos por tu ubicación entre 10:00 a.m. y 12:30 p.m. para recoger tu paquete.</strong></p>
+                        <p>2. Consolidación: Tu pedido llegará a nuestro centro de acopio en Chapinero alrededor de la 1:00 p.m., donde lo prepararemos para su distribución.</p>
+                        <p>3. Distribución:</p>
+                        <p>- Los pedidos salen clasificados por zonas alrededor de las 2:00pm</p>
+                        <p>- Las entregas se realizan durante el resto del día (el horario exacto puede variar según ubicación y volumen de pedidos).</p>
+                        <p>4. Notificación: El cliente final recibirá un aviso por WhatsApp o por llamada antes del mensajero llegar, para asegurar que esté disponible para recibir</p>
+                        <p>5. Confirmación: Al cierre del día, te enviaremos el soporte de entrega.</p>
+                    </div>
+                    <button class="btn-details" id="toggleInfoBtn">
+                        Ver Información ▼
+                    </button>
+                </div>
+
                 <div class="stat-card">
                     <div class="stat-icon" style="background: linear-gradient(135deg, #5cb85c 0%, #4cae4c 100%);">
                         📦
@@ -187,6 +240,21 @@ foreach ($chartDataRaw as $row) {
             total: <?php echo json_encode($dataTotal); ?>,
             entregados: <?php echo json_encode($dataEntregados); ?>
         };
+    </script>
+    <script>
+        // Script para la nueva tarjeta de información
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('toggleInfoBtn');
+            const infoDetails = document.querySelector('.important-info-card .info-details');
+
+            if (toggleBtn && infoDetails) {
+                toggleBtn.addEventListener('click', function() {
+                    const isVisible = infoDetails.style.display === 'block';
+                    infoDetails.style.display = isVisible ? 'none' : 'block';
+                    toggleBtn.innerHTML = isVisible ? 'Ver detalles ▼' : 'Ocultar detalles ▲';
+                });
+            }
+        });
     </script>
     <script src="../../public/js/inicioCliente.js"></script>
 </body>

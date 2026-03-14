@@ -43,6 +43,8 @@ class PaquetesAdminModel {
                        '' as zona, 
                        p.estado,
                        CONCAT(um.nombres, ' ', um.apellidos) as mensajero,
+                       CONCAT(um_rec.nombres, ' ', um_rec.apellidos) as mensajero_recoleccion,
+                       r.estado as estado_recoleccion,
                        p.costo_envio as valor, 
                        p.recaudo_esperado as recaudo,
                        p.tipo_servicio as tipo, 
@@ -54,6 +56,9 @@ class PaquetesAdminModel {
                 LEFT JOIN usuarios uc ON c.usuario_id = uc.id
                 LEFT JOIN mensajeros m ON p.mensajero_id = m.id
                 LEFT JOIN usuarios um ON m.usuario_id = um.id
+                LEFT JOIN mensajeros m_rec ON p.mensajero_recoleccion_id = m_rec.id
+                LEFT JOIN usuarios um_rec ON m_rec.usuario_id = um_rec.id
+                LEFT JOIN recolecciones r ON p.recoleccion_id = r.id
                 WHERE 1=1";
         
         $params = [];
@@ -119,12 +124,15 @@ class PaquetesAdminModel {
                                p.recaudo_esperado,
                                p.instrucciones_entrega,
                                p.estado,
-                               CONCAT(um.nombres, ' ', um.apellidos) as mensajero
+                               CONCAT(um.nombres, ' ', um.apellidos) as mensajero,
+                               CONCAT(um_rec.nombres, ' ', um_rec.apellidos) as mensajero_recoleccion
                         FROM paquetes p
                         LEFT JOIN clientes c ON p.cliente_id = c.id
                         LEFT JOIN usuarios uc ON c.usuario_id = uc.id
                         LEFT JOIN mensajeros m ON p.mensajero_id = m.id
                         LEFT JOIN usuarios um ON m.usuario_id = um.id
+                        LEFT JOIN mensajeros m_rec ON p.mensajero_recoleccion_id = m_rec.id
+                        LEFT JOIN usuarios um_rec ON m_rec.usuario_id = um_rec.id
                         WHERE p.id = :id";
             
             $stmtInfo = $this->conn->prepare($sqlInfo);
