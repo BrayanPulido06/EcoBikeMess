@@ -1,14 +1,9 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth.php';
+requireApiAuthLegacy(['cliente', 'colaborador'], 'Sesión no iniciada');
 require_once '../models/Colaborador.php';
 
 $colaboradorModel = new Colaborador();
-
-// Verificar sesión
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['status' => 'error', 'msg' => 'Sesión no iniciada']);
-    exit;
-}
 
 $usuario_id = $_SESSION['user_id'];
 $cliente_id = $colaboradorModel->obtenerClienteId($usuario_id);

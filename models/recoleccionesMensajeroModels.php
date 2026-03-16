@@ -37,6 +37,7 @@ class RecoleccionesMensajeroModels
                     r.telefono_contacto,
                     r.cantidad_estimada,
                     r.cantidad_real,
+                    r.foto_recoleccion,
                     r.horario_preferido,
                     r.descripcion_paquetes,
                     r.observaciones_recoleccion
@@ -93,12 +94,10 @@ class RecoleccionesMensajeroModels
         $sql = "SELECT p.numero_guia, p.destinatario_nombre
                 FROM recolecciones r
                 INNER JOIN paquetes p
-                    ON p.cliente_id = r.cliente_id
-                   AND p.direccion_origen = r.direccion_recoleccion
+                    ON p.recoleccion_id = r.id
                 WHERE r.id = :recoleccion_id
                   AND r.mensajero_id = :mensajero_id
-                  AND (p.mensajero_recoleccion_id = :mensajero_id OR p.mensajero_id = :mensajero_id)
-                  AND p.estado IN ('pendiente', 'asignado', 'en_transito', 'en_ruta')
+                  AND p.estado IN ('pendiente', 'asignado', 'asignada', 'en_curso', 'en_transito', 'en_ruta')
                 ORDER BY p.id DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([

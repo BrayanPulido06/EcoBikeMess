@@ -1,5 +1,9 @@
 <?php
 session_start();
+if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' && ($_SESSION['user_role'] ?? '') !== 'administrador')) {
+    header("Location: ../login.php?error=Debes iniciar sesión.");
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -155,11 +159,12 @@ session_start();
                             <th>Remitente</th>
                             <th>Destinatario</th>
                             <th>Dirección Entrega</th>
-                            <th class="sortable" data-column="estado">Estado <span class="sort-icon">↕</span></th>
-                            <th>Mensajero</th>
-                            <th class="sortable" data-column="valor">Valor <span class="sort-icon">↕</span></th>
+                            <th>Recolección</th>
+                            <th>Estado Recolección</th>
+                            <th>Entrega</th>
+                            <th>Estado Entrega</th>
                             <th>Recaudo</th>
-                            <th>Tipo</th>
+                            <th>Valor Envío Agregado</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>

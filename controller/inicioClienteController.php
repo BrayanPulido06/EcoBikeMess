@@ -1,13 +1,9 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth.php';
+requireApiAuthLegacy(['cliente', 'colaborador'], 'No autorizado');
 require_once '../models/inicioClienteModel.php';
 
 header('Content-Type: application/json');
-
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['status' => 'error', 'msg' => 'No autorizado']);
-    exit;
-}
 
 $op = $_GET['op'] ?? '';
 $model = new InicioClienteModel();

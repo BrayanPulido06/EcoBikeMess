@@ -34,7 +34,10 @@ class HistorialMensajeroModels
                     e.parentesco_cargo,
                     e.documento_receptor,
                     e.recaudo_real,
-                    e.fecha_entrega
+                    e.fecha_entrega,
+                    e.foto_entrega,
+                    e.foto_adicional,
+                    e.observaciones
                 FROM paquetes p
                 INNER JOIN entregas e ON e.paquete_id = p.id
                 WHERE e.mensajero_id = :mensajero_id
@@ -44,4 +47,3 @@ class HistorialMensajeroModels
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
-

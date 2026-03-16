@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajero') {
-    header("Location: ../login.php");
+    header("Location: ../login.php?error=Debes iniciar sesión.");
     exit();
 }
 
@@ -252,11 +252,7 @@ if ($nombreCompleto === '') {
         </div>
     </div>
 
-    <!-- Toast de Notificación -->
-    <div class="toast" id="toast">
-        <span class="toast-icon" id="toastIcon">✓</span>
-        <span class="toast-message" id="toastMessage"></span>
-    </div>
+
 
     <!-- Modal Detalle de Ruta -->
     <div class="modal" id="routeDetailModal">

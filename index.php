@@ -91,7 +91,7 @@
     <header>
         <nav class="navbar">
             <div class="logo">
-                <h1><img src="public/img/Logo_Circulo_Fondoblanco.png" alt="Logo EcoBikeMess" style="height: 40px; vertical-align: middle; margin-right: 5px;"> EcoBikeMess</h1>
+                <h1><img src="public/img/Logo_Circulo_Fondoblanco.png" alt="Logo" style="width: 90px; vertical-align: middle;"> EcoBikeMess</h1>
             </div>
             <div class="nav-links">
                 <a href="#inicio">Inicio</a>

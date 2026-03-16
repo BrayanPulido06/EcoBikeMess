@@ -1,5 +1,9 @@
 <?php
 session_start();
+if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' && ($_SESSION['user_role'] ?? '') !== 'administrador')) {
+    header("Location: ../login.php?error=Debes iniciar sesión.");
+    exit();
+}
 require_once '../../models/asignarRecoleccionesModels.php';
 
 $model = new AsignarRecoleccionesModel();
@@ -31,7 +35,8 @@ $recolecciones = $model->listarRecolecciones([]);
             text-transform: capitalize;
         }
         .badge.estado-pendiente { background-color: #ffc107; color: #333; } /* Amarillo */
-        .badge.estado-asignado { background-color: #17a2b8; }    /* Cian */
+        .badge.estado-asignado { background-color: #007bff; }    /* Azul */
+        .badge.estado-asignada { background-color: #007bff; }    /* Azul */
         .badge.estado-en_transito { background-color: #007bff; } /* Azul */
         .badge.estado-en_ruta { background-color: #007bff; }     /* Azul */
         .badge.estado-completada { background-color: #28a745; }  /* Verde para Recolección */

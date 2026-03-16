@@ -1,16 +1,10 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth.php';
+requireApiAuth(['administrador', 'admin'], 'Acceso denegado. Permisos insuficientes.');
 header('Content-Type: application/json');
 
 // Incluir el modelo
 require_once '../models/inicioAdminModels.php';
-
-// Verificar si el usuario está logueado y es administrador
-if (!isset($_SESSION['user_id']) || 
-    (!isset($_SESSION['user_role']) || ($_SESSION['user_role'] !== 'administrador' && $_SESSION['user_role'] !== 'admin'))) {
-    echo json_encode(['success' => false, 'message' => 'Acceso denegado. Permisos insuficientes.']);
-    exit;
-}
 
 $model = new InicioAdminModel();
 

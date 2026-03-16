@@ -1,13 +1,10 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth.php';
+ensureSessionStarted();
 require_once '../models/conexionGlobal.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
-    
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ../views/login.php");
-        exit();
-    }
+    requireWebAuth(null, '../views/login.php?error=Debes iniciar sesión.');
 
     $user_id = $_SESSION['user_id'];
 

@@ -1,15 +1,13 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth.php';
+requireApiAuth(['administrador', 'admin'], 'No autorizado');
 require_once '../models/paquetesAdminModels.php';
 
 // Configurar cabecera para devolver JSON
 header('Content-Type: application/json');
 
-// Verificar sesión (opcional, descomentar si es necesario seguridad estricta)
-// if (!isset($_SESSION['user_id'])) { echo json_encode(['error' => 'No autorizado']); exit; }
-
 $model = new PaquetesAdminModel();
-$action = $_REQUEST['action'] ?? 'listar';
+$action = $_REQUEST['action'] ?? 'listar'; 
 
 try {
     switch ($action) {

@@ -1,12 +1,13 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth.php';
+ensureSessionStarted();
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../models/misPedidosModels.php';
 
 // Verificar sesión
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['error' => 'Sesión no iniciada']);
+if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['cliente', 'colaborador'], true)) {
+    echo json_encode(['error' => 'No autorizado']);
     exit();
 }
 

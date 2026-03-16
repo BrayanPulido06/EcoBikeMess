@@ -12,7 +12,7 @@
         <!-- Header con logo -->
         <div class="login-header">
             <h1>
-                <img src="../public/img/Logo_Circulo_Fondoblanco.png" alt="Logo" style="width: 70px; vertical-align: middle;">EcoBikeMess</h1>
+                <img src="../public/img/Logo_Blanco_Trasparente_Circulo.png" alt="Logo" style="width: 100px; vertical-align: middle;">EcoBikeMess</h1>
             <p>Mensajería Ecológica para un Futuro Sostenible</p>
         </div>
 
@@ -24,8 +24,13 @@
                     <p class="form-subtitle">Bienvenido de nuevo</p>
 
                     <?php if (isset($_GET['mensaje'])): ?>
-                        <p class="error-message" style="color: red; text-align: center; display: block;">
+                        <p class="success-message show">
                             <?php echo htmlspecialchars($_GET['mensaje']); ?>
+                        </p>
+                    <?php endif; ?>
+                    <?php if (isset($_GET['error'])): ?>
+                        <p class="error-message" style="text-align: center; display: block;">
+                            <?php echo htmlspecialchars($_GET['error']); ?>
                         </p>
                     <?php endif; ?>
 

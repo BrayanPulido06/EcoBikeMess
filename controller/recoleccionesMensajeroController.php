@@ -1,45 +1,10 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth.php';
+requireApiAuth(['mensajero'], 'No autorizado');
 header('Content-Type: application/json; charset=utf-8');
 
+require_once __DIR__ . '/../includes/upload.php';
 require_once __DIR__ . '/../models/recoleccionesMensajeroModels.php';
-
-if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajero') {
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit;
-}
-
-function guardarFotoRecoleccion($base64)
-{
-    if (!$base64 || strpos($base64, 'base64,') === false) {
-        return null;
-    }
-    [$meta, $contenido] = explode('base64,', $base64, 2);
-    $binario = base64_decode($contenido);
-    if ($binario === false) {
-        return null;
-    }
-
-    $ext = 'jpg';
-    if (strpos($meta, 'image/png') !== false) {
-        $ext = 'png';
-    } elseif (strpos($meta, 'image/webp') !== false) {
-        $ext = 'webp';
-    }
-
-    $dirFisico = dirname(__DIR__) . '/uploads/recolecciones';
-    if (!is_dir($dirFisico)) {
-        mkdir($dirFisico, 0777, true);
-    }
-
-    $nombre = 'recoleccion_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-    $rutaFisica = $dirFisico . '/' . $nombre;
-    if (file_put_contents($rutaFisica, $binario) === false) {
-        return null;
-    }
-
-    return '/uploads/recolecciones/' . $nombre;
-}
 
 $model = new RecoleccionesMensajeroModels();
 $mensajero = $model->obtenerMensajeroPorUsuario((int) $_SESSION['user_id']);
@@ -108,7 +73,7 @@ try {
             if (empty($fotos) || empty($fotos[0]['data'])) {
                 throw new Exception('Debes adjuntar al menos una foto');
             }
-            $rutaFoto = guardarFotoRecoleccion($fotos[0]['data']);
+            $rutaFoto = saveBase64ImageSafe($fotos[0]['data'], 'recolecciones', 'ebm');
             if (!$rutaFoto) {
                 throw new Exception('No se pudo guardar la foto de recolección');
             }

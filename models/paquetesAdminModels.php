@@ -42,11 +42,12 @@ class PaquetesAdminModel {
                        p.direccion_destino as direccion, 
                        '' as zona, 
                        p.estado,
-                       CONCAT(um.nombres, ' ', um.apellidos) as mensajero,
+                       CONCAT(um.nombres, ' ', um.apellidos) as mensajero_entrega,
                        CONCAT(um_rec.nombres, ' ', um_rec.apellidos) as mensajero_recoleccion,
                        r.estado as estado_recoleccion,
-                       p.costo_envio as valor, 
-                       p.recaudo_esperado as recaudo,
+                       p.envio_destinatario as envio_destinatario,
+                       p.costo_envio as costo_envio,
+                       p.recaudo_esperado as recaudo_esperado,
                        p.tipo_servicio as tipo, 
                        p.instrucciones_entrega as observaciones,
                        CASE WHEN p.tipo_servicio = 'urgente' THEN 1 ELSE 0 END as urgente,
@@ -213,7 +214,7 @@ class PaquetesAdminModel {
             $this->conn->beginTransaction();
 
             // Actualizar paquete
-            $sql = "UPDATE paquetes SET mensajero_id = :mensajero_id, estado = 'en_transito' WHERE id = :id";
+            $sql = "UPDATE paquetes SET mensajero_id = :mensajero_id, estado = 'en_transito', fecha_asignacion = NOW() WHERE id = :id";
             $stmt = $this->conn->prepare($sql);
             $stmt->execute([':mensajero_id' => $mensajeroId, ':id' => $paqueteId]);
 

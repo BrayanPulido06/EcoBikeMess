@@ -28,7 +28,10 @@ async function cargarHistorial() {
                 documento: row.documento_receptor || 'N/A',
                 recaudo: Number(row.recaudo_real || 0),
                 fecha: row.fecha_entrega,
-                fechaObj: new Date(row.fecha_entrega)
+                fechaObj: new Date(row.fecha_entrega),
+                fotoPrincipal: row.foto_entrega || '',
+                fotoAdicional: row.foto_adicional || '',
+                observaciones: row.observaciones || ''
             }
         }));
 
@@ -172,6 +175,30 @@ function verDetalleHistorial(id) {
     document.getElementById('detalleDestinatario').textContent = paquete.nombreDestinatario;
     document.getElementById('detalleDireccion').textContent = paquete.direccion;
     document.getElementById('detalleContenido').textContent = paquete.contenido;
+
+    const evidencia = document.getElementById('entregaEvidencia');
+    if (evidencia) {
+        const fotos = [];
+        if (info.fotoPrincipal) {
+            const url = info.fotoPrincipal.startsWith('/') ? `../../${info.fotoPrincipal}` : info.fotoPrincipal;
+            fotos.push({ url, label: 'Foto principal' });
+        }
+        if (info.fotoAdicional) {
+            const url = info.fotoAdicional.startsWith('/') ? `../../${info.fotoAdicional}` : info.fotoAdicional;
+            fotos.push({ url, label: 'Foto adicional' });
+        }
+
+        if (fotos.length === 0) {
+            evidencia.innerHTML = '<p class="muted">No hay evidencia cargada.</p>';
+        } else {
+            evidencia.innerHTML = fotos.map(f => `
+                <a href="${f.url}" target="_blank" rel="noopener noreferrer" class="evidencia-item">
+                    <img src="${f.url}" alt="${f.label}">
+                    <span>${f.label}</span>
+                </a>
+            `).join('');
+        }
+    }
 }
 
 function actualizarEstadisticas() {
@@ -194,6 +221,10 @@ function configurarFiltros() {
     });
 
     document.getElementById('btnVolverDetalle').addEventListener('click', () => {
+        document.getElementById('vistaDetalle').classList.add('oculto');
+        document.getElementById('vistaLista').classList.remove('oculto');
+    });
+    document.getElementById('btnVolverDetalleFooter')?.addEventListener('click', () => {
         document.getElementById('vistaDetalle').classList.add('oculto');
         document.getElementById('vistaLista').classList.remove('oculto');
     });

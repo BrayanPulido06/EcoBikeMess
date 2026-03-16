@@ -1,45 +1,14 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth.php';
+requireApiAuth(['mensajero'], 'No autorizado');
 header('Content-Type: application/json; charset=utf-8');
 
+require_once __DIR__ . '/../includes/upload.php';
 require_once __DIR__ . '/../models/misPaquetesMensajerosModels.php';
-
-if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajero') {
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit;
-}
 
 function guardarImagenBase64($base64, $subcarpeta = 'entregas')
 {
-    if (!$base64 || strpos($base64, 'base64,') === false) {
-        return null;
-    }
-
-    [$meta, $contenido] = explode('base64,', $base64, 2);
-    $binario = base64_decode($contenido);
-    if ($binario === false) {
-        return null;
-    }
-
-    $ext = 'jpg';
-    if (strpos($meta, 'image/png') !== false) {
-        $ext = 'png';
-    } elseif (strpos($meta, 'image/webp') !== false) {
-        $ext = 'webp';
-    }
-
-    $nombre = $subcarpeta . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-    $dirFisico = dirname(__DIR__) . '/uploads/' . $subcarpeta;
-    if (!is_dir($dirFisico)) {
-        mkdir($dirFisico, 0777, true);
-    }
-
-    $rutaFisica = $dirFisico . '/' . $nombre;
-    if (file_put_contents($rutaFisica, $binario) === false) {
-        return null;
-    }
-
-    return '/uploads/' . $subcarpeta . '/' . $nombre;
+    return saveBase64ImageSafe($base64, $subcarpeta, 'ebm');
 }
 
 $model = new MisPaquetesMensajerosModels();

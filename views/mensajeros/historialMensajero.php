@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajero') {
+    header('Location: ../login.php?error=Debes iniciar sesión.');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -112,51 +119,60 @@
         </div>
 
         <div class="detalle-contenido">
-            <section class="seccion-detalle">
+            <section class="seccion-detalle resumen-detalle">
                 <div class="estado-badge-grande">
                     <span class="badge-grande entregado">Entregado</span>
                 </div>
-            </section>
-
-            <section class="seccion-detalle">
-                <h3>✅ Información de Entrega</h3>
-                <div class="info-item">
-                    <span class="info-label">Recibió:</span>
-                    <span id="entregaRecibio"></span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Parentesco:</span>
-                    <span id="entregaParentesco"></span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Documento:</span>
-                    <span id="entregaDocumento"></span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Fecha y Hora:</span>
-                    <span id="entregaFecha"></span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Recaudo:</span>
-                    <span id="entregaRecaudo" class="valor-destacado"></span>
+                <div class="resumen-grid">
+                    <div class="resumen-item">
+                        <span class="info-label">Recibió</span>
+                        <span id="entregaRecibio"></span>
+                    </div>
+                    <div class="resumen-item">
+                        <span class="info-label">Parentesco</span>
+                        <span id="entregaParentesco"></span>
+                    </div>
+                    <div class="resumen-item">
+                        <span class="info-label">Documento</span>
+                        <span id="entregaDocumento"></span>
+                    </div>
+                    <div class="resumen-item">
+                        <span class="info-label">Fecha y Hora</span>
+                        <span id="entregaFecha"></span>
+                    </div>
+                    <div class="resumen-item">
+                        <span class="info-label">Recaudo</span>
+                        <span id="entregaRecaudo" class="valor-destacado"></span>
+                    </div>
                 </div>
             </section>
 
             <section class="seccion-detalle">
                 <h3>📦 Detalles del Paquete</h3>
-                <div class="info-item">
-                    <span class="info-label">Destinatario Original:</span>
-                    <span id="detalleDestinatario"></span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Dirección:</span>
-                    <p id="detalleDireccion" class="direccion-completa"></p>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Contenido:</span>
-                    <span id="detalleContenido"></span>
+                <div class="detalle-grid">
+                    <div class="detalle-item">
+                        <span class="info-label">Destinatario Original</span>
+                        <span id="detalleDestinatario"></span>
+                    </div>
+                    <div class="detalle-item">
+                        <span class="info-label">Dirección</span>
+                        <p id="detalleDireccion" class="direccion-completa"></p>
+                    </div>
+                    <div class="detalle-item">
+                        <span class="info-label">Contenido</span>
+                        <span id="detalleContenido"></span>
+                    </div>
                 </div>
             </section>
+
+            <section class="seccion-detalle">
+                <h3>📸 Evidencia de Entrega</h3>
+                <div id="entregaEvidencia" class="evidencia-grid"></div>
+            </section>
+
+            <div class="detalle-acciones">
+                <button id="btnVolverDetalleFooter" class="btn-volver btn-volver-footer">← Volver</button>
+            </div>
         </div>
     </div>
 

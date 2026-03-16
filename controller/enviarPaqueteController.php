@@ -1,15 +1,10 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth.php';
+requireWebAuth(['cliente', 'colaborador'], '../views/login.php?error=Debes iniciar sesión.');
 
 // Incluir los modelos necesarios
 require_once '../models/inicioClienteModel.php';
 require_once '../models/enviarPaqueteModels.php';
-
-// 1. Verificar seguridad de la sesión
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../views/login.php");
-    exit();
-}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {

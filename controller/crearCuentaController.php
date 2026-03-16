@@ -2,6 +2,7 @@
 ob_start();
 session_start();
 require_once '../models/crearCuentamodels.php';
+require_once __DIR__ . '/../includes/upload.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
@@ -71,21 +72,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ];
 
             // Manejo de Archivos (Fotos y PDFs)
-            $uploadDir = '../uploads/mensajeros/';
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
+            $uploadDir = dirname(__DIR__) . '/uploads/mensajeros/';
 
             $archivos = ['foto', 'hoja_vida', 'licencia_conducir', 'soat'];
             $rutas = [];
+            $allowedImages = ['image/jpeg', 'image/png', 'image/webp'];
+            $allowedDocs = array_merge($allowedImages, ['application/pdf']);
 
             foreach ($archivos as $archivo) {
                 if (isset($_FILES[$archivo]) && $_FILES[$archivo]['error'] == 0) {
-                    $fileName = time() . '_' . $archivo . '_' . basename($_FILES[$archivo]['name']);
-                    $targetPath = $uploadDir . $fileName;
-                    if (move_uploaded_file($_FILES[$archivo]['tmp_name'], $targetPath)) {
-                        $rutas[$archivo] = $fileName;
+                    $allowed = $archivo === 'foto' ? $allowedImages : $allowedDocs;
+                    $fileName = saveUploadedFileSafe($_FILES[$archivo], $uploadDir, $allowed, 'ebm_' . $archivo, true);
+                    if (!$fileName) {
+                        throw new Exception("Archivo inválido: {$archivo}");
                     }
+                    $rutas[$archivo] = $fileName;
                 } else {
                     $rutas[$archivo] = null;
                 }

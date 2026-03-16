@@ -172,10 +172,9 @@ async function cargarRecolecciones() {
         recolecciones = (json.data || []).map(r => ({
             id: Number(r.id),
             numeroOrden: r.numero_orden,
-            estado: r.estado === 'asignada' ? 'pendiente' : r.estado,
+            estado: r.estado === 'asignada' ? 'en_curso' : r.estado,
             prioridad: r.prioridad || 'normal',
             fechaAsignacion: r.fecha_asignacion,
-            distancia: 0,
             direccion: r.direccion_recoleccion,
             coordenadas: {
                 lat: Number(r.coordenadas_lat || 0),
@@ -184,8 +183,10 @@ async function cargarRecolecciones() {
             nombreContacto: r.nombre_contacto,
             telefono: r.telefono_contacto,
             cantidadPaquetes: Number(r.cantidad_estimada || 0),
+            cantidadReal: Number(r.cantidad_real || 0),
             horarioSugerido: r.horario_preferido || 'Sin horario',
             instrucciones: r.descripcion_paquetes || r.observaciones_recoleccion || '',
+            fotoRecoleccion: r.foto_recoleccion || '',
             paquetes: []
         }));
 
@@ -228,7 +229,7 @@ function mostrarRecolecciones(filtro = 'todas') {
         };
         
         return `
-            <div class="tarjeta-recoleccion" onclick="verDetalleRecoleccion(${recoleccion.id})">
+            <div class="tarjeta-recoleccion">
                 <div class="tarjeta-header">
                     <div class="numero-orden">${recoleccion.numeroOrden}</div>
                     <div class="badges">
@@ -241,18 +242,37 @@ function mostrarRecolecciones(filtro = 'todas') {
                         🕐 <strong>Asignado:</strong> ${formatearFecha(recoleccion.fechaAsignacion)}
                     </div>
                     <div class="info-row">
-                        📍 <strong>Distancia:</strong> <span class="distancia">${recoleccion.distancia} km</span>
-                    </div>
-                    <div class="info-row">
                         📦 <strong>Paquetes:</strong> ${recoleccion.cantidadPaquetes}
                     </div>
                     <div class="info-row">
-                        📍 ${recoleccion.direccion}
+                        📍 <strong>Dirección:</strong> ${recoleccion.direccion}
                     </div>
+                </div>
+                <div class="tarjeta-acciones">
+                    ${recoleccion.estado === 'completada' ? `
+                        <button class="btn-recolectar-card" onclick="verDetalleRecoleccion(${recoleccion.id})">
+                            👁️ Ver detalles
+                        </button>
+                    ` : `
+                        <button class="btn-recolectar-card" onclick="abrirRecoleccion(${recoleccion.id})">
+                            📦 Realizar Recolección
+                        </button>
+                    `}
                 </div>
             </div>
         `;
     }).join('');
+}
+
+function abrirRecoleccion(id) {
+    recoleccionActual = recolecciones.find(r => r.id === id);
+    if (!recoleccionActual) return;
+    mostrarFormularioRecoleccion();
+    if (!Array.isArray(recoleccionActual.paquetes) || recoleccionActual.paquetes.length === 0) {
+        cargarDetalleRecoleccion();
+    } else {
+        renderGuiasFormulario();
+    }
 }
 
 // ============================================
@@ -288,8 +308,8 @@ function verDetalleRecoleccion(id) {
     }[recoleccionActual.prioridad];
     
     document.getElementById('detalleFechaAsignacion').textContent = formatearFecha(recoleccionActual.fechaAsignacion);
-    document.getElementById('detalleDistancia').textContent = `${recoleccionActual.distancia} km`;
-    document.getElementById('detalleDireccion').textContent = recoleccionActual.direccion;
+    const detalleDireccion = document.getElementById('detalleDireccion');
+    if (detalleDireccion) detalleDireccion.textContent = recoleccionActual.direccion;
     document.getElementById('detalleCoordenadas').textContent = 
         `${recoleccionActual.coordenadas.lat}, ${recoleccionActual.coordenadas.lng}`;
     document.getElementById('detalleNombreContacto').textContent = recoleccionActual.nombreContacto;
@@ -299,29 +319,33 @@ function verDetalleRecoleccion(id) {
     document.getElementById('detalleInstrucciones').textContent = recoleccionActual.instrucciones;
     
     // Mostrar/ocultar botones según estado
-    const btnIniciar = document.getElementById('btnIniciarRecoleccion');
     const btnLlegue = document.getElementById('btnLleguePunto');
     const seccionPaquetes = document.getElementById('seccionPaquetesAsignados');
+    const seccionEvidencia = document.getElementById('seccionEvidencia');
+    const seccionUbicacion = document.getElementById('seccionUbicacion');
+    const seccionContacto = document.getElementById('seccionContacto');
     
-    if (recoleccionActual.estado === 'pendiente') {
-        btnIniciar.classList.remove('oculto');
-        btnLlegue.classList.add('oculto');
-        if (seccionPaquetes) seccionPaquetes.classList.add('oculto');
-    } else if (recoleccionActual.estado === 'en_curso') {
-        btnIniciar.classList.add('oculto');
+    if (recoleccionActual.estado === 'en_curso') {
         btnLlegue.classList.remove('oculto');
         if (seccionPaquetes) seccionPaquetes.classList.remove('oculto');
+        if (seccionEvidencia) seccionEvidencia.classList.add('oculto');
+        if (seccionUbicacion) seccionUbicacion.classList.remove('oculto');
+        if (seccionContacto) seccionContacto.classList.remove('oculto');
     } else {
-        btnIniciar.classList.add('oculto');
         btnLlegue.classList.add('oculto');
         if (seccionPaquetes) seccionPaquetes.classList.remove('oculto');
+        if (seccionEvidencia && recoleccionActual.estado === 'completada') {
+            seccionEvidencia.classList.remove('oculto');
+        }
+        if (recoleccionActual.estado === 'completada') {
+            if (seccionUbicacion) seccionUbicacion.classList.add('oculto');
+            if (seccionContacto) seccionContacto.classList.add('oculto');
+        } else {
+            if (seccionUbicacion) seccionUbicacion.classList.remove('oculto');
+            if (seccionContacto) seccionContacto.classList.remove('oculto');
+        }
     }
     
-    // Calcular ruta si hay ubicación actual
-    if (ubicacionActual) {
-        calcularRutaOptimizada();
-    }
-
     cargarDetalleRecoleccion();
 }
 
@@ -340,24 +364,47 @@ async function cargarDetalleRecoleccion() {
 
 function renderPaquetesAsignados() {
     const totalEl = document.getElementById('detalleTotalPaquetes');
+    const recogidosEl = document.getElementById('detalleCantidadRecogida');
     const listaEl = document.getElementById('detalleListaPaquetes');
     if (!totalEl || !listaEl) return;
 
     const paquetes = Array.isArray(recoleccionActual?.paquetes) ? recoleccionActual.paquetes : [];
     const total = paquetes.length || recoleccionActual.cantidadPaquetes || 0;
     totalEl.textContent = total;
+    if (recogidosEl) {
+        recogidosEl.textContent = recoleccionActual.cantidadReal || 0;
+    }
 
     if (paquetes.length === 0) {
         listaEl.innerHTML = '<p style="color:#64748b;">No hay guías asociadas.</p>';
+    } else {
+        listaEl.innerHTML = paquetes.map(p => `
+            <div class="paquete-recoleccion-item">
+                <strong>${p.numero_guia}</strong>
+                <span>${p.destinatario_nombre || 'Sin nombre'}</span>
+            </div>
+        `).join('');
+    }
+
+    renderEvidenciaRecoleccion();
+}
+
+function renderEvidenciaRecoleccion() {
+    const contenedor = document.getElementById('detalleFotoEvidencia');
+    if (!contenedor) return;
+
+    const foto = recoleccionActual?.fotoRecoleccion;
+    if (!foto) {
+        contenedor.innerHTML = '<p style="color:#64748b;">No hay evidencia cargada.</p>';
         return;
     }
 
-    listaEl.innerHTML = paquetes.map(p => `
-        <div class="paquete-recoleccion-item">
-            <strong>${p.numero_guia}</strong>
-            <span>${p.destinatario_nombre || 'Sin nombre'}</span>
-        </div>
-    `).join('');
+    const url = foto.startsWith('/') ? `../../${foto}` : foto;
+    contenedor.innerHTML = `
+        <a href="${url}" target="_blank">
+            <img src="${url}" alt="Evidencia de recolección" style="width: 100%; max-width: 360px; border-radius: 12px; display: block;">
+        </a>
+    `;
 }
 
 function calcularRutaOptimizada() {
@@ -406,14 +453,39 @@ function mostrarFormularioRecoleccion() {
     // Ocultar vista detalle, mostrar formulario
     document.getElementById('vistaDetalle').classList.add('oculto');
     document.getElementById('vistaFormulario').classList.remove('oculto');
+    document.getElementById('vistaLista').classList.add('oculto');
     
     // Configurar formulario
     document.getElementById('formNumeroOrden').textContent = recoleccionActual.numeroOrden;
     document.getElementById('cantidadReal').value = recoleccionActual.cantidadPaquetes;
+    document.getElementById('formDireccionRecoleccion').value = recoleccionActual.direccion || '';
+    document.getElementById('formNombreContacto').value = recoleccionActual.nombreContacto || '';
+    document.getElementById('formTelefonoContacto').value = recoleccionActual.telefono || '';
+    const totalEl = document.getElementById('formTotalPaquetes');
+    if (totalEl) totalEl.textContent = recoleccionActual.cantidadPaquetes || 0;
+    const fechaAsignacionEl = document.getElementById('formFechaAsignacion');
+    if (fechaAsignacionEl) fechaAsignacionEl.textContent = formatearFecha(recoleccionActual.fechaAsignacion);
+    renderGuiasFormulario();
     
     // Resetear fotos
     fotosRecoleccion = [];
     document.getElementById('previsualizacionFotos').innerHTML = '';
+}
+
+function renderGuiasFormulario() {
+    const lista = document.getElementById('formListaGuias');
+    if (!lista) return;
+    const paquetes = Array.isArray(recoleccionActual?.paquetes) ? recoleccionActual.paquetes : [];
+    if (paquetes.length === 0) {
+        lista.innerHTML = '<p style="color:#64748b;">No hay guías asociadas.</p>';
+        return;
+    }
+    lista.innerHTML = paquetes.map(p => `
+        <div class="paquete-recoleccion-item">
+            <strong>${p.numero_guia}</strong>
+            <span>${p.destinatario_nombre || 'Sin nombre'}</span>
+        </div>
+    `).join('');
 }
 
 // ============================================
@@ -754,11 +826,18 @@ function configurarEventListeners() {
         feedbackTactilClick();
         llamarContacto();
     });
+
+    document.getElementById('btnLlamarForm')?.addEventListener('click', () => {
+        feedbackTactilClick();
+        llamarContacto();
+    });
     
     // Acciones de recolección
-    document.getElementById('btnIniciarRecoleccion')?.addEventListener('click', iniciarRecoleccion);
     document.getElementById('btnLleguePunto')?.addEventListener('click', marcarRecibido);
     document.getElementById('btnCancelar')?.addEventListener('click', () => {
+        document.getElementById('modalCancelacion').classList.remove('oculto');
+    });
+    document.getElementById('btnNoPuedoForm')?.addEventListener('click', () => {
         document.getElementById('modalCancelacion').classList.remove('oculto');
     });
     document.getElementById('btnCerrarCancelacion')?.addEventListener('click', () => {
@@ -772,6 +851,11 @@ function configurarEventListeners() {
         if (confirm('¿Estás seguro de cancelar? Se perderán los datos ingresados.')) {
             volverALista();
         }
+    });
+
+    document.getElementById('btnVolverFormulario')?.addEventListener('click', function() {
+        feedbackTactilClick();
+        volverALista();
     });
     
     // Modales
@@ -798,6 +882,7 @@ function configurarNotificaciones() {}
 // UTILIDADES
 // ============================================
 function formatearFecha(fecha) {
+    if (!fecha) return 'Sin fecha';
     const d = new Date(fecha);
     const opciones = { 
         year: 'numeric', 

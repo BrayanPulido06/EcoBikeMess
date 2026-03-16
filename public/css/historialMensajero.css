@@ -182,6 +182,145 @@ th {
     font-size: 0.75rem;
 }
 
+/* Detalle */
+.vista-detalle {
+    position: fixed;
+    inset: 0;
+    background: #f8fafc;
+    z-index: 30;
+    overflow-y: auto;
+    padding-bottom: 2rem;
+}
+
+.detalle-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.btn-volver {
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    padding: 0.45rem 0.75rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.detalle-contenido {
+    padding: 1rem 1.25rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.seccion-detalle {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+}
+
+.estado-badge-grande {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.5rem;
+}
+
+.badge-grande.entregado {
+    background: #16a34a;
+    color: #ffffff;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.resumen-grid,
+.detalle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+}
+
+.resumen-item,
+.detalle-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.75rem;
+    display: grid;
+    gap: 0.25rem;
+}
+
+.info-label {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.valor-destacado {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.direccion-completa {
+    margin: 0;
+}
+
+.evidencia-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+}
+
+.evidencia-item {
+    text-decoration: none;
+    color: inherit;
+    display: grid;
+    gap: 0.4rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.5rem;
+    background: #f8fafc;
+}
+
+.evidencia-item img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.evidencia-item span {
+    font-size: 0.8rem;
+    color: #334155;
+    text-align: center;
+}
+
+.muted {
+    color: #64748b;
+    margin: 0;
+}
+
+.detalle-acciones {
+    display: flex;
+    justify-content: center;
+}
+
+.btn-volver-footer {
+    width: 100%;
+    max-width: 260px;
+    background: #0ea5e9;
+    color: #ffffff;
+    border-color: transparent;
+}
+
 /* Cards mobile */
 .cards-historial {
     display: none;

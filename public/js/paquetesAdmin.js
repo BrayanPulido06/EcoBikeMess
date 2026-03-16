@@ -155,22 +155,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 case 'devuelto': badgeClass = 'dark'; break;       // Oscuro
             }
 
-            // Definir color del badge para estado de recolección
+            // Definir color y etiqueta del estado de recolección
             let badgeRecoleccion = 'secondary';
-            const estadoRec = p.estado_recoleccion || 'pendiente';
-            switch(estadoRec) {
-                case 'completada': badgeRecoleccion = 'success'; break;
-                case 'cancelada': badgeRecoleccion = 'danger'; break;
-                case 'en_curso': badgeRecoleccion = 'primary'; break;
-                case 'asignada': badgeRecoleccion = 'info'; break;
+            let estadoRecLabel = 'Pendiente por asignar';
+            const estadoRec = p.estado_recoleccion || '';
+            if (estadoRec) {
+                switch (estadoRec) {
+                    case 'completada':
+                        badgeRecoleccion = 'success';
+                        estadoRecLabel = 'Recolectada';
+                        break;
+                    case 'cancelada':
+                        badgeRecoleccion = 'danger';
+                        estadoRecLabel = 'Cancelada';
+                        break;
+                    case 'en_curso':
+                        badgeRecoleccion = 'primary';
+                        estadoRecLabel = 'En tránsito';
+                        break;
+                    case 'asignada':
+                        badgeRecoleccion = 'info';
+                        estadoRecLabel = 'Asignado';
+                        break;
+                    default:
+                        badgeRecoleccion = 'secondary';
+                        estadoRecLabel = estadoRec.toUpperCase().replace('_', ' ');
+                        break;
+                }
             }
 
             // Formatear valor a moneda
-            const valorFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.valor);
-            const recaudoFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.recaudo || 0);
+            const recaudoFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.recaudo_esperado || 0);
+            const valorEnvioFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.costo_envio || 0);
 
-            const mensajeroEntrega = p.mensajero || '<span class="text-muted font-italic">Sin asignar</span>';
+            const mensajeroEntrega = p.mensajero_entrega || '<span class="text-muted font-italic">Sin asignar</span>';
             const mensajeroRecoleccion = p.mensajero_recoleccion || '<span class="text-muted font-italic">Sin asignar</span>';
+            const envioAgregado = String(p.envio_destinatario || '').toLowerCase() === 'si'
+                ? `<span class="badge badge-success">Sí</span> ${valorEnvioFormateado}`
+                : `<span class="badge badge-secondary">No</span> ${valorEnvioFormateado}`;
 
             html += `
                 <tr>
@@ -181,11 +203,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${p.destinatario}</td>
                     <td>${p.direccion}</td>
                     <td>${mensajeroRecoleccion}</td>
-                    <td><span class="badge badge-${badgeRecoleccion}">${estadoRec.toUpperCase().replace('_', ' ')}</span></td>
+                    <td><span class="badge badge-${badgeRecoleccion}">${estadoRecLabel}</span></td>
                     <td>${mensajeroEntrega}</td>
                     <td><span class="badge badge-${badgeClass}">${p.estado.toUpperCase().replace('_', ' ')}</span></td>
-                    <td>${valorFormateado}</td>
                     <td>${recaudoFormateado}</td>
+                    <td>${envioAgregado}</td>
                     <td>
                         <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})" title="Ver Detalle">👁️</button>
                         ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar">🚴</button>` : ''}
@@ -226,10 +248,11 @@ document.addEventListener('DOMContentLoaded', function() {
             "Dirección": p.direccion,
             "Mensajero Recoge": p.mensajero_recoleccion || 'Sin asignar',
             "Estado Rec.": p.estado_recoleccion || 'pendiente',
-            "Mensajero Entrega": p.mensajero || 'Sin asignar',
-            "Estado Paq.": p.estado,
-            "Valor": p.valor,
-            "Recaudo": p.recaudo
+            "Mensajero Entrega": p.mensajero_entrega || 'Sin asignar',
+            "Estado Entrega": p.estado,
+            "Recaudo": p.recaudo_esperado || 0,
+            "Valor Envio": p.costo_envio || 0,
+            "Envio Agregado": p.envio_destinatario || 'no'
         }));
 
         const ws = XLSX.utils.json_to_sheet(exportData);

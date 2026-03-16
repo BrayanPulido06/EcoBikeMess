@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validación básica
     if (empty($correo) || empty($password)) {
-        header("Location: ../views/login.php?mensaje=Por favor complete todos los campos");
+        header("Location: ../views/login.php?error=Por favor complete todos los campos");
         exit();
     }
 
@@ -82,14 +82,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         } else {
             // Credenciales incorrectas
-            header("Location: ../views/login.php?mensaje=Correo o contraseña incorrectos");
+            header("Location: ../views/login.php?error=Correo o contraseña incorrectos");
             exit();
         }
 
     } catch (Exception $e) {
         // Error en la base de datos (No mostrar detalles técnicos al usuario final)
         error_log("Error de conexión o SQL en Login: " . $e->getMessage()); 
-        header("Location: ../views/login.php?mensaje=Error de conexión con el servidor. Intente más tarde.");
+        header("Location: ../views/login.php?error=Error de conexión con el servidor. Intente más tarde.");
         exit();
     }
 } else {

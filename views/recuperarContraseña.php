@@ -11,7 +11,7 @@
         <!-- Header con logo -->
         <div class="login-header">
             <h1>
-                <img src="../public/img/Logo_Circulo_Fondoblanco.png" alt="Logo" style="width: 50px; vertical-align: middle;"> 
+                <img src="../public/img/Logo_Blanco_Trasparente_Circulo.png" alt="Logo" style="width: 90px; vertical-align: middle;"> 
                 EcoBikeMess
             </h1>
             <p>Mensajería Ecológica para un Futuro Sostenible</p>

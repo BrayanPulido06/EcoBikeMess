@@ -1,14 +1,9 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth.php';
+requireApiAuth(['administrador', 'admin'], 'No autorizado');
 require_once '../models/asignarRecoleccionesModels.php';
 
 header('Content-Type: application/json');
-
-// Verificar sesión
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit;
-}
 
 $model = new AsignarRecoleccionesModel();
 $action = $_REQUEST['action'] ?? '';

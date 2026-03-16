@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajero') {
+    header('Location: ../login.php?error=Debes iniciar sesión.');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -68,7 +75,7 @@
 
         <div class="detalle-contenido">
             <!-- Información General -->
-            <section class="seccion-detalle">
+            <section class="seccion-detalle" id="seccionUbicacion">
                 <h3>📋 Información General</h3>
                 <div class="info-grid">
                     <div class="info-item">
@@ -84,17 +91,16 @@
                         <span id="detalleFechaAsignacion"></span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Distancia:</span>
-                        <span id="detalleDistancia"></span>
+                        <span class="info-label">Dirección:</span>
+                        <span id="detalleDireccion"></span>
                     </div>
                 </div>
             </section>
 
             <!-- Ubicación -->
-            <section class="seccion-detalle">
+            <section class="seccion-detalle" id="seccionContacto">
                 <h3>📍 Ubicación de Recolección</h3>
                 <div class="ubicacion-info">
-                    <p id="detalleDireccion" class="direccion"></p>
                     <div class="coordenadas">
                         <span>Coordenadas: </span>
                         <span id="detalleCoordenadas"></span>
@@ -110,7 +116,7 @@
                 <h3>👤 Información de Contacto</h3>
                 <div class="contacto-info">
                     <div class="info-item">
-                        <span class="info-label">Nombre:</span>
+                        <span class="info-label">Tienda:</span>
                         <span id="detalleNombreContacto"></span>
                     </div>
                     <div class="info-item">
@@ -147,19 +153,23 @@
                     <span class="info-label">Total a recoger:</span>
                     <span id="detalleTotalPaquetes" class="cantidad-grande"></span>
                 </div>
+                <div class="info-item">
+                    <span class="info-label">Recogidos:</span>
+                    <span id="detalleCantidadRecogida" class="cantidad-grande"></span>
+                </div>
                 <div id="detalleListaPaquetes" class="lista-paquetes-recoleccion"></div>
+            </section>
+
+            <!-- Evidencia -->
+            <section class="seccion-detalle oculto" id="seccionEvidencia">
+                <h3>📸 Evidencia de Recolección</h3>
+                <div id="detalleFotoEvidencia" class="lista-paquetes-recoleccion"></div>
             </section>
 
             <!-- Acciones -->
             <div class="acciones-detalle">
-                <button id="btnIniciarRecoleccion" class="btn-primario btn-grande">
-                    ✅ Confirmar Recolección
-                </button>
-                <button id="btnLleguePunto" class="btn-exito btn-grande oculto">
-                    📦 Recibido
-                </button>
-                <button id="btnCancelar" class="btn-peligro">
-                    ✕ No puedo realizar
+                <button id="btnLleguePunto" class="btn-recibido btn-grande oculto">
+                    📦 Realizar Recolección
                 </button>
             </div>
         </div>
@@ -168,11 +178,45 @@
     <!-- Vista Formulario de Recolección -->
     <div id="vistaFormulario" class="vista-formulario oculto">
         <div class="formulario-header">
+            <button type="button" id="btnVolverFormulario" class="btn-volver formulario-volver">← Volver</button>
             <h2>📝 Registrar Recolección</h2>
             <p id="formNumeroOrden">Orden #</p>
+            <p id="formFechaAsignacion" class="fecha-asignacion"></p>
         </div>
 
         <form id="formRecoleccion" class="formulario-recoleccion">
+            <div class="form-group">
+                <label>Dirección de Recolección</label>
+                <input type="text" id="formDireccionRecoleccion" class="input-readonly" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Nombre de la tienda</label>
+                <input type="text" id="formNombreContacto" class="input-readonly" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Teléfono de contacto</label>
+                <div class="telefono-container">
+                    <input type="text" id="formTelefonoContacto" class="input-readonly" readonly>
+                    <button type="button" id="btnLlamarForm" class="btn-llamar-mini">
+                        📞 Llamar
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Total de paquetes a recoger</label>
+                <div id="formTotalPaquetes" class="cantidad-grande">0</div>
+            </div>
+
+            <div class="form-group">
+                <label>Guías a recoger</label>
+                <div id="formListaGuias" class="lista-paquetes-recoleccion"></div>
+            </div>
+
+            <div class="acciones-detalle">
+            </div>
             <!-- Fotos -->
             <div class="form-group">
                 <label class="obligatorio">Foto de los paquetes</label>
@@ -206,7 +250,7 @@
             <!-- Botones de Acción -->
             <div class="form-acciones">
                 <button type="button" id="btnCancelarFormulario" class="btn-secundario">
-                    Cancelar
+                    Volver
                 </button>
                 <button type="submit" class="btn-exito btn-grande">
                     ✓ Recolección Exitosa

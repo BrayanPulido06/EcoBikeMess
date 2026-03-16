@@ -1,7 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../login.php");
+if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['cliente', 'colaborador'], true)) {
+    header("Location: ../login.php?error=Debes iniciar sesión.");
     exit();
 }
 

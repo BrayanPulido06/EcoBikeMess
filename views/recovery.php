@@ -90,9 +90,6 @@ try {
         $mail->setFrom('Eco.bikemess@gmail.com', 'EcoBikeMess Soporte');
         $mail->addAddress($correo);
 
-        // Adjuntar el logo como imagen embebida (CID)
-        $mail->addEmbeddedImage(__DIR__ . '/../public/img/Logo_Circulo_Fondoblanco.png', 'logo_eco');
-
         $mail->isHTML(true);
         $mail->Subject = 'Recuperación de Contraseña - EcoBikeMess';
         
@@ -104,7 +101,6 @@ try {
                 <!-- Header -->
                 <div style="background: linear-gradient(135deg, #5cb85c 0%, #4cae4c 100%); padding: 30px; text-align: center;">
                     <h1 style="color: white; margin: 0; font-size: 28px;">
-                        <img src="cid:logo_eco" alt="Logo" style="width: 45px; vertical-align: middle; margin-right: 10px;">
                         EcoBikeMess
                     </h1>
                     <p style="color: #e8f5e9; margin: 5px 0 0; font-size: 14px;">Mensajería Ecológica y Sostenible</p>

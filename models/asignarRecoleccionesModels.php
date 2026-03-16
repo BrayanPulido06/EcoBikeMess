@@ -56,6 +56,7 @@ class AsignarRecoleccionesModel {
                     p.estado as estado_paquete,
                     MAX(r.estado) as estado_recoleccion,
                     p.mensajero_id,
+                    p.mensajero_recoleccion_id,
                     COUNT(*) as cantidad,
                     GROUP_CONCAT(p.id) as ids,
                     GROUP_CONCAT(p.numero_guia SEPARATOR ', ') as guias,
@@ -63,7 +64,10 @@ class AsignarRecoleccionesModel {
                     c.nombre_emprendimiento,
                     u_cli.nombres as cli_nombres, 
                     u_cli.apellidos as cli_apellidos,
-                    CONCAT(u_mens.nombres, ' ', u_mens.apellidos) as mensajero_nombre,
+                    COALESCE(
+                        CONCAT(u_mens_rec.nombres, ' ', u_mens_rec.apellidos),
+                        CONCAT(u_mens.nombres, ' ', u_mens.apellidos)
+                    ) as mensajero_nombre,
                     CASE
                         WHEN DATE(p.fecha_creacion) < CURDATE() THEN 'verde'
                         WHEN HOUR(p.fecha_creacion) < 13 THEN 'verde'
@@ -75,6 +79,8 @@ class AsignarRecoleccionesModel {
                 LEFT JOIN usuarios u_cli ON c.usuario_id = u_cli.id
                 LEFT JOIN mensajeros m ON p.mensajero_id = m.id
                 LEFT JOIN usuarios u_mens ON m.usuario_id = u_mens.id
+                LEFT JOIN mensajeros m_rec ON p.mensajero_recoleccion_id = m_rec.id
+                LEFT JOIN usuarios u_mens_rec ON m_rec.usuario_id = u_mens_rec.id
                 LEFT JOIN recolecciones r ON p.recoleccion_id = r.id
                 WHERE p.estado IN ('pendiente', 'asignado', 'en_transito', 'en_ruta', 'entregado')";
         
@@ -88,7 +94,8 @@ class AsignarRecoleccionesModel {
         // Agrupar por dirección, estado, mensajero, fecha y franja horaria (antes/después 1 PM)
         $sql .= " GROUP BY p.direccion_origen, 
                            IFNULL(p.recoleccion_id, p.estado), 
-                           p.mensajero_id, 
+                           p.mensajero_id,
+                           p.mensajero_recoleccion_id,
                            DATE(p.fecha_creacion), 
                            CASE WHEN HOUR(p.fecha_creacion) < 13 THEN 'AM' ELSE 'PM' END 
                   ORDER BY fecha_creacion DESC";
@@ -165,7 +172,7 @@ class AsignarRecoleccionesModel {
 
                 // 3. Actualizar paquetes vinculándolos a esta recolección
                 // Nota: Asegúrate de haber ejecutado el ALTER TABLE para agregar recoleccion_id
-                $sql = "UPDATE paquetes SET mensajero_id = :mensajero_id, mensajero_recoleccion_id = :mensajero_id, recoleccion_id = :recoleccion_id, estado = 'asignado' WHERE id IN ($ids)";
+                $sql = "UPDATE paquetes SET mensajero_recoleccion_id = :mensajero_id, recoleccion_id = :recoleccion_id, estado = 'asignado' WHERE id IN ($ids)";
                 $stmt = $this->conn->prepare($sql);
                 $stmt->execute([':mensajero_id' => $mensajeroId, ':recoleccion_id' => $recoleccionId]);
             }

@@ -77,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 header("Location: ../views/login.php?mensaje=Contraseña actualizada correctamente. Inicia sesión.");
             } else {
-                header("Location: ../views/login.php?mensaje=El enlace es inválido o ha expirado.");
+                header("Location: ../views/login.php?error=El enlace es inválido o ha expirado.");
             }
         } catch (Exception $e) {
             header("Location: ../views/recovery.php?token=$token&error=Error al actualizar la contraseña");

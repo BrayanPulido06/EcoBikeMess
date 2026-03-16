@@ -1,15 +1,10 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth.php';
+requireApiAuth(['cliente', 'colaborador'], 'No autorizado');
 require_once __DIR__ . '/../models/facturacionClienteModels.php';
 require_once '../models/Colaborador.php';
 
 header('Content-Type: application/json');
-
-// Verificar sesión
-if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'cliente' && $_SESSION['user_role'] !== 'colaborador')) {
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit();
-}
 
 try {
     // Obtener el ID real del cliente (tienda)

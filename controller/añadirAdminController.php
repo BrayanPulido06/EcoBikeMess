@@ -1,12 +1,7 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth.php';
+requireApiAuth(['administrador', 'admin'], 'Acceso denegado');
 require_once '../models/añadirAdminModels.php';
-
-// Verificar si es administrador (seguridad básica)
-if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'admin' && $_SESSION['user_role'] !== 'administrador')) {
-    echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-    exit;
-}
 
 header('Content-Type: application/json');
 

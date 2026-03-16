@@ -3,7 +3,7 @@ session_start();
 
 // Verificar permisos de administrador
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'admin' && $_SESSION['user_role'] !== 'administrador')) {
-    header("Location: ../login.php");
+    header("Location: ../login.php?error=Debes iniciar sesión.");
     exit();
 }
 

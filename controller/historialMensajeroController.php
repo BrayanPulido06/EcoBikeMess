@@ -1,13 +1,9 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth.php';
+requireApiAuth(['mensajero'], 'No autorizado');
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../models/historialMensajeroModels.php';
-
-if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajero') {
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit;
-}
 
 $action = $_GET['action'] ?? '';
 $model = new HistorialMensajeroModels();
@@ -32,4 +28,3 @@ try {
 } catch (Throwable $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
-

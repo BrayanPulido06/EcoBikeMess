@@ -4,7 +4,7 @@ require_once '../../models/conexionGlobal.php';
 
 // Verificar sesión
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'mensajero') {
-    header("Location: ../login.php");
+    header("Location: ../login.php?error=Debes iniciar sesión.");
     exit();
 }
 
