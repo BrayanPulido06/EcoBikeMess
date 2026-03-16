@@ -19,8 +19,8 @@ body {
 
 /* Header */
 .dashboard-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: white;
+    color: rgb(0, 0, 0);
     padding: 30px;
     border-radius: 15px;
     margin-bottom: 30px;
@@ -91,7 +91,7 @@ body {
 }
 
 .stat-card.highlight {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #5cb85c;
     color: white;
 }
 

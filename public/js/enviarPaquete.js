@@ -34,6 +34,28 @@ document.addEventListener('DOMContentLoaded', function() {
     let baseRecaudo = 0; // Variable para almacenar el valor base del recaudo (sin envío)
 
     let currentStep = 1;
+    const parseSiNo = (value) => {
+        const v = String(value || '').trim().toLowerCase();
+        return ['si', 'sí', 'true', '1', 'x', 'yes'].includes(v);
+    };
+    const normalizeDimensiones = (value) => {
+        const vRaw = String(value || '').trim();
+        const v = vRaw.toLowerCase();
+        const allowed = new Set(['0', '2000', '4000', '7000', '10000', '12000', 'notificar']);
+        if (allowed.has(v)) return v;
+        const map = {
+            'menor o igual a 20 x 20 cm': '0',
+            'menor o igual a 20x20 cm': '0',
+            'entre 21x21 y 30x30 cm': '2000',
+            'entre 31x31 y 35x35 cm': '4000',
+            'entre 36x36 y 40x40 cm': '7000',
+            'entre 41x41 y 45x45 cm': '10000',
+            'entre 46x46 y 49x49 cm': '12000',
+            'igual o mayor a 50 x 50 cm (notificar)': 'notificar',
+            'igual o mayor a 50x50 cm (notificar)': 'notificar'
+        };
+        return map[v] || '';
+    };
 
     // --- NAVEGACIÓN ENTRE PASOS ---
     btnNext.addEventListener('click', () => {
@@ -77,6 +99,33 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentStep === 4) {
             populateConfirmation();
         }
+    }
+
+    function actualizarAvisoHorario() {
+        const aviso = document.getElementById('avisoHorarioRecoleccion');
+        if (!aviso) return;
+        const ahora = new Date();
+        const hora = ahora.getHours();
+        let bg = '#e8f5e9';
+        let color = '#2e7d32';
+        let border = '#a5d6a7';
+        let mensaje = 'La recolección se realizará hoy.';
+        if (hora >= 13 && hora < 16) {
+            bg = '#fff3cd';
+            color = '#856404';
+            border = '#ffeeba';
+            mensaje = 'Posiblemente no se pueda realizar la recolección por temas de horarios.';
+        } else if (hora >= 17) {
+            bg = '#ffebee';
+            color = '#c62828';
+            border = '#ef9a9a';
+            mensaje = 'La recolección se realizará al día siguiente.';
+        }
+        aviso.style.display = 'block';
+        aviso.style.backgroundColor = bg;
+        aviso.style.color = color;
+        aviso.style.borderColor = border;
+        aviso.textContent = mensaje;
     }
 
     // --- VALIDACIÓN ---
@@ -240,18 +289,32 @@ document.addEventListener('DOMContentLoaded', function() {
                     // 1. Llenar Destinatario
                     setField('destinatario_nombre', getValue('nombre') || getValue('destinatario'));
                     // Agregamos 'movil' y la normalización arregla 'Teléfono'
-                    setField('destinatario_telefono', getValue('telefono') || getValue('celular') || getValue('movil'));
+                    setField('destinatario_telefono', getValue('num destinatario') || getValue('telefono') || getValue('celular') || getValue('movil'));
                     setField('destinatario_direccion', getValue('direccion') || getValue('destino'));
                     setField('instrucciones_entrega', getValue('instrucciones') || getValue('observaciones'));
 
                     // 2. Llenar Paquete
                     setField('descripcion_contenido', getValue('descripcion') || getValue('contenido'));
+                    const dimensionesVal = normalizeDimensiones(getValue('dimensiones'));
+                    if (dimensionesVal) setField('dimensiones_paquete', dimensionesVal);
+
+                    const mismoDia = parseSiNo(getValue('mismo dia') || getValue('envio mismo dia'));
+                    const zonaPeriferica = parseSiNo(getValue('zona periferica'));
+                    const recogerCambios = parseSiNo(getValue('recoger cambios'));
+                    const sumarEnvio = parseSiNo(getValue('sumar envio'));
+
+                    const chkMismoDia = document.getElementById('envio_mismo_dia');
+                    const chkZona = document.getElementById('zona_periferica');
+                    const chkCambios = document.getElementById('recoger_cambios');
+                    if (chkMismoDia) chkMismoDia.checked = mismoDia;
+                    if (chkZona) chkZona.checked = zonaPeriferica;
+                    if (chkCambios) chkCambios.checked = recogerCambios;
 
                     // Dimensiones - El usuario debe seleccionarlo manualmente ya que la lógica es compleja.
                     // Se podría implementar una lógica para mapear cm a la opción correcta si se desea.
 
                     // Recaudo
-                    const recaudoVal = getValue('recaudo') || getValue('valor');
+                    const recaudoVal = getValue('valor recaudo') || getValue('recaudo') || getValue('valor');
                     if (recaudoVal && !isNaN(parseFloat(recaudoVal)) && parseFloat(recaudoVal) > 0) {
                         if (!tieneRecaudoCheckbox.checked) tieneRecaudoCheckbox.click();
                         setField('valor_recaudo', recaudoVal);
@@ -259,8 +322,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (tieneRecaudoCheckbox.checked) tieneRecaudoCheckbox.click();
                     }
 
+                    const radioSumar = document.querySelector('input[name="envio_destinatario"][value="si"]');
+                    const radioNo = document.querySelector('input[name="envio_destinatario"][value="no"]');
+                    if (sumarEnvio && radioSumar) radioSumar.checked = true;
+                    if (!sumarEnvio && radioNo) radioNo.checked = true;
+
                     // 3. Auto-llenar Remitente (Datos del usuario logueado)
                     if (autoFillBtn) autoFillBtn.click();
+
+                    calcularCostoAutomatico();
 
                     alert('✅ Datos cargados correctamente desde el Excel.');
                     excelUploadInput.value = ''; // Limpiar input para permitir recargar el mismo archivo
@@ -294,9 +364,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 return idx !== -1 ? row[idx] : '';
             };
 
-            let costoBase = 8000;
-            let recargoRecaudo = (getValue('recaudo') > 0) ? 3000 : 0;
-            const total = costoBase + recargoRecaudo; // Nota: No se pueden calcular otros recargos desde excel (dimensiones, etc)
+            const dimensionesVal = normalizeDimensiones(getValue('dimensiones'));
+            const mismoDia = parseSiNo(getValue('mismo dia') || getValue('envio mismo dia'));
+            const zonaPeriferica = parseSiNo(getValue('zona periferica'));
+            const recogerCambios = parseSiNo(getValue('recoger cambios'));
+            const sumarEnvio = parseSiNo(getValue('sumar envio'));
+            const valorRecaudo = parseFloat(getValue('valor recaudo') || getValue('recaudo') || 0) || 0;
+            const tieneRecaudo = parseSiNo(getValue('tiene recaudo')) || valorRecaudo > 0;
+
+            const recargoDimensiones = parseInt(dimensionesVal, 10) || 0;
+            const recargoMismoDia = mismoDia ? 2000 : 0;
+            const recargoZona = zonaPeriferica ? 4000 : 0;
+            const recargoCambios = recogerCambios ? 5000 : 0;
+            const recargoRecaudo = tieneRecaudo ? 3000 : 0;
+            const costoBase = 8000;
+            const total = costoBase + recargoDimensiones + recargoMismoDia + recargoZona + recargoCambios + recargoRecaudo;
 
             // Preparar objeto de datos
             const item = {
@@ -306,15 +388,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 remitente_email: document.getElementById('remitente_email').value || (window.remitenteData?.correo),
                 remitente_direccion: document.getElementById('remitente_direccion').value || (window.remitenteData?.direccion),
                 destinatario_nombre: getValue('nombre') || getValue('destinatario'),
-                destinatario_telefono: getValue('telefono') || getValue('celular') || getValue('movil'),
+                destinatario_telefono: getValue('num destinatario') || getValue('telefono') || getValue('celular') || getValue('movil'),
                 destinatario_direccion: getValue('direccion') || getValue('destino'),
                 instrucciones_entrega: getValue('instrucciones') || getValue('observaciones'),
                 descripcion_contenido: getValue('descripcion') || getValue('contenido'),
-                tiene_recaudo: (getValue('recaudo') > 0) ? 'on' : '',
-                valor_recaudo: getValue('recaudo') || 0,
+                dimensiones_paquete: dimensionesVal,
+                envio_mismo_dia: mismoDia ? 'on' : '',
+                zona_periferica: zonaPeriferica ? 'on' : '',
+                recoger_cambios: recogerCambios ? 'on' : '',
+                tiene_recaudo: tieneRecaudo ? 'on' : '',
+                valor_recaudo: valorRecaudo || 0,
+                envio_destinatario: sumarEnvio ? 'si' : 'no',
                 costo_total: total,
                 // Generar guía temporal
-                numero_guia: `ECO-${new Date().getFullYear()}${Math.random().toString(36).substring(2, 7).toUpperCase()}`
+                numero_guia: `EBM-${new Date().getFullYear()}${Math.random().toString(36).substring(2, 7).toUpperCase()}`
             };
 
             bulkData.push(item);
@@ -374,11 +461,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (result.success) {
                         statusCell.textContent = '✓ Creado';
                         statusCell.className = 'status-success';
+                        if (result.guia) item.numero_guia = result.guia;
                         
                         // Agregar botón de descarga
                         const actionsCell = document.getElementById(`actions-${item.id}`);
                         actionsCell.innerHTML = `
-                            <button type="button" class="btn-text" style="color: #28a745; font-size: 0.9rem;" onclick="downloadBulkPDF(${item.id}, '${result.guia}')">⬇️ Rótulo</button>
+                            <button type="button" class="btn-text" style="color: #28a745; font-size: 0.9rem;" onclick="downloadBulkPDF(${item.id}, '${item.numero_guia}')">⬇️ Rótulo</button>
                         `;
                     } else {
                         throw new Error(result.message || 'Error en servidor');
@@ -441,7 +529,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                     <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 10px;">
                         <tr>
                             <td style="width: 50%;">
-                                <h1 style="font-size: 24px; margin: 0; color: #5cb85c;">🚴 EcoBikeMess</h1>
+                                <h1 style="font-size: 24px; margin: 0; color: #5cb85c;"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
                                 <p style="margin: 0; font-size: 12px;">Guía de Envío</p>
                             </td>
                             <td style="width: 50%; text-align: right;">
@@ -509,22 +597,43 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
             try {
                 const templateData = [
                     {
-                        "Nombre Destinatario": "Ej: María González",
-                        "Teléfono": "3001234567",
-                        "Dirección Destino": "Calle 100 # 15-20",
-                        "Instrucciones": "Dejar en recepción",
+                        "Destinatario Nombre": "Ej: María González",
+                        "Num Destinatario": "3001234567",
+                        "Dirección": "Calle 100 # 15-20",
+                        "Instrucciones Entrega": "Dejar en recepción",
                         "Descripción Contenido": "Ropa y accesorios",
-                        "Peso (kg)": 2.5,
-                        "Largo (cm)": 30,
-                        "Ancho (cm)": 20,
-                        "Alto (cm)": 10,
-                        "Tipo (Normal/Fragil/Urgente)": "Normal",
-                        "Valor Recaudo": 50000
+                        "Dimensiones del Paquete": "Menor o igual a 20 x 20 cm",
+                        "Entrega Mismo Día (si/no)": "no",
+                        "Zona Periférica (si/no)": "no",
+                        "Recoger Cambios (si/no)": "no",
+                        "Tiene Recaudo (si/no)": "no",
+                        "Valor Recaudo": 0,
+                        "Sumar Envío al Recaudo (si/no)": "no"
                     }
                 ];
                 const ws = XLSX.utils.json_to_sheet(templateData);
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
+
+                const wsList = XLSX.utils.aoa_to_sheet([
+                    ["Menor o igual a 20 x 20 cm"],
+                    ["Entre 21x21 y 30x30 cm"],
+                    ["Entre 31x31 y 35x35 cm"],
+                    ["Entre 36x36 y 40x40 cm"],
+                    ["Entre 41x41 y 45x45 cm"],
+                    ["Entre 46x46 y 49x49 cm"],
+                    ["Igual o mayor a 50 x 50 cm (Notificar)"]
+                ]);
+                wsList['!hidden'] = 1;
+                XLSX.utils.book_append_sheet(wb, wsList, "Listas");
+
+                ws['!dataValidation'] = [{
+                    sqref: 'F2:F1000',
+                    type: 'list',
+                    allowBlank: true,
+                    formula1: 'Listas!$A$1:$A$7'
+                }];
+
                 XLSX.writeFile(wb, "Plantilla_Envio_EcoBikeMess.xlsx");
             } catch (error) {
                 console.error("Error al generar plantilla:", error);
@@ -543,6 +652,8 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
             calcularCostoAutomatico();
         });
     }
+
+    actualizarAvisoHorario();
 
     // --- CÁLCULO AUTOMÁTICO DE COSTO ---
     function calcularCostoAutomatico() {
@@ -723,7 +834,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const random = Math.random().toString(36).substring(2, 7).toUpperCase();
-        const numeroGuia = `ECO-${year}${month}${day}-${random}`;
+        const numeroGuia = `EBM-${year}${month}${day}-${random}`;
         document.getElementById('numeroGuia').textContent = numeroGuia;
         // Guardar la guía en el input oculto para enviarla al backend
         if (numeroGuiaHiddenInput) {
@@ -823,7 +934,7 @@ ${qrFinanciero}
                         <table style="width: 100%; border-bottom: 1px solid #e7eaee; padding-bottom: 10px;">
                             <tr>
                                 <td style="width: 60%; vertical-align: top;">
-                                    <h1 style="margin: 0; font-size: 32px; color: #34a853;">🚴 EcoBikeMess</h1>
+                                    <h1 style="margin: 0; font-size: 32px; color: #34a853;"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:24px;height:24px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
                                     <p style="margin: 6px 0 0; font-size: 20px; font-weight: 700; color: #2d3e50;">Guía de Envío</p>
                                 </td>
                                 <td style="width: 40%; text-align: right; vertical-align: top;">

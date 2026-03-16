@@ -221,7 +221,7 @@ class MisPaquetesMensajerosModels
                                     foto_entrega = VALUES(foto_entrega),
                                     fecha_generacion = CURRENT_TIMESTAMP";
 
-            $numeroComprobante = 'COMP-' . date('Ymd') . '-' . str_pad((string) $paquete['id'], 6, '0', STR_PAD_LEFT);
+            $numeroComprobante = 'COMP-' . date('dmY') . '-' . str_pad((string) $paquete['id'], 6, '0', STR_PAD_LEFT);
             $stmtComp = $this->conn->prepare($sqlComprobante);
             $stmtComp->execute([
                 ':paquete_id' => (int) $paquete['id'],

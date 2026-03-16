@@ -313,7 +313,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                         </div>
                         <div class="rotulo-guia">
                             <span class="guia-label">GUÍA DE ENVÍO</span>
-                            <span class="guia-value" id="rotulo_guia_num">ECO-XXXXXX</span>
+                            <span class="guia-value" id="rotulo_guia_num">EBM-XXXXXX</span>
                         </div>
                     </div>
                     

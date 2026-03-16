@@ -144,7 +144,7 @@ if ($nombreCompleto === '') {
             <span class="menu-icon">☰</span>
         </button>
         <div class="header-info">
-            <h1>🚴 EcoBikeMess</h1>
+            <h1><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:35px;height:35px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
             <p class="user-name"><?php echo htmlspecialchars($nombreCompleto); ?></p>
         </div>
     </header>
@@ -242,7 +242,7 @@ if ($nombreCompleto === '') {
             <h2>Ingresar Código Manualmente</h2>
             <div class="manual-input-container">
                 <label for="manualCode">Número de Guía</label>
-                <input type="text" id="manualCode" placeholder="ECO-2024-XXXXX" maxlength="20">
+                <input type="text" id="manualCode" placeholder="EBM-2024-XXXXX" maxlength="20">
                 <span class="error-message" id="manualError"></span>
             </div>
             <div class="modal-actions">

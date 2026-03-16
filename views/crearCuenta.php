@@ -16,7 +16,7 @@
 
         <!-- Header -->
         <div class="register-header">
-            <h1>🚴 EcoBikeMess</h1>
+            <h1><img src="../public/img/Logo_Blanco_Trasparente_Circulo.png" alt="EcoBikeMess" style="width: 100px; vertical-align: middle;">EcoBikeMess</h1>
             <p>Crea tu cuenta y comienza tu experiencia</p>
         </div>
 
@@ -92,7 +92,7 @@
                     <span class="type-desc">Quiero enviar paquetes</span>
                 </button>
                 <button type="button" class="type-btn" data-type="mensajero">
-                    <span class="icon">🚴</span>
+                    <span class="icon"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:18px;height:18px;vertical-align:middle;"></span>
                     <span class="type-title">Soy Mensajero</span>
                     <span class="type-desc">Quiero realizar entregas</span>
                 </button>

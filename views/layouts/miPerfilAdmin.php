@@ -167,7 +167,7 @@ if ($rol === 'cliente') {
                 <!-- MENSAJERO -->
                 <?php if ($rol === 'mensajero'): ?>
                 <div class="profile-card">
-                    <h3 class="form-section-title">🚴 Datos del Mensajero</h3>
+                    <h3 class="form-section-title"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;">Datos del Mensajero</h3>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Tipo de Documento</label>

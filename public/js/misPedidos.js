@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function listarFacturas() {
-        if (tableBody) tableBody.innerHTML = '<tr><td colspan="12" class="text-center">Cargando datos...</td></tr>';
+        if (tableBody) tableBody.innerHTML = '<tr><td colspan="11" class="text-center">Cargando datos...</td></tr>';
 
         const params = new URLSearchParams();
         params.append('action', 'listar');
@@ -89,14 +89,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.data) {
                     renderizarTabla(response.data);
                 } else if (response.error) {
-                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="12" class="text-center text-danger">${response.error}</td></tr>`;
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="11" class="text-center text-danger">${response.error}</td></tr>`;
                 } else {
-                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="12" class="text-center">No se encontraron datos</td></tr>`;
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="11" class="text-center">No se encontraron datos</td></tr>`;
                 }
             })
             .catch(err => {
                 console.error(err);
-                if (tableBody) tableBody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">Error de conexión con el servidor</td></tr>';
+                if (tableBody) tableBody.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Error de conexión con el servidor</td></tr>';
             });
     }
 
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!tableBody) return;
         
         if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="12" class="text-center">No se encontraron facturas.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="11" class="text-center">No se encontraron facturas.</td></tr>';
             return;
         }
 
@@ -135,7 +135,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${agregadoRecaudo}</td>
                     <td>${formatCurrency(f.recaudo_esperado)}</td>
                     <td><span class="badge badge-${badgeClass}">${f.estado.toUpperCase()}</span></td>
-                    <td>${f.mensajero_nombre || '<span class="text-muted">Sin asignar</span>'}</td>
                     <td>${fechaEntregaFormateada}</td>
                     <td>
                         <button class="btn btn-sm btn-warning" onclick="cargarRotulo(${f.id})" title="Ver Rótulo" style="margin-right:3px;">🏷️ Rótulo</button>
@@ -190,10 +189,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <tr>
                                         <td style="padding:8px;"><strong>Dirección:</strong></td>
                                         <td style="padding:8px;">${info.direccion_destino}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding:8px;"><strong>Mensajero:</strong></td>
-                                        <td style="padding:8px;">${info.mensajero_nombre || 'Sin asignar'}</td>
                                     </tr>
                                     <tr>
                                         <td style="padding:8px;"><strong>Contenido:</strong></td>

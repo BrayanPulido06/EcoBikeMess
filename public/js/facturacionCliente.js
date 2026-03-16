@@ -743,7 +743,7 @@ FECHA: ${formatDate(pedido.fecha)}`;
     
     function simulateNotification() {
         setTimeout(() => {
-            showToast('🔔 Tu pedido ECO-2024-12346 está en camino', 'info');
+            showToast('🔔 Tu pedido EBM-2024-12346 está en camino', 'info');
         }, 3000);
     }
     

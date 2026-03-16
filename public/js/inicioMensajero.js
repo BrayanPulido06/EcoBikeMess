@@ -261,16 +261,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const text = String(rawText).trim();
         if (!text) return null;
 
-        // 1) Formato etiqueta: "Guía: ECO-2024-001"
-        const matchGuia = text.match(/(?:gu[ií]a)\s*[:#-]?\s*(ECO-[A-Z0-9-]+)/i);
+        // 1) Formato etiqueta: "Guía: EBM-2024-001" (o ECO legacy)
+        const matchGuia = text.match(/(?:gu[ií]a)\s*[:#-]?\s*((?:EBM|ECO)-[A-Z0-9-]+)/i);
         if (matchGuia && matchGuia[1]) return matchGuia[1].toUpperCase();
 
         // 2) Guía directa en cualquier parte del texto
-        const matchEco = text.match(/\b(ECO-[A-Z0-9-]{3,})\b/i);
+        const matchEco = text.match(/\b((?:EBM|ECO)-[A-Z0-9-]{3,})\b/i);
         if (matchEco && matchEco[1]) return matchEco[1].toUpperCase();
 
-        // 3) Compatibilidad con códigos guardados como QR-ECO-XXX
-        const matchQrEco = text.match(/\b(QR-ECO-[A-Z0-9-]{2,})\b/i);
+        // 3) Compatibilidad con códigos guardados como QR-EBM-XXX / QR-ECO-XXX
+        const matchQrEco = text.match(/\b(QR-(?:EBM|ECO)-[A-Z0-9-]{2,})\b/i);
         if (matchQrEco && matchQrEco[1]) return matchQrEco[1].toUpperCase();
 
         return null;
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const raw = String(decodedText).trim();
         if (!raw) return null;
 
-        // A) Intentar como URL con parámetros (ej: ?guia=ECO-2024-001)
+        // A) Intentar como URL con parámetros (ej: ?guia=EBM-2024-001)
         try {
             const maybeUrl = new URL(raw);
             const keys = ['guia', 'numero_guia', 'codigo', 'code', 'qr_code'];

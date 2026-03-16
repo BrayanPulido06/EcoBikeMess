@@ -19,9 +19,9 @@ body {
 
 /* Header */
 .page-header {
-    background: #5cb85c;
+    background: #ffffff;
     /*background: linear-gradient(135deg, #2a8144 0%, #4ea24b 100%);*/
-    color: white;
+    color: rgb(0, 0, 0);
     padding: 30px;
     border-radius: 15px;
     margin-bottom: 30px;
@@ -61,20 +61,20 @@ body {
 }
 
 .btn-primary {
-    background: #667eea;
+    background: #5cb85c;
     color: white;
 }
 
 .btn-primary:hover {
-    background: #5568d3;
+    background: #5cb85c;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
 }
 
 .btn-secondary {
     background: white;
-    color: #667eea;
-    border: 2px solid #667eea;
+    color: #5cb85c;
+    border: 2px solid #5cb85c;
 }
 
 .btn-secondary:hover {

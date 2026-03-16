@@ -93,8 +93,8 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
         <!-- Header -->
         <header class="page-header">
             <div>
-                <h1>💰 Facturación</h1>
-                <p>Gestión de facturas y pagos</p>
+                <h1>Mis pedidos</h1>
+                <p>Gestiona y consulta todos tus envíos</p>
             </div>
             <div class="header-actions">
                 <button class="btn btn-secondary" id="btnExportarExcel">
@@ -129,7 +129,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
         <!-- Filtros y Búsqueda -->
         <div class="filters-section">
             <div class="search-container">
-                <input type="text" id="searchInput" placeholder="🔍 Buscar por número de factura, cliente..." class="search-input">
+                <input type="text" id="searchInput" placeholder="🔍 Buscar por número guia, destinatario..." class="search-input">
             </div>
             
             <div class="filters-grid">
@@ -140,26 +140,6 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                 <div class="form-group">
                     <label>Fecha Hasta</label>
                     <input type="date" id="filtroFechaHasta" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label>Estado de Pago</label>
-                    <select id="filtroEstado" class="form-control">
-                        <option value="">Todos los estados</option>
-                        <option value="pendiente">Pendiente</option>
-                        <option value="pagada">Pagada</option>
-                        <option value="vencida">Vencida</option>
-                        <option value="anulada">Anulada</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Monto</label>
-                    <select id="filtroMonto" class="form-control">
-                        <option value="">Todos los montos</option>
-                        <option value="0-50000">$0 - $50,000</option>
-                        <option value="50000-100000">$50,000 - $100,000</option>
-                        <option value="100000-500000">$100,000 - $500,000</option>
-                        <option value="500000+">Más de $500,000</option>
-                    </select>
                 </div>
                 <div class="form-group align-end">
                     <button class="btn btn-secondary btn-block" id="btnLimpiarFiltros">
@@ -375,12 +355,12 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                         <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 10px;">
                             <tr>
                                 <td style="width: 50%;">
-                                    <h1 style="font-size: 24px; margin: 0; color: #5cb85c;">🚴 EcoBikeMess</h1>
+                                    <h1 style="font-size: 24px; margin: 0; color: #5cb85c;"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:60px;height:60px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
                                     <p style="margin: 0; font-size: 12px;">Guía de Envío</p>
                                 </td>
                                 <td style="width: 50%; text-align: right;">
                                     <p style="margin: 0; font-size: 12px;">Número de Guía:</p>
-                                    <h2 style="margin: 0; font-size: 18px;" id="rotulo_guia_num">ECO-XXXXXX</h2>
+                                    <h2 style="margin: 0; font-size: 18px;" id="rotulo_guia_num">EBM-XXXXXX</h2>
                                 </td>
                             </tr>
                         </table>

@@ -191,7 +191,6 @@ foreach ($chartDataRaw as $row) {
                                         <th>Destino</th>
                                         <th>Estado</th>
                                         <th>Fecha</th>
-                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -212,14 +211,6 @@ foreach ($chartDataRaw as $row) {
                                                 <td><?php echo htmlspecialchars($pedido['direccion_destino']); ?></td>
                                                 <td><span class="status-badge <?php echo $statusClass; ?>"><?php echo $statusText; ?></span></td>
                                                 <td><?php echo date('d/m/Y', strtotime($pedido['fecha_creacion'])); ?></td>
-                                                <td>
-                                                    <button class="icon-btn" title="Ver detalles">👁️</button>
-                                                    <?php if ($pedido['estado'] == 'entregado'): ?>
-                                                        <button class="icon-btn" title="Descargar">⬇️</button>
-                                                    <?php else: ?>
-                                                        <button class="icon-btn" title="Rastrear">📍</button>
-                                                    <?php endif; ?>
-                                                </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php endif; ?>

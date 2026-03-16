@@ -36,7 +36,7 @@ class MisPedidosModel {
 
         // Filtro por búsqueda (guía o destinatario)
         if (!empty($filtros['search'])) {
-            $sql .= " AND (numero_guia LIKE :search OR destinatario_nombre LIKE :search)";
+            $sql .= " AND (numero_guia LIKE :search OR destinatario_nombre LIKE :search OR direccion_destino LIKE :search)";
             $params[':search'] = "%" . $filtros['search'] . "%";
         }
 
@@ -48,11 +48,11 @@ class MisPedidosModel {
 
         // Filtro por fechas
         if (!empty($filtros['fechaDesde'])) {
-            $sql .= " AND fecha_creacion >= :fechaDesde";
+            $sql .= " AND p.fecha_creacion >= :fechaDesde";
             $params[':fechaDesde'] = $filtros['fechaDesde'] . " 00:00:00";
         }
         if (!empty($filtros['fechaHasta'])) {
-            $sql .= " AND fecha_creacion <= :fechaHasta";
+            $sql .= " AND p.fecha_creacion <= :fechaHasta";
             $params[':fechaHasta'] = $filtros['fechaHasta'] . " 23:59:59";
         }
 
@@ -132,7 +132,7 @@ class MisPedidosModel {
 
         // Aplicar filtros (Misma lógica que listarFacturas)
         if (!empty($filtros['search'])) {
-            $sql .= " AND (numero_guia LIKE :search OR destinatario_nombre LIKE :search)";
+            $sql .= " AND (numero_guia LIKE :search OR destinatario_nombre LIKE :search OR direccion_destino LIKE :search)";
             $params[':search'] = "%" . $filtros['search'] . "%";
         }
 
@@ -142,11 +142,11 @@ class MisPedidosModel {
         }
 
         if (!empty($filtros['fechaDesde'])) {
-            $sql .= " AND fecha_creacion >= :fechaDesde";
+            $sql .= " AND p.fecha_creacion >= :fechaDesde";
             $params[':fechaDesde'] = $filtros['fechaDesde'] . " 00:00:00";
         }
         if (!empty($filtros['fechaHasta'])) {
-            $sql .= " AND fecha_creacion <= :fechaHasta";
+            $sql .= " AND p.fecha_creacion <= :fechaHasta";
             $params[':fechaHasta'] = $filtros['fechaHasta'] . " 23:59:59";
         }
 

@@ -8,6 +8,7 @@ require_once '../models/enviarPaqueteModels.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
+        $isAjax = isset($_POST['ajax']) && $_POST['ajax'] == '1';
         // Instanciar modelos
         $inicioModel = new InicioClienteModel();
         $envioModel = new EnvioModel();
@@ -64,7 +65,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 6. Guardar en base de datos
         if ($envioModel->registrarEnvio($datos)) {
-            // Redirigir con éxito
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => true, 'guia' => $datos['numero_guia']]);
+                exit();
+            }
             header("Location: ../views/Clientes/enviarPaquete.php?msg=envio_creado&guia=" . urlencode($datos['numero_guia']));
             exit();
         } else {
@@ -72,7 +77,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
     } catch (Exception $e) {
-        // Redirigir con el mensaje de error para mostrarlo en la alerta roja
+        if (isset($isAjax) && $isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            exit();
+        }
         header("Location: ../views/Clientes/enviarPaquete.php?error=" . urlencode($e->getMessage()));
         exit();
     }

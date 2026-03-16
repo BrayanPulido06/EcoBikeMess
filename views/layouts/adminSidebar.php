@@ -1,7 +1,7 @@
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="logo">
-            <span class="logo-icon">🚴</span>
+            <img class="logo-icon" src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png"  alt="EcoBikeMess" style="width: 55px; vertical-align: middle;">
             <span class="logo-text">EcoBikeMess</span>
         </div>
         <button class="sidebar-toggle" id="sidebarToggle">

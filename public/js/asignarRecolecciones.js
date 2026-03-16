@@ -88,7 +88,7 @@ function renderRecolecciones() {
     }
     
     tbody.innerHTML = recolecciones.map(rec => `
-        <tr>
+        <tr class="prioridad-${rec.color_prioridad || 'verde'}">
             <td>${rec.direccion_origen}</td>
             <td>${rec.cliente_nombre}</td>
             <td>${rec.mensajero_nombre}</td>
@@ -109,7 +109,7 @@ function renderRecolecciones() {
                     <button class="btn btn-sm btn-info" title="Ver Paquetes" onclick="verDetallesPaquetes('${rec.ids}')">👁️</button>
                     ${!['entregado', 'completada', 'cancelado'].includes(rec.estado) ? `
                         ${rec.estado === 'pendiente' ? 
-                            `<button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('${rec.ids}', '${rec.direccion_origen.replace(/'/g, "\\'")}', '${rec.cliente_nombre.replace(/'/g, "\\'")}')">🚴</button>` : 
+                            `<button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('${rec.ids}', '${rec.direccion_origen.replace(/'/g, "\\'")}', '${rec.cliente_nombre.replace(/'/g, "\\'")}')"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="Asignar" style="width:16px;height:16px;vertical-align:middle;"></button>` : 
                             `<button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('${rec.ids}', '${rec.direccion_origen.replace(/'/g, "\\'")}', '${rec.cliente_nombre.replace(/'/g, "\\'")}')">🔄</button>`
                         }
                         <button class="btn btn-sm btn-danger" title="Cancelar" onclick="cancelarRecoleccion('${rec.ids}')">🗑️</button>
@@ -150,7 +150,7 @@ function applyFilters() {
     } else {
         // Renderizar manualmente los filtrados (con la lógica corregida)
         tbody.innerHTML = filtered.map(rec => `
-            <tr>
+            <tr class="prioridad-${rec.color_prioridad || 'verde'}">
                 <td>${rec.direccion_origen}</td>
                 <td>${rec.cliente_nombre}</td>
                 <td>${rec.mensajero_nombre}</td>
@@ -171,7 +171,7 @@ function applyFilters() {
                         <button class="btn btn-sm btn-info" title="Ver Paquetes" onclick="verDetallesPaquetes('${rec.ids}')">👁️</button>
                         ${!['entregado', 'completada', 'cancelado'].includes(rec.estado) ? `
                             ${rec.estado === 'pendiente' ? 
-                                `<button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('${rec.ids}', '${rec.direccion_origen.replace(/'/g, "\\'")}', '${rec.cliente_nombre.replace(/'/g, "\\'")}')">🚴</button>` : 
+                                `<button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('${rec.ids}', '${rec.direccion_origen.replace(/'/g, "\\'")}', '${rec.cliente_nombre.replace(/'/g, "\\'")}')"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="Asignar" style="width:16px;height:16px;vertical-align:middle;"></button>` : 
                                 `<button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('${rec.ids}', '${rec.direccion_origen.replace(/'/g, "\\'")}', '${rec.cliente_nombre.replace(/'/g, "\\'")}')">🔄</button>`
                             }
                             <button class="btn btn-sm btn-danger" title="Cancelar" onclick="cancelarRecoleccion('${rec.ids}')">🗑️</button>

@@ -52,6 +52,11 @@ document.addEventListener('DOMContentLoaded', function() {
             userDropdown.classList.remove('active');
             userMenu.classList.remove('active');
         }
+
+        // Cerrar modales al hacer clic fuera del contenido
+        if (e.target && e.target.classList && e.target.classList.contains('modal')) {
+            e.target.style.display = 'none';
+        }
     });
     
     // ============================================

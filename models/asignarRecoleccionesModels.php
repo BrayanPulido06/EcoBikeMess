@@ -71,7 +71,7 @@ class AsignarRecoleccionesModel {
                     CASE
                         WHEN DATE(p.fecha_creacion) < CURDATE() THEN 'verde'
                         WHEN HOUR(p.fecha_creacion) < 13 THEN 'verde'
-                        WHEN HOUR(p.fecha_creacion) < 17 THEN 'amarillo'
+                        WHEN HOUR(p.fecha_creacion) < 16 THEN 'amarillo'
                         ELSE 'rojo'
                     END as color_prioridad
                 FROM paquetes p

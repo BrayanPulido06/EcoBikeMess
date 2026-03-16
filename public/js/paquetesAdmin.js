@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${envioAgregado}</td>
                     <td>
                         <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})" title="Ver Detalle">👁️</button>
-                        ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar">🚴</button>` : ''}
+                        ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="Asignar" style="width:16px;height:16px;vertical-align:middle;"></button>` : ''}
                     </td>
                 </tr>
             `;

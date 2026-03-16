@@ -47,6 +47,10 @@ $recolecciones = $model->listarRecolecciones([]);
         .badge.prioridad-programada { background-color: #6c757d; }
 
         .actions { display: flex; gap: 5px; justify-content: center; }
+
+        .prioridad-verde { border-left: 4px solid #28a745; }
+        .prioridad-amarillo { border-left: 4px solid #ffc107; }
+        .prioridad-rojo { border-left: 4px solid #dc3545; }
         
         /* Estilos de botones iguales a paquetesAdmin */
         .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.875rem; line-height: 1.5; border-radius: 0.2rem; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; }
@@ -370,7 +374,7 @@ $recolecciones = $model->listarRecolecciones([]);
                             </tr>
                         <?php else: ?>
                             <?php foreach ($recolecciones as $rec): ?>
-                                <tr>
+                                <tr class="prioridad-<?php echo htmlspecialchars($rec['color_prioridad']); ?>">
                                     <td><?php echo htmlspecialchars($rec['direccion_origen']); ?></td>
                                     <td><?php echo htmlspecialchars($rec['cliente_nombre']); ?></td>
                                     <td><?php echo htmlspecialchars($rec['mensajero_nombre']); ?></td>

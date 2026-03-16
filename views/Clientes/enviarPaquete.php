@@ -142,6 +142,10 @@ $remitente_data = [
                 </div>
             <?php endif; ?>
 
+            <div id="avisoHorarioRecoleccion" style="display:none; background-color:#fff3cd; color:#856404; padding:12px 15px; border-radius:6px; margin-bottom:20px; border:1px solid #ffeeba;">
+                Posiblemente no se pueda realizar la recolección por temas de horarios.
+            </div>
+
             <div class="page-header">
                 <div class="header-left">
                     <h1>Crear Nuevo Envío</h1>
@@ -407,12 +411,12 @@ $remitente_data = [
                             <div class="confirm-guide-sheet">
                                 <div class="confirm-guide-header">
                                     <div>
-                                        <h3 class="confirm-guide-brand">🚴 EcoBikeMess</h3>
+                                        <h3 class="confirm-guide-brand"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:70px;height:70px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h3>
                                         <p class="confirm-guide-subtitle">Guía de Envío</p>
                                     </div>
                                     <div class="confirm-guide-number-block">
                                         <span>Número de Guía:</span>
-                                        <strong id="numeroGuia">ECO-2024-XXXXX</strong>
+                                        <strong id="numeroGuia">EBM-2024-XXXXX</strong>
                                     </div>
                                 </div>
 

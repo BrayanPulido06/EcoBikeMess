@@ -314,7 +314,7 @@
                             </ul>
                             <p><strong>Mensaje amigable:</strong></p>
                             <ul>
-                                <li>"Valoramos el tiempo de todos. ¡Coordina con tu destinatario para que todo esté listo al llegar nuestro mensajero! 🚴‍♂️💨"</li>
+                                <li>"Valoramos el tiempo de todos. ¡Coordina con tu destinatario para que todo esté listo al llegar nuestro mensajero!🚴💨"</li>
                             </ul>
                         </div>
                     </div>
