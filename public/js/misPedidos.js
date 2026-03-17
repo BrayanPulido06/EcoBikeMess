@@ -251,6 +251,33 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </div>
                                 </div>
                             ` : ''}
+
+                            ${info.estado === 'cancelado' ? `
+                                <div class="detalle-section" style="margin-top: 20px; background-color: #fff5f5; border: 1px solid #f5c2c7;">
+                                    <h3 style="color: #b02a37;">❌ Detalles de Cancelación</h3>
+                                    <div class="detalle-grid">
+                                        <div class="detalle-item">
+                                            <div class="detalle-label">Motivo</div>
+                                            <div class="detalle-value">${info.infoCancelacion ? (info.infoCancelacion.motivo || 'Sin información.') : 'Sin información.'}</div>
+                                        </div>
+                                        <div class="detalle-item">
+                                            <div class="detalle-label">Fecha</div>
+                                            <div class="detalle-value">${info.infoCancelacion ? formatDateTimeEs(info.infoCancelacion.fecha) : 'Sin información.'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="detalle-section" style="margin-top: 20px;">
+                                    <h3>📸 Evidencia Fotográfica</h3>
+                                    <div class="fotos-evidencia-container" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+                                        ${info.infoCancelacion && info.infoCancelacion.foto ? `
+                                            <a href="../../${info.infoCancelacion.foto}" target="_blank" rel="noopener noreferrer" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                                <img src="../../${info.infoCancelacion.foto}" alt="Foto Evidencia" style="width: 100%; height: 100%; object-fit: cover;">
+                                            </a>
+                                        ` : '<p class="text-muted" style="width: 100%; text-align: center;">No hay fotos de evidencia disponibles.</p>'}
+                                    </div>
+                                </div>
+                            ` : ''}
                         `;
                     } else {
                         container.innerHTML = `<p class="text-danger text-center">${response.error}</p>`;

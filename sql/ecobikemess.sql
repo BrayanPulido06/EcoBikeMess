@@ -1,16 +1,7 @@
--- =====================================================
--- BASE DE DATOS ECOBIKEMESS - VERSIÓN COMPLETA CON COLABORADORES
--- =====================================================
-
 DROP DATABASE IF EXISTS ecobikemess;
 CREATE DATABASE IF NOT EXISTS ecobikemess;
 USE ecobikemess;
 
--- =====================================================
--- TABLAS PRINCIPALES
--- =====================================================
-
--- Tabla de usuarios (MODIFICADA para incluir colaboradores)
 CREATE TABLE IF NOT EXISTS usuarios (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombres VARCHAR(100) NOT NULL,
@@ -44,10 +35,6 @@ CREATE TABLE IF NOT EXISTS clientes (
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
--- =====================================================
--- NUEVA TABLA: COLABORADORES DE CLIENTES
--- =====================================================
-
 CREATE TABLE IF NOT EXISTS colaboradores_cliente (
     id INT PRIMARY KEY AUTO_INCREMENT,
     usuario_id INT UNIQUE NOT NULL,
@@ -71,10 +58,6 @@ CREATE TABLE IF NOT EXISTS colaboradores_cliente (
     FOREIGN KEY (creado_por) REFERENCES usuarios(id)
 );
 
--- =====================================================
--- NUEVA TABLA: INVITACIONES PARA COLABORADORES (CORREGIDA)
--- =====================================================
-
 CREATE TABLE IF NOT EXISTS invitaciones_colaboradores (
     id INT PRIMARY KEY AUTO_INCREMENT,
     cliente_id INT NOT NULL,
@@ -92,10 +75,6 @@ CREATE TABLE IF NOT EXISTS invitaciones_colaboradores (
     FOREIGN KEY (invitado_por) REFERENCES usuarios(id)
 );
 
--- =====================================================
--- NUEVA TABLA: AUDITORÍA DE COLABORADORES
--- =====================================================
-
 CREATE TABLE IF NOT EXISTS auditoria_colaboradores (
     id INT PRIMARY KEY AUTO_INCREMENT,
     colaborador_id INT NOT NULL,
@@ -109,10 +88,6 @@ CREATE TABLE IF NOT EXISTS auditoria_colaboradores (
     FOREIGN KEY (colaborador_id) REFERENCES colaboradores_cliente(id) ON DELETE CASCADE,
     FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
 );
-
--- =====================================================
--- TABLAS EXISTENTES (sin cambios)
--- =====================================================
 
 CREATE TABLE IF NOT EXISTS mensajeros (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -275,7 +250,6 @@ CREATE TABLE IF NOT EXISTS recolecciones (
     FOREIGN KEY (creada_por) REFERENCES usuarios(id)
 );
 
--- CORRECCIÓN: Agregar la relación FK aquí, ahora que ambas tablas existen
 ALTER TABLE paquetes ADD FOREIGN KEY (recoleccion_id) REFERENCES recolecciones(id);
 
 CREATE TABLE IF NOT EXISTS comprobantes (
@@ -297,7 +271,6 @@ CREATE TABLE IF NOT EXISTS comprobantes (
     FOREIGN KEY (cliente_id) REFERENCES clientes(id)
 );
 
--- Tabla para almacenar evidencias (imagenes/PDF) con metadatos de carga
 CREATE TABLE IF NOT EXISTS imagenes (
     id INT PRIMARY KEY AUTO_INCREMENT,
     comprobante_id INT NULL,
@@ -416,10 +389,6 @@ CREATE TABLE IF NOT EXISTS zonas_cobertura (
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- =====================================================
--- ÍNDICES
--- =====================================================
-
 -- Índices originales
 CREATE INDEX idx_usuarios_email ON usuarios(correo);
 CREATE INDEX idx_usuarios_tipo ON usuarios(tipo_usuario);
@@ -445,10 +414,6 @@ CREATE INDEX idx_invitacion_estado ON invitaciones_colaboradores(estado, fecha_e
 CREATE INDEX idx_invitacion_cliente ON invitaciones_colaboradores(cliente_id);
 CREATE INDEX idx_auditoria_colaborador ON auditoria_colaboradores(colaborador_id, fecha_accion);
 CREATE INDEX idx_auditoria_cliente ON auditoria_colaboradores(cliente_id, fecha_accion);
-
--- =====================================================
--- VISTAS ÚTILES
--- =====================================================
 
 -- Vista de colaboradores con información completa
 CREATE OR REPLACE VIEW vista_colaboradores_completa AS
@@ -499,10 +464,6 @@ FROM paquetes p
 INNER JOIN clientes c ON p.cliente_id = c.id
 INNER JOIN usuarios u ON p.creado_por = u.id
 LEFT JOIN colaboradores_cliente cc ON u.id = cc.usuario_id AND c.id = cc.cliente_id;
-
--- =====================================================
--- FUNCIONES Y PROCEDIMIENTOS
--- =====================================================
 
 DELIMITER //
 
@@ -720,10 +681,6 @@ END //
 
 DELIMITER ;
 
--- =====================================================
--- DATOS DE EJEMPLO
--- =====================================================
-
 -- Usuarios
 INSERT INTO usuarios (nombres, apellidos, correo, telefono, password, tipo_usuario, estado, correo_verificado)
 VALUES 
@@ -745,7 +702,7 @@ VALUES (2, 'cedula', '1234567890', 'super_admin', '/uploads/admins/eco_foto.jpg'
 INSERT INTO mensajeros (usuario_id, tipo_documento, numDocumento, foto, hoja_vida, telefono_emergencia1, nombre_emergencia1, apellido_emergencia1, telefono_emergencia2, nombre_emergencia2, apellido_emergencia2, tipo_sangre, direccion_residencia, tipo_transporte, estado_aprobacion, calificacion_promedio, total_entregas)
 VALUES (3, 'cedula', '9876543210', '/uploads/mensajeros/marlon_foto.jpg', '/uploads/mensajeros/marlon_hv.pdf', '3001112233', 'Maria', 'Castro Lopez', '3104445566', 'Pedro', 'Castro Ramirez', 'O+', 'Carrera 15 #78-90, Bogota', 'bicicleta', 'aprobado', 4.85, 0);
 
--- Colaboradores (NUEVO)
+-- Colaboradores 
 INSERT INTO colaboradores_cliente (
     usuario_id, cliente_id, cargo,
     puede_crear_paquetes, puede_ver_facturas, puede_ver_comprobantes,
@@ -761,7 +718,7 @@ INSERT INTO colaboradores_cliente (
  TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE,
  'activo', 1, 'Responsable de coordinar con mensajeros');
 
--- Invitaciones colaboradores (NUEVO - CORREGIDO CON DATETIME)
+-- Invitaciones colaboradores 
 INSERT INTO invitaciones_colaboradores (
     cliente_id, correo_invitado, token_invitacion, cargo,
     permisos_propuestos, mensaje_invitacion,
@@ -784,7 +741,7 @@ INSERT INTO invitaciones_colaboradores (
     1
 );
 
--- Paquetes (con campo creado_por)
+-- Paquetes 
 INSERT INTO paquetes (numero_guia, cliente_id, remitente_nombre, remitente_telefono, remitente_correo, direccion_origen, destinatario_nombre, destinatario_telefono, direccion_destino, instrucciones_entrega, descripcion_contenido, envio_destinatario, tipo_servicio, costo_envio, recaudo_esperado, estado, mensajero_id, mensajero_recoleccion_id, creado_por, fecha_asignacion, fecha_entrega, qr_code, escaneado, fecha_escaneo)
 VALUES 
 ('ECO-2024-001', 1, 'Brayan Rodriguez', '3001234567', 'brayan@gmail.com', 'Calle 45 #23-67, Bogota', 'Ana Maria Lopez', '3156789012', 'Carrera 7 #100-25, Bogota', 'Dejar con porteria si no esta', 'Camiseta deportiva talla M', 'no', 'contraentrega', 8000.00, 75000.00, 'entregado', 1, 1, 1, '2024-12-20 08:30:00', '2024-12-20 14:45:00', 'QR-ECO-001', TRUE, '2024-12-20 08:35:00'),
@@ -799,7 +756,7 @@ VALUES
 INSERT INTO entregas (paquete_id, mensajero_id, nombre_receptor, parentesco_cargo, documento_receptor, recaudo_real, coordenadas_entrega_lat, coordenadas_entrega_lng, foto_entrega, foto_adicional, observaciones)
 VALUES (1, 1, 'Ana Maria Lopez', 'Titular', '52123456', 75000.00, 4.701954, -74.035599, '/uploads/entregas/entrega_001_principal.jpg', '/uploads/entregas/entrega_001_adicional.jpg', 'Entrega exitosa. Cliente satisfecho con el producto.');
 
--- Recolecciones (con campo creada_por)
+-- Recolecciones 
 INSERT INTO recolecciones (numero_orden, cliente_id, mensajero_id, direccion_recoleccion, coordenadas_lat, coordenadas_lng, nombre_contacto, telefono_contacto, descripcion_paquetes, cantidad_estimada, cantidad_real, horario_preferido, prioridad, estado, creada_por, fecha_asignacion, fecha_completada, foto_recoleccion, observaciones_recoleccion, conformidad)
 VALUES 
 ('REC-2024-001', 1, 1, 'Calle 45 #23-67, Bogota', 4.672855, -74.055374, 'Brayan Rodriguez', '3001234567', 'Paquetes de ropa deportiva para envio', 5, 5, '14:00:00', 'programada', 'completada', 1, '2024-12-19 10:00:00', '2024-12-19 14:30:00', '/uploads/recolecciones/rec_001.jpg', 'Recoleccion exitosa. 5 paquetes recogidos.', TRUE),
@@ -859,7 +816,7 @@ VALUES
 (4, 'crear_paquete', 'Creacion de paquete por colaborador', '{"numero_guia": "ECO-2024-002", "envio_destinatario": "si"}', '192.168.1.103'),
 (5, 'crear_paquete', 'Creacion de paquete por colaborador', '{"numero_guia": "ECO-2024-003", "envio_destinatario": "si"}', '192.168.1.104');
 
--- Auditoría de colaboradores (NUEVO)
+-- Auditoría de colaboradores 
 INSERT INTO auditoria_colaboradores (colaborador_id, cliente_id, accion, descripcion, datos_anteriores, datos_nuevos, ip_address)
 VALUES 
 (1, 1, 'creacion', 'Colaborador creado exitosamente', NULL, 
@@ -878,42 +835,6 @@ VALUES
 ('dias_expiracion_invitacion', '7', 'Días que dura activa una invitación de colaborador', 'number', 'colaboradores'),
 ('max_colaboradores_por_cliente', '10', 'Máximo número de colaboradores por cliente', 'number', 'colaboradores');
 
--- =====================================================
--- CONSULTAS ÚTILES DE EJEMPLO
--- =====================================================
-
--- Ver todos los colaboradores de un cliente
--- SELECT * FROM vista_colaboradores_completa WHERE cliente_id = 1;
-
--- Ver paquetes creados por colaboradores
--- SELECT * FROM vista_paquetes_completa WHERE tipo_creador = 'colaborador';
-
--- Verificar si un usuario tiene un permiso específico
--- SELECT verificar_permiso_colaborador(4, 1, 'crear_paquetes') AS tiene_permiso;
-
--- Ver invitaciones pendientes
--- SELECT * FROM invitaciones_colaboradores WHERE estado = 'pendiente' AND fecha_expiracion > NOW();
-
--- Ver actividad de colaboradores
--- SELECT * FROM auditoria_colaboradores WHERE cliente_id = 1 ORDER BY fecha_accion DESC;
-
--- Obtener cliente_id de cualquier usuario (cliente o colaborador)
--- SELECT obtener_cliente_id(4) AS mi_cliente_id;
-
--- Ver estadísticas de colaboradores por cliente
--- SELECT 
---     c.nombre_emprendimiento,
---     COUNT(cc.id) as total_colaboradores,
---     SUM(CASE WHEN cc.estado = 'activo' THEN 1 ELSE 0 END) as activos,
---     SUM(CASE WHEN cc.puede_agregar_colaboradores THEN 1 ELSE 0 END) as con_permiso_agregar
--- FROM clientes c
--- LEFT JOIN colaboradores_cliente cc ON c.id = cc.cliente_id
--- GROUP BY c.id, c.nombre_emprendimiento;
-
--- =====================================================
--- TRIGGERS PARA AUTOMATIZACIÓN (NUEVO)
--- =====================================================
-
 DELIMITER //
 
 -- Trigger para agrupar paquetes en recolecciones automáticamente
@@ -922,9 +843,7 @@ AFTER INSERT ON paquetes
 FOR EACH ROW
 BEGIN
     DECLARE v_recoleccion_id INT;
-    
-    -- 1. Buscar si ya existe una recolección activa (asignada) para este cliente, 
-    -- en esta dirección y creada el día de hoy.
+
     SELECT id INTO v_recoleccion_id
     FROM recolecciones
     WHERE cliente_id = NEW.cliente_id
@@ -958,7 +877,3 @@ BEGIN
 END //
 
 DELIMITER ;
-
--- =====================================================
--- FIN DEL SCRIPT
--- =====================================================

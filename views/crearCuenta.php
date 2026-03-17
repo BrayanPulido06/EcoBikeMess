@@ -92,7 +92,7 @@
                     <span class="type-desc">Quiero enviar paquetes</span>
                 </button>
                 <button type="button" class="type-btn" data-type="mensajero">
-                    <span class="icon"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:18px;height:18px;vertical-align:middle;"></span>
+                    <span class="icon">🚴</span>
                     <span class="type-title">Soy Mensajero</span>
                     <span class="type-desc">Quiero realizar entregas</span>
                 </button>

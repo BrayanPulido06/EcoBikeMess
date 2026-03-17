@@ -219,7 +219,6 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             <div class="form-group">
                 <label for="totalRecaudar">Total a Recaudar</label>
                 <div class="input-dinero input-dinero-bloqueado">
-                    <span class="simbolo-dinero">$</span>
                     <input type="text" id="totalRecaudar" name="totalRecaudar"
                            value="$ 0" readonly>
                 </div>
@@ -228,7 +227,6 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             <div class="form-group">
                 <label for="totalRecaudado" class="obligatorio">Total Recaudado</label>
                 <div class="input-dinero">
-                    <span class="simbolo-dinero">$</span>
                     <input type="text" id="totalRecaudado" name="totalRecaudado"
                            placeholder="0" inputmode="numeric" autocomplete="off" required>
                 </div>
@@ -314,10 +312,6 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             </div>
 
             <div class="info-automatica">
-                <div class="info-auto-item">
-                    <span>📍 Ubicación GPS:</span>
-                    <span id="infoGPSNovedad">Obteniendo...</span>
-                </div>
                 <div class="info-auto-item">
                     <span>🕐 Fecha/Hora:</span>
                     <span id="infoFechaNovedad">--</span>

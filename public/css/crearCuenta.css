@@ -131,6 +131,7 @@ body {
 
 .register-form {
     display: none;
+    padding: 30px;
 }
 
 .register-form.active {

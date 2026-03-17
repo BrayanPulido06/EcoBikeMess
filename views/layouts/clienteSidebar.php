@@ -48,11 +48,19 @@
         <div class="user-plan">
             <span class="plan-icon">⭐</span>
             <div class="plan-info">
-                <span class="plan-name">Plan Cliente</span>
+                <span class="plan-name">Cliente</span>
                 <span class="plan-status">Activo</span>
             </div>
         </div>
     </div>
 </aside>
+
+<!-- Botón Flotante de WhatsApp -->
+<a href="https://wa.link/49g8jg" class="whatsapp-container" target="_blank" rel="noopener">
+    <div class="whatsapp-btn">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+    </div>
+
+</a>
 
 <script src="/ecobikemess/public/js/clienteSidebar.js"></script>

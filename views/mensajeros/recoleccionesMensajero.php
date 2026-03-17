@@ -202,6 +202,9 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                     <button type="button" id="btnLlamarForm" class="btn-llamar-mini">
                         📞 Llamar
                     </button>
+                    <button type="button" id="btnCopiarTelefonoForm" class="btn-copiar-mini">
+                        📋 Copiar
+                    </button>
                 </div>
             </div>
 

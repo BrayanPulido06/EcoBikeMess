@@ -159,6 +159,32 @@ class PaquetesAdminModel {
                     ];
                 }
             }
+
+            if ($info && $info['estado'] === 'cancelado') {
+                $sqlCancel = "SELECT n.descripcion,
+                                     n.foto_evidencia,
+                                     n.fecha_registro,
+                                     CONCAT(u.nombres, ' ', u.apellidos) AS mensajero
+                              FROM novedades_entrega n
+                              LEFT JOIN mensajeros m ON n.mensajero_id = m.id
+                              LEFT JOIN usuarios u ON m.usuario_id = u.id
+                              WHERE n.paquete_id = :id
+                                AND n.tipo = 'cancelado'
+                              ORDER BY n.fecha_registro DESC
+                              LIMIT 1";
+                $stmtCancel = $this->conn->prepare($sqlCancel);
+                $stmtCancel->execute([':id' => $id]);
+                $cancel = $stmtCancel->fetch(PDO::FETCH_ASSOC);
+
+                if ($cancel) {
+                    $info['infoCancelacion'] = [
+                        'motivo' => $cancel['descripcion'] ?? '',
+                        'foto' => $cancel['foto_evidencia'] ?? '',
+                        'fecha' => $cancel['fecha_registro'] ?? '',
+                        'mensajero' => $cancel['mensajero'] ?? ''
+                    ];
+                }
+            }
         } catch (PDOException $e) {
             $error = "Error al obtener info: " . $e->getMessage();
         }

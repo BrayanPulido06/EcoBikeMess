@@ -111,29 +111,6 @@ foreach ($chartDataRaw as $row) {
                         Ver Información ▼
                     </button>
                 </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #5cb85c 0%, #4cae4c 100%);">
-                        📦
-                    </div>
-                    <div class="stat-info">
-                        <span class="stat-label">Pedidos del Mes</span>
-                        <span class="stat-value"><?php echo $stats['pedidos_mes']; ?></span>
-                        <span class="stat-change positive">+12% vs mes anterior</span>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);">
-                        👥
-                    </div>
-                    <div class="stat-info">
-                        <span class="stat-label">Por Colaboradores</span>
-                        <span class="stat-value"><?php echo $stats['pedidos_colaboradores']; ?></span>
-                        <span class="stat-change neutral">Total histórico</span>
-                    </div>
-                </div>
-
             </div>
 
             <!-- Main Content Grid -->

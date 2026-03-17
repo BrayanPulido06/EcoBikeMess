@@ -788,6 +788,35 @@ function llamarContacto() {
     window.location.href = `tel:${recoleccionActual.telefono}`;
 }
 
+async function copiarTexto(texto, boton) {
+    const valor = (texto || '').toString().trim();
+    if (!valor) return;
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(valor);
+        } else {
+            const temp = document.createElement('input');
+            temp.value = valor;
+            document.body.appendChild(temp);
+            temp.select();
+            temp.setSelectionRange(0, temp.value.length);
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+        }
+
+        if (boton) {
+            const textoOriginal = boton.textContent;
+            boton.textContent = '✅ Copiado';
+            setTimeout(() => {
+                boton.textContent = textoOriginal;
+            }, 1200);
+        }
+    } catch (err) {
+        console.error('No se pudo copiar', err);
+    }
+}
+
 // ============================================
 // NAVEGACIÓN ENTRE VISTAS
 // ============================================
@@ -830,6 +859,12 @@ function configurarEventListeners() {
     document.getElementById('btnLlamarForm')?.addEventListener('click', () => {
         feedbackTactilClick();
         llamarContacto();
+    });
+
+    document.getElementById('btnCopiarTelefonoForm')?.addEventListener('click', (e) => {
+        feedbackTactilClick();
+        const input = document.getElementById('formTelefonoContacto');
+        copiarTexto(input?.value, e.currentTarget);
     });
     
     // Acciones de recolección

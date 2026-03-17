@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${envioAgregado}</td>
                     <td>
                         <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})" title="Ver Detalle">👁️</button>
-                        ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="Asignar" style="width:16px;height:16px;vertical-align:middle;"></button>` : ''}
+                        ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar">🚴</button>` : ''}
                     </td>
                 </tr>
             `;
@@ -474,6 +474,36 @@ function verDetalle(id) {
                                         <img src="../../${info.infoEntrega.fotoAdicional}" alt="Evidencia Adicional" style="width: 100%; height: 100%; object-fit: cover;">
                                     </a>
                                 ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${info.estado === 'cancelado' ? `
+                    <div class="detalle-section" style="margin-top: 20px; background-color: #fff5f5; border: 1px solid #f5c2c7;">
+                        <h3 style="color: #b02a37;">❌ Detalles de Cancelación</h3>
+                        <div class="detalle-grid">
+                            <div class="detalle-item">
+                                <div class="detalle-label">Motivo</div>
+                                <div class="detalle-value">${info.infoCancelacion ? (info.infoCancelacion.motivo || 'Sin información.') : 'Sin información.'}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Fecha</div>
+                                <div class="detalle-value">${info.infoCancelacion ? (info.infoCancelacion.fecha || 'Sin información.') : 'Sin información.'}</div>
+                            </div>
+                            <div class="detalle-item">
+                                <div class="detalle-label">Mensajero</div>
+                                <div class="detalle-value">${info.infoCancelacion ? (info.infoCancelacion.mensajero || 'Sin información.') : 'Sin información.'}</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <h4 style="font-size: 0.9em; text-transform: uppercase; color: #666; margin-bottom: 10px;">Evidencia Fotográfica</h4>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                ${info.infoCancelacion && info.infoCancelacion.foto ? `
+                                    <a href="../../${info.infoCancelacion.foto}" target="_blank" rel="noopener noreferrer" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                                        <img src="../../${info.infoCancelacion.foto}" alt="Evidencia de cancelación" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </a>
+                                ` : '<span class="text-muted">Sin evidencia fotográfica</span>'}
                             </div>
                         </div>
                     </div>
