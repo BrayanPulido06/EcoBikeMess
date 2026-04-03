@@ -95,7 +95,6 @@ CREATE TABLE IF NOT EXISTS mensajeros (
     tipo_documento ENUM('cedula', 'tarjeta_identidad', 'pasaporte', 'cedula_extranjeria') NOT NULL,
     numDocumento VARCHAR(20) UNIQUE NOT NULL,
     foto VARCHAR(255) NOT NULL,
-    hoja_vida VARCHAR(255) NOT NULL,
     telefono_emergencia1 VARCHAR(20) NOT NULL,
     nombre_emergencia1 VARCHAR(200) NOT NULL,
     apellido_emergencia1 VARCHAR(200) NOT NULL,
@@ -104,10 +103,11 @@ CREATE TABLE IF NOT EXISTS mensajeros (
     apellido_emergencia2 VARCHAR(200) NOT NULL,
     tipo_sangre ENUM('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-') NOT NULL,
     direccion_residencia TEXT NOT NULL,
-    tipo_transporte ENUM('moto', 'bicicleta', 'a_pie', 'vehiculo') NOT NULL,
+    tipo_transporte ENUM('moto', 'bicicleta', 'a_pie', 'Carro') NOT NULL,
     placa_vehiculo VARCHAR(10),
     licencia_conducir VARCHAR(100),
     soat VARCHAR(100),
+    tecnomecanica VARCHAR(100),
     estado_aprobacion ENUM('pendiente', 'aprobado', 'rechazado') DEFAULT 'pendiente',
     calificacion_promedio DECIMAL(3,2) DEFAULT 0.00,
     total_entregas INT DEFAULT 0,
@@ -282,6 +282,19 @@ CREATE TABLE IF NOT EXISTS imagenes (
     FOREIGN KEY (comprobante_id) REFERENCES comprobantes(id) ON DELETE SET NULL,
     INDEX idx_imagenes_comprobante (comprobante_id),
     INDEX idx_imagenes_fecha_subida (fecha_subida)
+);
+
+CREATE TABLE IF NOT EXISTS paquete_imagenes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    paquete_id INT NOT NULL,
+    tipo ENUM('general', 'entrega', 'cancelacion', 'recoleccion') NOT NULL DEFAULT 'general',
+    ruta_archivo VARCHAR(255) NOT NULL,
+    creado_por INT NULL,
+    fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (paquete_id) REFERENCES paquetes(id) ON DELETE CASCADE,
+    FOREIGN KEY (creado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+    INDEX idx_paquete_imagenes_paquete (paquete_id),
+    INDEX idx_paquete_imagenes_tipo (tipo)
 );
 
 CREATE TABLE IF NOT EXISTS facturas (
@@ -699,8 +712,8 @@ INSERT INTO administradores (usuario_id, tipo_documento, num_documento, rol, fot
 VALUES (2, 'cedula', '1234567890', 'super_admin', '/uploads/admins/eco_foto.jpg', '{"permisos": ["todos"]}');
 
 -- Mensajeros
-INSERT INTO mensajeros (usuario_id, tipo_documento, numDocumento, foto, hoja_vida, telefono_emergencia1, nombre_emergencia1, apellido_emergencia1, telefono_emergencia2, nombre_emergencia2, apellido_emergencia2, tipo_sangre, direccion_residencia, tipo_transporte, estado_aprobacion, calificacion_promedio, total_entregas)
-VALUES (3, 'cedula', '9876543210', '/uploads/mensajeros/marlon_foto.jpg', '/uploads/mensajeros/marlon_hv.pdf', '3001112233', 'Maria', 'Castro Lopez', '3104445566', 'Pedro', 'Castro Ramirez', 'O+', 'Carrera 15 #78-90, Bogota', 'bicicleta', 'aprobado', 4.85, 0);
+INSERT INTO mensajeros (usuario_id, tipo_documento, numDocumento, foto, tecnomecanica, telefono_emergencia1, nombre_emergencia1, apellido_emergencia1, telefono_emergencia2, nombre_emergencia2, apellido_emergencia2, tipo_sangre, direccion_residencia, tipo_transporte, estado_aprobacion, calificacion_promedio, total_entregas)
+VALUES (3, 'cedula', '9876543210', '/uploads/mensajeros/marlon_foto.jpg', '/uploads/mensajeros/marlon_tecnomecanica.pdf', '3001112233', 'Maria', 'Castro Lopez', '3104445566', 'Pedro', 'Castro Ramirez', 'O+', 'Carrera 15 #78-90, Bogota', 'bicicleta', 'aprobado', 4.85, 0);
 
 -- Colaboradores 
 INSERT INTO colaboradores_cliente (

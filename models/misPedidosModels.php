@@ -209,5 +209,21 @@ class MisPedidosModel {
             'saldo_pagar' => $saldo_pagar
         ];
     }
+
+    public function cancelarPedido($paquete_id, $cliente_id) {
+        $sql = "UPDATE paquetes
+                SET estado = 'cancelado',
+                    recoleccion_id = NULL,
+                    mensajero_recoleccion_id = NULL
+                WHERE id = :id
+                  AND cliente_id = :cliente_id
+                  AND estado NOT IN ('entregado', 'cancelado')";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([
+            ':id' => (int) $paquete_id,
+            ':cliente_id' => (int) $cliente_id
+        ]);
+        return $stmt->rowCount() > 0;
+    }
 }
 ?>

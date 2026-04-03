@@ -29,9 +29,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const costoTotalHiddenInput = document.getElementById('costoTotalHidden');
     const numeroGuiaHiddenInput = document.getElementById('numeroGuiaHidden');
     const btnDownloadPDF = document.getElementById('btnDownloadPDF');
+    const formAction = form?.getAttribute('action') || '../../controller/enviarPaqueteController.php';
     const qrcodeContainer = document.getElementById('qrcode');
     let qrCodeStylingInstance = null; // Para la instancia del nuevo QR
     let baseRecaudo = 0; // Variable para almacenar el valor base del recaudo (sin envío)
+
+    const getBaseRecaudoValue = () => {
+        const fromInput = valorRecaudoInput?.value ?? '';
+        const raw = String(fromInput);
+        const numeric = parseFloat(raw.replace(/[^\d]/g, '')) || 0;
+        return numeric;
+    };
 
     let currentStep = 1;
     const parseSiNo = (value) => {
@@ -184,11 +192,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Actualizar input oculto con el valor limpio para la BD
                 baseRecaudo = numberValue; // Guardar valor base
                 if (valorRecaudoHidden) valorRecaudoHidden.value = numberValue;
+                // El recargo de recaudo depende del monto, recalcular
+                calcularCostoAutomatico();
                 actualizarRecaudoFinal();
             } else {
                 e.target.value = '';
                 baseRecaudo = 0;
                 if (valorRecaudoHidden) valorRecaudoHidden.value = '';
+                calcularCostoAutomatico();
                 actualizarRecaudoFinal();
             }
         });
@@ -294,7 +305,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     setField('instrucciones_entrega', getValue('instrucciones') || getValue('observaciones'));
 
                     // 2. Llenar Paquete
-                    setField('descripcion_contenido', getValue('descripcion') || getValue('contenido'));
                     const dimensionesVal = normalizeDimensiones(getValue('dimensiones'));
                     if (dimensionesVal) setField('dimensiones_paquete', dimensionesVal);
 
@@ -376,13 +386,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const recargoMismoDia = mismoDia ? 2000 : 0;
             const recargoZona = zonaPeriferica ? 4000 : 0;
             const recargoCambios = recogerCambios ? 5000 : 0;
-            const recargoRecaudo = tieneRecaudo ? 3000 : 0;
+            const fijoContraentrega = 3000;
+            const extraRecaudo = (tieneRecaudo && valorRecaudo >= 300000)
+                ? Math.floor((valorRecaudo - 300000) / 100000) * 1000
+                : 0;
+            const recargoRecaudo = tieneRecaudo ? (fijoContraentrega + Math.max(0, extraRecaudo)) : 0;
             const costoBase = 8000;
             const total = costoBase + recargoDimensiones + recargoMismoDia + recargoZona + recargoCambios + recargoRecaudo;
 
             // Preparar objeto de datos
             const item = {
                 id: index,
+                cliente_id: document.getElementById('cliente_id')?.value || '',
                 remitente_nombre: document.getElementById('remitente_nombre').value || (window.remitenteData?.nombre_completo), // Usar datos del usuario logueado
                 remitente_telefono: document.getElementById('remitente_telefono').value || (window.remitenteData?.telefono),
                 remitente_email: document.getElementById('remitente_email').value || (window.remitenteData?.correo),
@@ -391,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 destinatario_telefono: getValue('num destinatario') || getValue('telefono') || getValue('celular') || getValue('movil'),
                 destinatario_direccion: getValue('direccion') || getValue('destino'),
                 instrucciones_entrega: getValue('instrucciones') || getValue('observaciones'),
-                descripcion_contenido: getValue('descripcion') || getValue('contenido'),
+                descripcion_contenido: '',
                 dimensiones_paquete: dimensionesVal,
                 envio_mismo_dia: mismoDia ? 'on' : '',
                 zona_periferica: zonaPeriferica ? 'on' : '',
@@ -413,7 +428,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>${item.destinatario_nombre}</td>
                 <td>${item.destinatario_telefono}</td>
                 <td>${item.destinatario_direccion}</td>
-                <td>${item.descripcion_contenido}</td>
+                <td></td>
                 <td>$${total.toLocaleString('es-CO')}</td>
                 <td class="status-pending" id="status-${index}">Pendiente</td>
                 <td id="actions-${index}"></td>
@@ -450,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     formData.append('ajax', '1'); // Indicar al controlador que es AJAX
 
                     // Enviar al controlador existente
-                    const response = await fetch('../../controller/enviarPaqueteController.php', {
+                    const response = await fetch(formAction, {
                         method: 'POST',
                         body: formData
                     });
@@ -498,7 +513,6 @@ Remitente: ${item.remitente_nombre}
 Origen: ${item.remitente_direccion}
 Destinatario: ${item.destinatario_nombre}
 Destino: ${item.destinatario_direccion}
-Contenido: ${item.descripcion_contenido}
 Costo Envío: $${item.costo_total.toLocaleString('es-CO')}
 Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
             `.trim();
@@ -555,7 +569,6 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                     </table>
                     <div style="margin-top: 20px; border: 1px solid #eee; padding: 10px; border-radius: 8px; font-size: 11px;">
                         <h3 style="margin: 0 0 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
-                        <p><strong>Descripción:</strong> ${item.descripcion_contenido}</p>
                     </div>
                     <table style="width: 100%; margin-top: 20px; border-top: 2px solid #5cb85c; padding-top: 10px;">
                         <tr>
@@ -648,6 +661,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
             if (!tieneRecaudoCheckbox.checked) {
                 document.getElementById('valor_recaudo').value = '';
                 if (valorRecaudoHidden) valorRecaudoHidden.value = '';
+                baseRecaudo = 0;
             }
             calcularCostoAutomatico();
         });
@@ -691,7 +705,10 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         
         let recargoRecaudo = 0;
         if (tieneRecaudoCheckbox && tieneRecaudoCheckbox.checked) {
-            recargoRecaudo = 3000;
+            const fijoContraentrega = 3000;
+            const monto = Number(baseRecaudo || 0);
+            const extra = monto >= 300000 ? Math.floor((monto - 300000) / 100000) * 1000 : 0;
+            recargoRecaudo = fijoContraentrega + Math.max(0, extra);
         }
 
         const total = costoBase + recargoRecaudo + recargoMismoDia + recargoZona + recargoDimensiones + recargoCambios;
@@ -739,6 +756,8 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
     function actualizarRecaudoFinal() {
         const sumarOption = document.querySelector('input[name="envio_destinatario"]:checked');
         const costoTotal = parseFloat(costoTotalHiddenInput.value) || 0;
+        const baseRecaudoActual = getBaseRecaudoValue();
+        baseRecaudo = baseRecaudoActual;
         const preview = document.getElementById('preview_total_recaudo');
         
         // Actualizar estilos visuales de las tarjetas
@@ -748,17 +767,17 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         }
 
         if (sumarOption && sumarOption.value === 'si') {
-            const total = baseRecaudo + costoTotal;
+            const total = baseRecaudoActual + costoTotal;
             if (valorRecaudoHidden) valorRecaudoHidden.value = total;
             if (preview) {
                 preview.style.display = 'block';
                 preview.innerHTML = `Total a cobrar al destinatario: <span style="font-size: 1.2em;">$${total.toLocaleString('es-CO')}</span>`;
             }
         } else if (sumarOption && sumarOption.value === 'no') {
-            if (valorRecaudoHidden) valorRecaudoHidden.value = baseRecaudo;
+            if (valorRecaudoHidden) valorRecaudoHidden.value = baseRecaudoActual;
             if (preview) {
                 preview.style.display = 'block';
-                preview.innerHTML = `Total a cobrar al destinatario: <span style="font-size: 1.2em;">$${baseRecaudo.toLocaleString('es-CO')}</span>`;
+                preview.innerHTML = `Total a cobrar al destinatario: <span style="font-size: 1.2em;">$${baseRecaudoActual.toLocaleString('es-CO')}</span>`;
             }
         } else {
             if (preview) preview.style.display = 'none';
@@ -794,14 +813,13 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         document.getElementById('confirm_destinatario_direccion').textContent = document.getElementById('destinatario_direccion').value;
         document.getElementById('confirm_destinatario_observaciones').textContent = document.getElementById('instrucciones_entrega').value || 'Sin observaciones';
 
-        document.getElementById('confirm_descripcion').textContent = document.getElementById('descripcion_contenido').value;
         const recogerCambios = document.getElementById('recoger_cambios').checked;
         document.getElementById('confirm_recoger_cambios').textContent = recogerCambios ? 'Sí' : 'No';
 
 
         // --- CÁLCULO DE TOTALES A COBRAR ---
         const costoEnvioNum = parseFloat(document.getElementById('costoTotalHidden').value) || 0;
-        const baseRecaudoNum = baseRecaudo || 0;
+        const baseRecaudoNum = getBaseRecaudoValue() || 0;
         const sumarOption = document.querySelector('input[name="envio_destinatario"]:checked');
         const sumar = sumarOption ? sumarOption.value : 'no';
         const tieneRecaudo = document.getElementById('tiene_recaudo').checked;
@@ -853,7 +871,6 @@ Remitente: ${document.getElementById('remitente_nombre').value}
 Origen: ${document.getElementById('remitente_direccion').value}
 Destinatario: ${document.getElementById('destinatario_nombre').value}
 Destino: ${document.getElementById('destinatario_direccion').value}
-Contenido: ${document.getElementById('descripcion_contenido').value}
 Cambios por recoger: ${recogerCambios ? 'Sí' : 'No'}
 ${qrFinanciero}
         `.trim();
@@ -863,8 +880,8 @@ ${qrFinanciero}
         
         // Crear nueva instancia de QR con logo
         qrCodeStylingInstance = new QRCodeStyling({
-            width: 300,
-            height: 300,
+            width: 220,
+            height: 220,
             data: infoParaQR,
             // image: "../../public/img/logo_qr.png", // Desactivado para asegurar que el QR funcione. Actívalo cuando tengas el logo.
             dotsOptions: {
@@ -894,7 +911,7 @@ ${qrFinanciero}
                 const numeroGuia = document.getElementById('numeroGuia').textContent;
                 
                 const costoEnvioNum = parseFloat(document.getElementById('costoTotalHidden').value) || 0;
-                const baseRecaudoNum = baseRecaudo || 0;
+                const baseRecaudoNum = getBaseRecaudoValue() || 0;
                 const sumarOption = document.querySelector('input[name="envio_destinatario"]:checked');
                 const sumar = sumarOption ? sumarOption.value : 'no';
                 const tieneRecaudo = document.getElementById('tiene_recaudo').checked;
@@ -930,57 +947,62 @@ ${qrFinanciero}
                 document.body.appendChild(pdfTemplate); // Añadir al DOM para que html2canvas lo renderice
                 
                 pdfTemplate.innerHTML = `
-                    <div style="font-family: Arial, sans-serif; color: #1f2a37; padding: 14px; border: 1px solid #d9dde2; border-radius: 8px; background: #fff;">
-                        <table style="width: 100%; border-bottom: 1px solid #e7eaee; padding-bottom: 10px;">
-                            <tr>
-                                <td style="width: 60%; vertical-align: top;">
-                                    <h1 style="margin: 0; font-size: 32px; color: #34a853;"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:24px;height:24px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
-                                    <p style="margin: 6px 0 0; font-size: 20px; font-weight: 700; color: #2d3e50;">Guía de Envío</p>
-                                </td>
-                                <td style="width: 40%; text-align: right; vertical-align: top;">
-                                    <p style="margin: 0; font-size: 18px; color: #495057;">Número de Guía:</p>
-                                    <h2 style="margin: 4px 0 0; font-size: 34px; color: #12263a;">${numeroGuia}</h2>
-                                </td>
-                            </tr>
-                        </table>
+                    <div style="font-family: Arial, sans-serif; color: #333; padding: 12px; border: 1px solid #ccc; background: #fff; width: 100mm; height: 100mm; box-sizing: border-box;">
+                        <div style="transform: scale(0.72); transform-origin: top left; width: 139mm; height: 139mm;">
+                            <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 6px;">
+                                <tr>
+                                    <td colspan="2">
+                                        <div style="display: flex; align-items: center; gap: 10px; justify-content: center; text-align: center;">
+                                            <img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:100px;height:100px;">
+                                            <div>
+                                                <div style="font-size: 26px; font-weight: 800; color: #5cb85c; line-height: 1;">EcoBikeMess</div>
+                                                <div style="margin-top: 3px; font-size: 15px; font-weight: 700; color: #28a745;">Contactanos: 317509298</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="padding-top: 4px;">
+                                        <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUÍA: <span style="font-size: 19px; font-weight: 800; color: #1f2a37;">${numeroGuia}</span></div>
+                                    </td>
+                                </tr>
+                            </table>
 
-                        <table style="width: 100%; margin-top: 14px;">
-                            <tr>
-                                <td style="width: 50%; vertical-align: top; padding-right: 8px;">
-                                    <div style="border: 1px solid #e0e5ea; border-radius: 8px; padding: 10px; font-size: 14px;">
-                                        <h3 style="margin: 0 0 8px; font-size: 18px; color: #1c2f44; border-bottom: 1px solid #edf0f2; padding-bottom: 6px;">📤 Remitente</h3>
-                                        <p style="margin: 5px 0;"><strong>Tienda:</strong> ${window.remitenteData?.nombre_tienda || 'Tienda'}</p>
-                                    </div>
-                                </td>
-                                <td style="width: 50%; vertical-align: top; padding-left: 8px;">
-                                    <div style="border: 1px solid #e0e5ea; border-radius: 8px; padding: 10px; font-size: 14px;">
-                                        <h3 style="margin: 0 0 8px; font-size: 18px; color: #1c2f44; border-bottom: 1px solid #edf0f2; padding-bottom: 6px;">📥 Destinatario</h3>
-                                        <p style="margin: 5px 0;"><strong>Dirección:</strong> ${document.getElementById('destinatario_direccion').value}</p>
-                                        <p style="margin: 5px 0;"><strong>Nombre:</strong> ${document.getElementById('destinatario_nombre').value}</p>
-                                        <p style="margin: 5px 0;"><strong>Teléfono:</strong> ${document.getElementById('destinatario_telefono').value}</p>
-                                        <p style="margin: 5px 0;"><strong>Observaciones:</strong> ${document.getElementById('instrucciones_entrega').value || 'Sin observaciones'}</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
+                            <table style="width: 100%; margin-top: 4px; font-size: 12px;">
+                                <tr>
+                                    <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                        <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
+                                        <p style="margin: 2px 0; line-height: 1.05;"><strong>Dirección:</strong> <span style="font-size: 15px; font-weight: 700;">${document.getElementById('destinatario_direccion').value}</span></p>
+                                        <p style="margin: 2px 0; line-height: 1.05;"><strong>Nombre:</strong> <span style="font-size: 15px; font-weight: 700;">${document.getElementById('destinatario_nombre').value}</span></p>
+                                        <p style="margin: 2px 0; line-height: 1.05;"><strong>Teléfono:</strong> <span style="font-size: 15px; font-weight: 700;">${document.getElementById('destinatario_telefono').value}</span></p>
+                                        <p style="margin: 2px 0; line-height: 1.05;"><strong>Observaciones:</strong> <span style="font-size: 15px; font-weight: 700;">${document.getElementById('instrucciones_entrega').value || 'Sin observaciones'}</span></p>
+                                    </td>
+                                    <td style="width: 4%;"></td>
+                                    <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                        <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
+                                        <p style="margin: 2px 0; line-height: 1.05;"><strong>Tienda:</strong> <span style="font-size: 15px; font-weight: 700;">${window.remitenteData?.nombre_tienda || 'Tienda'}</span></p>
+                                    </td>
+                                </tr>
+                            </table>
 
-                        <div style="margin-top: 12px; border: 1px solid #e0e5ea; border-radius: 8px; padding: 10px; font-size: 14px;">
-                            <h3 style="margin: 0 0 8px; font-size: 18px; color: #1c2f44; border-bottom: 1px solid #edf0f2; padding-bottom: 6px;">📦 Detalles del Paquete</h3>
-                            <p style="margin: 5px 0;"><strong>Descripción:</strong> ${document.getElementById('descripcion_contenido').value}</p>
-                            <p style="margin: 5px 0;"><strong>Cambios por recoger:</strong> ${recogerCambiosChecked ? 'Sí' : 'No'}</p>
+                            <table style="width: 100%; margin-top: 4px; padding-top: 0;">
+                                <tr>
+                                    <td style="width: 60%; vertical-align: top; font-size: 12px;">
+                                        <div style="border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                            <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
+                                            <p style="margin: 2px 0; line-height: 1.05;"><strong>Cambios por recoger:</strong> <span style="font-size: 15px; font-weight: 700;">${recogerCambiosChecked ? 'Sí' : 'No'}</span></p>
+                                        </div>
+                                        <div style="margin-top: 6px;">
+                                            <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800;">💰 Total a Cobrar</h3>
+                                            <p style="margin: 2px 0; font-size: 26px; font-weight: 800; color: #28a745; line-height: 1.1;">${totalCobrarTexto}</p>
+                                        </div>
+                                    </td>
+                                    <td style="width: 40%; text-align: right; vertical-align: top;">
+                                        <img src="${qrImageDataUrl}" style="width: 220px; height: 220px; border: 1px solid #ddd; border-radius: 4px; padding: 4px; margin-right: 6mm; margin-top: -7mm;">
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
-
-                        <table style="width: 100%; margin-top: 14px; border-top: 2px solid #79c27d; padding-top: 12px;">
-                            <tr>
-                                <td style="width: 58%; vertical-align: top; font-size: 14px;">
-                                    <h3 style="margin: 0 0 8px; font-size: 20px; color: #1c2f44;">💰 Total a Cobrar</h3>
-                                    <p style="margin: 5px 0; font-size: 36px; font-weight: 800; color: #28a745;">${totalCobrarTexto}</p>
-                                </td>
-                                <td style="width: 42%; text-align: right;">
-                                    <img src="${qrImageDataUrl}" style="width: 190px; height: 190px; border: 1px solid #d6dbe1; border-radius: 4px; padding: 4px;">
-                                </td>
-                            </tr>
-                        </table>
                     </div>
                 `;
 

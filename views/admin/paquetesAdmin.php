@@ -15,6 +15,9 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/paquetesAdmin.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         /* Estilos para centrar modales perfectamente */
         .modal {
@@ -70,6 +73,77 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         .badge-info { background-color: #17a2b8; }    /* Cian - Asignado */
         .badge-secondary { background-color: #6c757d; } /* Gris - Default */
         .badge-dark { background-color: #343a40; }    /* Oscuro - Devuelto */
+
+        /* Rótulo 10x10 cm */
+        #rotuloPreview {
+            width: 100mm;
+            height: 100mm;
+            padding: 1mm 2mm 2mm 3mm !important;
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .guia-divider-h {
+            border-top: 2px solid #28a745;
+            margin: 4px 0 6px;
+        }
+        .guia-left-col {
+            position: relative;
+            padding-right: 6px;
+        }
+        .guia-left-col::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -4px;
+            bottom: 0;
+            width: 0;
+            border-right: 2px solid #28a745;
+        }
+        .guia-right-col {
+            padding-left: 6px;
+        }
+        #rotuloPreview .rotulo-scale {
+            transform: scale(0.72);
+            transform-origin: top left;
+            width: 139mm;
+            height: 139mm;
+        }
+        #rotuloPreview .rotulo-scale h1 { font-size: 26px !important; }
+        #rotuloPreview .rotulo-scale h2 { font-size: 20px !important; }
+        #rotuloPreview .rotulo-scale h3 { font-size: 17px !important; }
+        #rotuloPreview .rotulo-scale p,
+        #rotuloPreview .rotulo-scale span,
+        #rotuloPreview .rotulo-scale strong { font-size: 14px !important; }
+        /* Forzar negrita en títulos y etiquetas */
+        #rotuloPreview .rotulo-scale h3 { font-weight: 800 !important; }
+        #rotuloPreview .rotulo-scale strong { font-weight: 800 !important; }
+        #rotuloPreview .rotulo-scale p strong { font-weight: 800 !important; }
+        /* Total a cobrar grande y centrado (override de tamaños generales) */
+        #rotuloPreview .rotulo-scale .rotulo-total {
+            margin: 2px 0;
+            font-size: 30px !important;
+            font-weight: 800;
+            color: #28a745;
+            text-align: center;
+            line-height: 0.9;
+        }
+        /* Compactar textos para no mover el QR */
+        #rotuloPreview .rotulo-scale .rotulo-card p {
+            margin: 2px 0;
+            line-height: 1.05;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-card h3 {
+            margin: 0 0 6px;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-text-lg {
+            font-size: 15px !important;
+            font-weight: 600;
+            line-height: 1.05;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-text-lg.bold {
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
@@ -86,6 +160,9 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             <div class="header-actions">
                 <button class="btn btn-secondary" id="btnExportarExcel">
                     📊 Exportar Excel
+                </button>
+                <button class="btn btn-secondary" id="btnExportarGuias">
+                    🧾 Descargar Guías
                 </button>
                 <button class="btn btn-primary" id="btnNuevoPaquete">
                     + Nuevo Paquete
@@ -307,8 +384,141 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             </div>
         </div>
 
+        <!-- Modal Rótulo (Guía) -->
+        <div class="modal" id="rotuloModal">
+            <div class="modal-content" style="max-width: 800px; padding: 20px;">
+                <div class="modal-header" style="border: none; padding-bottom: 0;">
+                    <h2>🏷️ Guía de Envío</h2>
+                    <button class="btn-close" id="closeRotuloModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="rotuloPreview" style="background: white; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333;">
+                        <div class="rotulo-scale">
+                            <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 6px;">
+                                <tr>
+                                    <td colspan="2">
+                                        <div style="display: flex; align-items: center; gap: 100px; justify-content: center; text-align: center;">
+                                            <img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:100px;height:100px;">
+                                            <div>
+                                                <div style="font-size: 26px; font-weight: 800; color: #5cb85c; line-height: 1;">EcoBikeMess</div>
+                                                <div style="margin-top: 3px; font-size: 15px; font-weight: 700; color: #28a745;">Contactanos: 31235180619</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="padding-top: 4px;">
+                                        <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUÍA: <span id="rotulo_guia_num" style="font-size: 19px; font-weight: 800; color: #1f2a37;">EBM-XXXXXX</span></div>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <table style="width: 100%; margin-top: 2px; font-size: 12px;">
+                                <tr>
+                                    <td style="width: 4%;"></td>
+                                    <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                        <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Destinatario</h3>
+                                        <p><strong>Dirección:</strong> <span id="rotulo_dir_destinatario" class="rotulo-text-lg bold"></span></p>
+                                        <p><strong>Nombre:</strong> <span id="rotulo_destinatario" class="rotulo-text-lg bold"></span></p>
+                                        <p><strong>Teléfono:</strong> <span id="rotulo_tel_destinatario" class="rotulo-text-lg bold"></span></p>
+                                        <p><strong>Observaciones:</strong> <span id="rotulo_observaciones" class="rotulo-text-lg bold"></span></p>
+                                    </td>
+                                    <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                        <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Remitente</h3>
+                                        <p><strong>Tienda:</strong> <span id="rotulo_remitente" class="rotulo-text-lg bold"></span></p>
+                                    </td>
+                                    
+                                </tr>
+                            </table>
+
+                            <table style="width: 100%; margin-top: 4px; padding-top: 0;">
+                                <tr>
+                                    <td style="width: 60%; vertical-align: top; font-size: 12px;">
+                                        <div class="guia-left-col">
+                                            <div class="guia-divider-h"></div>
+                                            <div class="rotulo-card" style="border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                                <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Detalles del Paquete</h3>
+                                                <p><strong>Cambios por recoger:</strong> <span id="rotulo_cambios" class="rotulo-text-lg"></span></p>
+                                            </div>
+                                            <div style="margin-top: 6px;">
+                                                <h3 style="margin: 0 0 6px; font-size: 15px;">Total a Cobrar</h3>
+                                                <div id="rotulo_financiero"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="width: 40%; text-align: right; vertical-align: top;">
+                                        <div class="guia-right-col">
+                                            <div id="rotulo_qr_code" style="display: inline-block; width: 220px; height: 220px; margin-right: 6mm; margin-top: -9mm;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions" style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-primary" id="btnDownloadRotulo">
+                        ⬇️ Descargar PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script src="../../public/js/paquetesAdmin.js"></script>
+    <script>
+        window.verRotulo = function(datos) {
+            const modal = document.getElementById('rotuloModal');
+            if (!modal) return;
+
+            document.getElementById('rotulo_guia_num').textContent = datos.guia || 'N/A';
+            document.getElementById('rotulo_remitente').textContent = datos.tienda_nombre || datos.remitente_nombre || 'Tienda';
+            document.getElementById('rotulo_destinatario').textContent = datos.destinatario_nombre || 'Cliente';
+            document.getElementById('rotulo_dir_destinatario').textContent = datos.destinatario_direccion || '';
+            document.getElementById('rotulo_tel_destinatario').textContent = datos.destinatario_telefono || '';
+            document.getElementById('rotulo_observaciones').textContent = datos.destinatario_observaciones || 'Sin observaciones';
+            document.getElementById('rotulo_cambios').textContent = datos.cambios || 'No';
+
+            const formatMoney = (val) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val);
+            const totalCobrar = datos.recaudo > 0 ? Number(datos.recaudo) : 0;
+            const totalTexto = formatMoney(totalCobrar);
+            document.getElementById('rotulo_financiero').innerHTML = `<p class="rotulo-total">${totalTexto}</p>`;
+
+            const qrContainer = document.getElementById('rotulo_qr_code');
+            qrContainer.innerHTML = '';
+            const qrData = `Guía: ${datos.guia}\nRemitente: ${datos.tienda_nombre || datos.remitente_nombre}\nDestinatario: ${datos.destinatario_nombre}\nDirección: ${datos.destinatario_direccion}\nTotal a Cobrar: ${totalTexto}`;
+            const qrCode = new QRCodeStyling({
+                width: 220,
+                height: 220,
+                type: "canvas",
+                data: qrData,
+                dotsOptions: { color: "#000", type: "rounded" },
+                backgroundOptions: { color: "#fff" }
+            });
+            qrCode.append(qrContainer);
+
+            modal.style.display = 'flex';
+        };
+
+        document.getElementById('closeRotuloModal').onclick = () => document.getElementById('rotuloModal').style.display = 'none';
+        document.getElementById('btnDownloadRotulo').onclick = async () => {
+            const element = document.getElementById('rotuloPreview');
+            const guia = document.getElementById('rotulo_guia_num').textContent;
+            try {
+                const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff' });
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', [100, 100]);
+                const pdfWidth = 100;
+                const pdfHeight = 100;
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save(`Guia_${guia}.pdf`);
+            } catch (error) {
+                alert('Error al generar PDF');
+                console.error(error);
+            }
+        };
+    </script>
 </body>
 </html>

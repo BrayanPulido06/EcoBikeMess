@@ -57,15 +57,36 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                         <span class="stat-value" id="totalRecaudoHistorico">$0</span>
                     </div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Recaudo (Rango)</span>
+                        <span class="stat-value" id="totalRecaudoRango">$0</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Filtros y Búsqueda -->
             <div class="filters-section">
                 <div class="search-container">
-                    <input type="text" id="searchHistorial" placeholder="🔍 Buscar por guía o destinatario..." class="search-input">
+                    <input type="text" id="searchHistorial" placeholder="🔍 Buscar por guía..." class="search-input">
                 </div>
 
                 <div class="filters-grid">
+                    <div class="filters-row">
+                        <div class="filter-item">
+                            <label for="searchNombre">Nombre (destinatario o recibió)</label>
+                            <input type="text" id="searchNombre" placeholder="Ej: Juan Pérez" class="search-input">
+                        </div>
+                        <div class="filter-item">
+                            <label for="fechaInicio">Fecha inicio</label>
+                            <input type="date" id="fechaInicio" class="search-input">
+                        </div>
+                        <div class="filter-item">
+                            <label for="fechaFin">Fecha fin</label>
+                            <input type="date" id="fechaFin" class="search-input">
+                        </div>
+                    </div>
                     <div class="filtros">
                         <button class="filtro-btn activo" data-filtro="todos">Todos</button>
                         <button class="filtro-btn" data-filtro="hoy">Hoy</button>

@@ -4,7 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crear Cuenta - EcoBikeMess</title>
-    <link rel="stylesheet" href="../public/css/crearCuenta.css">
+    <link rel="stylesheet" href="../public/css/crearCuenta.css"> 
+    <style>
+        /* Estilos para ocultar el input de archivo nativo */
+        .hidden-file-input {
+            display: none;
+        }
+
+        /* Estilos para el botón de carga de archivo personalizado */
+        .custom-file-upload-button {
+            display: inline-block;
+            padding: 10px 20px; /* Tamaño ligeramente mayor */
+            background-color: #28a745; /* Color verde */
+            color: white;
+            border-radius: 8px; /* Esquinas más redondeadas */
+            cursor: pointer;
+            font-size: 1rem; /* Fuente ligeramente mayor */
+            transition: background-color 0.3s ease;
+            border: none;
+            text-align: center;
+            white-space: nowrap; /* Evita que el texto se rompa */
+            margin-right: 10px; /* Espacio entre el botón y el nombre del archivo */
+        }
+
+        .custom-file-upload-button:hover {
+            background-color: #218838; /* Verde más oscuro al pasar el ratón */
+        }
+
+        .file-upload-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Espacio entre el botón y el texto */
+        }
+    </style>
 </head>
 <body>
     <div class="register-container">
@@ -174,22 +206,18 @@
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="mensajero_foto">Foto Personal *</label>
-                        <input type="file" id="mensajero_foto" name="foto" accept="image/*">
-                        <small class="file-info">Formato: JPG, PNG (máx. 2MB)</small>
-                        <div id="foto-preview-container" class="foto-preview-container" style="display: none;">
-                            <img id="foto-preview-img" src="#" alt="Previsualización de foto">
-                        </div>
-                        <span class="error-message"></span>
+                <div class="form-group">
+                    <label for="mensajero_foto">Foto Personal *</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="mensajero_foto" name="foto" accept="image/*" class="hidden-file-input">
+                        <label for="mensajero_foto" class="custom-file-upload-button">Seleccionar archivo</label>
+                        <span class="file-name-display" id="file-name-mensajero_foto">Ningún archivo seleccionado</span>
                     </div>
-                    <div class="form-group">
-                        <label for="mensajero_hoja_vida">Hoja de Vida (PDF) *</label>
-                        <input type="file" id="mensajero_hoja_vida" name="hoja_vida" accept=".pdf">
-                        <small class="file-info">Formato: PDF (máx. 5MB)</small>
-                        <span class="error-message"></span>
+                    <small class="file-info">Formato: JPG, PNG (máx. 2MB)</small>
+                    <div id="foto-preview-container" class="foto-preview-container" style="display: none;">
+                        <img id="foto-preview-img" src="#" alt="Previsualización de foto">
                     </div>
+                    <span class="error-message"></span>
                 </div>
 
                 <h2>Contactos de Emergencia</h2>
@@ -238,8 +266,7 @@
                         <option value="">Seleccionar...</option>
                         <option value="bicicleta">Bicicleta</option>
                         <option value="moto">Motocicleta</option>
-                        <option value="vehiculo">Vehículo</option>
-                        <option value="a_pie">A pie</option>
+                        <option value="vehiculo">Carro</option>
                     </select>
                     <span class="error-message"></span>
                 </div>
@@ -253,16 +280,36 @@
                         </div>
                         <div class="form-group">
                             <label for="mensajero_licencia">Licencia de Conducir *</label>
-                            <input type="file" id="mensajero_licencia" name="licencia_conducir" accept=".pdf,image/*">
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="mensajero_licencia" name="licencia_conducir" accept=".pdf,image/*" class="hidden-file-input">
+                                <label for="mensajero_licencia" class="custom-file-upload-button">Seleccionar archivo</label>
+                                <span class="file-name-display" id="file-name-mensajero_licencia">Ningún archivo seleccionado</span>
+                            </div>
                             <small class="file-info">PDF o imagen (máx. 2MB)</small>
                             <span class="error-message"></span>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="mensajero_soat">SOAT *</label>
-                        <input type="file" id="mensajero_soat" name="soat" accept=".pdf,image/*">
-                        <small class="file-info">PDF o imagen (máx. 2MB)</small>
-                        <span class="error-message"></span>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="mensajero_soat">SOAT *</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="mensajero_soat" name="soat" accept=".pdf,image/*" class="hidden-file-input">
+                                <label for="mensajero_soat" class="custom-file-upload-button">Seleccionar archivo</label>
+                                <span class="file-name-display" id="file-name-mensajero_soat">Ningún archivo seleccionado</span>
+                            </div>
+                            <small class="file-info">PDF o imagen (máx. 2MB)</small>
+                            <span class="error-message"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="mensajero_tecnomecanica">Revisión Tecnomecánica *</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="mensajero_tecnomecanica" name="tecnomecanica" accept=".pdf,image/*" class="hidden-file-input">
+                                <label for="mensajero_tecnomecanica" class="custom-file-upload-button">Seleccionar archivo</label>
+                                <span class="file-name-display" id="file-name-mensajero_tecnomecanica">Ningún archivo seleccionado</span>
+                            </div>
+                            <small class="file-info">PDF o imagen (máx. 2MB)</small>
+                            <span class="error-message"></span>
+                        </div>
                     </div>
                 </div>
             </div>

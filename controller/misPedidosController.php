@@ -81,6 +81,27 @@ switch ($action) {
         }
         break;
 
+    case 'cancelar':
+        $raw = file_get_contents('php://input');
+        $input = json_decode($raw, true);
+        $id = (int) ($input['id'] ?? $_POST['id'] ?? 0);
+        if ($id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'ID de pedido inválido']);
+            exit();
+        }
+
+        try {
+            $ok = $model->cancelarPedido($id, $cliente_id);
+            if ($ok) {
+                echo json_encode(['success' => true, 'message' => 'Pedido cancelado correctamente']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'No se pudo cancelar el pedido. Puede que ya esté entregado o cancelado.']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error al cancelar el pedido']);
+        }
+        break;
+
     default:
         echo json_encode(['error' => 'Acción no válida']);
         break;

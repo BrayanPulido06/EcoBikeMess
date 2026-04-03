@@ -49,12 +49,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('mensajero_placa').required = true;
                 document.getElementById('mensajero_licencia').required = true;
                 document.getElementById('mensajero_soat').required = true;
+                document.getElementById('mensajero_tecnomecanica').required = true;
             } else {
                 vehiculoFields.style.display = 'none';
                 // Quitar requerido
                 document.getElementById('mensajero_placa').required = false;
                 document.getElementById('mensajero_licencia').required = false;
                 document.getElementById('mensajero_soat').required = false;
+                document.getElementById('mensajero_tecnomecanica').required = false;
             }
         });
     }
@@ -97,6 +99,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // ============================================
+    // MANEJO DE INPUTS DE ARCHIVO PERSONALIZADOS
+    // ============================================
+    function setupCustomFileInput(inputId) {
+        const input = document.getElementById(inputId);
+        const fileNameDisplay = document.getElementById(`file-name-${inputId}`);
+
+        if (input && fileNameDisplay) {
+            input.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    fileNameDisplay.textContent = this.files[0].name;
+                } else {
+                    fileNameDisplay.textContent = 'Ningún archivo seleccionado';
+                }
+            });
+        }
+    }
+    setupCustomFileInput('mensajero_foto');
+    setupCustomFileInput('mensajero_licencia');
+    setupCustomFileInput('mensajero_soat');
+    setupCustomFileInput('mensajero_tecnomecanica');
+
     // ============================================
     // VALIDACIONES
     // ============================================
@@ -276,7 +300,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Agrega más validaciones de cliente si es necesario
             } else if (tipoUsuario === 'mensajero') {
                 const foto = document.getElementById('mensajero_foto').files[0];
-                const hojaVida = document.getElementById('mensajero_hoja_vida').files[0];
                 
                 // Validar foto
                 if (!foto) {
@@ -284,15 +307,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     isValid = false;
                 } else if (!validateFileSize(foto, 2)) {
                     showError(document.getElementById('mensajero_foto'), 'La foto no debe superar 2MB');
-                    isValid = false;
-                }
-                
-                // Validar hoja de vida
-                if (!hojaVida) {
-                    showError(document.getElementById('mensajero_hoja_vida'), 'La hoja de vida es requerida');
-                    isValid = false;
-                } else if (!validateFileSize(hojaVida, 5)) {
-                    showError(document.getElementById('mensajero_hoja_vida'), 'El archivo no debe superar 5MB');
                     isValid = false;
                 }
                 
@@ -316,6 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const placa = document.getElementById('mensajero_placa').value;
                     const licencia = document.getElementById('mensajero_licencia').files[0];
                     const soat = document.getElementById('mensajero_soat').files[0];
+                    const tecnomecanica = document.getElementById('mensajero_tecnomecanica').files[0];
 
                     if (!placa.trim()) {
                         showError(document.getElementById('mensajero_placa'), 'La placa es requerida');
@@ -327,6 +342,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     if (!soat) {
                         showError(document.getElementById('mensajero_soat'), 'El SOAT es requerido');
+                        isValid = false;
+                    }
+                    if (!tecnomecanica) {
+                        showError(document.getElementById('mensajero_tecnomecanica'), 'La tecnomecánica es requerida');
                         isValid = false;
                     }
                 }

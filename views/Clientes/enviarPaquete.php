@@ -75,8 +75,8 @@ $remitente_data = [
             text-align: center;
         }
         #qrcode {
-            width: 120px !important;
-            height: 120px !important;
+            width: 220px !important;
+            height: 220px !important;
             padding: 5px;
             border: 1px solid #ddd;
             border-radius: 8px;
@@ -88,6 +88,73 @@ $remitente_data = [
         }
         .qr-code-container small {
             font-size: 0.8rem; color: #777;
+        }
+        /* Rótulo 10x10 cm (igual a paquetesAdmin) */
+        #rotuloPreview {
+            width: 100mm;
+            height: 100mm;
+            padding: 1mm 2mm 2mm 3mm !important;
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        #rotuloPreview .rotulo-scale {
+            transform: scale(0.72);
+            transform-origin: top left;
+            width: 139mm;
+            height: 139mm;
+        }
+        #rotuloPreview .rotulo-scale h1 { font-size: 26px !important; }
+        #rotuloPreview .rotulo-scale h2 { font-size: 20px !important; }
+        #rotuloPreview .rotulo-scale h3 { font-size: 17px !important; }
+        #rotuloPreview .rotulo-scale p,
+        #rotuloPreview .rotulo-scale span,
+        #rotuloPreview .rotulo-scale strong { font-size: 14px !important; }
+        #rotuloPreview .rotulo-scale h3 { font-weight: 800 !important; }
+        #rotuloPreview .rotulo-scale strong { font-weight: 800 !important; }
+        #rotuloPreview .rotulo-scale p strong { font-weight: 800 !important; }
+        #rotuloPreview .rotulo-scale .rotulo-total {
+            margin: 2px 0;
+            font-size: 26px !important;
+            font-weight: 800;
+            color: #28a745;
+            text-align: left;
+            line-height: 1.1;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-card p {
+            margin: 2px 0;
+            line-height: 1.05;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-card h3 {
+            margin: 0 0 6px;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-text-lg {
+            font-size: 15px !important;
+            font-weight: 600;
+            line-height: 1.05;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-text-lg.bold {
+            font-weight: 700;
+        }
+        .guia-divider-h {
+            border-top: 2px solid #28a745;
+            margin: 4px 0 6px;
+        }
+        .guia-left-col {
+            position: relative;
+            padding-right: 6px;
+        }
+        .guia-left-col::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -4px;
+            bottom: 0;
+            width: 0;
+            border-right: 2px solid #28a745;
+        }
+        .guia-right-col {
+            padding-left: 6px;
         }
         /* Estilos para carga masiva */
         .bulk-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
@@ -254,7 +321,7 @@ $remitente_data = [
                                 <span class="error-message"></span>
                             </div>
                             <div class="form-group">
-                                <label for="instrucciones_entrega">Instrucciones Especiales de Entrega</label>
+                                <label for="instrucciones_entrega">Observaciones y/o Descripciónes</label>
                                 <textarea id="instrucciones_entrega" name="instrucciones_entrega" rows="3" placeholder="Ej: Tocar el timbre 2 veces, entregar en portería, etc."></textarea>
                             </div>
                             <div class="form-group">
@@ -318,11 +385,6 @@ $remitente_data = [
                                     </label>
                                 </div>
                             </div>
-                                <div class="form-group">
-                                    <label for="descripcion_contenido">Descripción del Contenido y Observaciones*</label>
-                                    <textarea id="descripcion_contenido" name="descripcion_contenido" rows="2" placeholder="Ej: Ropa, documentos, accesorios, etc." required></textarea>
-                                    <span class="error-message"></span>
-                                </div>
                         </div>
                     </div>
 
@@ -408,47 +470,68 @@ $remitente_data = [
                             </button>
                         </div>
                         <div class="card-body">
-                            <div class="confirm-guide-sheet">
-                                <div class="confirm-guide-header">
-                                    <div>
-                                        <h3 class="confirm-guide-brand"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:70px;height:70px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h3>
-                                        <p class="confirm-guide-subtitle">Guía de Envío</p>
-                                    </div>
-                                    <div class="confirm-guide-number-block">
-                                        <span>Número de Guía:</span>
-                                        <strong id="numeroGuia">EBM-2024-XXXXX</strong>
-                                    </div>
-                                </div>
+                            <div id="rotuloPreview" style="background: white; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333;">
+                                <div class="rotulo-scale">
+                                    <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 6px;">
+                                        <tr>
+                                            <td colspan="2">
+                                                <div style="display: flex; align-items: center; gap: 100px; justify-content: center; text-align: center;">
+                                                    <img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:100px;height:100px;">
+                                                    <div>
+                                                        <div style="font-size: 26px; font-weight: 800; color: #5cb85c; line-height: 1;">EcoBikeMess</div>
+                                                        <div style="margin-top: 3px; font-size: 15px; font-weight: 700; color: #28a745;">Contactanos: 317509298</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" style="padding-top: 4px;">
+                                                <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUÍA: <span id="numeroGuia" style="font-size: 19px; font-weight: 800; color: #1f2a37;">EBM-2024-XXXXX</span></div>
+                                            </td>
+                                        </tr>
+                                    </table>
 
-                                <div class="confirm-guide-grid">
-                                    <div class="confirm-guide-card">
-                                        <h4>📤 Remitente</h4>
-                                        <p><strong>Tienda:</strong> <span id="confirm_tienda_nombre"></span></p>
-                                    </div>
-                                    <div class="confirm-guide-card">
-                                        <h4>📥 Destinatario</h4>
-                                        <p><strong>Dirección:</strong> <span id="confirm_destinatario_direccion"></span></p>
-                                        <p><strong>Nombre:</strong> <span id="confirm_destinatario_nombre"></span></p>
-                                        <p><strong>Teléfono:</strong> <span id="confirm_destinatario_telefono"></span></p>
-                                        <p><strong>Observaciones:</strong> <span id="confirm_destinatario_observaciones"></span></p>
-                                    </div>
-                                </div>
+                                    <table style="width: 100%; margin-top: 4px; font-size: 12px;">
+                                        <tr>
+                                            <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                                <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
+                                                <p><strong>Dirección:</strong> <span id="confirm_destinatario_direccion" class="rotulo-text-lg bold"></span></p>
+                                                <p><strong>Nombre:</strong> <span id="confirm_destinatario_nombre" class="rotulo-text-lg bold"></span></p>
+                                                <p><strong>Teléfono:</strong> <span id="confirm_destinatario_telefono" class="rotulo-text-lg bold"></span></p>
+                                                <p><strong>Observaciones:</strong> <span id="confirm_destinatario_observaciones" class="rotulo-text-lg bold"></span></p>
+                                            </td>
+                                            <td style="width: 4%;"></td>
+                                            <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                                <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
+                                                <p><strong>Tienda:</strong> <span id="confirm_tienda_nombre" class="rotulo-text-lg bold"></span></p>
+                                            </td>
+                                        </tr>
+                                    </table>
 
-                                <div class="confirm-guide-card full-width">
-                                    <h4>📦 Detalles del Paquete</h4>
-                                    <p><strong>Descripción:</strong> <span id="confirm_descripcion"></span></p>
-                                    <p><strong>Cambios por recoger:</strong> <span id="confirm_recoger_cambios"></span></p>
-                                </div>
-
-                                <div class="confirm-guide-footer">
-                                    <div class="confirm-guide-financial">
-                                        <h4>💰 Total a Cobrar</h4>
-                                        <p class="confirm-guide-total" id="confirm_total_cobrar">$0</p>
-                                    </div>
-                                    <div class="qr-code-container">
-                                        <div id="qrcode"></div>
-                                        <small>Escanea para ver detalles</small>
-                                    </div>
+                                    <table style="width: 100%; margin-top: 4px; padding-top: 0;">
+                                        <tr>
+                                            <td style="width: 60%; vertical-align: top; font-size: 12px;">
+                                                <div class="guia-left-col">
+                                                    <div class="guia-divider-h"></div>
+                                                    <div class="rotulo-card" style="border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                                        <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
+                                                        <p><strong>Cambios por recoger:</strong> <span id="confirm_recoger_cambios" class="rotulo-text-lg bold"></span></p>
+                                                    </div>
+                                                    <div style="margin-top: 6px;">
+                                                        <h3 style="margin: 0 0 6px; font-size: 15px;">💰 Total a Cobrar</h3>
+                                                        <div>
+                                                            <p id="confirm_total_cobrar" class="rotulo-total">$0</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td style="width: 40%; text-align: right; vertical-align: top;">
+                                                <div class="guia-right-col">
+                                                    <div id="qrcode" style="display: inline-block; width: 220px; height: 220px; margin-right: 6mm; margin-top: -9mm;"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
                                 </div>
                             </div>
                         </div>

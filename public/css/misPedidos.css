@@ -521,6 +521,7 @@ tbody tr.por-vencer {
 
 .modal-body {
     padding: 30px;
+    padding-left: 170px;
 }
 
 /* Detalles de la Factura */

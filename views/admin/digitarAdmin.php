@@ -1,370 +1,579 @@
-<?php
+﻿<?php
 session_start();
 if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' && ($_SESSION['user_role'] ?? '') !== 'administrador')) {
     header("Location: ../login.php?error=Debes iniciar sesión.");
     exit();
 }
+
+$remitente_data = [
+    'nombre_tienda' => '',
+    'nombre_completo' => '',
+    'telefono' => '',
+    'correo' => '',
+    'direccion' => ''
+];
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digitar Envío - Sistema de Mensajería</title>
+    <title>Digitar Envío - EcoBikeMess</title>
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
-    <link rel="stylesheet" href="../../public/css/digitarAdmin.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="../../public/css/enviarPaquete.css">
+    <link rel="stylesheet" href="../../public/css/clientesTheme.css">
+    <link rel="stylesheet" href="../../public/css/digitarAdminEnvio.css">
+    <style>
+        .guia-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eee;
+        }
+        .qr-code-container {
+            text-align: center;
+        }
+        #qrcode {
+            width: 220px !important;
+            height: 220px !important;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 5px;
+        }
+        #qrcode canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .qr-code-container small {
+            font-size: 0.8rem; color: #777;
+        }
+        /* Rótulo 10x10 cm (igual a paquetesAdmin) */
+        #rotuloPreview {
+            width: 100mm;
+            height: 100mm;
+            padding: 1mm 2mm 2mm 3mm !important;
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        #rotuloPreview .rotulo-scale {
+            transform: scale(0.72);
+            transform-origin: top left;
+            width: 139mm;
+            height: 139mm;
+        }
+        #rotuloPreview .rotulo-scale h1 { font-size: 26px !important; }
+        #rotuloPreview .rotulo-scale h2 { font-size: 20px !important; }
+        #rotuloPreview .rotulo-scale h3 { font-size: 17px !important; }
+        #rotuloPreview .rotulo-scale p,
+        #rotuloPreview .rotulo-scale span,
+        #rotuloPreview .rotulo-scale strong { font-size: 14px !important; }
+        #rotuloPreview .rotulo-scale h3 { font-weight: 800 !important; }
+        #rotuloPreview .rotulo-scale strong { font-weight: 800 !important; }
+        #rotuloPreview .rotulo-scale p strong { font-weight: 800 !important; }
+        #rotuloPreview .rotulo-scale .rotulo-total {
+            margin: 2px 0;
+            font-size: 26px !important;
+            font-weight: 800;
+            color: #28a745;
+            text-align: left;
+            line-height: 1.1;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-card p {
+            margin: 2px 0;
+            line-height: 1.05;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-card h3 {
+            margin: 0 0 6px;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-text-lg {
+            font-size: 15px !important;
+            font-weight: 600;
+            line-height: 1.05;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-text-lg.bold {
+            font-weight: 700;
+        }
+        .guia-divider-h {
+            border-top: 2px solid #28a745;
+            margin: 4px 0 6px;
+        }
+        .guia-left-col {
+            position: relative;
+            padding-right: 6px;
+        }
+        .guia-left-col::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -4px;
+            bottom: 0;
+            width: 0;
+            border-right: 2px solid #28a745;
+        }
+        .guia-right-col {
+            padding-left: 6px;
+        }
+        /* Estilos para carga masiva */
+        .bulk-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .bulk-table th, .bulk-table td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; font-size: 0.9rem; }
+        .bulk-table th { background: #f8f9fa; font-weight: 600; color: #2d3e50; }
+        .status-pending { color: #f0ad4e; font-weight: bold; }
+        .status-success { color: #28a745; font-weight: bold; }
+        .status-error { color: #dc3545; font-weight: bold; }
+        
+        /* Estilos para tarjetas de selección de recaudo */
+        .radio-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fff;
+        }
+        .radio-card:hover { border-color: #b0b0b0; background: #f9f9f9; }
+        .radio-card.selected { border-color: #28a745; background: #e8f5e9; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15); }
+        .radio-card input[type="radio"] { transform: scale(1.5); accent-color: #28a745; margin: 0; }
+        .radio-card-content strong { display: block; font-size: 1.1rem; color: #333; margin-bottom: 2px; }
+        .radio-card-content small { color: #666; font-size: 0.9rem; }
+    </style>
 </head>
 <body>
     <?php include '../layouts/adminNavbar.php'; ?>
     <?php include '../layouts/adminSidebar.php'; ?>
 
-    <div class="container" style="margin-left: 250px; margin-top: 60px;">
-        <!-- Header -->
-        <header class="page-header">
-            <div>
-                <h1>📝 Digitar Nuevo Envío</h1>
-                <p>Registro manual de paquetes y envíos</p>
-            </div>
-            <div class="header-actions">
-                <button class="btn btn-secondary" id="btnHistorialEnvios">
-                    📋 Historial de Hoy
-                </button>
-            </div>
-        </header>
+    <div class="main-content">
+        <div class="content-container">
+            <?php if (isset($_GET['error'])): ?>
+                <div style="background-color: #ffebee; color: #c62828; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ef9a9a; margin-top: 100px;">
+                    <strong>Error:</strong> <?php echo htmlspecialchars($_GET['error']); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (isset($_GET['msg']) && $_GET['msg'] === 'envio_creado'): ?>
+                <div style="background-color: #e8f5e9; color: #2e7d32; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #a5d6a7; margin-top: 100px;">
+                    <strong>¡Éxito!</strong> El envío fue registrado correctamente.
+                    <?php if(isset($_GET['guia'])): ?>
+                        <br>Número de Guía: <strong><?php echo htmlspecialchars($_GET['guia']); ?></strong>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
 
-        <!-- Resumen de Envíos del Día -->
-        <div class="stats-summary">
-            <div class="stat-item">
-                <span class="stat-label">Envíos Hoy</span>
-                <span class="stat-value" id="enviosHoy">0</span>
+            <div class="page-header">
+                <div class="header-left">
+                    <h1>Crear Envío para Cliente</h1>
+                    <p>Selecciona el cliente y completa la información del envío</p>
+                </div>
+                <div class="header-right">
+                    <a href="paquetesAdmin.php" class="btn-secondary">
+                        <span>📦</span> Ver Paquetes
+                    </a>
+                </div>
             </div>
-            <div class="stat-item">
-                <span class="stat-label">Total Facturado</span>
-                <span class="stat-value" id="totalFacturado">$0</span>
+
+            
+
+            <div class="steps-indicator">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Remitente</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Destinatario</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Paquete</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Confirmar</div>
+                </div>
             </div>
-            <div class="stat-item">
-                <span class="stat-label">Último Cliente</span>
-                <span class="stat-value" id="ultimoCliente">-</span>
-            </div>
-        </div>
 
-        <!-- Formulario Principal -->
-        <div class="form-container">
-            <form id="formEnvio">
-                <!-- Sección: Cliente -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <h2>🏢 Cliente / Remitente</h2>
-                        <button type="button" class="btn btn-sm btn-success" id="btnNuevoCliente">
-                            + Nuevo Cliente
-                        </button>
-                    </div>
+            <form id="envioForm" class="envio-form" action="../../controller/enviarPaqueteAdminController.php" method="POST" novalidate>
+                <input type="hidden" name="cliente_id" id="cliente_id" required>
 
-                    <div class="search-client-container">
-                        <div class="form-group">
-                            <label>Buscar Cliente Existente</label>
-                            <input type="text" id="searchCliente" placeholder="Buscar por nombre, NIT o teléfono..." class="form-control">
-                            <div id="resultadosClientes" class="search-results"></div>
-                        </div>
-                    </div>
-
-                    <div id="datosCliente" class="datos-cliente hidden">
-                        <div class="cliente-info-card">
-                            <div class="cliente-header">
-                                <h3 id="clienteNombre">-</h3>
-                                <button type="button" class="btn btn-sm btn-secondary" id="btnCambiarCliente">
-                                    🔄 Cambiar Cliente
+                <div class="form-step active" data-step="1">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>📤 Datos del Remitente</h2>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <button type="button" class="btn-text" id="autoFillRemitente">
+                                    Usar datos del cliente
                                 </button>
+                                <input type="file" id="excelUpload" accept=".xlsx, .xls" style="display: none;">
                             </div>
-                            <div class="cliente-details">
-                                <p><strong>NIT/CC:</strong> <span id="clienteNit">-</span></p>
-                                <p><strong>Teléfono:</strong> <span id="clienteTelefono">-</span></p>
-                                <p><strong>Dirección:</strong> <span id="clienteDireccion">-</span></p>
-                                <p><strong>Email:</strong> <span id="clienteEmail">-</span></p>
+                        </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>🏢 Cliente</h2>
+                    <button type="button" class="btn-text" id="btnCambiarClienteAdmin" style="display: none;">Cambiar cliente</button>
+                </div>
+                <div class="card-body">
+                    <div class="form-group admin-client-search">
+                        <label for="searchClienteAdmin">Buscar cliente</label>
+                        <input type="text" id="searchClienteAdmin" placeholder="Buscar por nombre, teléfono o email">
+                        <div id="resultadosClientesAdmin" class="admin-client-results"></div>
+                    </div>
+
+                    <div id="clienteSeleccionadoAdmin" class="cliente-seleccionado hidden">
+                        <div class="cliente-card">
+                            <div class="cliente-card-header">
+                                <h3 id="clienteAdminNombre">-</h3>
+                                <span id="clienteAdminEstado" class="cliente-estado">activo</span>
                             </div>
+                            <p><strong>Contacto:</strong> <span id="clienteAdminContacto">-</span></p>
+                            <p><strong>Teléfono:</strong> <span id="clienteAdminTelefono">-</span></p>
+                            <p><strong>Email:</strong> <span id="clienteAdminEmail">-</span></p>
+                            <p><strong>Dirección:</strong> <span id="clienteAdminDireccion">-</span></p>
                         </div>
                     </div>
 
-                    <div class="form-grid" id="remitente-section">
-                        <div class="form-group">
-                            <label>Nombre del Remitente *</label>
-                            <input type="text" id="remitenteNombre" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Teléfono del Remitente *</label>
-                            <input type="tel" id="remitenteTelefono" class="form-control" required>
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Dirección de Recolección *</label>
-                            <textarea id="remitenteDireccion" class="form-control" rows="2" required></textarea>
+                    
+                </div>
+            </div>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="remitente_nombre">Nombre Completo *</label>
+                                    <input type="text" id="remitente_nombre" name="remitente_nombre" required>
+                                    <span class="error-message"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="remitente_telefono">Teléfono *</label>
+                                    <input type="tel" id="remitente_telefono" name="remitente_telefono" placeholder="300 123 4567" required>
+                                    <span class="error-message"></span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="remitente_email">Email de Contacto *</label>
+                                <input type="email" id="remitente_email" name="remitente_email" required>
+                                <span class="error-message"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="remitente_direccion">Dirección de Origen Completa *</label>
+                                <textarea id="remitente_direccion" name="remitente_direccion" rows="3" placeholder="Ej: Calle 123 #45-67, Apto 301, Barrio Centro" required></textarea>
+                                <span class="error-message"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sección: Destinatario -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <h2>📍 Destinatario</h2>
-                    </div>
-
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Nombre Completo *</label>
-                            <input type="text" id="destinatarioNombre" class="form-control" required>
+                <div class="form-step" data-step="2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>📥 Datos del Destinatario</h2>
                         </div>
-                        <div class="form-group">
-                            <label>Teléfono *</label>
-                            <input type="tel" id="destinatarioTelefono" class="form-control" required>
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Dirección de Entrega *</label>
-                            <textarea id="destinatarioDireccion" class="form-control" rows="2" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Ciudad *</label>
-                            <input type="text" id="destinatarioCiudad" class="form-control" value="Bogotá" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Zona *</label>
-                            <select id="destinatarioZona" class="form-control" required>
-                                <option value="">Seleccione zona</option>
-                                <option value="norte">Norte</option>
-                                <option value="sur">Sur</option>
-                                <option value="este">Este</option>
-                                <option value="oeste">Oeste</option>
-                                <option value="centro">Centro</option>
-                            </select>
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Referencia / Indicaciones</label>
-                            <textarea id="destinatarioReferencia" class="form-control" rows="2" placeholder="Ej: Casa blanca, segundo piso"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sección: Descripción del Paquete -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <h2>📦 Descripción del Paquete</h2>
-                    </div>
-
-                    <div class="form-grid">
-                        <div class="form-group full-width">
-                            <label>Descripción Detallada del Contenido *</label>
-                            <textarea id="paqueteDescripcion" class="form-control" rows="3" placeholder="Ej: 2 cajas con documentos legales" required></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Tipo de Paquete *</label>
-                            <select id="paqueteTipo" class="form-control" required>
-                                <option value="">Seleccione tipo</option>
-                                <option value="documento">Documento</option>
-                                <option value="sobre">Sobre</option>
-                                <option value="paquete">Paquete</option>
-                                <option value="caja">Caja</option>
-                                <option value="otro">Otro</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Cantidad de Unidades *</label>
-                            <input type="number" id="paqueteCantidad" class="form-control" min="1" value="1" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Peso Total (kg) *</label>
-                            <input type="number" id="paquetePeso" class="form-control" step="0.1" min="0.1" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Alto (cm)</label>
-                            <input type="number" id="paqueteAlto" class="form-control" step="0.1" min="0">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Ancho (cm)</label>
-                            <input type="number" id="paqueteAncho" class="form-control" step="0.1" min="0">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Largo (cm)</label>
-                            <input type="number" id="paqueteLargo" class="form-control" step="0.1" min="0">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Valor Declarado *</label>
-                            <input type="number" id="paqueteValor" class="form-control" min="0" required>
-                        </div>
-
-                        <div class="form-group full-width">
-                            <label>Instrucciones Especiales</label>
-                            <textarea id="paqueteInstrucciones" class="form-control" rows="2" placeholder="Ej: Frágil, Manejar con cuidado"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sección: Servicio y Pago -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <h2>💰 Servicio y Facturación</h2>
-                    </div>
-
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Tipo de Servicio *</label>
-                            <select id="tipoServicio" class="form-control" required>
-                                <option value="">Seleccione servicio</option>
-                                <option value="normal">Normal (24-48 horas)</option>
-                                <option value="urgente">Urgente (Mismo día)</option>
-                                <option value="express">Express (2-4 horas)</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Forma de Pago *</label>
-                            <select id="formaPago" class="form-control" required>
-                                <option value="">Seleccione forma de pago</option>
-                                <option value="efectivo">Efectivo</option>
-                                <option value="transferencia">Transferencia</option>
-                                <option value="credito">Crédito (Cuenta Corriente)</option>
-                                <option value="contraentrega">Contraentrega</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>¿Quién Paga?</label>
-                            <select id="quienPaga" class="form-control">
-                                <option value="remitente">Remitente</option>
-                                <option value="destinatario">Destinatario</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Cálculo de Costo -->
-                    <div class="costo-section">
-                        <div class="costo-breakdown">
-                            <div class="costo-item">
-                                <span>Costo Base:</span>
-                                <span id="costoBase">$0</span>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="destinatario_nombre">Nombre Completo *</label>
+                                    <input type="text" id="destinatario_nombre" name="destinatario_nombre" required>
+                                    <span class="error-message"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="destinatario_telefono">Teléfono *</label>
+                                    <input type="tel" id="destinatario_telefono" name="destinatario_telefono" placeholder="3001234567" required maxlength="10" pattern="\d{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                    <span class="error-message"></span>
+                                </div>
                             </div>
-                            <div class="costo-item">
-                                <span>Recargo por Servicio:</span>
-                                <span id="costoRecargo">$0</span>
+                            <div class="form-group">
+                                <label for="destinatario_direccion">Dirección de Destino Completa *</label>
+                                <textarea id="destinatario_direccion" name="destinatario_direccion" rows="3" placeholder="Ej: Carrera 45 #67-89, Casa 202, Barrio Norte" required></textarea>
+                                <span class="error-message"></span>
                             </div>
-                            <div class="costo-item">
-                                <span>Seguro (2%):</span>
-                                <span id="costoSeguro">$0</span>
+                            <div class="form-group">
+                                <label for="instrucciones_entrega">Instrucciones Especiales de Entrega</label>
+                                <textarea id="instrucciones_entrega" name="instrucciones_entrega" rows="3" placeholder="Ej: Tocar el timbre 2 veces, entregar en portería, etc."></textarea>
                             </div>
-                            <div class="costo-item">
-                                <label>
-                                    <input type="checkbox" id="aplicarDescuento">
-                                    Aplicar Descuento:
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="tiene_recaudo" name="tiene_recaudo">
+                                    <span>Este envío tiene recaudo (pago contra entrega)</span>
                                 </label>
-                                <input type="number" id="descuentoPorcentaje" class="form-control-sm" min="0" max="100" value="0" disabled>
-                                <span>%</span>
-                                <span id="costoDescuento">$0</span>
                             </div>
-                            <div class="costo-total">
-                                <span>TOTAL A PAGAR:</span>
-                                <span id="costoTotal">$0</span>
+                            <div class="form-group recaudo-field" style="display: none;">
+                                <label for="valor_recaudo">Valor del Recaudo *</label>
+                                <div class="input-with-icon">
+                                    <span class="input-icon"></span>
+                                    <input type="text" id="valor_recaudo" placeholder="0" maxlength="15">
+                                    <input type="hidden" id="valor_recaudo_hidden" name="valor_recaudo">
+                                </div>
+                                <span class="error-message"></span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Botones de Acción -->
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" id="btnCancelar">
-                        ❌ Cancelar
+                <div class="form-step" data-step="3">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>📦 Información del Paquete</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="dimensiones_paquete">Dimensiones del Paquete *</label>
+                                <select id="dimensiones_paquete" name="dimensiones_paquete" required>
+                                    <option value="">Seleccionar tamaño...</option>
+                                    <option value="0">Menor o igual a 20 x 20 cm</option>
+                                    <option value="2000">Entre 21x21 y 30x30 cm (+$2.000)</option>
+                                    <option value="4000">Entre 31x31 y 35x35 cm (+$4.000)</option>
+                                    <option value="7000">Entre 36x36 y 40x40 cm (+$7.000)</option>
+                                    <option value="10000">Entre 41x41 y 45x45 cm (+$10.000)</option>
+                                    <option value="12000">Entre 46x46 y 49x49 cm (+$12.000)</option>
+                                    <option value="notificar">Igual o mayor a 50 x 50 cm (Notificar)</option>
+                                </select>
+                                <span class="error-message"></span>
+                            </div>
+                            <div class="form-row" style="margin-top: 15px;">
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="envio_mismo_dia" name="envio_mismo_dia">
+                                        <span>¿Entrega el mismo día? (+$2.000)</span>
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="zona_periferica" name="zona_periferica">
+                                        <span>Destino Soacha, Usme, C. Bolívar o San Cristóbal sur (+$4.000)</span>
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="recoger_cambios" name="recoger_cambios">
+                                        <span>¿Hay cambios por recoger? (+$5.000)</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card cost-card">
+                        <div class="card-header">
+                            <h2>💰 Cálculo del Costo</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="cost-breakdown">
+                                <div class="cost-item">
+                                    <span>Costo base por zona:</span>
+                                    <span id="costoBase">$8.000</span>
+                                </div>
+                                <div class="cost-item">
+                                    <span>Recargo por dimensiones:</span>
+                                    <span id="recargoDimensiones">$0</span>
+                                </div>
+                                <div class="cost-item">
+                                    <span>Entrega mismo día:</span>
+                                    <span id="recargoMismoDia">$0</span>
+                                </div>
+                                <div class="cost-item">
+                                    <span>Zonas de difícil acceso:</span>
+                                    <span id="recargoZona">$0</span>
+                                </div>
+                                <div class="cost-item">
+                                    <span>Cambios por recoger:</span>
+                                    <span id="recargoCambios">$0</span>
+                                </div>
+                                <div class="cost-item">
+                                    <span>Recaudo (si aplica):</span>
+                                    <span id="valorRecaudoDisplay">$0</span>
+                                </div>
+                                <div class="cost-divider"></div>
+                                <div class="cost-item total">
+                                    <span>Total a pagar:</span>
+                                    <span id="costoTotal">$8.000</span>
+                                </div>
+
+                                <div class="form-group" id="container_sumar_envio" style="display: none; margin-top: 25px; border-top: 2px dashed #eee; padding-top: 20px;">
+                                    <label style="font-weight: bold; display: block; margin-bottom: 15px; font-size: 1.1rem; color: #2c3e50;">¿Desea sumar el costo del envío al valor del recaudo? *</label>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                        <label class="radio-card">
+                                            <input type="radio" name="envio_destinatario" value="si" required>
+                                            <div class="radio-card-content">
+                                                <strong>SÍ, SUMAR</strong>
+                                                <small>Cobrar envío al destinatario</small>
+                                            </div>
+                                        </label>
+                                        <label class="radio-card">
+                                            <input type="radio" name="envio_destinatario" value="no" required>
+                                            <div class="radio-card-content">
+                                                <strong>NO, MANTENER</strong>
+                                                <small>Cobrar solo el valor del producto</small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div id="preview_total_recaudo" style="margin-top: 15px; font-weight: bold; color: #155724; background-color: #d4edda; border-color: #c3e6cb; padding: 12px; border-radius: 6px; text-align: center; font-size: 1.1rem; display: none;"></div>
+                                    <span class="error-message"></span>
+                                </div>
+
+                                <input type="hidden" name="costo_total" id="costoTotalHidden" value="8000">
+                                <input type="hidden" name="numero_guia" id="numeroGuiaHidden">
+                            </div>
+                            <button type="button" class="btn-text" id="calcularCosto" style="display: none;">
+                                🔄 Calcular costo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-step" data-step="4">
+                    <div class="card confirmation-card">
+                        <div class="card-header">
+                            <h2>✓ Confirmar Envío</h2>
+                            <button type="button" class="btn-secondary" id="btnDownloadPDF">
+                                <span>📄</span> Descargar Guía (PDF)
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="rotuloPreview" style="background: white; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333;">
+                                <div class="rotulo-scale">
+                                    <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 6px;">
+                                        <tr>
+                                            <td colspan="2">
+                                                <div style="display: flex; align-items: center; gap: 100px; justify-content: center; text-align: center;">
+                                                    <img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:100px;height:100px;">
+                                                    <div>
+                                                        <div style="font-size: 26px; font-weight: 800; color: #5cb85c; line-height: 1;">EcoBikeMess</div>
+                                                        <div style="margin-top: 3px; font-size: 15px; font-weight: 700; color: #28a745;">Contactanos: 317509298</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" style="padding-top: 4px;">
+                                                <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUÍA: <span id="numeroGuia" style="font-size: 19px; font-weight: 800; color: #1f2a37;">EBM-2024-XXXXX</span></div>
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <table style="width: 100%; margin-top: 4px; font-size: 12px;">
+                                        <tr>
+                                            <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                                <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
+                                                <p><strong>Dirección:</strong> <span id="confirm_destinatario_direccion" class="rotulo-text-lg bold"></span></p>
+                                                <p><strong>Nombre:</strong> <span id="confirm_destinatario_nombre" class="rotulo-text-lg bold"></span></p>
+                                                <p><strong>Teléfono:</strong> <span id="confirm_destinatario_telefono" class="rotulo-text-lg bold"></span></p>
+                                                <p><strong>Observaciones:</strong> <span id="confirm_destinatario_observaciones" class="rotulo-text-lg bold"></span></p>
+                                            </td>
+                                            <td style="width: 4%;"></td>
+                                            <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                                <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
+                                                <p><strong>Tienda:</strong> <span id="confirm_tienda_nombre" class="rotulo-text-lg bold"></span></p>
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <table style="width: 100%; margin-top: 4px; padding-top: 0;">
+                                        <tr>
+                                            <td style="width: 60%; vertical-align: top; font-size: 12px;">
+                                                <div class="guia-left-col">
+                                                    <div class="guia-divider-h"></div>
+                                                    <div class="rotulo-card" style="border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                                        <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
+                                                        <p><strong>Cambios por recoger:</strong> <span id="confirm_recoger_cambios" class="rotulo-text-lg bold"></span></p>
+                                                    </div>
+                                                    <div style="margin-top: 6px;">
+                                                        <h3 style="margin: 0 0 6px; font-size: 15px;">💰 Total a Cobrar</h3>
+                                                        <div>
+                                                            <p id="confirm_total_cobrar" class="rotulo-total">$0</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td style="width: 40%; text-align: right; vertical-align: top;">
+                                                <div class="guia-right-col">
+                                                <div id="qrcode" style="display: inline-block; width: 220px; height: 220px; margin-right: 6mm; margin-top: -9mm;"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-navigation">
+                    <button type="button" class="btn-secondary" id="btnPrevious" style="display: none;">
+                        ← Anterior
                     </button>
-                    <button type="button" class="btn btn-info" id="btnPrevisualizarEtiqueta">
-                        👁️ Previsualizar Etiqueta
+                    <div class="nav-spacer"></div>
+                    <button type="button" class="btn-primary" id="btnNext">
+                        Siguiente →
                     </button>
-                    <button type="submit" class="btn btn-primary">
-                        💾 Guardar y Generar Guía
-                    </button>
-                    <button type="button" class="btn btn-success" id="btnGuardarYNuevo" style="display: none;">
-                        ➕ Guardar y Agregar Otro
+                    <button type="submit" class="btn-success" id="btnSubmit" style="display: none;">
+                        ✓ Confirmar Envío
                     </button>
                 </div>
             </form>
         </div>
-
-        <!-- Modal Nuevo Cliente -->
-        <div class="modal" id="modalNuevoCliente">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Nuevo Cliente</h2>
-                    <button class="btn-close" id="btnCerrarNuevoCliente">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="formNuevoCliente">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Tipo de Documento *</label>
-                                <select id="nuevoClienteTipoDoc" class="form-control" required>
-                                    <option value="NIT">NIT</option>
-                                    <option value="CC">Cédula</option>
-                                    <option value="CE">Cédula Extranjería</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Número de Documento *</label>
-                                <input type="text" id="nuevoClienteDoc" class="form-control" required>
-                            </div>
-                            <div class="form-group full-width">
-                                <label>Nombre / Razón Social *</label>
-                                <input type="text" id="nuevoClienteNombre" class="form-control" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Teléfono *</label>
-                                <input type="tel" id="nuevoClienteTelefono" class="form-control" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Email</label>
-                                <input type="email" id="nuevoClienteEmail" class="form-control">
-                            </div>
-                            <div class="form-group full-width">
-                                <label>Dirección *</label>
-                                <textarea id="nuevoClienteDireccion" class="form-control" rows="2" required></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Ciudad *</label>
-                                <input type="text" id="nuevoClienteCiudad" class="form-control" value="Bogotá" required>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" id="btnCancelarNuevoCliente">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Crear Cliente</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal Previsualizar Etiqueta -->
-        <div class="modal" id="modalEtiqueta">
-            <div class="modal-content modal-large">
-                <div class="modal-header">
-                    <h2>Etiqueta de Envío</h2>
-                    <button class="btn-close" id="btnCerrarEtiqueta">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div id="etiquetaPreview" class="etiqueta-container">
-                        <!-- La etiqueta se genera dinámicamente -->
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary" id="btnCerrarEtiquetaBtn">Cerrar</button>
-                        <button type="button" class="btn btn-primary" id="btnImprimirEtiqueta">🖨️ Imprimir Etiqueta</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 
-    <script src="../../public/js/digitarAdmin.js"></script>
+    <div id="bulkPreviewContainer" class="content-container" style="display: none;">
+        <div class="card">
+            <div class="card-header">
+                <h2>📦 Carga Masiva de Envíos</h2>
+                <div class="header-actions">
+                    <button type="button" class="btn-text" id="btnCancelBulk" style="color: #dc3545;">❌ Cancelar</button>
+                    <button type="button" class="btn-primary" id="btnProcessBulk">🚀 Procesar Todos</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <p>Se han detectado múltiples envíos. Revise la información antes de procesar.</p>
+                <div class="table-responsive">
+                    <table class="bulk-table">
+                        <thead>
+                            <tr>
+                                <th>Destinatario</th>
+                                <th>Teléfono</th>
+                                <th>Dirección</th>
+                                <th>Paquete</th>
+                                <th>Costo</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bulkTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="whatsappModal" class="modal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
+        <div class="modal-content" style="background: white; padding: 30px; border-radius: 15px; text-align: center; max-width: 400px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); animation: fadeIn 0.3s;">
+            <span class="close-wa-modal" style="position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #aaa;">&times;</span>
+            <div style="font-size: 50px; margin-bottom: 15px;">📦</div>
+            <h3 style="margin-bottom: 15px; color: #333;">Dimensiones Especiales</h3>
+            <p style="margin-bottom: 25px; color: #666;">Para paquetes de 50x50 cm o más, por favor contáctanos directamente para coordinar el envío.</p>
+            <a href="https://wa.link/49g8jg" target="_blank" class="btn-whatsapp" style="background-color: #25D366; color: white; padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 10px; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382C17.117 14.205 15.374 13.349 15.049 13.231C14.724 13.113 14.488 13.054 14.252 13.408C14.016 13.762 13.337 14.559 13.13 14.795C12.924 15.031 12.717 15.06 12.363 14.883C12.009 14.706 10.867 14.332 9.514 13.125C8.455 12.181 7.74 11.016 7.533 10.662C7.326 10.308 7.511 10.116 7.689 9.939C7.847 9.781 8.04 9.529 8.217 9.323C8.394 9.117 8.453 8.969 8.571 8.733C8.689 8.497 8.63 8.291 8.541 8.114C8.452 7.937 7.744 6.195 7.449 5.487C7.162 4.798 6.87 4.892 6.653 4.892C6.456 4.892 6.23 4.892 6.004 4.892C5.778 4.892 5.413 4.976 5.108 5.309C4.803 5.642 3.947 6.448 3.947 8.08C3.947 9.712 5.137 11.292 5.304 11.518C5.471 11.744 7.664 15.125 11.021 16.574C11.819 16.919 12.442 17.125 12.926 17.278C13.88 17.58 14.746 17.536 15.426 17.434C16.183 17.321 17.758 16.481 18.083 15.567C18.408 14.653 18.408 13.887 18.29 13.68C18.172 13.474 17.827 13.415 17.472 13.238V14.382ZM12.046 21.957C10.266 21.957 8.593 21.485 7.127 20.654L6.812 20.467L3.047 21.453L4.052 17.78L3.845 17.45C2.92 15.979 2.432 14.278 2.432 12.518C2.432 7.213 6.748 2.897 12.051 2.897C14.62 2.897 17.035 3.897 18.85 5.712C20.665 7.527 21.665 9.942 21.665 12.511C21.665 17.816 17.349 22.132 12.046 21.957Z" fill="white"/></svg>
+                WhatsApp +57 312318019
+            </a>
+        </div>
+    </div>
+
+    <script>
+        window.remitenteData = <?php echo json_encode($remitente_data, JSON_UNESCAPED_UNICODE); ?>;
+    </script>
+    <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script src="../../public/js/digitarAdminEnvio.js"></script>
+    <script src="../../public/js/enviarPaquete.js"></script>
 </body>
 </html>

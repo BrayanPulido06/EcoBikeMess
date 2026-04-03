@@ -596,19 +596,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Llenar datos del rótulo
         document.getElementById('rotulo_guia_num').textContent = pedido.guia;
-        document.getElementById('rotulo_fecha_creacion').textContent = formatDate(pedido.fecha);
-        document.getElementById('rotulo_tipo_paquete').textContent = (pedido.paquete.tipo || 'Normal').toUpperCase();
-        
         document.getElementById('rotulo_remitente').textContent = pedido.remitente.nombre;
-        document.getElementById('rotulo_dir_remitente').textContent = pedido.remitente.direccion;
-        document.getElementById('rotulo_tel_remitente').textContent = 'Tel: ' + pedido.remitente.telefono;
-        
+
         document.getElementById('rotulo_destinatario').textContent = pedido.destinatario.nombre;
         document.getElementById('rotulo_dir_destinatario').textContent = pedido.destinatario.direccion;
-        document.getElementById('rotulo_tel_destinatario').textContent = 'Tel: ' + pedido.destinatario.telefono;
-        
-        document.getElementById('rotulo_peso').textContent = (pedido.paquete.peso || '0') + ' kg';
-        document.getElementById('rotulo_notas').textContent = pedido.instrucciones_entrega || 'Sin observaciones';
+        document.getElementById('rotulo_tel_destinatario').textContent = pedido.destinatario.telefono;
+        document.getElementById('rotulo_observaciones').textContent = pedido.instrucciones_entrega || 'Sin observaciones';
+
+        document.getElementById('rotulo_cambios').textContent = 'No';
+
+        const totalCobrar = pedido.comprobante?.recaudo > 0 ? Number(pedido.comprobante.recaudo) : 0;
+        const totalTexto = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(totalCobrar);
+        document.getElementById('rotulo_financiero').innerHTML = `<p class="rotulo-total">${totalTexto}</p>`;
 
         // Generar QR
         const qrContainer = document.getElementById('rotulo_qr_code');
@@ -620,12 +619,11 @@ REM: ${pedido.remitente.nombre}
 DEST: ${pedido.destinatario.nombre}
 DIR: ${pedido.destinatario.direccion}
 TEL: ${pedido.destinatario.telefono}
-TIPO: ${pedido.paquete.tipo || 'Normal'}
-FECHA: ${formatDate(pedido.fecha)}`;
+TOTAL: ${totalTexto}`;
 
         const qrCode = new QRCodeStyling({
-            width: 160,
-            height: 160,
+            width: 220,
+            height: 220,
             type: "canvas",
             data: qrData,
             dotsOptions: { color: "#000", type: "square" },
@@ -646,9 +644,9 @@ FECHA: ${formatDate(pedido.fecha)}`;
                 const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff' });
                 const imgData = canvas.toDataURL('image/png');
                 const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a6'); // Tamaño A6 para etiquetas
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                const pdf = new jsPDF('p', 'mm', [100, 100]);
+                const pdfWidth = 100;
+                const pdfHeight = 100;
                 pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
                 pdf.save(`Rotulo_${guia}.pdf`);
             } catch (error) {

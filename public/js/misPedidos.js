@@ -1,3 +1,5 @@
+let currentData = [];
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Script facturacionCliente.js cargado');
 
@@ -5,6 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableBody = document.getElementById('tablaFacturasBody');
     const btnLimpiar = document.getElementById('btnLimpiarFiltros');
     const btnExportExcel = document.getElementById('btnExportarExcel');
+    const btnExportarGuias = document.getElementById('btnExportarGuias');
+    const selectAllCheckbox = document.getElementById('selectAll');
     
     // Filtros
     const inputs = {
@@ -48,6 +52,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnExportExcel) {
         btnExportExcel.addEventListener('click', exportarExcel);
     }
+    if (btnExportarGuias) {
+        btnExportarGuias.addEventListener('click', descargarGuiasSeleccionadas);
+    }
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.factura-checkbox');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+        });
+    }
+    document.addEventListener('change', (e) => {
+        if (e.target && e.target.classList.contains('factura-checkbox')) {
+            const all = document.querySelectorAll('.factura-checkbox');
+            const checked = document.querySelectorAll('.factura-checkbox:checked');
+            if (selectAllCheckbox) selectAllCheckbox.checked = all.length > 0 && all.length === checked.length;
+        }
+    });
 
     // --- FUNCIONES ---
 
@@ -108,6 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        currentData = data;
         let html = '';
         data.forEach(f => {
             let badgeClass = 'secondary';
@@ -139,7 +161,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>
                         <button class="btn btn-sm btn-warning" onclick="cargarRotulo(${f.id})" title="Ver Rótulo" style="margin-right:3px;">🏷️ Rótulo</button>
                         <button class="btn btn-sm btn-info" onclick="verDetalle(${f.id})" title="Ver Detalle">👁️</button>
-                        <button class="btn btn-sm btn-secondary" title="Descargar PDF">⬇️</button>
+                        <button class="btn btn-sm btn-secondary" onclick="descargarGuia(${f.id})" title="Descargar PDF">⬇️</button>
+                        ${f.estado !== 'entregado' && f.estado !== 'cancelado' ? `<button class="btn btn-sm btn-danger" onclick="cancelarPedido(${f.id}, '${f.numero_guia}')" title="Cancelar Pedido" style="margin-left:3px;">🗑️</button>` : ''}
                     </td>
                 </tr>
             `;
@@ -335,6 +358,33 @@ document.addEventListener('DOMContentLoaded', function() {
         return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val);
     }
 
+    // Función global para cancelar pedido
+    window.cancelarPedido = function(id, guia) {
+        if (!id) return;
+        const mensaje = `¿Estás seguro de cancelar el paquete ${guia}? Esta acción no se puede deshacer.`;
+        if (!confirm(mensaje)) return;
+
+        fetch(`../../controller/misPedidosController.php?action=cancelar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        })
+            .then(res => res.json())
+            .then(response => {
+                if (response.success) {
+                    alert(response.message || 'Pedido cancelado correctamente');
+                    listarFacturas();
+                    cargarEstadisticas();
+                } else {
+                    alert(response.message || 'No se pudo cancelar el pedido');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error de conexión al cancelar el pedido');
+            });
+    }
+
     function formatDateTimeEs(dateValue) {
         if (!dateValue) return 'Pendiente';
         const raw = String(dateValue).replace('T', ' ').substring(0, 19);
@@ -355,4 +405,178 @@ document.addEventListener('DOMContentLoaded', function() {
     function exportarExcel() {
         alert('Funcionalidad de exportación en desarrollo.');
     }
+
+    function formatMoney(val) {
+        return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val || 0);
+    }
+
+    function buildRotuloHtml(datos) {
+        return `
+            <div id="rotuloPreview" style="background: white; padding: 12px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333; width: 100mm; height: 100mm; box-sizing: border-box;">
+                <div style="transform: scale(0.72); transform-origin: top left; width: 139mm; height: 139mm;">
+                    <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 6px;">
+                        <tr>
+                            <td colspan="2">
+                                <div style="display: flex; align-items: center; gap: 10px; justify-content: center; text-align: center;">
+                                    <img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:100px;height:100px;">
+                                    <div>
+                                        <div style="font-size: 26px; font-weight: 800; color: #5cb85c; line-height: 1;">EcoBikeMess</div>
+                                        <div style="margin-top: 3px; font-size: 15px; font-weight: 700; color: #28a745;">Contactanos: 317509298</div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="padding-top: 4px;">
+                                <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUÍA: <span style="font-size: 19px; font-weight: 800; color: #1f2a37;">${datos.guia}</span></div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table style="width: 100%; margin-top: 4px; font-size: 12px;">
+                        <tr>
+                            <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
+                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Dirección:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_direccion || ''}</span></p>
+                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Nombre:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_nombre || ''}</span></p>
+                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Teléfono:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_telefono || ''}</span></p>
+                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Observaciones:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_observaciones || 'Sin observaciones'}</span></p>
+                            </td>
+                            <td style="width: 4%;"></td>
+                            <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
+                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Tienda:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.tienda_nombre || datos.remitente_nombre || 'Tienda'}</span></p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table style="width: 100%; margin-top: 4px; padding-top: 0;">
+                        <tr>
+                            <td style="width: 60%; vertical-align: top; font-size: 12px;">
+                                <div style="border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                    <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
+                                    <p style="margin: 2px 0; line-height: 1.05;"><strong>Cambios por recoger:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.cambios || 'No'}</span></p>
+                                </div>
+                                <div style="margin-top: 6px;">
+                                    <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800;">💰 Total a Cobrar</h3>
+                                    <p style="margin: 2px 0; font-size: 26px; font-weight: 800; color: #28a745; line-height: 1.1;">${formatMoney(datos.recaudo)}</p>
+                                </div>
+                            </td>
+                            <td style="width: 40%; text-align: right; vertical-align: top;">
+                                <div id="rotulo_qr_code" style="display: inline-block; width: 220px; height: 220px; margin-right: 6mm; margin-top: -7mm;"></div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    async function renderRotuloToCanvas(datos) {
+        const temp = document.createElement('div');
+        temp.style.position = 'absolute';
+        temp.style.left = '-9999px';
+        temp.style.top = '0';
+        temp.innerHTML = buildRotuloHtml(datos);
+        document.body.appendChild(temp);
+
+        const qrContainer = temp.querySelector('#rotulo_qr_code');
+        const totalTexto = formatMoney(datos.recaudo);
+        const qrData = `Guía: ${datos.guia}\nRemitente: ${datos.tienda_nombre || datos.remitente_nombre}\nDestinatario: ${datos.destinatario_nombre}\nDirección: ${datos.destinatario_direccion}\nTotal a Cobrar: ${totalTexto}`;
+        const qrCode = new QRCodeStyling({
+            width: 220,
+            height: 220,
+            type: "canvas",
+            data: qrData,
+            dotsOptions: { color: "#000", type: "rounded" },
+            backgroundOptions: { color: "#fff" }
+        });
+        qrCode.append(qrContainer);
+
+        await new Promise(r => setTimeout(r, 50));
+        const element = temp.querySelector('#rotuloPreview');
+        const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff' });
+        document.body.removeChild(temp);
+        return canvas;
+    }
+
+    async function descargarGuiasSeleccionadas() {
+        const selectedCheckboxes = document.querySelectorAll('.factura-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('Selecciona al menos un pedido.');
+            return;
+        }
+        const ids = Array.from(selectedCheckboxes).map(cb => cb.value);
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', [100, 100]);
+        let first = true;
+
+        for (const id of ids) {
+            try {
+                const res = await fetch(`../../controller/misPedidosController.php?action=detalle&id=${id}`);
+                const response = await res.json();
+                if (!response.success) continue;
+                const info = response.data.info;
+                const datos = {
+                    guia: info.numero_guia,
+                    remitente_nombre: info.remitente_nombre || 'EcoBikeMess',
+                    tienda_nombre: info.nombre_emprendimiento || info.remitente_nombre || 'Tienda',
+                    destinatario_nombre: info.destinatario_nombre,
+                    destinatario_direccion: info.direccion_destino,
+                    destinatario_telefono: info.destinatario_telefono || '',
+                    destinatario_observaciones: info.instrucciones_entrega || 'Sin observaciones',
+                    contenido: info.descripcion_contenido || '',
+                    cambios: info.recoger_cambios ? 'Sí' : 'No',
+                    recaudo: info.recaudo_esperado || 0
+                };
+                const canvas = await renderRotuloToCanvas(datos);
+                const imgData = canvas.toDataURL('image/png');
+                if (!first) pdf.addPage([100, 100], 'p');
+                pdf.addImage(imgData, 'PNG', 0, 0, 100, 100);
+                first = false;
+            } catch (err) {
+                console.error('Error generando guía:', err);
+            }
+        }
+
+        if (first) {
+            alert('No se pudieron generar las guías.');
+            return;
+        }
+        const fecha = new Date().toISOString().slice(0, 10);
+        pdf.save(`Guias_${fecha}.pdf`);
+    }
+
+    window.descargarGuia = async function(id) {
+        try {
+            const res = await fetch(`../../controller/misPedidosController.php?action=detalle&id=${id}`);
+            const response = await res.json();
+            if (!response.success) {
+                alert('No se pudo cargar la guía.');
+                return;
+            }
+            const info = response.data.info;
+            const datos = {
+                guia: info.numero_guia,
+                remitente_nombre: info.remitente_nombre || 'EcoBikeMess',
+                tienda_nombre: info.nombre_emprendimiento || info.remitente_nombre || 'Tienda',
+                destinatario_nombre: info.destinatario_nombre,
+                destinatario_direccion: info.direccion_destino,
+                destinatario_telefono: info.destinatario_telefono || '',
+                destinatario_observaciones: info.instrucciones_entrega || 'Sin observaciones',
+                contenido: info.descripcion_contenido || '',
+                cambios: info.recoger_cambios ? 'Sí' : 'No',
+                recaudo: info.recaudo_esperado || 0
+            };
+            const canvas = await renderRotuloToCanvas(datos);
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', [100, 100]);
+            pdf.addImage(imgData, 'PNG', 0, 0, 100, 100);
+            pdf.save(`Guia_${datos.guia}.pdf`);
+        } catch (err) {
+            console.error(err);
+            alert('Error al generar la guía.');
+        }
+    };
 });

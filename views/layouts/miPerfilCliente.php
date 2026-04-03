@@ -53,6 +53,12 @@ if ($rol === 'cliente') {
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/miPerfil.css">
 
+    <style>
+        /* Ocultar el botón de WhatsApp solo en esta vista para no interferir con el formulario */
+        .whatsapp-container {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
     <?php 

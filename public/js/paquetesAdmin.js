@@ -1,4 +1,4 @@
-// Variable global para almacenar todos los mensajeros
+﻿// Variable global para almacenar todos los mensajeros
 let todosLosMensajeros = [];
 let currentData = []; // Almacenar datos actuales de la tabla para exportación
 
@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableBody = document.getElementById('tablaPaquetesBody');
     const btnLimpiar = document.getElementById('btnLimpiarFiltros');
     const btnExportExcel = document.getElementById('btnExportarExcel');
+    const btnExportarGuias = document.getElementById('btnExportarGuias');
     const selectAllCheckbox = document.getElementById('selectAll');
     const btnNuevoPaquete = document.getElementById('btnNuevoPaquete');
     
@@ -80,6 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- EXPORTACIÓN ---
     if (btnExportExcel) btnExportExcel.addEventListener('click', exportarExcel);
+    if (btnExportarGuias) btnExportarGuias.addEventListener('click', descargarGuiasSeleccionadas);
 
     // --- NUEVO PAQUETE ---
     if (btnNuevoPaquete) {
@@ -87,12 +89,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- SELECCIONAR TODOS ---
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
-            const checkboxes = document.querySelectorAll('.paquete-checkbox');
-            checkboxes.forEach(cb => cb.checked = this.checked);
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.paquete-checkbox');
+                checkboxes.forEach(cb => cb.checked = this.checked);
+            });
+        }
+        document.addEventListener('change', (e) => {
+            if (e.target && e.target.classList.contains('paquete-checkbox')) {
+                const all = document.querySelectorAll('.paquete-checkbox');
+                const checked = document.querySelectorAll('.paquete-checkbox:checked');
+                if (selectAllCheckbox) selectAllCheckbox.checked = all.length > 0 && all.length === checked.length;
+            }
         });
-    }
 
     // --- FUNCIONES ---
 
@@ -129,6 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (tableBody) tableBody.innerHTML = `<tr><td colspan="13" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
             });
     }
+    window.listarPaquetes = listarPaquetes;
 
     // 3. Generar el HTML de las filas
     function renderizarTabla(data) {
@@ -209,6 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${recaudoFormateado}</td>
                     <td>${envioAgregado}</td>
                     <td>
+                        <button class="btn btn-sm btn-warning" onclick="cargarRotuloAdmin(${p.id})" title="Guía" style="margin-right:3px;">🏷️ Guía</button>
                         <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})" title="Ver Detalle">👁️</button>
                         ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar">🚴</button>` : ''}
                     </td>
@@ -259,6 +270,150 @@ document.addEventListener('DOMContentLoaded', function() {
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Paquetes");
         XLSX.writeFile(wb, `Paquetes_EcoBikeMess_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function formatMoney(val) {
+        return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val || 0);
+    }
+
+    function buildRotuloHtml(datos) {
+        return `
+            <div id="rotuloPreview" style="background: white; padding: 12px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333; width: 100mm; height: 100mm; box-sizing: border-box;">
+                <div style="transform: scale(0.72); transform-origin: top left; width: 139mm; height: 139mm;">
+                    <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 6px;">
+                        <tr>
+                            <td colspan="2">
+                                <div style="display: flex; align-items: center; gap: 10px; justify-content: center; text-align: center;">
+                                    <img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:100px;height:100px;">
+                                    <div>
+                                        <div style="font-size: 26px; font-weight: 800; color: #5cb85c; line-height: 1;">EcoBikeMess</div>
+                                        <div style="margin-top: 3px; font-size: 15px; font-weight: 700; color: #28a745;">Contactanos: 317509298</div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="padding-top: 4px;">
+                                <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUÍA: <span style="font-size: 19px; font-weight: 800; color: #1f2a37;">${datos.guia}</span></div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table style="width: 100%; margin-top: 4px; font-size: 12px;">
+                        <tr>
+                            <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
+                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Dirección:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_direccion || ''}</span></p>
+                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Nombre:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_nombre || ''}</span></p>
+                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Teléfono:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_telefono || ''}</span></p>
+                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Observaciones:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_observaciones || 'Sin observaciones'}</span></p>
+                            </td>
+                            <td style="width: 4%;"></td>
+                            <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
+                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Tienda:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.tienda_nombre || datos.remitente_nombre || 'Tienda'}</span></p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table style="width: 100%; margin-top: 4px; padding-top: 0;">
+                        <tr>
+                            <td style="width: 60%; vertical-align: top; font-size: 12px;">
+                                <div style="border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                    <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
+                                    <p style="margin: 2px 0; line-height: 1.05;"><strong>Cambios por recoger:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.cambios || 'No'}</span></p>
+                                </div>
+                                <div style="margin-top: 6px;">
+                                    <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800;">💰 Total a Cobrar</h3>
+                                    <p style="margin: 2px 0; font-size: 26px; font-weight: 800; color: #28a745; line-height: 1.1;">${formatMoney(datos.recaudo)}</p>
+                                </div>
+                            </td>
+                            <td style="width: 40%; text-align: right; vertical-align: top;">
+                                <div id="rotulo_qr_code" style="display: inline-block; width: 220px; height: 220px; margin-right: 6mm; margin-top: -7mm;"></div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    async function renderRotuloToCanvas(datos) {
+        const temp = document.createElement('div');
+        temp.style.position = 'absolute';
+        temp.style.left = '-9999px';
+        temp.style.top = '0';
+        temp.innerHTML = buildRotuloHtml(datos);
+        document.body.appendChild(temp);
+
+        const qrContainer = temp.querySelector('#rotulo_qr_code');
+        const totalTexto = formatMoney(datos.recaudo);
+        const qrData = `Guía: ${datos.guia}\nRemitente: ${datos.tienda_nombre || datos.remitente_nombre}\nDestinatario: ${datos.destinatario_nombre}\nDirección: ${datos.destinatario_direccion}\nTotal a Cobrar: ${totalTexto}`;
+        const qrCode = new QRCodeStyling({
+            width: 220,
+            height: 220,
+            type: "canvas",
+            data: qrData,
+            dotsOptions: { color: "#000", type: "rounded" },
+            backgroundOptions: { color: "#fff" }
+        });
+        qrCode.append(qrContainer);
+
+        await new Promise(r => setTimeout(r, 50));
+        const element = temp.querySelector('#rotuloPreview');
+        const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff' });
+        document.body.removeChild(temp);
+        return canvas;
+    }
+
+    async function descargarGuiasSeleccionadas() {
+        const selectedCheckboxes = document.querySelectorAll('.paquete-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('Selecciona al menos un paquete.');
+            return;
+        }
+
+        const ids = Array.from(selectedCheckboxes).map(cb => cb.value);
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', [100, 100]);
+        let first = true;
+
+        for (const id of ids) {
+            try {
+                const res = await fetch(`../../controller/paquetesAdminController.php?action=detalle&id=${id}`);
+                const response = await res.json();
+                const info = response.info;
+                if (!info) continue;
+
+                const datos = {
+                    guia: info.numero_guia,
+                    remitente_nombre: info.remitente || 'EcoBikeMess',
+                    tienda_nombre: info.remitente || 'Tienda',
+                    destinatario_nombre: info.destinatario_nombre,
+                    destinatario_direccion: info.direccion_destino,
+                    destinatario_telefono: info.destinatario_telefono || '',
+                    destinatario_observaciones: info.instrucciones_entrega || 'Sin observaciones',
+                    contenido: info.descripcion_contenido || '',
+                    cambios: info.recoger_cambios ? 'Sí' : 'No',
+                    recaudo: info.recaudo_esperado || 0
+                };
+
+                const canvas = await renderRotuloToCanvas(datos);
+                const imgData = canvas.toDataURL('image/png');
+                if (!first) pdf.addPage([100, 100], 'p');
+                pdf.addImage(imgData, 'PNG', 0, 0, 100, 100);
+                first = false;
+            } catch (err) {
+                console.error('Error generando guía:', err);
+            }
+        }
+
+        if (first) {
+            alert('No se pudieron generar las guías.');
+            return;
+        }
+        const fecha = new Date().toISOString().slice(0, 10);
+        pdf.save(`Guias_${fecha}.pdf`);
     }
 });
 
@@ -350,11 +505,16 @@ function verDetalle(id) {
             .then(data => {
                 const info = data.info;
                 const historial = data.historial || [];
+                const imagenes = data.imagenes || [];
 
                 if (!info) {
                     const msg = data.error ? `Error: ${data.error}` : 'No se encontró información del paquete.';
                     container.innerHTML = `<p class="text-danger text-center">${msg}</p>`;
                     return;
+                }
+
+                if (todosLosMensajeros.length === 0) {
+                    cargarFiltros();
                 }
 
                 // Formateadores
@@ -370,144 +530,264 @@ function verDetalle(id) {
                     case 'devuelto': badgeClass = 'dark'; break;
                 }
 
+                const escapeHtml = (value) => {
+                    if (value === null || value === undefined) return '';
+                    return String(value)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;');
+                };
+
+                const toInputDateTime = (value) => {
+                    if (!value) return '';
+                    const cleaned = String(value).replace(' ', 'T');
+                    return cleaned.slice(0, 16);
+                };
+
+                const toDbDateTime = (value) => {
+                    if (!value) return '';
+                    const normalized = String(value).replace('T', ' ');
+                    return normalized.length === 16 ? `${normalized}:00` : normalized;
+                };
+
+                const renderMensajeroOptions = (selectedId) => {
+                    let opts = `<option value="">Sin asignar</option>`;
+                    todosLosMensajeros.forEach(m => {
+                        const sel = String(m.id) === String(selectedId) ? 'selected' : '';
+                        opts += `<option value="${m.id}" ${sel}>${escapeHtml(m.nombre)}</option>`;
+                    });
+                    return opts;
+                };
+
+                const renderTipoOptions = (value) => {
+                    const base = [
+                        { value: 'entrega_simple', label: 'Entrega Simple' },
+                        { value: 'contraentrega', label: 'Contraentrega' }
+                    ];
+                    if (value && !base.find(o => o.value === value)) {
+                        base.push({ value, label: value });
+                    }
+                    return base.map(o => `<option value="${o.value}" ${o.value === value ? 'selected' : ''}>${o.label}</option>`).join('');
+                };
+
+                const renderEstadoOptions = (value) => {
+                    const estados = [
+                        { value: 'pendiente', label: 'Pendiente' },
+                        { value: 'asignado', label: 'Asignado' },
+                        { value: 'en_transito', label: 'En tránsito' },
+                        { value: 'en_ruta', label: 'En ruta' },
+                        { value: 'entregado', label: 'Entregado' },
+                        { value: 'devuelto', label: 'Devuelto' },
+                        { value: 'cancelado', label: 'Cancelado' }
+                    ];
+                    return estados.map(o => `<option value="${o.value}" ${o.value === value ? 'selected' : ''}>${o.label}</option>`).join('');
+                };
+
+                const evidenciaItems = [];
+                if (info.infoEntrega && info.infoEntrega.fotoPrincipal) {
+                    evidenciaItems.push({
+                        tipo: 'entrega',
+                        label: 'Entrega principal',
+                        ruta: info.infoEntrega.fotoPrincipal,
+                        target: 'entrega_principal'
+                    });
+                }
+                if (info.infoEntrega && info.infoEntrega.fotoAdicional) {
+                    evidenciaItems.push({
+                        tipo: 'entrega',
+                        label: 'Entrega adicional',
+                        ruta: info.infoEntrega.fotoAdicional,
+                        target: 'entrega_adicional'
+                    });
+                }
+                if (info.infoCancelacion && info.infoCancelacion.foto) {
+                    evidenciaItems.push({
+                        tipo: 'cancelacion',
+                        label: 'Cancelación',
+                        ruta: info.infoCancelacion.foto,
+                        target: 'cancelacion'
+                    });
+                }
+
+                const extraItems = imagenes.map(img => ({
+                    tipo: img.tipo || 'general',
+                    label: `Imagen ${img.tipo || 'general'}`,
+                    ruta: img.ruta_archivo,
+                    imageId: img.id
+                }));
+
+                const renderEvidenciaCard = (item) => {
+                    const ruta = item.ruta || item.ruta_archivo;
+                    if (!ruta) return '';
+                    const deleteAttrs = item.imageId ? `data-action="eliminar-imagen" data-image-id="${item.imageId}"` : `data-action="eliminar-imagen" data-target="${item.target}"`;
+                    const replaceInput = item.target ? `
+                        <label class="btn btn-sm btn-secondary">
+                            Reemplazar
+                            <input type="file" class="input-reemplazar" data-target="${item.target}" data-paquete-id="${info.paquete_id}" accept="image/*" hidden>
+                        </label>
+                    ` : '';
+                    return `
+                        <div class="evidencia-card">
+                            <a href="../../${ruta}" target="_blank" rel="noopener noreferrer">
+                                <img src="../../${ruta}" alt="${escapeHtml(item.label)}">
+                            </a>
+                            <div class="evidencia-meta">
+                                <span>${escapeHtml(item.label)}</span>
+                                <span class="badge badge-secondary">${escapeHtml(item.tipo)}</span>
+                            </div>
+                            <div class="evidencia-actions">
+                                ${replaceInput}
+                                <button class="btn btn-sm btn-danger" ${deleteAttrs}>Eliminar</button>
+                            </div>
+                        </div>
+                    `;
+                };
+
                 let html = `
-                    <div class="detalle-section">
-                        <h3>📦 Información del Paquete</h3>
-                        <div class="detalle-grid">
-                            <div class="detalle-item">
-                                <div class="detalle-label">Número de Guía</div>
-                                <div class="detalle-value" style="font-size: 1.2em; color: #667eea;">${info.numero_guia}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Estado Actual</div>
-                                <div class="detalle-value"><span class="badge badge-${badgeClass}">${info.estado.toUpperCase()}</span></div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Fecha de Ingreso</div>
-                                <div class="detalle-value">${info.fecha_creacion}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Remitente</div>
-                                <div class="detalle-value">${info.remitente || 'N/A'}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Destinatario</div>
-                                <div class="detalle-value">${info.destinatario_nombre}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Teléfono Destinatario</div>
-                                <div class="detalle-value">${info.destinatario_telefono}</div>
-                            </div>
-                            <div class="detalle-item" style="grid-column: span 2;">
-                                <div class="detalle-label">Dirección de Entrega</div>
-                                <div class="detalle-value">${info.direccion_destino}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Mensajero Recolección</div>
-                                <div class="detalle-value">${info.mensajero_recoleccion || '<span class="text-muted">Sin asignar</span>'}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Mensajero Entrega</div>
-                                <div class="detalle-value">${info.mensajero || '<span class="text-muted">Sin asignar</span>'}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Tipo de Paquete</div>
-                                <div class="detalle-value">${info.tipo_paquete}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Contenido</div>
-                                <div class="detalle-value">${info.descripcion_contenido || '-'}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Costo Envío</div>
-                                <div class="detalle-value">${currency.format(info.costo_envio)}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Valor a Recaudar</div>
-                                <div class="detalle-value" style="color: ${info.recaudo_esperado > 0 ? '#dc3545' : '#333'}">
-                                    ${currency.format(info.recaudo_esperado || 0)}
+                    <form id="formEditarDetalles" data-paquete-id="${info.paquete_id}">
+                        <div class="detalle-section">
+                            <h3>📦 Información del Paquete</h3>
+                            <div class="detalle-grid">
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Número de Guía</div>
+                                    <input class="form-control" name="numero_guia" value="${escapeHtml(info.numero_guia)}">
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Estado Actual</div>
+                                    <select class="form-control" name="estado">
+                                        ${renderEstadoOptions(info.estado)}
+                                    </select>
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Fecha de Ingreso</div>
+                                    <input class="form-control" type="datetime-local" name="fecha_creacion" value="${escapeHtml(toInputDateTime(info.fecha_creacion))}">
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Remitente</div>
+                                    <input class="form-control" name="remitente_nombre" value="${escapeHtml(info.remitente_editable || info.remitente || '')}">
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Destinatario</div>
+                                    <input class="form-control" name="destinatario_nombre" value="${escapeHtml(info.destinatario_nombre || '')}">
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Teléfono Destinatario</div>
+                                    <input class="form-control" name="destinatario_telefono" value="${escapeHtml(info.destinatario_telefono || '')}">
+                                </div>
+                                <div class="detalle-item" style="grid-column: span 2;">
+                                    <div class="detalle-label">Dirección de Entrega</div>
+                                    <textarea class="form-control" name="direccion_destino" rows="2">${escapeHtml(info.direccion_destino || '')}</textarea>
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Mensajero Recolección</div>
+                                    <select class="form-control" name="mensajero_recoleccion_id">
+                                        ${renderMensajeroOptions(info.mensajero_recoleccion_id)}
+                                    </select>
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Mensajero Entrega</div>
+                                    <select class="form-control" name="mensajero_id">
+                                        ${renderMensajeroOptions(info.mensajero_id)}
+                                    </select>
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Tipo de Paquete</div>
+                                    <select class="form-control" name="tipo_servicio">
+                                        ${renderTipoOptions(info.tipo_paquete)}
+                                    </select>
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Contenido</div>
+                                    <input class="form-control" name="descripcion_contenido" value="${escapeHtml(info.descripcion_contenido || '')}">
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Costo Envío</div>
+                                    <input class="form-control" type="number" name="costo_envio" step="0.01" min="0" value="${escapeHtml(info.costo_envio || 0)}">
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Valor a Recaudar</div>
+                                    <input class="form-control" type="number" name="recaudo_esperado" step="0.01" min="0" value="${escapeHtml(info.recaudo_esperado || 0)}">
+                                </div>
+                                <div class="detalle-item" style="grid-column: span 2;">
+                                    <div class="detalle-label">Instrucciones / Observaciones</div>
+                                    <textarea class="form-control" name="instrucciones_entrega" rows="2">${escapeHtml(info.instrucciones_entrega || '')}</textarea>
                                 </div>
                             </div>
-                            <div class="detalle-item" style="grid-column: span 2;">
-                                <div class="detalle-label">Instrucciones / Observaciones</div>
-                                <div class="detalle-value">${info.instrucciones_entrega || 'Ninguna'}</div>
-                            </div>
                         </div>
-                    </div>
 
-                    ${info.estado === 'entregado' && info.infoEntrega ? `
-                    <div class="detalle-section" style="margin-top: 20px; background-color: #f8fff9; border: 1px solid #c3e6cb;">
-                        <h3 style="color: #155724;">✅ Detalles de la Entrega</h3>
-                        <div class="detalle-grid">
-                            <div class="detalle-item">
-                                <div class="detalle-label">Recibido por</div>
-                                <div class="detalle-value"><strong>${info.infoEntrega.nombreRecibe || 'N/A'}</strong></div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Parentesco/Cargo</div>
-                                <div class="detalle-value">${info.infoEntrega.parentesco || 'N/A'}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Documento</div>
-                                <div class="detalle-value">${info.infoEntrega.documento || 'N/A'}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Fecha Entrega</div>
-                                <div class="detalle-value">${info.infoEntrega.fecha || 'N/A'}</div>
-                            </div>
-                            <div class="detalle-item" style="grid-column: span 2;">
-                                <div class="detalle-label">Observaciones de Entrega</div>
-                                <div class="detalle-value">${info.infoEntrega.observaciones || 'Sin observaciones'}</div>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-top: 15px;">
-                            <h4 style="font-size: 0.9em; text-transform: uppercase; color: #666; margin-bottom: 10px;">Evidencia Fotográfica</h4>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                ${info.infoEntrega.fotoPrincipal ? `
-                                    <a href="../../${info.infoEntrega.fotoPrincipal}" target="_blank" rel="noopener noreferrer" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                                        <img src="../../${info.infoEntrega.fotoPrincipal}" alt="Evidencia Principal" style="width: 100%; height: 100%; object-fit: cover;">
-                                    </a>
-                                ` : '<span class="text-muted">Sin foto principal</span>'}
-                                ${info.infoEntrega.fotoAdicional ? `
-                                    <a href="../../${info.infoEntrega.fotoAdicional}" target="_blank" rel="noopener noreferrer" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                                        <img src="../../${info.infoEntrega.fotoAdicional}" alt="Evidencia Adicional" style="width: 100%; height: 100%; object-fit: cover;">
-                                    </a>
-                                ` : ''}
+                        ${info.infoEntrega ? `
+                        <div class="detalle-section" style="margin-top: 20px; background-color: #f8fff9; border: 1px solid #c3e6cb;">
+                            <h3 style="color: #155724;">✅ Detalles de la Entrega</h3>
+                            <div class="detalle-grid">
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Recibido por</div>
+                                    <input class="form-control" name="entrega_nombre_receptor" value="${escapeHtml(info.infoEntrega.nombreRecibe || '')}">
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Parentesco/Cargo</div>
+                                    <input class="form-control" name="entrega_parentesco" value="${escapeHtml(info.infoEntrega.parentesco || '')}">
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Documento</div>
+                                    <input class="form-control" name="entrega_documento" value="${escapeHtml(info.infoEntrega.documento || '')}">
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Fecha Entrega</div>
+                                    <input class="form-control" type="datetime-local" name="entrega_fecha" value="${escapeHtml(toInputDateTime(info.infoEntrega.fecha || ''))}">
+                                </div>
+                                <div class="detalle-item" style="grid-column: span 2;">
+                                    <div class="detalle-label">Observaciones de Entrega</div>
+                                    <textarea class="form-control" name="entrega_observaciones" rows="2">${escapeHtml(info.infoEntrega.observaciones || '')}</textarea>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    ` : ''}
+                        ` : ''}
 
-                    ${info.estado === 'cancelado' ? `
-                    <div class="detalle-section" style="margin-top: 20px; background-color: #fff5f5; border: 1px solid #f5c2c7;">
-                        <h3 style="color: #b02a37;">❌ Detalles de Cancelación</h3>
-                        <div class="detalle-grid">
-                            <div class="detalle-item">
-                                <div class="detalle-label">Motivo</div>
-                                <div class="detalle-value">${info.infoCancelacion ? (info.infoCancelacion.motivo || 'Sin información.') : 'Sin información.'}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Fecha</div>
-                                <div class="detalle-value">${info.infoCancelacion ? (info.infoCancelacion.fecha || 'Sin información.') : 'Sin información.'}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Mensajero</div>
-                                <div class="detalle-value">${info.infoCancelacion ? (info.infoCancelacion.mensajero || 'Sin información.') : 'Sin información.'}</div>
-                            </div>
-                        </div>
-                        <div style="margin-top: 15px;">
-                            <h4 style="font-size: 0.9em; text-transform: uppercase; color: #666; margin-bottom: 10px;">Evidencia Fotográfica</h4>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                ${info.infoCancelacion && info.infoCancelacion.foto ? `
-                                    <a href="../../${info.infoCancelacion.foto}" target="_blank" rel="noopener noreferrer" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                                        <img src="../../${info.infoCancelacion.foto}" alt="Evidencia de cancelación" style="width: 100%; height: 100%; object-fit: cover;">
-                                    </a>
-                                ` : '<span class="text-muted">Sin evidencia fotográfica</span>'}
+                        ${info.infoCancelacion ? `
+                        <div class="detalle-section" style="margin-top: 20px; background-color: #fff5f5; border: 1px solid #f5c2c7;">
+                            <h3 style="color: #b02a37;">❌ Detalles de Cancelación</h3>
+                            <div class="detalle-grid">
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Motivo</div>
+                                    <textarea class="form-control" name="cancelacion_motivo" rows="2">${escapeHtml(info.infoCancelacion.motivo || '')}</textarea>
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Fecha</div>
+                                    <div class="detalle-value">${escapeHtml(info.infoCancelacion.fecha || 'Sin información.')}</div>
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Mensajero</div>
+                                    <div class="detalle-value">${escapeHtml(info.infoCancelacion.mensajero || 'Sin información.')}</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    ` : ''}
+                        ` : ''}
+
+                        <div class="detalle-section" style="margin-top: 20px;">
+                            <h3>🖼️ Evidencias e Imágenes</h3>
+                            <div class="evidencia-grid">
+                                ${evidenciaItems.map(renderEvidenciaCard).join('')}
+                                ${extraItems.map(renderEvidenciaCard).join('')}
+                                ${evidenciaItems.length === 0 && extraItems.length === 0 ? '<p class="text-muted">No hay imágenes registradas.</p>' : ''}
+                            </div>
+                            <div class="evidencia-upload">
+                                <select class="form-control" id="tipoImagenNueva">
+                                    <option value="general">General</option>
+                                    <option value="entrega">Entrega</option>
+                                    <option value="cancelacion">Cancelación</option>
+                                    <option value="recoleccion">Recolección</option>
+                                </select>
+                                <input class="form-control" type="file" id="imagenesNueva" multiple accept="image/*">
+                                <button type="button" class="btn btn-primary" id="btnSubirImagenes">Subir imágenes</button>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success">Guardar cambios</button>
+                        </div>
+                    </form>
 
                     <div class="detalle-section" style="margin-top: 20px;">
                         <h3>🕒 Historial de Movimientos</h3>
@@ -531,12 +811,208 @@ function verDetalle(id) {
                 }
                 html += '</div></div>';
                 container.innerHTML = html;
+
+                const form = document.getElementById('formEditarDetalles');
+                if (form) {
+                    form.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const formData = new FormData(form);
+                        const payload = {
+                            paquete_id: id,
+                            numero_guia: formData.get('numero_guia') || '',
+                            estado: formData.get('estado') || '',
+                            fecha_creacion: toDbDateTime(formData.get('fecha_creacion') || ''),
+                            remitente_nombre: formData.get('remitente_nombre') || '',
+                            destinatario_nombre: formData.get('destinatario_nombre') || '',
+                            destinatario_telefono: formData.get('destinatario_telefono') || '',
+                            direccion_destino: formData.get('direccion_destino') || '',
+                            tipo_servicio: formData.get('tipo_servicio') || '',
+                            descripcion_contenido: formData.get('descripcion_contenido') || '',
+                            costo_envio: parseFloat(formData.get('costo_envio') || '0'),
+                            recaudo_esperado: parseFloat(formData.get('recaudo_esperado') || '0'),
+                            instrucciones_entrega: formData.get('instrucciones_entrega') || '',
+                            mensajero_id: formData.get('mensajero_id') || '',
+                            mensajero_recoleccion_id: formData.get('mensajero_recoleccion_id') || ''
+                        };
+
+                        if (formData.get('entrega_nombre_receptor') !== null) {
+                            payload.entrega = {
+                                nombre_receptor: formData.get('entrega_nombre_receptor') || '',
+                                parentesco_cargo: formData.get('entrega_parentesco') || '',
+                                documento_receptor: formData.get('entrega_documento') || '',
+                                fecha_entrega: toDbDateTime(formData.get('entrega_fecha') || ''),
+                                observaciones: formData.get('entrega_observaciones') || '',
+                                recaudo_real: 0
+                            };
+                        }
+
+                        if (formData.get('cancelacion_motivo') !== null) {
+                            payload.cancelacion = {
+                                descripcion: formData.get('cancelacion_motivo') || ''
+                            };
+                        }
+
+                        try {
+                            const resp = await fetch('../../controller/paquetesAdminController.php?action=actualizar', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                            const result = await resp.json();
+                            if (result.success) {
+                                alert('Cambios guardados correctamente');
+                                verDetalle(id);
+                                if (typeof window.listarPaquetes === 'function') window.listarPaquetes();
+                            } else {
+                                alert('Error al guardar: ' + (result.error || 'Desconocido'));
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            alert('Error de conexión al guardar cambios');
+                        }
+                    });
+                }
+
+                const btnSubir = document.getElementById('btnSubirImagenes');
+                if (btnSubir) {
+                    btnSubir.addEventListener('click', async () => {
+                        const tipo = document.getElementById('tipoImagenNueva').value;
+                        const inputFiles = document.getElementById('imagenesNueva');
+                        if (!inputFiles || !inputFiles.files || inputFiles.files.length === 0) {
+                            if (inputFiles) inputFiles.click();
+                            alert('Selecciona una o más imágenes');
+                            return;
+                        }
+                        const fd = new FormData();
+                        fd.append('paquete_id', id);
+                        fd.append('tipo', tipo);
+                        Array.from(inputFiles.files).forEach(file => fd.append('imagenes[]', file));
+                        try {
+                            const resp = await fetch('../../controller/paquetesAdminController.php?action=imagen_subir', {
+                                method: 'POST',
+                                body: fd
+                            });
+                            const result = await resp.json();
+                            if (result.success) {
+                                alert('Imágenes subidas');
+                                verDetalle(id);
+                            } else {
+                                alert('Error al subir: ' + (result.error || 'Desconocido'));
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            alert('Error al subir imágenes');
+                        }
+                    });
+                }
+
+                container.querySelectorAll('[data-action="eliminar-imagen"]').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        if (!confirm('¿Eliminar esta imagen?')) return;
+                        const imageId = btn.getAttribute('data-image-id');
+                        const target = btn.getAttribute('data-target');
+                        const payload = { paquete_id: id };
+                        if (imageId) payload.image_id = imageId;
+                        if (target) payload.target = target;
+                        try {
+                            const resp = await fetch('../../controller/paquetesAdminController.php?action=imagen_eliminar', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                            const result = await resp.json();
+                            if (result.success) {
+                                verDetalle(id);
+                            } else {
+                                alert('Error al eliminar: ' + (result.error || 'Desconocido'));
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            alert('Error de conexión al eliminar');
+                        }
+                    });
+                });
+
+                container.querySelectorAll('.input-reemplazar').forEach(input => {
+                    input.addEventListener('change', async () => {
+                        if (!input.files || input.files.length === 0) return;
+                        const target = input.getAttribute('data-target');
+                        const fd = new FormData();
+                        fd.append('paquete_id', id);
+                        fd.append('target', target);
+                        fd.append('imagen', input.files[0]);
+                        try {
+                            const resp = await fetch('../../controller/paquetesAdminController.php?action=imagen_reemplazar', {
+                                method: 'POST',
+                                body: fd
+                            });
+                            const result = await resp.json();
+                            if (result.success) {
+                                verDetalle(id);
+                            } else {
+                                alert('Error al reemplazar: ' + (result.error || 'Desconocido'));
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            alert('Error al reemplazar imagen');
+                        }
+                    });
+                });
             })
             .catch(err => {
                 console.error(err);
                 container.innerHTML = '<p class="text-danger">Error al cargar datos.</p>';
             });
     }
+}
+
+// Abrir modal de Guía (Rótulo) desde Admin
+function cargarRotuloAdmin(id) {
+    const btn = event?.currentTarget;
+    const originalContent = btn ? btn.innerHTML : null;
+    if (btn) {
+        btn.innerHTML = '⌛';
+        btn.disabled = true;
+    }
+
+    fetch(`../../controller/paquetesAdminController.php?action=detalle&id=${id}`)
+        .then(res => res.json())
+        .then(response => {
+            if (btn) {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+
+            const info = response.info;
+            if (!info) {
+                alert('No se pudieron cargar los datos de la guía.');
+                return;
+            }
+
+            const datos = {
+                guia: info.numero_guia,
+                remitente_nombre: info.remitente || 'EcoBikeMess',
+                tienda_nombre: info.remitente || 'Tienda',
+                destinatario_nombre: info.destinatario_nombre,
+                destinatario_direccion: info.direccion_destino,
+                destinatario_telefono: info.destinatario_telefono || '',
+                destinatario_observaciones: info.instrucciones_entrega || 'Sin observaciones',
+                contenido: info.descripcion_contenido || '',
+                cambios: info.recoger_cambios ? 'Sí' : 'No',
+                costo_envio: info.costo_envio,
+                recaudo: info.recaudo_esperado || 0
+            };
+
+            if (typeof window.verRotulo === 'function') window.verRotulo(datos);
+        })
+        .catch(err => {
+            console.error(err);
+            if (btn) {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+            alert('Error de conexión al cargar la guía.');
+        });
 }
 
 function abrirModalAsignar(id, guia) {

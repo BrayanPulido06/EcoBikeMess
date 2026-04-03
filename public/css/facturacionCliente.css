@@ -839,6 +839,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-top: -4px;
 }
 .rotulo-dates {
     flex: 1;
@@ -895,6 +896,35 @@
     font-size: 0.75rem;
 }
 
+/* Rótulo 10x10 cm */
+.rotulo-card {
+    width: 100mm;
+    height: 100mm;
+    padding: 1mm 1mm 3mm 3mm;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+.rotulo-card .rotulo-scale {
+    transform: scale(0.72);
+    transform-origin: top left;
+    width: 139mm;
+    height: 139mm;
+}
+.rotulo-card .rotulo-header .brand-name {
+    font-size: 1.35rem;
+}
+.rotulo-card .rotulo-guia .guia-value {
+    font-size: 1.25rem;
+}
+.rotulo-card .block-content strong {
+    font-size: 1.05rem;
+}
+.rotulo-card .block-content p,
+.rotulo-card .footer-info span,
+.rotulo-card .footer-note {
+    font-size: 0.9rem;
+}
+
 /* Estilos para el Modal de Rótulo */
 .rotulo-card {
     background: white;
@@ -947,6 +977,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-top: -4px;
 }
 .rotulo-dates {
     flex: 1;
@@ -1001,4 +1032,50 @@
     font-style: italic;
     color: #555;
     font-size: 0.75rem;
+}
+/* Rótulo 10x10 cm (igual a paquetesAdmin) */
+#rotuloPreview {
+    width: 100mm;
+    height: 100mm;
+    padding: 1mm 2mm 2mm 3mm !important;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+#rotuloPreview .rotulo-scale {
+    transform: scale(0.72);
+    transform-origin: top left;
+    width: 139mm;
+    height: 139mm;
+}
+#rotuloPreview .rotulo-scale h1 { font-size: 26px !important; }
+#rotuloPreview .rotulo-scale h2 { font-size: 20px !important; }
+#rotuloPreview .rotulo-scale h3 { font-size: 17px !important; }
+#rotuloPreview .rotulo-scale p,
+#rotuloPreview .rotulo-scale span,
+#rotuloPreview .rotulo-scale strong { font-size: 14px !important; }
+#rotuloPreview .rotulo-scale h3 { font-weight: 800 !important; }
+#rotuloPreview .rotulo-scale strong { font-weight: 800 !important; }
+#rotuloPreview .rotulo-scale p strong { font-weight: 800 !important; }
+#rotuloPreview .rotulo-scale .rotulo-total {
+    margin: 2px 0;
+    font-size: 26px !important;
+    font-weight: 800;
+    color: #28a745;
+    text-align: left;
+    line-height: 1.1;
+}
+#rotuloPreview .rotulo-scale .rotulo-card p {
+    margin: 2px 0;
+    line-height: 1.05;
+}
+#rotuloPreview .rotulo-scale .rotulo-card h3 {
+    margin: 0 0 6px;
+}
+#rotuloPreview .rotulo-scale .rotulo-text-lg {
+    font-size: 15px !important;
+    font-weight: 600;
+    line-height: 1.05;
+}
+#rotuloPreview .rotulo-scale .rotulo-text-lg.bold {
+    font-weight: 700;
 }

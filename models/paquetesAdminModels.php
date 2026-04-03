@@ -85,6 +85,9 @@ class PaquetesAdminModel {
             $sql .= " AND p.estado = :estado";
             $params[':estado'] = $filters['estado'];
         }
+        if (empty($filters['estado'])) {
+            $sql .= " AND p.estado <> 'cancelado'";
+        }
         // La columna zona no existe en la tabla paquetes, se comenta el filtro para evitar error
         // if (!empty($filters['zona'])) {
         //    $sql .= " AND p.zona = :zona";
@@ -109,22 +112,30 @@ class PaquetesAdminModel {
     public function getPaqueteDetails($id) {
         $info = null;
         $historial = [];
+        $imagenes = [];
         $error = null;
 
         // 1. Obtener información completa del paquete
         try {
             $sqlInfo = "SELECT p.numero_guia, 
+                               p.id as paquete_id,
                                p.fecha_creacion,
-                               COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos)) as remitente,
+                               COALESCE(NULLIF(p.remitente_nombre, ''), NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos)) as remitente,
+                               p.remitente_nombre as remitente_editable,
                                p.destinatario_nombre, 
                                p.destinatario_telefono,
+                               p.destinatario_telefono2,
                                p.direccion_destino, 
                                p.descripcion_contenido,
+                               p.dimensiones,
+                               p.envio_destinatario,
                                p.tipo_servicio as tipo_paquete,
                                p.costo_envio,
                                p.recaudo_esperado,
                                p.instrucciones_entrega,
                                p.estado,
+                               p.mensajero_id,
+                               p.mensajero_recoleccion_id,
                                CONCAT(um.nombres, ' ', um.apellidos) as mensajero,
                                CONCAT(um_rec.nombres, ' ', um_rec.apellidos) as mensajero_recoleccion
                         FROM paquetes p
@@ -210,29 +221,169 @@ class PaquetesAdminModel {
             }
         }
 
-        return ['info' => $info, 'historial' => $historial, 'error' => $error];
+        // 3. Obtener imágenes adicionales del paquete
+        if ($info) {
+            try {
+                $sqlImgs = "SELECT id, tipo, ruta_archivo, fecha_subida
+                            FROM paquete_imagenes
+                            WHERE paquete_id = :id
+                            ORDER BY fecha_subida DESC";
+                $stmtImgs = $this->conn->prepare($sqlImgs);
+                $stmtImgs->execute([':id' => $id]);
+                $imagenes = $stmtImgs->fetchAll(PDO::FETCH_ASSOC);
+            } catch (PDOException $e) {
+                // No bloquear detalles si falla imágenes
+            }
+        }
+
+        return ['info' => $info, 'historial' => $historial, 'imagenes' => $imagenes, 'error' => $error];
     }
 
-    public function updatePaquete($id, $data) {
+    public function updatePaqueteAdmin($id, $data) {
         $sql = "UPDATE paquetes SET 
+                    numero_guia = :numero_guia,
+                    remitente_nombre = :remitente_nombre,
                     destinatario_nombre = :destinatario,
                     destinatario_telefono = :telefono,
                     direccion_destino = :direccion,
+                    descripcion_contenido = :contenido,
                     tipo_servicio = :tipo,
                     costo_envio = :valor,
-                    instrucciones_entrega = :observaciones
+                    recaudo_esperado = :recaudo,
+                    instrucciones_entrega = :observaciones,
+                    estado = :estado,
+                    mensajero_id = :mensajero_id,
+                    mensajero_recoleccion_id = :mensajero_recoleccion_id,
+                    fecha_creacion = :fecha_creacion
                 WHERE id = :id";
         
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
-            ':destinatario' => $data['destinatario'],
-            ':telefono' => $data['telefono'],
-            ':direccion' => $data['direccion'],
-            ':tipo' => $data['tipo'],
-            ':valor' => $data['valor'],
-            ':observaciones' => $data['observaciones'],
+            ':numero_guia' => $data['numero_guia'],
+            ':remitente_nombre' => $data['remitente_nombre'],
+            ':destinatario' => $data['destinatario_nombre'],
+            ':telefono' => $data['destinatario_telefono'],
+            ':direccion' => $data['direccion_destino'],
+            ':contenido' => $data['descripcion_contenido'],
+            ':tipo' => $data['tipo_servicio'],
+            ':valor' => $data['costo_envio'],
+            ':recaudo' => $data['recaudo_esperado'],
+            ':observaciones' => $data['instrucciones_entrega'],
+            ':estado' => $data['estado'],
+            ':mensajero_id' => $data['mensajero_id'] ?: null,
+            ':mensajero_recoleccion_id' => $data['mensajero_recoleccion_id'] ?: null,
+            ':fecha_creacion' => $data['fecha_creacion'] ?: null,
             ':id' => $id
         ]);
+    }
+
+    public function updateEntregaInfo($paqueteId, $data) {
+        $sql = "UPDATE entregas SET
+                    nombre_receptor = :nombre_receptor,
+                    parentesco_cargo = :parentesco,
+                    documento_receptor = :documento,
+                    recaudo_real = :recaudo,
+                    fecha_entrega = :fecha_entrega,
+                    observaciones = :observaciones
+                WHERE paquete_id = :id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':nombre_receptor' => $data['nombre_receptor'],
+            ':parentesco' => $data['parentesco_cargo'] ?: null,
+            ':documento' => $data['documento_receptor'] ?: null,
+            ':recaudo' => $data['recaudo_real'],
+            ':fecha_entrega' => $data['fecha_entrega'] ?: null,
+            ':observaciones' => $data['observaciones'] ?: null,
+            ':id' => $paqueteId
+        ]);
+    }
+
+    public function updateCancelacionInfo($paqueteId, $data) {
+        $sqlId = "SELECT id FROM novedades_entrega
+                  WHERE paquete_id = :id AND tipo = 'cancelado'
+                  ORDER BY fecha_registro DESC
+                  LIMIT 1";
+        $stmtId = $this->conn->prepare($sqlId);
+        $stmtId->execute([':id' => $paqueteId]);
+        $row = $stmtId->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            return false;
+        }
+
+        $sql = "UPDATE novedades_entrega SET descripcion = :descripcion WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':descripcion' => $data['descripcion'],
+            ':id' => $row['id']
+        ]);
+    }
+
+    public function addPaqueteImagen($paqueteId, $tipo, $ruta, $userId) {
+        $sql = "INSERT INTO paquete_imagenes (paquete_id, tipo, ruta_archivo, creado_por)
+                VALUES (:paquete_id, :tipo, :ruta, :creado_por)";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([
+            ':paquete_id' => $paqueteId,
+            ':tipo' => $tipo,
+            ':ruta' => $ruta,
+            ':creado_por' => $userId ?: null
+        ]);
+        return $this->conn->lastInsertId();
+    }
+
+    public function getPaqueteImagenById($imageId) {
+        $sql = "SELECT id, ruta_archivo FROM paquete_imagenes WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':id' => $imageId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function deletePaqueteImagen($imageId) {
+        $sql = "DELETE FROM paquete_imagenes WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([':id' => $imageId]);
+    }
+
+    public function getEntregaFotos($paqueteId) {
+        $sql = "SELECT foto_entrega, foto_adicional FROM entregas WHERE paquete_id = :id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':id' => $paqueteId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function updateEntregaFoto($paqueteId, $campo, $ruta) {
+        if (!in_array($campo, ['foto_entrega', 'foto_adicional'], true)) {
+            return false;
+        }
+        $sql = "UPDATE entregas SET {$campo} = :ruta WHERE paquete_id = :id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([':ruta' => $ruta, ':id' => $paqueteId]);
+    }
+
+    public function getCancelacionFoto($paqueteId) {
+        $sql = "SELECT foto_evidencia FROM novedades_entrega
+                WHERE paquete_id = :id AND tipo = 'cancelado'
+                ORDER BY fecha_registro DESC
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':id' => $paqueteId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function updateCancelacionFoto($paqueteId, $ruta) {
+        $sqlId = "SELECT id FROM novedades_entrega
+                  WHERE paquete_id = :id AND tipo = 'cancelado'
+                  ORDER BY fecha_registro DESC
+                  LIMIT 1";
+        $stmtId = $this->conn->prepare($sqlId);
+        $stmtId->execute([':id' => $paqueteId]);
+        $row = $stmtId->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            return false;
+        }
+        $sql = "UPDATE novedades_entrega SET foto_evidencia = :ruta WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([':ruta' => $ruta, ':id' => $row['id']]);
     }
 
     public function assignMensajero($paqueteId, $mensajeroId, $userId) {

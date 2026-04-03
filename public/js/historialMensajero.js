@@ -48,13 +48,17 @@ let filtroActual = 'todos';
 
 function aplicarFiltros() {
     const searchValue = (document.getElementById('searchHistorial')?.value || '').trim().toLowerCase();
-    const paquetesFiltrados = filtrarHistorial(filtroActual, searchValue);
+    const nombreValue = (document.getElementById('searchNombre')?.value || '').trim().toLowerCase();
+    const fechaInicio = document.getElementById('fechaInicio')?.value || '';
+    const fechaFin = document.getElementById('fechaFin')?.value || '';
+    const paquetesFiltrados = filtrarHistorial(filtroActual, searchValue, nombreValue, fechaInicio, fechaFin);
     renderTablaHistorial(paquetesFiltrados);
     renderCardsHistorial(paquetesFiltrados);
     actualizarConteoTabla(paquetesFiltrados.length);
+    actualizarRecaudoRango(paquetesFiltrados);
 }
 
-function filtrarHistorial(filtro, searchValue) {
+function filtrarHistorial(filtro, searchValue, nombreValue, fechaInicio, fechaFin) {
     let paquetesFiltrados = historialPaquetes;
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
@@ -78,9 +82,27 @@ function filtrarHistorial(filtro, searchValue) {
     if (searchValue) {
         paquetesFiltrados = paquetesFiltrados.filter(p => {
             const guia = (p.guia || '').toLowerCase();
+            return guia.includes(searchValue);
+        });
+    }
+
+    if (nombreValue) {
+        paquetesFiltrados = paquetesFiltrados.filter(p => {
             const destinatario = (p.nombreDestinatario || '').toLowerCase();
             const receptor = (p.infoEntrega?.nombreRecibe || '').toLowerCase();
-            return guia.includes(searchValue) || destinatario.includes(searchValue) || receptor.includes(searchValue);
+            return destinatario.includes(nombreValue) || receptor.includes(nombreValue);
+        });
+    }
+
+    if (fechaInicio || fechaFin) {
+        const inicio = fechaInicio ? new Date(fechaInicio + 'T00:00:00') : null;
+        const fin = fechaFin ? new Date(fechaFin + 'T23:59:59') : null;
+        paquetesFiltrados = paquetesFiltrados.filter(p => {
+            const fecha = p.infoEntrega?.fechaObj;
+            if (!fecha || Number.isNaN(fecha.getTime())) return false;
+            if (inicio && fecha < inicio) return false;
+            if (fin && fecha > fin) return false;
+            return true;
         });
     }
 
@@ -210,6 +232,12 @@ function actualizarEstadisticas() {
     if (elRecaudo) elRecaudo.textContent = formatearMoneda(recaudo);
 }
 
+function actualizarRecaudoRango(paquetes) {
+    const recaudo = paquetes.reduce((sum, p) => sum + (p.infoEntrega.recaudo || 0), 0);
+    const elRecaudo = document.getElementById('totalRecaudoRango');
+    if (elRecaudo) elRecaudo.textContent = formatearMoneda(recaudo);
+}
+
 function configurarFiltros() {
     document.querySelectorAll('.filtro-btn').forEach(btn => {
         btn.addEventListener('click', function () {
@@ -233,6 +261,16 @@ function configurarFiltros() {
     if (search) {
         search.addEventListener('input', () => aplicarFiltros());
     }
+
+    const searchNombre = document.getElementById('searchNombre');
+    if (searchNombre) {
+        searchNombre.addEventListener('input', () => aplicarFiltros());
+    }
+
+    const fechaInicio = document.getElementById('fechaInicio');
+    const fechaFin = document.getElementById('fechaFin');
+    if (fechaInicio) fechaInicio.addEventListener('change', () => aplicarFiltros());
+    if (fechaFin) fechaFin.addEventListener('change', () => aplicarFiltros());
 }
 
 function formatearMoneda(valor) {

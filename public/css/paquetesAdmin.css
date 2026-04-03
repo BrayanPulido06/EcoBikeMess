@@ -541,6 +541,7 @@ tbody tr.problema {
 
 .modal-body {
     padding: 30px;
+    padding-left: 170px;
 }
 
 /* Detalles del Paquete */
@@ -580,6 +581,55 @@ tbody tr.problema {
     font-size: 1em;
     color: #333;
     font-weight: 600;
+}
+
+/* Evidencias e imágenes */
+.evidencia-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.evidencia-card {
+    width: 180px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.evidencia-card img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+}
+
+.evidencia-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8em;
+    color: #555;
+    padding: 0 10px;
+    gap: 6px;
+}
+
+.evidencia-actions {
+    display: flex;
+    gap: 6px;
+    padding: 0 10px 10px;
+}
+
+.evidencia-upload {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
 }
 
 /* Historial */

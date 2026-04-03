@@ -305,62 +305,61 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                 <h2>🏷️ Rótulo de Envío</h2>
             </div>
             <div class="modal-body">
-                <div id="rotuloPreview" class="rotulo-card">
-                    <div class="rotulo-header">
-                        <div class="rotulo-brand">
-                            <span class="brand-name">EcoBikeMess</span>
-                            <span class="brand-slogan">Mensajería Ecológica</span>
-                        </div>
-                        <div class="rotulo-guia">
-                            <span class="guia-label">GUÍA DE ENVÍO</span>
-                            <span class="guia-value" id="rotulo_guia_num">EBM-XXXXXX</span>
-                        </div>
-                    </div>
-                    
-                    <div class="rotulo-main">
-                        <div class="rotulo-qr" id="rotulo_qr_code">
-                            <!-- QR Code Here -->
-                        </div>
-                        <div class="rotulo-dates">
-                            <div class="date-group">
-                                <label>Fecha:</label>
-                                <span id="rotulo_fecha_creacion">DD/MM/YYYY</span>
-                            </div>
-                            <div class="date-group">
-                                <label>Tipo:</label>
-                                <span id="rotulo_tipo_paquete">NORMAL</span>
-                            </div>
-                        </div>
-                    </div>
+                <div id="rotuloPreview" style="background: white; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333;">
+                    <div class="rotulo-scale">
+                        <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 6px;">
+                            <tr>
+                                <td colspan="2">
+                                    <div style="display: flex; align-items: center; gap: 10px; justify-content: center; text-align: center;">
+                                        <img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:100px;height:100px;">
+                                        <div>
+                                            <div style="font-size: 26px; font-weight: 800; color: #5cb85c; line-height: 1;">EcoBikeMess</div>
+                                            <div style="margin-top: 3px; font-size: 15px; font-weight: 700; color: #28a745;">Contactanos: 317509298</div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="padding-top: 4px;">
+                                    <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUÍA: <span id="rotulo_guia_num" style="font-size: 19px; font-weight: 800; color: #1f2a37;">EBM-XXXXXX</span></div>
+                                </td>
+                            </tr>
+                        </table>
 
-                    <div class="rotulo-addresses">
-                        <div class="address-block from">
-                            <div class="block-label">REMITENTE</div>
-                            <div class="block-content">
-                                <strong id="rotulo_remitente">Nombre Remitente</strong>
-                                <p id="rotulo_dir_remitente">Dirección completa del remitente</p>
-                                <p id="rotulo_tel_remitente">Tel: 3000000000</p>
-                            </div>
-                        </div>
-                        <div class="address-arrow">⬇</div>
-                        <div class="address-block to">
-                            <div class="block-label">DESTINATARIO</div>
-                            <div class="block-content">
-                                <strong id="rotulo_destinatario">Nombre Destinatario</strong>
-                                <p id="rotulo_dir_destinatario">Dirección completa del destinatario</p>
-                                <p id="rotulo_tel_destinatario">Tel: 3000000000</p>
-                            </div>
-                        </div>
-                    </div>
+                        <table style="width: 100%; margin-top: 4px; font-size: 12px;">
+                            <tr>
+                                <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                    <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
+                                    <p><strong>Dirección:</strong> <span id="rotulo_dir_destinatario" class="rotulo-text-lg bold"></span></p>
+                                    <p><strong>Nombre:</strong> <span id="rotulo_destinatario" class="rotulo-text-lg bold"></span></p>
+                                    <p><strong>Teléfono:</strong> <span id="rotulo_tel_destinatario" class="rotulo-text-lg bold"></span></p>
+                                    <p><strong>Observaciones:</strong> <span id="rotulo_observaciones" class="rotulo-text-lg bold"></span></p>
+                                </td>
+                                <td style="width: 4%;"></td>
+                                <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                    <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
+                                    <p><strong>Tienda:</strong> <span id="rotulo_remitente" class="rotulo-text-lg bold"></span></p>
+                                </td>
+                            </tr>
+                        </table>
 
-                    <div class="rotulo-footer">
-                        <div class="footer-info">
-                            <span>Peso: <b id="rotulo_peso">0.0 kg</b></span>
-                            <span>Piezas: <b>1/1</b></span>
-                        </div>
-                        <div class="footer-note" id="rotulo_notas">
-                            Sin observaciones
-                        </div>
+                        <table style="width: 100%; margin-top: 4px; padding-top: 0;">
+                            <tr>
+                                <td style="width: 60%; vertical-align: top; font-size: 12px;">
+                                    <div class="rotulo-card" style="border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                        <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
+                                        <p><strong>Cambios por recoger:</strong> <span id="rotulo_cambios" class="rotulo-text-lg bold">No</span></p>
+                                    </div>
+                                    <div style="margin-top: 6px;">
+                                        <h3 style="margin: 0 0 6px; font-size: 15px;">💰 Total a Cobrar</h3>
+                                        <div id="rotulo_financiero"></div>
+                                    </div>
+                                </td>
+                                <td style="width: 40%; text-align: right; vertical-align: top;">
+                                    <div id="rotulo_qr_code" style="display: inline-block; width: 220px; height: 220px; margin-right: 6mm; margin-top: -7mm;"></div>
+                                </td>
+                            </tr>
+                        </table>
                     </div>
                 </div>
             </div>

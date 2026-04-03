@@ -1,0 +1,108 @@
+﻿/* Estilos para selector de clientes en digitarAdmin */
+.admin-client-search {
+    position: relative;
+}
+
+.admin-client-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #e8f5f1;
+    border-radius: 10px;
+    margin-top: 6px;
+    max-height: 280px;
+    overflow-y: auto;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+    z-index: 20;
+    display: none;
+}
+
+.admin-client-results.active {
+    display: block;
+}
+
+.admin-client-result {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f1f5f3;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.admin-client-result:hover {
+    background: #f7fbf8;
+}
+
+.admin-client-result:last-child {
+    border-bottom: none;
+}
+
+.admin-client-result h4 {
+    margin: 0 0 4px;
+    font-size: 0.95rem;
+    color: #2d3e50;
+}
+
+.admin-client-result p {
+    margin: 2px 0;
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+.cliente-seleccionado.hidden {
+    display: none;
+}
+
+.cliente-card {
+    border: 1px solid #e8f5f1;
+    border-radius: 12px;
+    background: #f9fffb;
+    padding: 16px;
+}
+
+.cliente-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.cliente-card-header h3 {
+    margin: 0;
+    color: #2d3e50;
+    font-size: 1.05rem;
+}
+
+.cliente-estado {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #e8f5f1;
+    color: #4cae4c;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.cliente-card p {
+    margin: 6px 0;
+    color: #5c6b77;
+    font-size: 0.9rem;
+}
+
+.cliente-alert {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fff7e6;
+    border: 1px solid #ffe0a3;
+    color: #8a6d3b;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .admin-client-results {
+        position: static;
+        margin-top: 10px;
+    }
+}

@@ -5,6 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - EcoBikeMess</title>
     <link rel="stylesheet" href="../public/css/login.css">
+    <style>
+        /* Estabilización del campo de contraseña */
+        .password-input {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-input input {
+            width: 100% !important;
+            /* Copiamos los estilos exactos de login.css para que no se pierdan al cambiar el tipo */
+            padding: 14px 45px 14px 16px !important; 
+            border: 2px solid #e8f5f1 !important;
+            border-radius: 10px !important;
+            font-size: 1rem !important;
+            background: #f8fdf9 !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 35px; /* Ancho fijo para evitar saltos de diseño */
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        /* Mantenemos el estilo de enfoque (verde) igual que en los demás campos */
+        .password-input input:focus {
+            outline: none !important;
+            border-color: #5cb85c !important;
+            background: white !important;
+            box-shadow: 0 0 0 3px rgba(92, 184, 92, 0.1) !important;
+        }
+
+        .eye-icon {
+            font-size: 1.2rem;
+            display: inline-block;
+            line-height: 1;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
     <div class="login-container">

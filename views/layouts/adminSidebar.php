@@ -38,6 +38,13 @@
                     <span class="nav-text">Recolecciones</span>
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a href="/ecobikemess/views/admin/facturacionAdmin.php" class="nav-link">
+                    <span class="nav-icon">f</span>
+                    <span class="nav-text">Facturación</span>
+                </a>
+            </li>
             
             <li class="nav-item">
                 <a href="/ecobikemess/views/admin/añadirAdmin.php" class="nav-link">
