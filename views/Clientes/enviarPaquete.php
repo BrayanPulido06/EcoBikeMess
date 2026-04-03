@@ -350,7 +350,6 @@ $remitente_data = [
                             <h2>📦 Información del Paquete</h2>
                         </div>
                         <div class="card-body">
-
                             <div class="form-group">
                                 <label for="dimensiones_paquete">Dimensiones del Paquete *</label>
                                 <select id="dimensiones_paquete" name="dimensiones_paquete" required>

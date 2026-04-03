@@ -33,7 +33,7 @@ class UsuarioModel {
                 ':telefono' => $datos['telefono'],
                 ':password' => password_hash($datos['password'], PASSWORD_DEFAULT), // Encriptar contraseña
                 ':tipo_usuario' => $datos['tipo_usuario'],
-                ':estado' => ($datos['tipo_usuario'] == 'mensajero') ? 'pendiente' : 'activo'
+                ':estado' => ($datos['tipo_usuario'] == 'mensajero') ? 'pendiente_aprobacion' : 'activo'
             ]);
             
             $usuarioId = $this->conn->lastInsertId();
@@ -53,17 +53,17 @@ class UsuarioModel {
             } elseif ($datos['tipo_usuario'] == 'mensajero') {
                 // Se ajustaron los nombres de columnas para coincidir con ecobikemess.sql
                 $sqlMensajero = "INSERT INTO mensajeros (
-                    usuario_id, tipo_documento, numDocumento, tipo_sangre, direccion_residencia, 
-                    foto, hoja_vida, 
+                    usuario_id, tipo_documento, numDocumento, tipo_sangre, direccion_residencia,
+                    foto,
                     nombre_emergencia1, apellido_emergencia1, telefono_emergencia1,
                     nombre_emergencia2, apellido_emergencia2, telefono_emergencia2,
-                    tipo_transporte, placa_vehiculo, licencia_conducir, soat
+                    tipo_transporte, placa_vehiculo, licencia_conducir, soat, tecnomecanica
                 ) VALUES (
-                    :uid, :tdoc, :ndoc, :tsangre, :dir, 
-                    :foto, :hv, 
+                    :uid, :tdoc, :ndoc, :tsangre, :dir,
+                    :foto,
                     :nom1, :ape1, :tel1,
                     :nom2, :ape2, :tel2,
-                    :transporte, :placa, :licencia, :soat
+                    :transporte, :placa, :licencia, :soat, :tecnomecanica
                 )";
 
                 $stmtMensajero = $this->conn->prepare($sqlMensajero);
@@ -74,7 +74,6 @@ class UsuarioModel {
                     ':tsangre' => $datos['tipo_sangre'],
                     ':dir' => $datos['direccion_residencia'],
                     ':foto' => $datos['rutas_archivos']['foto'] ?? null,
-                    ':hv' => $datos['rutas_archivos']['hoja_vida'] ?? null,
                     
                     // Contacto Emergencia 1
                     ':nom1' => $datos['emergencia']['contacto1']['nombre'],
@@ -88,9 +87,10 @@ class UsuarioModel {
                     
                     // Transporte
                     ':transporte' => $datos['transporte']['tipo'],
-                    ':placa' => $datos['transporte']['placa'] ?? null,
+                    ':placa' => $datos['transporte']['placa'] !== '' ? $datos['transporte']['placa'] : null,
                     ':licencia' => $datos['rutas_archivos']['licencia_conducir'] ?? null,
-                    ':soat' => $datos['rutas_archivos']['soat'] ?? null
+                    ':soat' => $datos['rutas_archivos']['soat'] ?? null,
+                    ':tecnomecanica' => $datos['rutas_archivos']['tecnomecanica'] ?? null
                 ]);
             }
 

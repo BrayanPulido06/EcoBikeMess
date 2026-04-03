@@ -69,7 +69,7 @@ class EnvioModel {
                 ':destinatario_telefono' => $datos['destinatario_telefono'],
                 ':destinatario_direccion' => $datos['destinatario_direccion'],
                 ':instrucciones_entrega' => $datos['instrucciones_entrega'],
-                ':descripcion_contenido' => $datos['descripcion_contenido'],
+                ':descripcion_contenido' => trim((string) ($datos['descripcion_contenido'] ?? '')),
                 ':dimensiones' => $datos['dimensiones'] ?? null,
                 ':envio_destinatario' => $datos['envio_destinatario'] ?? 'no',
                 ':tipo_servicio' => $tipo_servicio,

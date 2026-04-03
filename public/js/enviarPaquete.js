@@ -406,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 destinatario_telefono: getValue('num destinatario') || getValue('telefono') || getValue('celular') || getValue('movil'),
                 destinatario_direccion: getValue('direccion') || getValue('destino'),
                 instrucciones_entrega: getValue('instrucciones') || getValue('observaciones'),
-                descripcion_contenido: '',
+                descripcion_contenido: getValue('descripcion contenido') || getValue('contenido') || getValue('producto') || getValue('paquete'),
                 dimensiones_paquete: dimensionesVal,
                 envio_mismo_dia: mismoDia ? 'on' : '',
                 zona_periferica: zonaPeriferica ? 'on' : '',

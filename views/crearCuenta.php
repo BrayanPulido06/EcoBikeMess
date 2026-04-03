@@ -118,24 +118,24 @@
             <!-- 2. SELECCIÓN DE TIPO DE USUARIO -->
             <h2>Tipo de Cuenta</h2>
             <div class="user-type-selector">
-                <button type="button" class="type-btn active" data-type="cliente">
+                <button type="button" class="type-btn <?php echo (($_GET['tipo'] ?? 'cliente') !== 'mensajero') ? 'active' : ''; ?>" data-type="cliente">
                     <span class="icon">🛍️</span>
                     <span class="type-title">Soy Cliente</span>
                     <span class="type-desc">Quiero enviar paquetes</span>
                 </button>
-                <button type="button" class="type-btn" data-type="mensajero">
+                <button type="button" class="type-btn <?php echo (($_GET['tipo'] ?? 'cliente') === 'mensajero') ? 'active' : ''; ?>" data-type="mensajero">
                     <span class="icon">🚴</span>
                     <span class="type-title">Soy Mensajero</span>
                     <span class="type-desc">Quiero realizar entregas</span>
                 </button>
             </div>
             <!-- Input oculto que guarda la selección -->
-            <input type="hidden" name="tipo_usuario" id="tipoUsuario" value="cliente">
+            <input type="hidden" name="tipo_usuario" id="tipoUsuario" value="<?php echo htmlspecialchars($_GET['tipo'] ?? 'cliente'); ?>">
 
             <!-- 3. CAMPOS ESPECÍFICOS (Dinámicos) -->
             
             <!-- CAMPOS CLIENTE -->
-            <div id="camposCliente">
+            <div id="camposCliente" style="display: <?php echo (($_GET['tipo'] ?? 'cliente') === 'mensajero') ? 'none' : 'block'; ?>;">
                 <h2>Información del Emprendimiento</h2>
                 <div class="form-group">
                     <label for="cliente_nombre_emprendimiento">Nombre del Emprendimiento *</label>
@@ -162,7 +162,7 @@
             </div>
 
             <!-- CAMPOS MENSAJERO (Ocultos por defecto) -->
-            <div id="camposMensajero" style="display: none;">
+            <div id="camposMensajero" style="display: <?php echo (($_GET['tipo'] ?? 'cliente') === 'mensajero') ? 'block' : 'none'; ?>;">
                 <h2>Documentación</h2>
                 <div class="form-row">
                     <div class="form-group">

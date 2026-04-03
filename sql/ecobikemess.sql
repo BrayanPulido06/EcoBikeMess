@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS paquetes (
     destinatario_telefono2 VARCHAR(10),
     direccion_destino TEXT NOT NULL,
     instrucciones_entrega TEXT,
-    descripcion_contenido TEXT NOT NULL,
+    descripcion_contenido TEXT NULL,
     dimensiones VARCHAR(100),
     envio_destinatario ENUM('si', 'no') DEFAULT 'no',
     tipo_servicio ENUM('entrega_simple', 'contraentrega') DEFAULT 'entrega_simple',
@@ -883,7 +883,7 @@ BEGIN
             CONCAT('REC-AUTO-', LPAD(NEW.id, 10, '0')), -- ID único basado en el paquete recién creado
             NEW.cliente_id, NEW.direccion_origen,
             NEW.remitente_nombre, NEW.remitente_telefono,
-            CONCAT('Auto-generada: ', NEW.descripcion_contenido), 1,
+            CONCAT('Auto-generada: ', COALESCE(NEW.descripcion_contenido, 'Sin descripción')), 1,
             'asignada', NEW.creado_por, NOW()
         );
     END IF;

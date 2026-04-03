@@ -66,15 +66,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]
             ];
             
+            $tipoTransporte = $_POST['tipo_transporte'] ?? '';
+            if ($tipoTransporte === 'vehiculo') {
+                $tipoTransporte = 'Carro';
+            }
+
             $datos['transporte'] = [
-                'tipo' => $_POST['tipo_transporte'],
-                'placa' => $_POST['placa_vehiculo'] ?? '',
+                'tipo' => $tipoTransporte,
+                'placa' => trim($_POST['placa_vehiculo'] ?? ''),
             ];
 
             // Manejo de Archivos (Fotos y PDFs)
             $uploadDir = dirname(__DIR__) . '/uploads/mensajeros/';
 
-            $archivos = ['foto', 'hoja_vida', 'licencia_conducir', 'soat'];
+            $archivos = ['foto', 'licencia_conducir', 'soat', 'tecnomecanica'];
             $rutas = [];
             $allowedImages = ['image/jpeg', 'image/png', 'image/webp'];
             $allowedDocs = array_merge($allowedImages, ['application/pdf']);
@@ -103,6 +108,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
     } catch (Exception $e) {
+        error_log('crearCuentaController: ' . $e->getMessage());
         // Redirigir con error
         $errorMsg = urlencode($e->getMessage());
         header("Location: ../views/crearCuenta.php?error=" . $errorMsg . "&tipo=" . ($_POST['tipo_usuario'] ?? 'cliente'));
