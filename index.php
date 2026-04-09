@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoBikeMess - Mensajería Ecológica en Bicicleta</title>
-    <link rel="icon" href="public/img/Logo_Sin_Fondo.png" type="image/png">
+    <link rel="icon" href="public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="public/css/styles.css">
     <style>
         /* Aumentamos el límite de altura para que no se corte el texto al desplegar */
