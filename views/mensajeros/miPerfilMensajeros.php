@@ -42,10 +42,6 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
             <h1><img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:35px;height:35px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
             <p class="user-name">Mi Perfil</p>
         </div>
-        <button class="notif-btn" id="notifBtn">
-            <span class="notif-icon">🔔</span>
-            <span class="notif-badge">3</span>
-        </button>
     </header>
 
     <!-- Sidebar -->

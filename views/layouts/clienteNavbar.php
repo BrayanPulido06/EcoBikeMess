@@ -42,12 +42,6 @@ if (session_status() === PHP_SESSION_NONE) session_start();
                             <span>Mi Perfil</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="configuracion.php" class="dropdown-item">
-                            <span class="dropdown-icon">🔧</span>
-                            <span>Configuración</span>
-                        </a>
-                    </li>
                     <li class="dropdown-divider"></li>
                     <li>
                         <a href="../../controller/logout.php" class="dropdown-item logout">
