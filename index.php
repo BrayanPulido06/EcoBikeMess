@@ -355,7 +355,7 @@
             <div class="container">
                 <h2>Zonas de Cobertura</h2>
                     <div class="map-container">
-                        <img src="public/img/mapa.jpg" alt="Mapa de cobertura de EcoBikeMess en Bogotá" style="width: 100%; max-width: 800px; height: auto; margin: 20px auto; display: block; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <img src="/ecobikemess/public/img/mapa.jpg" alt="Mapa de cobertura de EcoBikeMess en Bogotá" style="width: 100%; max-width: 800px; height: auto; margin: 20px auto; display: block; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     </div>
                     <div class="map-container">
                         <p>Con la finalidad de expandir nuestra cobertura de zonas de entrega, hemos diseñado nuestro mapa de cobertura dentro de la ciudad de Bogotá y el municipio de Soacha en Cundinamarca</p>

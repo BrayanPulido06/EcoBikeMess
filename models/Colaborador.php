@@ -1,5 +1,6 @@
 <?php
 require_once 'conexionGlobal.php';
+require_once __DIR__ . '/conexionGlobal.php';
 
 class Colaborador {
     private $conn;
