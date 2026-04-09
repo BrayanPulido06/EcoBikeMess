@@ -25,54 +25,8 @@ body.sidebar-collapsed .app-shell,
     margin-left: 70px;
 }
 
-.profile-main-content {
-    padding: 20px !important;
-    margin-top: 70px !important;
-}
-
 .profile-no-sidebar {
     margin-left: 0 !important;
-}
-
-.container,
-.dashboard-container,
-.content-container,
-.profile-container {
-    width: 100%;
-    max-width: 100%;
-}
-
-.page-header,
-.dashboard-header,
-.team-header,
-.chart-header,
-.app-header,
-.card-header,
-.modal-header,
-.header-actions,
-.section-actions,
-.scan-actions {
-    gap: 12px;
-}
-
-.page-header,
-.dashboard-header,
-.team-header,
-.chart-header,
-.app-header {
-    flex-wrap: wrap;
-}
-
-.header-actions,
-.section-actions,
-.filters-row,
-.filters-bar,
-.role-tabs,
-.modal-foot,
-.scan-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
 }
 
 .table-responsive,
@@ -81,12 +35,6 @@ body.sidebar-collapsed .app-shell,
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-}
-
-.modal-content {
-    width: min(96vw, 900px) !important;
-    max-width: 96vw !important;
-    box-sizing: border-box;
 }
 
 .filters-grid,
@@ -102,18 +50,71 @@ body.sidebar-collapsed .app-shell,
     min-width: 0;
 }
 
-.modal .row {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.modal .row > * {
-    min-width: 0;
-    flex: 1 1 220px;
+@media (max-width: 1200px) {
+    .page-title h1 {
+        max-width: 58vw;
+    }
 }
 
 @media (max-width: 992px) {
+    .container,
+    .dashboard-container,
+    .content-container,
+    .profile-container {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .page-header,
+    .dashboard-header,
+    .team-header,
+    .chart-header,
+    .app-header,
+    .card-header,
+    .modal-header,
+    .header-actions,
+    .section-actions,
+    .scan-actions {
+        gap: 12px;
+    }
+
+    .page-header,
+    .dashboard-header,
+    .team-header,
+    .chart-header,
+    .app-header {
+        flex-wrap: wrap;
+    }
+
+    .header-actions,
+    .section-actions,
+    .filters-row,
+    .filters-bar,
+    .role-tabs,
+    .modal-foot,
+    .scan-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .modal-content {
+        width: min(96vw, 900px) !important;
+        max-width: 96vw !important;
+        box-sizing: border-box;
+    }
+
+    .modal .row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .modal .row > * {
+        min-width: 0;
+        flex: 1 1 220px;
+    }
+
     .app-shell {
         margin-left: 0;
         padding: 18px 14px;
