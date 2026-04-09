@@ -15,6 +15,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#059669">
     <title>Mis Paquetes - Sistema de Mensajería</title>
+    <link rel="icon" href="../../public/img/Logo_Blanco_Trasparente_Circulo.png" type="image/png">
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest-paquetes.json">

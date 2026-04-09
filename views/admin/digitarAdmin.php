@@ -1,4 +1,4 @@
-﻿<?php
+﻿﻿<?php
 session_start();
 if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' && ($_SESSION['user_role'] ?? '') !== 'administrador')) {
     header("Location: ../login.php?error=Debes iniciar sesión.");
@@ -19,6 +19,7 @@ $remitente_data = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digitar Envío - EcoBikeMess</title>
+    <link rel="icon" href="../../public/img/Logo_Blanco_Trasparente_Circulo.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/enviarPaquete.css">
