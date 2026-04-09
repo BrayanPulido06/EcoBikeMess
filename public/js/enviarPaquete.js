@@ -517,7 +517,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                     <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 10px;">
                         <tr>
                             <td style="width: 50%;">
-                                <h1 style="font-size: 24px; margin: 0; color: #5cb85c;"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
+                                <h1 style="font-size: 24px; margin: 0; color: #5cb85c;"><img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
                                 <p style="margin: 0; font-size: 12px;">Guía de Envío</p>
                             </td>
                             <td style="width: 50%; text-align: right;">
@@ -924,7 +924,7 @@ ${qrFinanciero}
                                 <tr>
                                     <td colspan="2">
                                         <div style="display: flex; align-items: center; gap: 10px; justify-content: center; text-align: center;">
-                                            <img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:100px;height:100px;">
+                                            <img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:100px;height:100px;">
                                             <div>
                                                 <div style="font-size: 26px; font-weight: 800; color: #5cb85c; line-height: 1;">EcoBikeMess</div>
                                                 <div style="margin-top: 3px; font-size: 15px; font-weight: 700; color: #28a745;">Contactanos: 317509298</div>

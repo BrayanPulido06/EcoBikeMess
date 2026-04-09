@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../models/conexionGlobal.php';
+require_once __DIR__ . '/../includes/paths.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $conn = conexionDB();
@@ -31,7 +32,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
 
                 // 4. Generar enlace (En producción, aquí enviarías el correo con mail() o PHPMailer)
-                $link = "http://localhost/ecobikemess/views/cambioContraseña.php?token=" . $token;
+                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                $link = $scheme . '://' . $host . app_url('views/cambioContraseña.php') . '?token=' . urlencode($token);
                 
                 // NOTA: Como estamos en local, redirigimos con el link visible en la URL para que puedas probarlo
                 // En producción, cambia esto por un mensaje genérico y envía el correo real.

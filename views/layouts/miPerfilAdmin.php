@@ -85,7 +85,7 @@ if ($rol === 'cliente') {
                 <div class="profile-card">
                     <div class="profile-bg"></div>
                     <div class="profile-header-content">
-                        <img src="../../public/img/default-avatar.png" alt="Avatar" class="profile-avatar-large">
+                        <img src="../../public/img/default-avatar.png" alt="Avatar" class="profile-avatar-large" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%228%22 r=%224%22 fill=%22%235cb85c%22/%3E%3Cpath d=%22M12 14c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z%22 fill=%22%235cb85c%22/%3E%3C/svg%3E'">
                         <h1 class="profile-name"><?php echo htmlspecialchars($usuario['nombres'] . ' ' . $usuario['apellidos']); ?></h1>
                         <div class="profile-role"><?php echo ucfirst($rol); ?></div>
                         <?php if (isset($_GET['mensaje'])): ?>
@@ -168,7 +168,7 @@ if ($rol === 'cliente') {
                 <!-- MENSAJERO -->
                 <?php if ($rol === 'mensajero'): ?>
                 <div class="profile-card">
-                    <h3 class="form-section-title"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;">Datos del Mensajero</h3>
+                    <h3 class="form-section-title"><img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;">Datos del Mensajero</h3>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Tipo de Documento</label>

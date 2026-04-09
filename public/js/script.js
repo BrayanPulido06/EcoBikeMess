@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Funcionalidad del botón de Iniciar Sesión
     const btnLogin = document.getElementById('btnLogin');
     btnLogin.addEventListener('click', function() {
-        window.location.href = '../eco/views/login.php';
+        window.location.href = btnLogin.getAttribute('href') || 'views/login.php';
     });
     
     // Funcionalidad para expandir/contraer detalles de servicios

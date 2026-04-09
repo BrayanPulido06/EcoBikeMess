@@ -1,7 +1,7 @@
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="logo">
-            <img class="logo-icon" src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png"  alt="EcoBikeMess" style="width: 55px; vertical-align: middle;">
+            <img class="logo-icon" src="../../public/img/Logo_Circulo_Fondoblanco.png"  alt="EcoBikeMess" style="width: 55px; vertical-align: middle;">
             <span class="logo-text">EcoBikeMess</span>
         </div>
         <button class="sidebar-toggle" id="sidebarToggle">
@@ -12,21 +12,21 @@
     <nav class="sidebar-nav">
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="/ecobikemess/views/Clientes/inicioCliente.php" class="nav-link">
+                <a href="inicioCliente.php" class="nav-link">
                     <span class="nav-icon">📊</span>
                     <span class="nav-text">Inicio</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="/ecobikemess/views/Clientes/enviarPaquete.php" class="nav-link">
+                <a href="enviarPaquete.php" class="nav-link">
                     <span class="nav-icon">📦</span>
                     <span class="nav-text">Enviar Paquete</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="/ecobikemess/views/Clientes/misPedidos.php" class="nav-link">
+                <a href="misPedidos.php" class="nav-link">
                     <span class="nav-icon">📋</span>
                     <span class="nav-text">Mis Pedidos</span>
                 </a>
@@ -35,7 +35,7 @@
 
             <?php if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'colaborador'): ?>
             <li class="nav-item">
-                <a href="/ecobikemess/views/Clientes/equipoTrabajo.php" class="nav-link">
+                <a href="equipoTrabajo.php" class="nav-link">
                     <span class="nav-icon">💬</span>
                     <span class="nav-text">Equipo de Trabajo</span>
                 </a>
@@ -63,4 +63,4 @@
 
 </a>
 
-<script src="/ecobikemess/public/js/clienteSidebar.js"></script>
+<script src="../../public/js/clienteSidebar.js"></script>

@@ -1,7 +1,7 @@
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="logo">
-            <img class="logo-icon" src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png"  alt="EcoBikeMess" style="width: 55px; vertical-align: middle;">
+            <img class="logo-icon" src="../../public/img/Logo_Circulo_Fondoblanco.png"  alt="EcoBikeMess" style="width: 55px; vertical-align: middle;">
             <span class="logo-text">EcoBikeMess</span>
         </div>
         <button class="sidebar-toggle" id="sidebarToggle">
@@ -12,42 +12,42 @@
     <nav class="sidebar-nav">
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="/ecobikemess/views/admin/inicioAdmin.php" class="nav-link">
+                <a href="inicioAdmin.php" class="nav-link">
                     <span class="nav-icon">📊</span>
                     <span class="nav-text">Dashboard</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="/ecobikemess/views/admin/paquetesAdmin.php" class="nav-link">
+                <a href="paquetesAdmin.php" class="nav-link">
                     <span class="nav-icon">📦</span>
                     <span class="nav-text">Gestión Paquetes</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="/ecobikemess/views/admin/digitarAdmin.php" class="nav-link">
+                <a href="digitarAdmin.php" class="nav-link">
                     <span class="nav-icon">📝</span>
                     <span class="nav-text">Digitar Envío</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="/ecobikemess/views/admin/asignarRecolecciones.php" class="nav-link">
+                <a href="asignarRecolecciones.php" class="nav-link">
                     <span class="nav-icon">🚚</span>
                     <span class="nav-text">Recolecciones</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="/ecobikemess/views/admin/facturacionAdmin.php" class="nav-link">
+                <a href="facturacionAdmin.php" class="nav-link">
                     <span class="nav-icon">f</span>
                     <span class="nav-text">Facturación</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="/ecobikemess/views/admin/añadirAdmin.php" class="nav-link">
+                <a href="añadirAdmin.php" class="nav-link">
                     <span class="nav-icon">👥</span>
                     <span class="nav-text">Usuarios</span>
                 </a>
@@ -66,4 +66,4 @@
     </div>
 </aside>
 
-<script src="/ecobikemess/public/js/clienteSidebar.js"></script>
+<script src="../../public/js/clienteSidebar.js"></script>

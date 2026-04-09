@@ -133,7 +133,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             <!-- Estadísticas de Mensajeros -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-icon"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:22px;height:22px;"></div>
+                    <div class="stat-icon"><img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:22px;height:22px;"></div>
                     <div class="stat-info">
                         <span class="stat-label">Total Mensajeros</span>
                         <span class="stat-value" id="totalMensajeros">0</span>

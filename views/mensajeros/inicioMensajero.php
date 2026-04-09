@@ -145,7 +145,7 @@ if ($nombreCompleto === '') {
             <span class="menu-icon">☰</span>
         </button>
         <div class="header-info">
-            <h1><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:35px;height:35px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
+            <h1><img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:35px;height:35px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
             <p class="user-name"><?php echo htmlspecialchars($nombreCompleto); ?></p>
         </div>
     </header>

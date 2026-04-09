@@ -75,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     break;
                 case 'cliente':
                 case 'colaborador':
-                    header("Location: ../views/clientes/inicioCliente.php");
+                    header("Location: ../views/Clientes/inicioCliente.php");
                     break;
             }
             exit();

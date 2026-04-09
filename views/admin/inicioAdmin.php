@@ -90,7 +90,7 @@ if ($ingresosAyer > 0) {
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon"><img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:24px;height:24px;"></div>
+                <div class="stat-icon"><img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:24px;height:24px;"></div>
                 <div class="stat-info">
                     <h3>Mensajeros Activos</h3>
                     <p class="stat-value" id="mensajerosActivos"><?php echo $stats['mensajeros_activos']; ?></p>

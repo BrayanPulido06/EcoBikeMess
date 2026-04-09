@@ -399,7 +399,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                 <tr>
                                     <td colspan="2">
                                         <div style="display: flex; align-items: center; gap: 100px; justify-content: center; text-align: center;">
-                                            <img src="/ecobikemess/public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:100px;height:100px;">
+                                            <img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:100px;height:100px;">
                                             <div>
                                                 <div style="font-size: 26px; font-weight: 800; color: #5cb85c; line-height: 1;">EcoBikeMess</div>
                                                 <div style="margin-top: 3px; font-size: 15px; font-weight: 700; color: #28a745;">Contactanos: 31235180619</div>
