@@ -52,6 +52,7 @@ if ($rol === 'cliente') {
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/miPerfil.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
 
     <style>
         /* Ocultar el botón de WhatsApp solo en esta vista para no interferir con el formulario */
@@ -76,7 +77,7 @@ if ($rol === 'cliente') {
     }
     ?>
 
-    <main class="main-content" style="<?php echo ($rol !== 'cliente' && $rol !== 'colaborador') ? 'margin-left: 0;' : 'margin-left: 250px;'; ?> padding: 20px; margin-top: 60px;">
+    <main class="main-content profile-main-content<?php echo ($rol !== 'cliente' && $rol !== 'colaborador') ? ' profile-no-sidebar' : ''; ?>">
         <div class="profile-container">
 
             <form action="../../controller/perfilController.php" method="POST">
@@ -85,8 +86,7 @@ if ($rol === 'cliente') {
                 <!-- Tarjeta de Cabecera -->
                 <div class="profile-card">
                     <div class="profile-bg"></div>
-                    <div class="profile-header-content">
-                        <img src="../../public/img/default-avatar.png" alt="Avatar" class="profile-avatar-large">
+                    <div class="profile-header-content" style="padding-top: 60px;">
                         <h1 class="profile-name"><?php echo htmlspecialchars($usuario['nombres'] . ' ' . $usuario['apellidos']); ?></h1>
                         <div class="profile-role"><?php echo ucfirst($rol); ?></div>
                         <?php if (isset($_GET['mensaje'])): ?>

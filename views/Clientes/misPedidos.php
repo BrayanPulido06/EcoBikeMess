@@ -15,6 +15,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/misPedidos.css">
     <link rel="stylesheet" href="../../public/css/clientesTheme.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -160,7 +161,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
     <?php include '../layouts/clienteNavbar.php'; ?>
     <?php include '../layouts/clienteSidebar.php'; ?>
 
-    <div class="container" style="margin-left: 250px; margin-top: 60px;">
+    <div class="container app-shell">
         <!-- Header -->
         <header class="page-header">
             <div>
@@ -232,7 +233,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                 </div>
             </div>
 
-            <div class="table-responsive">
+            <div class="table-responsive pedidos-scroll">
                 <table id="tablaFacturas">
                     <thead>
                         <tr>
@@ -449,7 +450,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                             <table style="width: 100%; margin-top: 4px; font-size: 12px;">
                                 <tr>
                                     <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
-                                        <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
+                                        <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;"> Destinatario</h3>
                                         <p><strong>Dirección:</strong> <span id="rotulo_dir_destinatario" class="rotulo-text-lg bold"></span></p>
                                         <p><strong>Nombre:</strong> <span id="rotulo_destinatario" class="rotulo-text-lg bold"></span></p>
                                         <p><strong>Teléfono:</strong> <span id="rotulo_tel_destinatario" class="rotulo-text-lg bold"></span></p>
@@ -457,7 +458,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                                     </td>
                                     <td style="width: 4%;"></td>
                                     <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
-                                        <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
+                                        <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;"> Remitente</h3>
                                         <p><strong>Tienda:</strong> <span id="rotulo_remitente" class="rotulo-text-lg bold"></span></p>
                                     </td>
                                 </tr>
@@ -469,11 +470,11 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                                         <div class="guia-left-col">
                                             <div class="guia-divider-h"></div>
                                             <div class="rotulo-card" style="border: 1px solid #eee; padding: 6px; border-radius: 8px;">
-                                                <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
+                                                <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;"> Detalles del Paquete</h3>
                                                 <p><strong>Cambios por recoger:</strong> <span id="rotulo_cambios" class="rotulo-text-lg bold"></span></p>
                                             </div>
                                             <div style="margin-top: 6px;">
-                                                <h3 style="margin: 0 0 6px; font-size: 15px;">💰 Total a Cobrar</h3>
+                                                <h3 style="margin: 0 0 6px; font-size: 15px;"> Total a Cobrar</h3>
                                                 <div id="rotulo_financiero">
                                                     <!-- Se llena dinámicamente -->
                                                 </div>

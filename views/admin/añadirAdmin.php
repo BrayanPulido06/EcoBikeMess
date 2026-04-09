@@ -14,12 +14,13 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/añadirAdmin.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
 </head>
 <body>
     <?php include '../layouts/adminNavbar.php'; ?>
     <?php include '../layouts/adminSidebar.php'; ?>
 
-    <div class="container" style="margin-left: 250px; margin-top: 60px;">
+    <div class="container app-shell">
         <!-- Header -->
         <header class="page-header">
             <div>

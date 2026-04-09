@@ -18,6 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Facturación Admin</title>
   <link rel="stylesheet" href="../../public/css/facturacionAdmin.css">
+  <link rel="stylesheet" href="../../public/css/responsive.css">
 </head>
 <body>
 

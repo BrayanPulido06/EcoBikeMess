@@ -62,6 +62,7 @@ $remitente_data = [
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/enviarPaquete.css">
     <link rel="stylesheet" href="../../public/css/clientesTheme.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
     <style>
         .guia-section {
             display: flex;
@@ -136,6 +137,19 @@ $remitente_data = [
         #rotuloPreview .rotulo-scale .rotulo-text-lg.bold {
             font-weight: 700;
         }
+        /* Asegurar que el QR del rótulo no se encoja por estilos globales */
+        #rotuloPreview #qrcode {
+            width: 220px !important;
+            height: 220px !important;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 0;
+        }
+        #rotuloPreview #qrcode canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
         .guia-divider-h {
             border-top: 2px solid #28a745;
             margin: 4px 0 6px;
@@ -208,10 +222,6 @@ $remitente_data = [
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
-
-            <div id="avisoHorarioRecoleccion" style="display:none; background-color:#fff3cd; color:#856404; padding:12px 15px; border-radius:6px; margin-bottom:20px; border:1px solid #ffeeba;">
-                Posiblemente no se pueda realizar la recolección por temas de horarios.
-            </div>
 
             <div class="page-header">
                 <div class="header-left">
@@ -493,7 +503,7 @@ $remitente_data = [
                                     <table style="width: 100%; margin-top: 4px; font-size: 12px;">
                                         <tr>
                                             <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
-                                                <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
+                                                <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;"> Destinatario</h3>
                                                 <p><strong>Dirección:</strong> <span id="confirm_destinatario_direccion" class="rotulo-text-lg bold"></span></p>
                                                 <p><strong>Nombre:</strong> <span id="confirm_destinatario_nombre" class="rotulo-text-lg bold"></span></p>
                                                 <p><strong>Teléfono:</strong> <span id="confirm_destinatario_telefono" class="rotulo-text-lg bold"></span></p>
@@ -501,7 +511,7 @@ $remitente_data = [
                                             </td>
                                             <td style="width: 4%;"></td>
                                             <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
-                                                <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
+                                                <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;"> Remitente</h3>
                                                 <p><strong>Tienda:</strong> <span id="confirm_tienda_nombre" class="rotulo-text-lg bold"></span></p>
                                             </td>
                                         </tr>
@@ -513,11 +523,11 @@ $remitente_data = [
                                                 <div class="guia-left-col">
                                                     <div class="guia-divider-h"></div>
                                                     <div class="rotulo-card" style="border: 1px solid #eee; padding: 6px; border-radius: 8px;">
-                                                        <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
+                                                        <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;"> Detalles del Paquete</h3>
                                                         <p><strong>Cambios por recoger:</strong> <span id="confirm_recoger_cambios" class="rotulo-text-lg bold"></span></p>
                                                     </div>
                                                     <div style="margin-top: 6px;">
-                                                        <h3 style="margin: 0 0 6px; font-size: 15px;">💰 Total a Cobrar</h3>
+                                                        <h3 style="margin: 0 0 6px; font-size: 15px;"> Total a Cobrar</h3>
                                                         <div>
                                                             <p id="confirm_total_cobrar" class="rotulo-total">$0</p>
                                                         </div>

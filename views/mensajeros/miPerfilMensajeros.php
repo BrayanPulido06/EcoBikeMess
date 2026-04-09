@@ -30,6 +30,7 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
     <link rel="stylesheet" href="../../public/css/miPerfil.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
 </head>
 <body>
     <!-- Header Móvil -->

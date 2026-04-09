@@ -24,6 +24,7 @@ $remitente_data = [
     <link rel="stylesheet" href="../../public/css/enviarPaquete.css">
     <link rel="stylesheet" href="../../public/css/clientesTheme.css">
     <link rel="stylesheet" href="../../public/css/digitarAdminEnvio.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
     <style>
         .guia-section {
             display: flex;

@@ -250,7 +250,7 @@ body {
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
+    overflow: visible;
 }
 
 .table-header {
@@ -272,13 +272,63 @@ body {
 }
 
 .table-responsive {
+    display: block;
+    width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    scrollbar-gutter: stable both-edges;
+}
+
+.pedidos-scroll {
+    width: 100%;
+    overflow-x: scroll;
+    padding-bottom: 8px;
+}
+
+.pedidos-scroll::-webkit-scrollbar {
+    height: 12px;
+}
+
+.pedidos-scroll::-webkit-scrollbar-track {
+    background: #edf1f5;
+    border-radius: 999px;
+}
+
+.pedidos-scroll::-webkit-scrollbar-thumb {
+    background: #9aa5b1;
+    border-radius: 999px;
+    border: 2px solid #edf1f5;
+}
+
+.pedidos-scroll::-webkit-scrollbar-thumb:hover {
+    background: #7b8794;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9em;
+}
+
+#tablaFacturas {
+    width: max-content;
+    min-width: 100%;
+}
+
+#tablaFacturas th,
+#tablaFacturas td {
+    white-space: nowrap;
+}
+
+#tablaFacturas th:last-child,
+#tablaFacturas td:last-child {
+    min-width: 240px;
+}
+
+#tablaFacturas .btn {
+    white-space: nowrap;
 }
 
 thead {
@@ -379,6 +429,7 @@ tbody tr.por-vencer {
     display: flex;
     gap: 5px;
     flex-wrap: wrap;
+    min-width: 220px;
 }
 
 /* Pagination */
@@ -768,6 +819,15 @@ tbody tr.por-vencer {
         padding: 8px 6px;
     }
 
+    #tablaFacturas {
+        min-width: 1250px;
+    }
+
+    #tablaFacturas th:last-child,
+    #tablaFacturas td:last-child {
+        min-width: 260px;
+    }
+
     .action-buttons {
         flex-direction: column;
     }
@@ -776,6 +836,7 @@ tbody tr.por-vencer {
         grid-template-columns: 1fr;
     }
 }
+
 
 /* Print Styles */
 @media print {

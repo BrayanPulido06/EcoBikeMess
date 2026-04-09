@@ -180,11 +180,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if(btnFlash) btnFlash.style.display = 'none';
         
         html5QrCode = new Html5Qrcode("reader");
-        // fps: 10 para escaneo rápido, qrbox responsive
+        // Config más rápida: más fps + qrbox ligeramente menor
         const config = { 
-            fps: 10, 
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0
+            fps: 15,
+            qrbox: { width: 220, height: 220 },
+            aspectRatio: 1.0,
+            disableFlip: true
         };
         
         // Usar 'environment' para forzar cámara trasera
@@ -547,6 +548,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateQRCounter() {
         const count = scannedQRs.length;
         qrCounter.textContent = count;
+
+        const modalCounter = document.getElementById('modalQrCounter');
+        if (modalCounter) modalCounter.textContent = count;
         
         // Mostrar/ocultar sección de entrega
         if (count > 0) {

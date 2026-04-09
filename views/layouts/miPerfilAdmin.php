@@ -56,6 +56,7 @@ if ($rol === 'cliente') {
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/miPerfil.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
 
 </head>
 <body>
@@ -74,7 +75,7 @@ if ($rol === 'cliente') {
     }
     ?>
 
-    <main class="main-content" style="<?php echo ($rol === 'mensajero') ? 'margin-left: 0;' : 'margin-left: 250px;'; ?> padding: 20px; margin-top: 60px;">
+    <main class="main-content profile-main-content<?php echo ($rol === 'mensajero') ? ' profile-no-sidebar' : ''; ?>">
         <div class="profile-container">
 
             <form action="../../controller/perfilController.php" method="POST">

@@ -208,7 +208,7 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .sidebar {
         transform: translateX(-100%);
     }
@@ -238,7 +238,7 @@
     display: block;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .sidebar-overlay.active {
         display: block;
     }

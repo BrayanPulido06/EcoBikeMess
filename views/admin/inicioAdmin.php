@@ -33,13 +33,14 @@ if ($ingresosAyer > 0) {
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/inicioAdmin.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <?php include '../layouts/adminNavbar.php'; ?>
     <?php include '../layouts/adminSidebar.php'; ?>
 
-    <div class="dashboard-container" style="margin-left: 250px; margin-top: 60px;">
+    <div class="dashboard-container app-shell">
         <!-- Header -->
         <header class="dashboard-header">
             <div class="welcome-section">

@@ -250,7 +250,7 @@ body {
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
+    overflow: visible;
 }
 
 .table-header {
@@ -272,13 +272,38 @@ body {
 }
 
 .table-responsive {
+    display: block;
+    width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    scrollbar-gutter: stable both-edges;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9em;
+}
+
+#tablaPaquetes {
+    width: max-content;
+    min-width: 100%;
+}
+
+#tablaPaquetes th,
+#tablaPaquetes td {
+    white-space: nowrap;
+}
+
+#tablaPaquetes th:last-child,
+#tablaPaquetes td:last-child {
+    min-width: 250px;
+}
+
+#tablaPaquetes .btn {
+    white-space: nowrap;
 }
 
 thead {
@@ -399,6 +424,7 @@ tbody tr.problema {
     display: flex;
     gap: 5px;
     flex-wrap: wrap;
+    min-width: 230px;
 }
 
 /* Pagination */
@@ -831,6 +857,15 @@ tbody tr.problema {
 
     th, td {
         padding: 8px 6px;
+    }
+
+    #tablaPaquetes {
+        min-width: 1550px;
+    }
+
+    #tablaPaquetes th:last-child,
+    #tablaPaquetes td:last-child {
+        min-width: 270px;
     }
 
     .action-buttons {
