@@ -6,6 +6,7 @@ let paqueteActual = null;
 let fotoEntregaPrincipal = null;
 let fotoEntregaAdicional = null;
 let fotoNovedad = null;
+let fotoNovedadAdicional = null;
 let tipoNovedadActual = null;
 let ubicacionActual = null;
 let watchId = null;
@@ -34,6 +35,15 @@ function feedbackError() {
 
 function feedbackClick() {
     vibrar([5]);
+}
+
+function mostrarToast(mensaje, tipo = 'info', opts = {}) {
+    const toastFn = window.EcoBikeUI?.toast;
+    if (typeof toastFn === 'function') {
+        toastFn(mensaje, { type: tipo, ...opts });
+        return;
+    }
+    console.log(`[${tipo}] ${mensaje}`);
 }
 
 // ============================================
@@ -227,7 +237,7 @@ function aplicarDeepLinkDesdeURL() {
 
     const paquete = paquetes.find(p => normalizarGuia(p.guia) === guiaBuscada);
     if (!paquete) {
-        alert(`No se encontró la guía ${guiaBuscada} en tus paquetes asignados.`);
+        mostrarToast(`No se encontró la guía ${guiaBuscada} en tus paquetes asignados.`, 'warning', { title: 'No encontrado' });
         deepLinkProcesado = true;
         return;
     }
@@ -520,11 +530,11 @@ function abrirFormularioEntrega(id) {
     paqueteActual = paquetes.find(p => p.id === id || `virtual_${p.guia}` === id);
     
     if (!paqueteActual || paqueteActual.estado === 'entregado') {
-        alert('Este paquete ya fue entregado');
+        mostrarToast('Este paquete ya fue entregado', 'info', { title: 'Sin cambios' });
         return;
     }
     if (paqueteActual.estado === 'cancelado') {
-        alert('Este paquete está cancelado');
+        mostrarToast('Este paquete está cancelado', 'info', { title: 'Sin cambios' });
         return;
     }
     
@@ -713,21 +723,20 @@ document.getElementById('parentesco')?.addEventListener('change', function() {
 // ============================================
 // ENVÍO DE FORMULARIO
 // ============================================
-document.getElementById('formEntrega')?.addEventListener('submit', function(e) {
+document.getElementById('formEntrega')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     
     // Validar fotos
     if (!fotoEntregaPrincipal) {
         feedbackError();
-        alert('Debes tomar la foto principal de la entrega');
+        mostrarToast('Debes tomar la foto principal de la entrega', 'warning', { title: 'Falta evidencia' });
         return;
     }
     
     // Validar GPS
     if (!ubicacionActual) {
-        if (!confirm('No se pudo obtener la ubicación GPS. ¿Deseas continuar de todos modos?')) {
-            return;
-        }
+        const continuar = await mostrarModalDecision('Continuar sin GPS', 'No se pudo obtener la ubicación GPS. ¿Deseas continuar de todos modos?');
+        if (!continuar) return;
     }
     
     const parentesco = document.getElementById('parentesco').value;
@@ -789,11 +798,11 @@ async function completarEntrega(datosEntrega) {
         refrescarListaActual();
         document.getElementById('vistaFormularioEntrega').classList.add('oculto');
         feedbackExito();
-        alert('Entrega exitosa');
+        mostrarToast('Entrega exitosa', 'success', { title: 'Listo' });
         mostrarConfirmacionEntrega(datosEntrega);
     } catch (error) {
         feedbackError();
-        alert(error.message);
+        mostrarToast(error.message || 'Ocurrió un error al registrar la entrega', 'error', { title: 'Error', duration: 4200 });
     } finally {
         mostrarLoading(false);
     }
@@ -846,16 +855,17 @@ function abrirFormularioNovedad(id, tipo) {
     if (!paqueteActual) return;
 
     if (paqueteActual.estado === 'entregado') {
-        alert('Este paquete ya fue entregado.');
+        mostrarToast('Este paquete ya fue entregado.', 'info', { title: 'Sin cambios' });
         return;
     }
     if (paqueteActual.estado === 'cancelado') {
-        alert('Este paquete ya fue cancelado.');
+        mostrarToast('Este paquete ya fue cancelado.', 'info', { title: 'Sin cambios' });
         return;
     }
 
     tipoNovedadActual = tipo === 'cancelado' ? 'cancelado' : 'aplazado';
     fotoNovedad = null;
+    fotoNovedadAdicional = null;
 
     document.getElementById('vistaLista').classList.add('oculto');
     document.getElementById('vistaDetalle').classList.add('oculto');
@@ -869,6 +879,8 @@ function abrirFormularioNovedad(id, tipo) {
     document.getElementById('btnEnviarNovedad').textContent = tipoNovedadActual === 'cancelado' ? 'Cancelar paquete' : 'Registrar aplazamiento';
     document.getElementById('descripcionNovedad').value = '';
     document.getElementById('previsualizacionFotoNovedad').innerHTML = '';
+    const prevNovedadAdicional = document.getElementById('previsualizacionFotoNovedadAdicional');
+    if (prevNovedadAdicional) prevNovedadAdicional.innerHTML = '';
 
     actualizarFechaHora();
     actualizarInfoGPS();
@@ -881,11 +893,22 @@ document.getElementById('btnTomarFotoNovedad')?.addEventListener('click', functi
 document.getElementById('inputFotoNovedad')?.addEventListener('change', function(e) {
     const archivo = e.target.files?.[0];
     if (!archivo || !archivo.type.startsWith('image/')) return;
-    procesarFotoNovedad(archivo);
+    procesarFotoNovedad(archivo, false);
     e.target.value = '';
 });
 
-function procesarFotoNovedad(archivo) {
+document.getElementById('btnTomarFotoNovedadAdicional')?.addEventListener('click', function() {
+    document.getElementById('inputFotoNovedadAdicional').click();
+});
+
+document.getElementById('inputFotoNovedadAdicional')?.addEventListener('change', function(e) {
+    const archivo = e.target.files?.[0];
+    if (!archivo || !archivo.type.startsWith('image/')) return;
+    procesarFotoNovedad(archivo, true);
+    e.target.value = '';
+});
+
+function procesarFotoNovedad(archivo, esAdicional) {
     const reader = new FileReader();
     reader.onload = function(e) {
         const img = new Image();
@@ -911,13 +934,20 @@ function procesarFotoNovedad(archivo) {
             canvas.height = height;
             ctx.drawImage(img, 0, 0, width, height);
 
-            fotoNovedad = {
+            const objFoto = {
                 id: Date.now(),
                 data: canvas.toDataURL('image/jpeg', 0.85),
                 fecha: new Date(),
                 ubicacion: ubicacionActual ? { ...ubicacionActual } : null
             };
-            renderPreviewFotoNovedad();
+
+            if (esAdicional) {
+                fotoNovedadAdicional = objFoto;
+                renderPreviewFotoNovedadAdicional();
+            } else {
+                fotoNovedad = objFoto;
+                renderPreviewFotoNovedad();
+            }
             feedbackExito();
         };
         img.src = e.target.result;
@@ -951,6 +981,32 @@ function eliminarFotoNovedad() {
     renderPreviewFotoNovedad();
 }
 
+function renderPreviewFotoNovedadAdicional() {
+    const contenedor = document.getElementById('previsualizacionFotoNovedadAdicional');
+    if (!contenedor) return;
+    if (!fotoNovedadAdicional) {
+        contenedor.innerHTML = '';
+        return;
+    }
+
+    contenedor.innerHTML = `
+        <div class="foto-item">
+            <img src="${fotoNovedadAdicional.data}" alt="Foto adicional de evidencia">
+            <div class="foto-meta">
+                ${formatearFechaHora(fotoNovedadAdicional.fecha)}<br>
+                ${fotoNovedadAdicional.ubicacion ? `${fotoNovedadAdicional.ubicacion.lat.toFixed(6)}, ${fotoNovedadAdicional.ubicacion.lng.toFixed(6)}` : 'Sin GPS'}
+            </div>
+            <button type="button" class="btn-eliminar-foto" onclick="eliminarFotoNovedadAdicional()">×</button>
+        </div>
+    `;
+}
+
+function eliminarFotoNovedadAdicional() {
+    feedbackClick();
+    fotoNovedadAdicional = null;
+    renderPreviewFotoNovedadAdicional();
+}
+
 document.getElementById('formNovedad')?.addEventListener('submit', function(e) {
     e.preventDefault();
     registrarNovedad();
@@ -959,21 +1015,22 @@ document.getElementById('formNovedad')?.addEventListener('submit', function(e) {
 async function registrarNovedad() {
     const descripcion = document.getElementById('descripcionNovedad').value.trim();
     if (!tipoNovedadActual) {
-        alert('No se definió el tipo de novedad.');
+        feedbackError();
+        mostrarToast('No se definió el tipo de novedad.', 'error', { title: 'Error' });
         return;
     }
     if (tipoNovedadActual === 'cancelado') {
-        const confirmar = confirm('¿Seguro que deseas cancelar esta entrega?');
+        const confirmar = await mostrarModalDecision('Confirmar cancelación', '¿Seguro que deseas cancelar esta entrega?');
         if (!confirmar) return;
     }
     if (!descripcion) {
         feedbackError();
-        alert('Debes ingresar una descripción.');
+        mostrarToast('Debes ingresar una descripción.', 'warning', { title: 'Campos incompletos' });
         return;
     }
     if (!fotoNovedad) {
         feedbackError();
-        alert('Debes tomar una foto de evidencia.');
+        mostrarToast('Debes tomar una foto de evidencia.', 'warning', { title: 'Falta evidencia' });
         return;
     }
 
@@ -985,6 +1042,7 @@ async function registrarNovedad() {
             tipo: tipoNovedadActual,
             descripcion,
             foto: { data: fotoNovedad.data },
+            foto_adicional: fotoNovedadAdicional ? { data: fotoNovedadAdicional.data } : undefined,
             ubicacion: ubicacionActual ? { ...ubicacionActual } : null
         };
 
@@ -1015,11 +1073,15 @@ async function registrarNovedad() {
     actualizarEstadisticas();
     refrescarListaActual();
     feedbackExito();
-    alert(tipoNovedadActual === 'cancelado' ? 'La entrega se canceló' : 'Entrega aplazada');
+    if (tipoNovedadActual === 'cancelado') {
+        mostrarToast('La entrega se canceló', 'success', { title: 'Listo' });
+    } else {
+        mostrarToast('Entrega aplazada', 'success', { title: 'Listo' });
+    }
     volverALista();
 } catch (error) {
     feedbackError();
-    alert(error.message);
+    mostrarToast(error.message || 'Ocurrió un error al registrar la novedad', 'error', { title: 'Error', duration: 4200 });
     } finally {
         mostrarLoading(false);
     }
@@ -1035,7 +1097,7 @@ async function registrarNovedad() {
 async function guardarCierreJornada() {
     const resumen = obtenerResumenCierre();
     if (resumen.total === 0 || resumen.pendientesReales > 0) {
-        alert('Aún no cumples las condiciones para guardar el cierre de jornada.');
+        mostrarToast('Aún no cumples las condiciones para guardar el cierre de jornada.', 'warning', { title: 'Pendientes' });
         return;
     }
 
@@ -1076,10 +1138,10 @@ async function guardarCierreJornada() {
         }
 
         feedbackExito();
-        alert('Cierre de jornada guardado correctamente.');
+        mostrarToast('Cierre de jornada guardado correctamente.', 'success', { title: 'Listo' });
     } catch (error) {
         feedbackError();
-        alert(error.message);
+        mostrarToast(error.message || 'Ocurrió un error al guardar el cierre', 'error', { title: 'Error', duration: 4200 });
     } finally {
         mostrarLoading(false);
     }

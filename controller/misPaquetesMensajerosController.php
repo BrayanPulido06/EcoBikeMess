@@ -105,12 +105,22 @@ try {
                 throw new Exception('No se pudo guardar la foto de evidencia');
             }
 
+            $rutaFotoAdicional = null;
+            $fotoAdicionalData = null;
+            if (!empty($input['foto_adicional']) && is_array($input['foto_adicional'])) {
+                $fotoAdicionalData = $input['foto_adicional']['data'] ?? null;
+            }
+            if ($fotoAdicionalData) {
+                $rutaFotoAdicional = guardarImagenBase64($fotoAdicionalData, 'novedades');
+            }
+
             $payload = [
                 'paquete_id' => (int) ($input['paquete_id'] ?? 0),
                 'numero_guia' => trim($input['numero_guia'] ?? ''),
                 'tipo' => $tipo,
                 'descripcion' => $descripcion,
                 'foto_evidencia' => $rutaFoto,
+                'foto_adicional' => $rutaFotoAdicional,
                 'lat' => isset($input['ubicacion']['lat']) ? (float) $input['ubicacion']['lat'] : null,
                 'lng' => isset($input['ubicacion']['lng']) ? (float) $input['ubicacion']['lng'] : null
             ];

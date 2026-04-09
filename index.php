@@ -404,7 +404,6 @@
         <div class="whatsapp-btn">
             <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
         </div>
-        <span class="whatsapp-text">Chatea con nosotros</span>
     </a>
 
     <script src="public/js/script.js"></script>

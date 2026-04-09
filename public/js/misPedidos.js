@@ -259,12 +259,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <h3>📸 Evidencia Fotográfica</h3>
                                     <div class="fotos-evidencia-container" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
                                         ${info.infoEntrega.fotoPrincipal ? `
-                                            <a href="../../${info.infoEntrega.fotoPrincipal}" target="_blank" rel="noopener noreferrer" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                            <a href="../../${info.infoEntrega.fotoPrincipal}" class="js-image-lightbox" data-lightbox-src="../../${info.infoEntrega.fotoPrincipal}" data-lightbox-alt="Foto Principal" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                                 <img src="../../${info.infoEntrega.fotoPrincipal}" alt="Foto Principal" style="width: 100%; height: 100%; object-fit: cover;">
                                             </a>
                                         ` : ''}
                                         ${info.infoEntrega.fotoAdicional ? `
-                                            <a href="../../${info.infoEntrega.fotoAdicional}" target="_blank" rel="noopener noreferrer" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                            <a href="../../${info.infoEntrega.fotoAdicional}" class="js-image-lightbox" data-lightbox-src="../../${info.infoEntrega.fotoAdicional}" data-lightbox-alt="Foto Adicional" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                                 <img src="../../${info.infoEntrega.fotoAdicional}" alt="Foto Adicional" style="width: 100%; height: 100%; object-fit: cover;">
                                             </a>
                                         ` : ''}
@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <h3>📸 Evidencia Fotográfica</h3>
                                     <div class="fotos-evidencia-container" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
                                         ${info.infoCancelacion && info.infoCancelacion.foto ? `
-                                            <a href="../../${info.infoCancelacion.foto}" target="_blank" rel="noopener noreferrer" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                            <a href="../../${info.infoCancelacion.foto}" class="js-image-lightbox" data-lightbox-src="../../${info.infoCancelacion.foto}" data-lightbox-alt="Foto Evidencia" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                                 <img src="../../${info.infoCancelacion.foto}" alt="Foto Evidencia" style="width: 100%; height: 100%; object-fit: cover;">
                                             </a>
                                         ` : '<p class="text-muted" style="width: 100%; text-align: center;">No hay fotos de evidencia disponibles.</p>'}

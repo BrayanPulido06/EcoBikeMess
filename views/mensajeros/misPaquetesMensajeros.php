@@ -311,6 +311,18 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 <small class="ayuda-texto">📸 Obligatorio: una foto como evidencia</small>
             </div>
 
+            <div class="form-group">
+                <label>Foto adicional (opcional)</label>
+                <div class="fotos-container">
+                    <input type="file" id="inputFotoNovedadAdicional" accept="image/*" capture="environment" style="display: none;">
+                    <button type="button" id="btnTomarFotoNovedadAdicional" class="btn-foto btn-foto-secundaria">
+                        📷 Tomar Foto Adicional
+                    </button>
+                    <div id="previsualizacionFotoNovedadAdicional" class="previsualizacion-fotos"></div>
+                </div>
+                <small class="ayuda-texto">Opcional: agrega una segunda foto</small>
+            </div>
+
             <div class="info-automatica">
                 <div class="info-auto-item">
                     <span>🕐 Fecha/Hora:</span>
@@ -356,6 +368,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     </div>
 
     <script src="../../public/js/mensajeroLayout.js"></script>
+    <script src="../../public/js/uiToast.js"></script>
     <script src="../../public/js/misPaquetesMensajeros.js"></script>
 </body>
 </html>

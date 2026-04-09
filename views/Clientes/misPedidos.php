@@ -501,6 +501,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
     </div>
 
     <!-- Enlace al script JS recién creado -->
+    <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/misPedidos.js"></script>
     
     <!-- Script para manejar el Rótulo -->

@@ -8,6 +8,17 @@ class PaquetesAdminModel {
         $this->conn = conexionDB();
     }
 
+    private function columnExists(string $table, string $column): bool
+    {
+        try {
+            $stmt = $this->conn->prepare("SHOW COLUMNS FROM {$table} LIKE :col");
+            $stmt->execute([':col' => $column]);
+            return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
     public function getFilters() {
         // Obtener Clientes para el filtro
         $sqlClientes = "SELECT c.id, 
@@ -113,6 +124,7 @@ class PaquetesAdminModel {
         $info = null;
         $historial = [];
         $imagenes = [];
+        $novedades = [];
         $error = null;
 
         // 1. Obtener información completa del paquete
@@ -172,32 +184,49 @@ class PaquetesAdminModel {
             }
 
             if ($info && $info['estado'] === 'cancelado') {
-                $sqlCancel = "SELECT n.descripcion,
-                                     n.foto_evidencia,
-                                     n.fecha_registro,
-                                     CONCAT(u.nombres, ' ', u.apellidos) AS mensajero
-                              FROM novedades_entrega n
-                              LEFT JOIN mensajeros m ON n.mensajero_id = m.id
-                              LEFT JOIN usuarios u ON m.usuario_id = u.id
-                              WHERE n.paquete_id = :id
-                                AND n.tipo = 'cancelado'
-                              ORDER BY n.fecha_registro DESC
-                              LIMIT 1";
-                $stmtCancel = $this->conn->prepare($sqlCancel);
-                $stmtCancel->execute([':id' => $id]);
-                $cancel = $stmtCancel->fetch(PDO::FETCH_ASSOC);
-
-                if ($cancel) {
-                    $info['infoCancelacion'] = [
-                        'motivo' => $cancel['descripcion'] ?? '',
-                        'foto' => $cancel['foto_evidencia'] ?? '',
-                        'fecha' => $cancel['fecha_registro'] ?? '',
-                        'mensajero' => $cancel['mensajero'] ?? ''
-                    ];
-                }
+                // infoCancelacion se rellenará desde el historial de novedades (más abajo)
             }
         } catch (PDOException $e) {
             $error = "Error al obtener info: " . $e->getMessage();
+        }
+
+        // 1.5 Obtener historial de novedades (aplazado/cancelado)
+        if ($info) {
+            try {
+                $hasFotoAdicional = $this->columnExists('novedades_entrega', 'foto_adicional');
+                $selectFotoAdicional = $hasFotoAdicional ? ", n.foto_adicional" : ", NULL as foto_adicional";
+
+                $sqlNov = "SELECT n.id,
+                                  n.tipo,
+                                  n.descripcion,
+                                  n.foto_evidencia
+                                  {$selectFotoAdicional},
+                                  n.fecha_registro,
+                                  CONCAT(u.nombres, ' ', u.apellidos) AS mensajero
+                           FROM novedades_entrega n
+                           LEFT JOIN mensajeros m ON n.mensajero_id = m.id
+                           LEFT JOIN usuarios u ON m.usuario_id = u.id
+                           WHERE n.paquete_id = :id
+                           ORDER BY n.fecha_registro DESC";
+                $stmtNov = $this->conn->prepare($sqlNov);
+                $stmtNov->execute([':id' => $id]);
+                $novedades = $stmtNov->fetchAll(PDO::FETCH_ASSOC);
+
+                // Mantener compatibilidad: infoCancelacion = última cancelación si existe
+                foreach ($novedades as $nov) {
+                    if (($nov['tipo'] ?? '') === 'cancelado') {
+                        $info['infoCancelacion'] = [
+                            'motivo' => $nov['descripcion'] ?? '',
+                            'foto' => $nov['foto_evidencia'] ?? '',
+                            'fecha' => $nov['fecha_registro'] ?? '',
+                            'mensajero' => $nov['mensajero'] ?? ''
+                        ];
+                        break;
+                    }
+                }
+            } catch (Throwable $e) {
+                // No bloquear detalles si falla novedades
+            }
         }
 
         // 2. Obtener historial (solo si tenemos info)
@@ -236,7 +265,7 @@ class PaquetesAdminModel {
             }
         }
 
-        return ['info' => $info, 'historial' => $historial, 'imagenes' => $imagenes, 'error' => $error];
+        return ['info' => $info, 'historial' => $historial, 'imagenes' => $imagenes, 'novedades' => $novedades, 'error' => $error];
     }
 
     public function updatePaqueteAdmin($id, $data) {

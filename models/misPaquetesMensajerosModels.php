@@ -21,6 +21,7 @@ class MisPaquetesMensajerosModels
                     tipo ENUM('aplazado', 'cancelado') NOT NULL,
                     descripcion TEXT NOT NULL,
                     foto_evidencia VARCHAR(255) NOT NULL,
+                    foto_adicional VARCHAR(255) NULL,
                     coordenada_lat DECIMAL(10, 8) NULL,
                     coordenada_lng DECIMAL(11, 8) NULL,
                     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -30,6 +31,17 @@ class MisPaquetesMensajerosModels
                     FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id) ON DELETE CASCADE
                 )";
         $this->conn->exec($sql);
+
+        // Backfill: agregar columna si la tabla ya existía sin ella.
+        try {
+            $stmt = $this->conn->query("SHOW COLUMNS FROM novedades_entrega LIKE 'foto_adicional'");
+            $exists = $stmt && $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$exists) {
+                $this->conn->exec("ALTER TABLE novedades_entrega ADD COLUMN foto_adicional VARCHAR(255) NULL AFTER foto_evidencia");
+            }
+        } catch (Throwable $e) {
+            // No bloquear la app si falla el ALTER por permisos/estado.
+        }
     }
 
     private function asegurarTablaCierresJornada()
@@ -267,10 +279,10 @@ class MisPaquetesMensajerosModels
         $this->conn->beginTransaction();
         try {
             $sqlNovedad = "INSERT INTO novedades_entrega (
-                                paquete_id, mensajero_id, tipo, descripcion, foto_evidencia,
+                                paquete_id, mensajero_id, tipo, descripcion, foto_evidencia, foto_adicional,
                                 coordenada_lat, coordenada_lng
                            ) VALUES (
-                                :paquete_id, :mensajero_id, :tipo, :descripcion, :foto_evidencia,
+                                :paquete_id, :mensajero_id, :tipo, :descripcion, :foto_evidencia, :foto_adicional,
                                 :lat, :lng
                            )";
             $stmtNovedad = $this->conn->prepare($sqlNovedad);
@@ -280,6 +292,7 @@ class MisPaquetesMensajerosModels
                 ':tipo' => $tipo,
                 ':descripcion' => trim((string) ($payload['descripcion'] ?? '')),
                 ':foto_evidencia' => trim((string) ($payload['foto_evidencia'] ?? '')),
+                ':foto_adicional' => ($payload['foto_adicional'] ?? null) ? trim((string) $payload['foto_adicional']) : null,
                 ':lat' => isset($payload['lat']) ? (float) $payload['lat'] : null,
                 ':lng' => isset($payload['lng']) ? (float) $payload['lng'] : null
             ]);

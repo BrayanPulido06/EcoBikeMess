@@ -506,6 +506,7 @@ function verDetalle(id) {
                 const info = data.info;
                 const historial = data.historial || [];
                 const imagenes = data.imagenes || [];
+                const novedades = data.novedades || [];
 
                 if (!info) {
                     const msg = data.error ? `Error: ${data.error}` : 'No se encontró información del paquete.';
@@ -591,7 +592,8 @@ function verDetalle(id) {
                         tipo: 'entrega',
                         label: 'Entrega principal',
                         ruta: info.infoEntrega.fotoPrincipal,
-                        target: 'entrega_principal'
+                        target: 'entrega_principal',
+                        allowDelete: true
                     });
                 }
                 if (info.infoEntrega && info.infoEntrega.fotoAdicional) {
@@ -599,7 +601,8 @@ function verDetalle(id) {
                         tipo: 'entrega',
                         label: 'Entrega adicional',
                         ruta: info.infoEntrega.fotoAdicional,
-                        target: 'entrega_adicional'
+                        target: 'entrega_adicional',
+                        allowDelete: true
                     });
                 }
                 if (info.infoCancelacion && info.infoCancelacion.foto) {
@@ -607,9 +610,30 @@ function verDetalle(id) {
                         tipo: 'cancelacion',
                         label: 'Cancelación',
                         ruta: info.infoCancelacion.foto,
-                        target: 'cancelacion'
+                        target: 'cancelacion',
+                        allowDelete: true
                     });
                 }
+
+                const cap = (v) => String(v || '').charAt(0).toUpperCase() + String(v || '').slice(1);
+                novedades.forEach((n) => {
+                    if (n && n.foto_evidencia) {
+                        evidenciaItems.push({
+                            tipo: n.tipo || 'novedad',
+                            label: `${cap(n.tipo)} (${n.fecha_registro || ''})`,
+                            ruta: n.foto_evidencia,
+                            allowDelete: false
+                        });
+                    }
+                    if (n && n.foto_adicional) {
+                        evidenciaItems.push({
+                            tipo: n.tipo || 'novedad',
+                            label: `${cap(n.tipo)} adicional (${n.fecha_registro || ''})`,
+                            ruta: n.foto_adicional,
+                            allowDelete: false
+                        });
+                    }
+                });
 
                 const extraItems = imagenes.map(img => ({
                     tipo: img.tipo || 'general',
@@ -619,27 +643,84 @@ function verDetalle(id) {
                 }));
 
                 const renderEvidenciaCard = (item) => {
-                    const ruta = item.ruta || item.ruta_archivo;
-                    if (!ruta) return '';
-                    const deleteAttrs = item.imageId ? `data-action="eliminar-imagen" data-image-id="${item.imageId}"` : `data-action="eliminar-imagen" data-target="${item.target}"`;
+                    const rutaRaw = item.ruta || item.ruta_archivo;
+                    if (!rutaRaw) return '';
+                    const ruta = String(rutaRaw).replace(/^\/+/, '');
+                    const fullPath = `../../${ruta}`;
+
+                    const canDelete = (item.allowDelete !== false) && (item.imageId || item.target);
+                    const deleteAttrs = item.imageId
+                        ? `data-action="eliminar-imagen" data-image-id="${item.imageId}"`
+                        : (item.target ? `data-action="eliminar-imagen" data-target="${item.target}"` : '');
+
                     const replaceInput = item.target ? `
                         <label class="btn btn-sm btn-secondary">
                             Reemplazar
                             <input type="file" class="input-reemplazar" data-target="${item.target}" data-paquete-id="${info.paquete_id}" accept="image/*" hidden>
                         </label>
                     ` : '';
+
+                    const deleteButton = canDelete
+                        ? `<button class="btn btn-sm btn-danger" ${deleteAttrs}>Eliminar</button>`
+                        : '';
+
+                    const actions = (replaceInput || deleteButton) ? `
+                        <div class="evidencia-actions">
+                            ${replaceInput}
+                            ${deleteButton}
+                        </div>
+                    ` : '';
                     return `
                         <div class="evidencia-card">
-                            <a href="../../${ruta}" target="_blank" rel="noopener noreferrer">
-                                <img src="../../${ruta}" alt="${escapeHtml(item.label)}">
+                            <a href="${fullPath}" class="js-image-lightbox" data-lightbox-src="${fullPath}" data-lightbox-alt="${escapeHtml(item.label)}" aria-label="${escapeHtml(item.label)}">
+                                <img src="${fullPath}" alt="${escapeHtml(item.label)}">
                             </a>
                             <div class="evidencia-meta">
                                 <span>${escapeHtml(item.label)}</span>
                                 <span class="badge badge-secondary">${escapeHtml(item.tipo)}</span>
                             </div>
-                            <div class="evidencia-actions">
-                                ${replaceInput}
-                                <button class="btn btn-sm btn-danger" ${deleteAttrs}>Eliminar</button>
+                            ${actions}
+                        </div>
+                    `;
+                };
+
+                const aplazados = novedades.filter(n => (n?.tipo || '').toLowerCase() === 'aplazado');
+                const cancelaciones = novedades.filter(n => (n?.tipo || '').toLowerCase() === 'cancelado');
+
+                const renderNovedadFotos = (n) => {
+                    const fotos = [];
+                    if (n?.foto_evidencia) fotos.push({ ruta: n.foto_evidencia, label: 'Evidencia' });
+                    if (n?.foto_adicional) fotos.push({ ruta: n.foto_adicional, label: 'Adicional' });
+                    if (fotos.length === 0) return '<span class="text-muted">Sin fotos</span>';
+
+                    return fotos.map(f => {
+                        const ruta = String(f.ruta).replace(/^\/+/, '');
+                        const fullPath = `../../${ruta}`;
+                        const alt = `${cap(n.tipo)} - ${f.label}`;
+                        return `
+                            <a href="${fullPath}" class="js-image-lightbox" data-lightbox-src="${fullPath}" data-lightbox-alt="${escapeHtml(alt)}" aria-label="${escapeHtml(alt)}" style="display:inline-block;width:120px;height:120px;border:1px solid #ddd;border-radius:10px;overflow:hidden;margin-right:10px;">
+                                <img src="${fullPath}" alt="${escapeHtml(alt)}" style="width:100%;height:100%;object-fit:cover;display:block;">
+                            </a>
+                        `;
+                    }).join('');
+                };
+
+                const renderNovedadesSection = (title, items) => {
+                    if (!items || items.length === 0) return '';
+                    return `
+                        <div class="detalle-section" style="margin-top: 20px;">
+                            <h3>${title}</h3>
+                            <div style="display:flex;flex-direction:column;gap:12px;">
+                                ${items.map(n => `
+                                    <div style="border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#fff;">
+                                        <div class="text-muted small">${escapeHtml(n.fecha_registro || '')}</div>
+                                        <p style="margin:6px 0 0;font-size:0.95em;">${escapeHtml(n.descripcion || '')}</p>
+                                        <small class="text-muted">Mensajero: ${escapeHtml(n.mensajero || 'Sin información')}</small>
+                                        <div style="margin-top:10px;">
+                                            ${renderNovedadFotos(n)}
+                                        </div>
+                                    </div>
+                                `).join('')}
                             </div>
                         </div>
                     `;
@@ -764,6 +845,9 @@ function verDetalle(id) {
                             </div>
                         </div>
                         ` : ''}
+
+                        ${renderNovedadesSection('⏳ Historial de Aplazamientos', aplazados)}
+                        ${renderNovedadesSection('🛑 Historial de Cancelaciones', cancelaciones)}
 
                         <div class="detalle-section" style="margin-top: 20px;">
                             <h3>🖼️ Evidencias e Imágenes</h3>

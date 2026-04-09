@@ -608,6 +608,11 @@ tbody tr.problema {
     display: block;
 }
 
+.evidencia-card a.js-image-lightbox {
+    display: block;
+    cursor: zoom-in;
+}
+
 .evidencia-meta {
     display: flex;
     justify-content: space-between;

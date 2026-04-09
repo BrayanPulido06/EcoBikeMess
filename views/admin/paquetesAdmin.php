@@ -466,6 +466,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
 
     </div>
 
+    <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/paquetesAdmin.js"></script>
     <script>
         window.verRotulo = function(datos) {
