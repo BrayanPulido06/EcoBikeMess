@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Definir color y etiqueta del estado de recolección
             let badgeRecoleccion = 'secondary';
-            let estadoRecLabel = 'Pendiente por asignar';
+            let estadoRecLabel = 'Sin asignar';
             const estadoRec = p.estado_recoleccion || '';
             if (estadoRec) {
                 switch (estadoRec) {
@@ -219,9 +219,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${recaudoFormateado}</td>
                     <td>${envioAgregado}</td>
                     <td>
-                        <button class="btn btn-sm btn-warning" onclick="cargarRotuloAdmin(${p.id})" title="Guía" style="margin-right:3px;">🏷️ Guía</button>
-                        <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})" title="Ver Detalle">👁️</button>
-                        ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar">🚴</button>` : ''}
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-warning" onclick="cargarRotuloAdmin(${p.id})" title="Guía">🏷️ Guía</button>
+                            <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})" title="Ver Detalle">👁️</button>
+                            ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar">🚴 Asignar</button>` : ''}
+                        </div>
                     </td>
                 </tr>
             `;

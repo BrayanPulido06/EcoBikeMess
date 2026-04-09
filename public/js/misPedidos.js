@@ -159,10 +159,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td><span class="badge badge-${badgeClass}">${f.estado.toUpperCase()}</span></td>
                     <td>${fechaEntregaFormateada}</td>
                     <td>
-                        <button class="btn btn-sm btn-warning" onclick="cargarRotulo(${f.id})" title="Ver Rótulo" style="margin-right:3px;">🏷️ Rótulo</button>
-                        <button class="btn btn-sm btn-info" onclick="verDetalle(${f.id})" title="Ver Detalle">👁️</button>
-                        <button class="btn btn-sm btn-secondary" onclick="descargarGuia(${f.id})" title="Descargar PDF">⬇️</button>
-                        ${f.estado !== 'entregado' && f.estado !== 'cancelado' ? `<button class="btn btn-sm btn-danger" onclick="cancelarPedido(${f.id}, '${f.numero_guia}')" title="Cancelar Pedido" style="margin-left:3px;">🗑️</button>` : ''}
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-warning" onclick="cargarRotulo(${f.id})" title="Ver Rótulo">🏷️ Rótulo</button>
+                            <button class="btn btn-sm btn-info" onclick="verDetalle(${f.id})" title="Ver Detalle">👁️</button>
+                            <button class="btn btn-sm btn-secondary" onclick="descargarGuia(${f.id})" title="Descargar PDF">⬇️</button>
+                            ${f.estado !== 'entregado' && f.estado !== 'cancelado' ? `<button class="btn btn-sm btn-danger" onclick="cancelarPedido(${f.id}, '${f.numero_guia}')" title="Cancelar Pedido">🗑️</button>` : ''}
+                        </div>
                     </td>
                 </tr>
             `;

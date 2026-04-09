@@ -18,6 +18,7 @@ if ($nombreCompleto === '') {
     <title>Dashboard Mensajero - EcoBikeMess</title>
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
     <!-- Librería para escaneo de QR -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>

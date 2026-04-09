@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crear Cuenta - EcoBikeMess</title>
-    <link rel="stylesheet" href="../public/css/crearCuenta.css"> 
+    <link rel="stylesheet" href="../public/css/crearCuenta.css">
+    <link rel="stylesheet" href="../public/css/responsive.css">
     <style>
         /* Estilos para ocultar el input de archivo nativo */
         .hidden-file-input {

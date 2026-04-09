@@ -109,33 +109,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function actualizarAvisoHorario() {
-        const aviso = document.getElementById('avisoHorarioRecoleccion');
-        if (!aviso) return;
-        const ahora = new Date();
-        const hora = ahora.getHours();
-        let bg = '#e8f5e9';
-        let color = '#2e7d32';
-        let border = '#a5d6a7';
-        let mensaje = 'La recolección se realizará hoy.';
-        if (hora >= 13 && hora < 16) {
-            bg = '#fff3cd';
-            color = '#856404';
-            border = '#ffeeba';
-            mensaje = 'Posiblemente no se pueda realizar la recolección por temas de horarios.';
-        } else if (hora >= 17) {
-            bg = '#ffebee';
-            color = '#c62828';
-            border = '#ef9a9a';
-            mensaje = 'La recolección se realizará al día siguiente.';
-        }
-        aviso.style.display = 'block';
-        aviso.style.backgroundColor = bg;
-        aviso.style.color = color;
-        aviso.style.borderColor = border;
-        aviso.textContent = mensaje;
-    }
-
     // --- VALIDACIÓN ---
     function validateStep(stepNumber) {
         let isValid = true;
@@ -393,6 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const recargoRecaudo = tieneRecaudo ? (fijoContraentrega + Math.max(0, extraRecaudo)) : 0;
             const costoBase = 8000;
             const total = costoBase + recargoDimensiones + recargoMismoDia + recargoZona + recargoCambios + recargoRecaudo;
+            const valorRecaudoFinal = sumarEnvio ? (valorRecaudo + total) : valorRecaudo;
 
             // Preparar objeto de datos
             const item = {
@@ -412,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 zona_periferica: zonaPeriferica ? 'on' : '',
                 recoger_cambios: recogerCambios ? 'on' : '',
                 tiene_recaudo: tieneRecaudo ? 'on' : '',
-                valor_recaudo: valorRecaudo || 0,
+                valor_recaudo: valorRecaudoFinal || 0,
                 envio_destinatario: sumarEnvio ? 'si' : 'no',
                 costo_total: total,
                 // Generar guía temporal
@@ -828,17 +802,15 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         let valorProducto = 0;
         let valorEnvio = 0;
 
-        if (tieneRecaudo) {
+        // Cobro al destinatario si hay recaudo o si se decidió sumar envío
+        const cobrarEnvio = sumar === 'si';
+        const debeCobrar = tieneRecaudo || baseRecaudoNum > 0 || cobrarEnvio;
+
+        if (debeCobrar) {
             valorProducto = baseRecaudoNum;
-            if (sumar === 'si') {
-                valorEnvio = costoEnvioNum;
-                totalCobrar = valorProducto + valorEnvio;
-            } else {
-                valorEnvio = 0;
-                totalCobrar = valorProducto;
-            }
+            valorEnvio = cobrarEnvio ? costoEnvioNum : 0;
+            totalCobrar = valorProducto + valorEnvio;
         } else {
-            // Si no hay recaudo, asumimos que no se cobra nada al destinatario (0)
             totalCobrar = 0;
             valorProducto = 0;
             valorEnvio = 0;
@@ -916,13 +888,12 @@ ${qrFinanciero}
                 const sumar = sumarOption ? sumarOption.value : 'no';
                 const tieneRecaudo = document.getElementById('tiene_recaudo').checked;
 
+                const cobrarEnvio = sumar === 'si';
+                const debeCobrar = tieneRecaudo || baseRecaudoNum > 0 || cobrarEnvio;
+
                 let totalCobrar = 0;
-                if (tieneRecaudo) {
-                    if (sumar === 'si') {
-                        totalCobrar = baseRecaudoNum + costoEnvioNum;
-                    } else {
-                        totalCobrar = baseRecaudoNum;
-                    }
+                if (debeCobrar) {
+                    totalCobrar = baseRecaudoNum + (cobrarEnvio ? costoEnvioNum : 0);
                 }
 
                 const totalCobrarTexto = `$${totalCobrar.toLocaleString('es-CO')}`;

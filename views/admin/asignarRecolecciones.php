@@ -19,6 +19,7 @@ $recolecciones = $model->listarRecolecciones([]);
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/asignarRecolecciones.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -106,7 +107,7 @@ $recolecciones = $model->listarRecolecciones([]);
     <?php include '../layouts/adminNavbar.php'; ?>
     <?php include '../layouts/adminSidebar.php'; ?>
 
-    <div class="container" style="margin-left: 250px; margin-top: 60px;">
+    <div class="container app-shell">
         <!-- Header -->
         <header class="page-header">
             <div>

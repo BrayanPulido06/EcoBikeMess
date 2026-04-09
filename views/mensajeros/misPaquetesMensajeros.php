@@ -23,6 +23,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
     <link rel="stylesheet" href="../../public/css/misPaquetesMensajeros.css">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
 </head>
 <body>
     <!-- Header Móvil (Diseño Unificado) -->

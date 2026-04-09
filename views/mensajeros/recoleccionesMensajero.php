@@ -22,6 +22,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
     <link rel="stylesheet" href="../../public/css/recoleccionesMensajero.css">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
     
     <!-- PWA Icons -->
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📦</text></svg>">

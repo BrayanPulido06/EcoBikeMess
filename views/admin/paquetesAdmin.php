@@ -14,6 +14,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/paquetesAdmin.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -150,7 +151,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
     <?php include '../layouts/adminNavbar.php'; ?>
     <?php include '../layouts/adminSidebar.php'; ?>
 
-    <div class="container" style="margin-left: 250px; margin-top: 60px;">
+    <div class="container app-shell">
         <!-- Header -->
         <header class="page-header">
             <div>

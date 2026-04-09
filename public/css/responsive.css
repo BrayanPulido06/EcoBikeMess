@@ -1,0 +1,236 @@
+html,
+body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+img,
+svg,
+canvas,
+video,
+iframe {
+    max-width: 100%;
+    height: auto;
+}
+
+.app-shell {
+    margin-left: 260px;
+    margin-top: 70px;
+    padding: 20px;
+    transition: margin-left 0.3s ease, padding 0.3s ease, margin-top 0.3s ease;
+}
+
+body.sidebar-collapsed .app-shell,
+.sidebar.collapsed ~ .app-shell {
+    margin-left: 70px;
+}
+
+.profile-main-content {
+    padding: 20px !important;
+    margin-top: 70px !important;
+}
+
+.profile-no-sidebar {
+    margin-left: 0 !important;
+}
+
+.container,
+.dashboard-container,
+.content-container,
+.profile-container {
+    width: 100%;
+    max-width: 100%;
+}
+
+.page-header,
+.dashboard-header,
+.team-header,
+.chart-header,
+.app-header,
+.card-header,
+.modal-header,
+.header-actions,
+.section-actions,
+.scan-actions {
+    gap: 12px;
+}
+
+.page-header,
+.dashboard-header,
+.team-header,
+.chart-header,
+.app-header {
+    flex-wrap: wrap;
+}
+
+.header-actions,
+.section-actions,
+.filters-row,
+.filters-bar,
+.role-tabs,
+.modal-foot,
+.scan-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.table-responsive,
+.table-container,
+.data-table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal-content {
+    width: min(96vw, 900px) !important;
+    max-width: 96vw !important;
+    box-sizing: border-box;
+}
+
+.filters-grid,
+.form-grid,
+.form-row,
+.stats-grid,
+.stats-quick,
+.content-grid,
+.quick-stats,
+.permissions-grid,
+.summary-grid,
+.detail-grid {
+    min-width: 0;
+}
+
+.modal .row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.modal .row > * {
+    min-width: 0;
+    flex: 1 1 220px;
+}
+
+@media (max-width: 992px) {
+    .app-shell {
+        margin-left: 0;
+        padding: 18px 14px;
+    }
+
+    body.sidebar-collapsed .app-shell,
+    .sidebar.collapsed ~ .app-shell {
+        margin-left: 0;
+    }
+
+    .page-header,
+    .dashboard-header,
+    .team-header,
+    .app-header {
+        padding: 22px 18px !important;
+    }
+
+    .content-grid,
+    .quick-stats,
+    .permissions-grid,
+    .summary-grid,
+    .detail-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-shell {
+        margin-top: 64px;
+        padding: 14px 10px 18px;
+    }
+
+    .page-header,
+    .dashboard-header,
+    .team-header,
+    .filters-section,
+    .card-body,
+    .card-header,
+    .chart-container,
+    .profile-card {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+
+    .header-actions,
+    .section-actions,
+    .filters-bar,
+    .role-tabs,
+    .modal-foot,
+    .scan-actions,
+    .form-navigation {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        width: 100%;
+    }
+
+    .header-actions > *,
+    .section-actions > *,
+    .scan-actions > *,
+    .form-navigation > * {
+        width: 100%;
+    }
+
+    .filters-grid,
+    .form-grid,
+    .form-row,
+    .stats-grid,
+    .stats-quick,
+    .content-grid,
+    .quick-stats,
+    .permissions-grid,
+    .summary-grid,
+    .detail-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .tabs-container {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .tabs-container > * {
+        width: 100%;
+    }
+
+    .modal .row {
+        flex-direction: column;
+    }
+
+    .table-responsive table,
+    .table-container table,
+    table.data-table,
+    table.bulk-table {
+        min-width: 700px;
+    }
+}
+
+@media (max-width: 480px) {
+    .app-shell {
+        padding: 12px 8px 16px;
+    }
+
+    .page-header h1,
+    .dashboard-header h1,
+    .team-header h1,
+    .page-title h1 {
+        font-size: 1.2rem !important;
+        line-height: 1.2;
+    }
+
+    .tabs-container {
+        grid-template-columns: 1fr;
+    }
+
+    .app-header {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+}

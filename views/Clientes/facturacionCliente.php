@@ -14,6 +14,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/facturacionCliente.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
     <link rel="stylesheet" href="../../public/css/clientesTheme.css">
 </head>
 <body>
