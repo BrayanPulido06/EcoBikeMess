@@ -19,35 +19,35 @@
             </li>
             
             <li class="nav-item">
-                <a href="paquetesAdmin.php" class="nav-link">
+                <a href="../admin/paquetesAdmin.php" class="nav-link">
                     <span class="nav-icon">📦</span>
                     <span class="nav-text">Gestión Paquetes</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="digitarAdmin.php" class="nav-link">
+                <a href="../admin/digitarAdmin.php" class="nav-link">
                     <span class="nav-icon">📝</span>
                     <span class="nav-text">Digitar Envío</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="asignarRecolecciones.php" class="nav-link">
+                <a href="../admin/asignarRecolecciones.php" class="nav-link">
                     <span class="nav-icon">🚚</span>
                     <span class="nav-text">Recolecciones</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="facturacionAdmin.php" class="nav-link">
+                <a href="../admin/facturacionAdmin.php" class="nav-link">
                     <span class="nav-icon">f</span>
                     <span class="nav-text">Facturación</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="añadirAdmin.php" class="nav-link">
+                <a href="../admin/añadirAdmin.php" class="nav-link">
                     <span class="nav-icon">👥</span>
                     <span class="nav-text">Usuarios</span>
                 </a>

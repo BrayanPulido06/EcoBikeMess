@@ -12,21 +12,21 @@
     <nav class="sidebar-nav">
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="inicioCliente.php" class="nav-link">
+                <a href="../Clientes/inicioCliente.php" class="nav-link">
                     <span class="nav-icon">📊</span>
                     <span class="nav-text">Inicio</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="enviarPaquete.php" class="nav-link">
+                <a href="../Clientes/enviarPaquete.php" class="nav-link">
                     <span class="nav-icon">📦</span>
                     <span class="nav-text">Enviar Paquete</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="misPedidos.php" class="nav-link">
+                <a href="../Clientes/misPedidos.php" class="nav-link">
                     <span class="nav-icon">📋</span>
                     <span class="nav-text">Mis Pedidos</span>
                 </a>
@@ -35,7 +35,7 @@
 
             <?php if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'colaborador'): ?>
             <li class="nav-item">
-                <a href="equipoTrabajo.php" class="nav-link">
+                <a href="../Clientes/equipoTrabajo.php" class="nav-link">
                     <span class="nav-icon">💬</span>
                     <span class="nav-text">Equipo de Trabajo</span>
                 </a>
