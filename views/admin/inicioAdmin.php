@@ -30,7 +30,7 @@ if ($ingresosAyer > 0) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Sistema de Mensajería</title>
-    <link rel="icon" href="../../public/img/Logo_Blanco_Trasparente_Circulo.png" type="image/png">
+    <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/inicioAdmin.css">
