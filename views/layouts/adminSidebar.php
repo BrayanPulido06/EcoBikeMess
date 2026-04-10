@@ -12,7 +12,7 @@
     <nav class="sidebar-nav">
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="inicioAdmin.php" class="nav-link">
+                <a href="../admin/inicioAdmin.php" class="nav-link">
                     <span class="nav-icon">📊</span>
                     <span class="nav-text">Dashboard</span>
                 </a>
