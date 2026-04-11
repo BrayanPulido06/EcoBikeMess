@@ -21,7 +21,7 @@ if ($nombreCompleto === '') {
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <!-- Librería para escaneo de QR -->
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.10/minified/html5-qrcode.min.js" type="text/javascript"></script>
     <style>
         /* Estilos para la tarjeta de información importante */
         .info-card {

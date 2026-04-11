@@ -723,7 +723,19 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         // Manejar visibilidad de la opción de sumar envío
         const containerSumar = document.getElementById('container_sumar_envio');
         if (containerSumar) containerSumar.style.display = 'block';
+        asegurarSeleccionEnvioDestinatario();
         actualizarRecaudoFinal(); // Recalcular siempre
+    }
+
+    function asegurarSeleccionEnvioDestinatario() {
+        const radios = document.querySelectorAll('input[name="envio_destinatario"]');
+        if (!radios || radios.length === 0) return;
+
+        const anyChecked = Array.from(radios).some(r => r.checked);
+        if (anyChecked) return;
+
+        const defaultRadio = document.querySelector('input[name="envio_destinatario"][value="no"]');
+        if (defaultRadio) defaultRadio.checked = true;
     }
 
     // Función para actualizar el recaudo final según la selección
@@ -773,9 +785,29 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
     const radiosSumar = document.querySelectorAll('input[name="envio_destinatario"]');
     radiosSumar.forEach(r => r.addEventListener('change', actualizarRecaudoFinal));
 
+    // Hacer que toda la tarjeta sea clickeable (mejora UX y evita "no me deja seleccionar")
+    document.querySelectorAll('#container_sumar_envio .radio-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const radio = card.querySelector('input[type="radio"]');
+            if (!radio) return;
+            if (radio.disabled) return;
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    });
+
     // Mantener compatibilidad con el botón si existe (aunque lo ocultaremos)
     if (calcularCostoBtn) {
         calcularCostoBtn.addEventListener('click', calcularCostoAutomatico);
+    }
+
+    // Inicializar costos/estado al cargar (para que aparezca la opción de cobrar envío)
+    try {
+        calcularCostoAutomatico();
+        asegurarSeleccionEnvioDestinatario();
+        actualizarRecaudoFinal();
+    } catch (e) {
+        console.warn('No se pudo inicializar el cálculo automático', e);
     }
 
     function populateConfirmation() {

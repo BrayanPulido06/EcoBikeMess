@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let sessionStartTime = new Date();
     let sessionTimer;
     let html5QrCode = null; // Variable para la instancia del escáner
+    let scannerStartToken = 0;
+    let isScannerStarting = false;
+    let isScannerStopping = false;
     let lastScannedCode = null;
     let lastScannedTime = 0;
     let isFlashOn = false;
@@ -154,8 +157,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     btnScanQR.addEventListener('click', function() {
+        if (scanModal.classList.contains('active')) return;
         scanModal.classList.add('active');
-        startScanning();
+        // Esperar a que el modal sea visible (display:flex + animación) antes de inicializar la cámara
+        setTimeout(() => startScanning(), 250);
     });
     
     closeScanModal.addEventListener('click', function() {
@@ -168,52 +173,133 @@ document.addEventListener('DOMContentLoaded', function() {
     // LÓGICA DE ESCANEO (HTML5-QRCODE)
     // ============================================
 
-    function startScanning() {
-        // Limpiar cualquier instancia previa o mensaje de error
-        document.getElementById('reader').innerHTML = '';
-        document.getElementById('modalQrCounter').textContent = scannedQRs.length;
-        
-        // Resetear variables de control
-        lastScannedCode = null;
-        isFlashOn = false;
+    function isHtml5QrCodeScanning(instance) {
+        if (!instance) return false;
+        try {
+            if (typeof instance.isScanning === 'function') return !!instance.isScanning();
+            return !!instance.isScanning;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    async function startScanning() {
+        if (isScannerStarting) return;
+        isScannerStarting = true;
+
+        const currentToken = ++scannerStartToken;
+        const readerEl = document.getElementById('reader');
+        const modalCounterEl = document.getElementById('modalQrCounter');
         const btnFlash = document.getElementById('btnFlash');
-        if(btnFlash) btnFlash.style.display = 'none';
-        
-        html5QrCode = new Html5Qrcode("reader");
-        // Config más rápida: más fps + qrbox ligeramente menor
-        const config = { 
-            fps: 15,
-            qrbox: { width: 220, height: 220 },
-            aspectRatio: 1.0,
-            disableFlip: true
-        };
-        
-        // Usar 'environment' para forzar cámara trasera
-        html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
-        .then(() => {
-            // Intentar habilitar botón de flash si el dispositivo lo soporta
-            if(btnFlash) {
+
+        try {
+            // UI inicial
+            if (readerEl) readerEl.innerHTML = '<p style="padding:1rem;color:#6c757d;">Iniciando cámara...</p>';
+            if (modalCounterEl) modalCounterEl.textContent = scannedQRs.length;
+
+            // Resetear variables de control
+            lastScannedCode = null;
+            isFlashOn = false;
+            if (btnFlash) btnFlash.style.display = 'none';
+
+            // Si hay una instancia previa, detenerla limpiamente (sin cancelar este arranque)
+            await stopScanning({ cancelPendingStart: false });
+            if (currentToken !== scannerStartToken) return;
+
+            // Validaciones de compatibilidad / contexto seguro (muy común en celulares por HTTP en IP local)
+            const isSecure = (typeof window.isSecureContext === 'boolean') ? window.isSecureContext : false;
+            const host = (location && location.hostname) ? location.hostname : '';
+            const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1';
+            if (!isSecure && !isLocalhost) {
+                if (readerEl) {
+                    readerEl.innerHTML =
+                        '<p style="color:#dc3545; padding:1rem;">La cámara solo funciona en HTTPS o en localhost. Abre el sistema con HTTPS (o desde localhost) y vuelve a intentar.</p>';
+                }
+                return;
+            }
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                if (readerEl) {
+                    readerEl.innerHTML =
+                        '<p style="color:#dc3545; padding:1rem;">Este navegador no soporta acceso a cámara (getUserMedia).</p>';
+                }
+                return;
+            }
+
+            // Config más estable: fps moderado (menos "traba" en equipos lentos) y sin aspectRatio fijo
+            const config = {
+                fps: 10,
+                qrbox: { width: 220, height: 220 },
+                disableFlip: true
+            };
+
+            // Dejar terminar la animación del modal antes de iniciar la cámara
+            await new Promise(resolve => setTimeout(resolve, 150));
+            if (currentToken !== scannerStartToken) return;
+
+            html5QrCode = new Html5Qrcode("reader");
+
+            // Preferir cámara trasera si la lista está disponible (más compatible que facingMode en algunos Android)
+            let cameraIdOrConfig = { facingMode: { ideal: "environment" } };
+            try {
+                const cameras = await Html5Qrcode.getCameras();
+                if (Array.isArray(cameras) && cameras.length > 0) {
+                    const backCam = cameras.find(c => /back|rear|traser|environment/i.test(c.label || '')) || cameras[cameras.length - 1];
+                    cameraIdOrConfig = backCam.id;
+                }
+            } catch (_) {
+                // Si falla, se usa facingMode ideal
+            }
+
+            await html5QrCode.start(cameraIdOrConfig, config, onScanSuccess, onScanFailure);
+
+            // Botón de flash: mostrarlo y dejar que el usuario pruebe (no todos los dispositivos lo soportan)
+            if (btnFlash) {
                 btnFlash.style.display = 'block';
                 btnFlash.onclick = toggleFlash;
             }
-        })
-        .catch(err => {
+        } catch (err) {
             console.error("Error iniciando cámara:", err);
-            document.getElementById('reader').innerHTML = 
-                '<p style="color:#dc3545; padding:1rem;">No se pudo acceder a la cámara. Por favor verifica los permisos.</p>';
-        });
+            if (readerEl) {
+                readerEl.innerHTML =
+                    '<p style="color:#dc3545; padding:1rem;">No se pudo acceder a la cámara. Verifica permisos del navegador y que estés en HTTPS/localhost.</p>';
+            }
+        } finally {
+            isScannerStarting = false;
+        }
     }
 
-    function stopScanning() {
-        if (html5QrCode && html5QrCode.isScanning) {
-            // Apagar flash si estaba encendido
-            if (isFlashOn) toggleFlash();
-            return html5QrCode.stop().then(() => {
+    async function stopScanning(options = {}) {
+        const cancelPendingStart = options.cancelPendingStart !== false;
+
+        if (cancelPendingStart) scannerStartToken++;
+        if (isScannerStopping) return;
+        isScannerStopping = true;
+
+        try {
+            if (!html5QrCode) return;
+
+            try {
+                if (isHtml5QrCodeScanning(html5QrCode)) {
+                    // No forzar apagar torch aquí: en algunos equipos puede "congelar" el track
+                    isFlashOn = false;
+                    await html5QrCode.stop();
+                }
+            } catch (err) {
+                console.warn("Error al detener:", err);
+            }
+
+            try {
                 html5QrCode.clear();
-                html5QrCode = null;
-            }).catch(err => console.error("Error al detener:", err));
+            } catch (_) {}
+
+            html5QrCode = null;
+
+            const readerEl = document.getElementById('reader');
+            if (readerEl) readerEl.innerHTML = '';
+        } finally {
+            isScannerStopping = false;
         }
-        return Promise.resolve();
     }
     
     function toggleFlash() {
