@@ -51,6 +51,7 @@ body {
     padding-top: var(--safe-area-top);
     padding-bottom: var(--safe-area-bottom);
     overscroll-behavior-y: contain;
+    touch-action: pan-y;
 }
 
 input, select, textarea, button {

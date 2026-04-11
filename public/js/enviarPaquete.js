@@ -641,7 +641,10 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         });
     }
 
-    actualizarAvisoHorario();
+    // En algunas versiones no existe esta función; evitar que el JS se rompa
+    if (typeof actualizarAvisoHorario === 'function') {
+        actualizarAvisoHorario();
+    }
 
     // --- CÁLCULO AUTOMÁTICO DE COSTO ---
     function calcularCostoAutomatico() {

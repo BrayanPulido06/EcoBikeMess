@@ -1185,15 +1185,13 @@ body {
     }
 }
 
-/* Modo oscuro automático */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --color-fondo: #0f172a;
-        --color-blanco: #1e293b;
-        --color-texto: #f1f5f9;
-        --color-texto-claro: #94a3b8;
-        --color-borde: #334155;
-    }
+/* Modo oscuro opcional (activar con clase en el body: .modo-oscuro) */
+body.modo-oscuro {
+    --color-fondo: #0f172a;
+    --color-blanco: #1e293b;
+    --color-texto: #f1f5f9;
+    --color-texto-claro: #94a3b8;
+    --color-borde: #334155;
 }
 
 /* Landscape en móvil */

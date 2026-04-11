@@ -1000,15 +1000,7 @@ function inicializarApp() {
         });
     }
     
-    // Prevenir zoom con doble tap (mejor UX en móvil)
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', function(event) {
-        const now = Date.now();
-        if (now - lastTouchEnd <= 300) {
-            event.preventDefault();
-        }
-        lastTouchEnd = now;
-    }, false);
+    // Nota: evitar preventDefault global en touchend, porque puede romper el scroll en algunos móviles.
     
     // Detectar si es PWA instalada
     if (window.matchMedia('(display-mode: standalone)').matches) {

@@ -159,8 +159,8 @@ document.addEventListener('DOMContentLoaded', function() {
     btnScanQR.addEventListener('click', function() {
         if (scanModal.classList.contains('active')) return;
         scanModal.classList.add('active');
-        // Esperar a que el modal sea visible (display:flex + animación) antes de inicializar la cámara
-        setTimeout(() => startScanning(), 250);
+        // Importante: en móviles, la cámara debe abrirse desde un gesto del usuario (sin setTimeout/await previo)
+        startScanning({ userGesture: true });
     });
     
     closeScanModal.addEventListener('click', function() {
@@ -183,10 +183,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    async function startScanning() {
+    async function startScanning(options = {}) {
         if (isScannerStarting) return;
         isScannerStarting = true;
 
+        const userGesture = options.userGesture === true;
         const currentToken = ++scannerStartToken;
         const readerEl = document.getElementById('reader');
         const modalCounterEl = document.getElementById('modalQrCounter');
@@ -202,10 +203,6 @@ document.addEventListener('DOMContentLoaded', function() {
             isFlashOn = false;
             if (btnFlash) btnFlash.style.display = 'none';
 
-            // Si hay una instancia previa, detenerla limpiamente (sin cancelar este arranque)
-            await stopScanning({ cancelPendingStart: false });
-            if (currentToken !== scannerStartToken) return;
-
             // Validaciones de compatibilidad / contexto seguro (muy común en celulares por HTTP en IP local)
             const isSecure = (typeof window.isSecureContext === 'boolean') ? window.isSecureContext : false;
             const host = (location && location.hostname) ? location.hostname : '';
@@ -215,6 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     readerEl.innerHTML =
                         '<p style="color:#dc3545; padding:1rem;">La cámara solo funciona en HTTPS o en localhost. Abre el sistema con HTTPS (o desde localhost) y vuelve a intentar.</p>';
                 }
+                showToast('La cámara requiere HTTPS (o localhost)', 'warning');
                 return;
             }
 
@@ -223,6 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     readerEl.innerHTML =
                         '<p style="color:#dc3545; padding:1rem;">Este navegador no soporta acceso a cámara (getUserMedia).</p>';
                 }
+                showToast('Navegador sin soporte de cámara', 'error');
                 return;
             }
 
@@ -233,27 +232,64 @@ document.addEventListener('DOMContentLoaded', function() {
                 disableFlip: true
             };
 
-            // Dejar terminar la animación del modal antes de iniciar la cámara
-            await new Promise(resolve => setTimeout(resolve, 150));
+            if (userGesture) {
+                // En móvil, NO usar setTimeout/await antes del start: puede bloquear el prompt de permisos.
+                if (html5QrCode && isHtml5QrCodeScanning(html5QrCode)) return;
+                if (html5QrCode) {
+                    try { html5QrCode.clear(); } catch (_) {}
+                    html5QrCode = null;
+                }
+
+                html5QrCode = new Html5Qrcode("reader");
+                const startPromise = html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
+
+                startPromise
+                    .then(() => {
+                        if (btnFlash) {
+                            btnFlash.style.display = 'block';
+                            btnFlash.onclick = toggleFlash;
+                        }
+                    })
+                    .catch(async err => {
+                        console.error("Error iniciando cámara:", err);
+
+                        // Fallback: intentar con cameraId si facingMode falla en el dispositivo
+                        try {
+                            const cameras = await Html5Qrcode.getCameras();
+                            const backCam = Array.isArray(cameras) && cameras.length > 0
+                                ? (cameras.find(c => /back|rear|traser|environment/i.test(c.label || '')) || cameras[cameras.length - 1])
+                                : null;
+
+                            if (backCam && backCam.id) {
+                                await html5QrCode.start(backCam.id, config, onScanSuccess, onScanFailure);
+                                if (btnFlash) {
+                                    btnFlash.style.display = 'block';
+                                    btnFlash.onclick = toggleFlash;
+                                }
+                                return;
+                            }
+                        } catch (_) {}
+
+                        if (readerEl) {
+                            readerEl.innerHTML =
+                                '<p style="color:#dc3545; padding:1rem;">No se pudo abrir la cámara. Revisa permisos del navegador (Cámara: Permitir) y que estés en HTTPS/localhost.</p>';
+                        }
+                        showToast('No se pudo abrir la cámara', 'error');
+                    })
+                    .finally(() => {
+                        isScannerStarting = false;
+                    });
+
+                return;
+            }
+
+            // Flujo normal (no dependiente de gesto): detener instancia previa y arrancar
+            await stopScanning({ cancelPendingStart: false });
             if (currentToken !== scannerStartToken) return;
 
             html5QrCode = new Html5Qrcode("reader");
+            await html5QrCode.start({ facingMode: { ideal: "environment" } }, config, onScanSuccess, onScanFailure);
 
-            // Preferir cámara trasera si la lista está disponible (más compatible que facingMode en algunos Android)
-            let cameraIdOrConfig = { facingMode: { ideal: "environment" } };
-            try {
-                const cameras = await Html5Qrcode.getCameras();
-                if (Array.isArray(cameras) && cameras.length > 0) {
-                    const backCam = cameras.find(c => /back|rear|traser|environment/i.test(c.label || '')) || cameras[cameras.length - 1];
-                    cameraIdOrConfig = backCam.id;
-                }
-            } catch (_) {
-                // Si falla, se usa facingMode ideal
-            }
-
-            await html5QrCode.start(cameraIdOrConfig, config, onScanSuccess, onScanFailure);
-
-            // Botón de flash: mostrarlo y dejar que el usuario pruebe (no todos los dispositivos lo soportan)
             if (btnFlash) {
                 btnFlash.style.display = 'block';
                 btnFlash.onclick = toggleFlash;
@@ -264,8 +300,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 readerEl.innerHTML =
                     '<p style="color:#dc3545; padding:1rem;">No se pudo acceder a la cámara. Verifica permisos del navegador y que estés en HTTPS/localhost.</p>';
             }
+            showToast('No se pudo acceder a la cámara', 'error');
         } finally {
-            isScannerStarting = false;
+            if (!userGesture) isScannerStarting = false;
         }
     }
 
