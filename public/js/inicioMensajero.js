@@ -189,6 +189,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // LÓGICA DE ESCANEO (HTML5-QRCODE)
     // ============================================
 
+    async function preflightCameraPermission() {
+        // Fuerza el prompt de permisos en móviles. Si ya está permitido, retorna rápido.
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+        let stream = null;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' } },
+                audio: false
+            });
+        } finally {
+            try {
+                stream?.getTracks?.().forEach(t => t.stop());
+            } catch (_) {}
+        }
+    }
+
     function isHtml5QrCodeScanning(instance) {
         if (!instance) return false;
         try {
@@ -251,6 +267,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (userGesture) {
                 // En móvil, NO usar setTimeout/await antes del start: puede bloquear el prompt de permisos.
+                try {
+                    await preflightCameraPermission();
+                } catch (err) {
+                    const name = String(err?.name || '');
+                    const msg = String(err?.message || '');
+                    if (readerEl) {
+                        readerEl.innerHTML =
+                            `<p style="color:#dc3545; padding:1rem;">Permiso/cámara bloqueada. ${name ? `(${name}) ` : ''}${msg ? ` ${msg}` : ''}</p>`;
+                    }
+                    showToast('Permiso de cámara bloqueado', 'error');
+                    if (btnEnableCamera) btnEnableCamera.style.display = 'block';
+                    return;
+                }
+
                 if (html5QrCode && isHtml5QrCodeScanning(html5QrCode)) return;
                 if (html5QrCode) {
                     try { html5QrCode.clear(); } catch (_) {}
@@ -306,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         if (readerEl) {
                             readerEl.innerHTML =
-                                `<p style="color:#dc3545; padding:1rem;">${help}</p>`;
+                                `<p style="color:#dc3545; padding:1rem;">${help}${name ? `<br><small style="opacity:.85">Detalle: ${name}</small>` : ''}</p>`;
                         }
                         showToast('No se pudo abrir la cámara', 'error');
                         if (btnEnableCamera) btnEnableCamera.style.display = 'block';

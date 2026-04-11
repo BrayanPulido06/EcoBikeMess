@@ -33,6 +33,12 @@
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+html, body {
+    height: auto;
+    min-height: 100%;
+    overflow-y: auto;
+}
+
 * {
     margin: 0;
     padding: 0;
