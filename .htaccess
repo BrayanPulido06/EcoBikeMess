@@ -1,0 +1,7 @@
+# Permitir uso de cámara/GPS en el dominio (algunos hostings lo bloquean por Permissions-Policy)
+<IfModule mod_headers.c>
+  Header always set Permissions-Policy "camera=(self), microphone=(self), geolocation=(self)"
+  # Compatibilidad antigua (Feature-Policy fue deprecado, pero algunos navegadores antiguos la leen)
+  Header always set Feature-Policy "camera 'self'; microphone 'self'; geolocation 'self'"
+</IfModule>
+
