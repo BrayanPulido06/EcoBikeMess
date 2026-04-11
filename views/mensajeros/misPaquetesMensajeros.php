@@ -22,7 +22,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📦</text></svg>">
     
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
-    <link rel="stylesheet" href="../../public/css/misPaquetesMensajeros.css">
+    <link rel="stylesheet" href="../../public/css/misPaquetesMensajeros.css?v=20260411-1">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
     <link rel="stylesheet" href="../../public/css/responsive.css">
 </head>
@@ -369,8 +369,8 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
         <p id="loadingTexto">Procesando...</p>
     </div>
 
-    <script src="../../public/js/mensajeroLayout.js"></script>
+    <script src="../../public/js/mensajeroLayout.js?v=20260411-1"></script>
     <script src="../../public/js/uiToast.js"></script>
-    <script src="../../public/js/misPaquetesMensajeros.js"></script>
+    <script src="../../public/js/misPaquetesMensajeros.js?v=20260411-1"></script>
 </body>
 </html>

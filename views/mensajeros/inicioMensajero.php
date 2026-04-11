@@ -230,6 +230,9 @@ if ($nombreCompleto === '') {
                 <p class="scan-instruction">Coloca el código QR frente a la cámara</p>
             </div>
             <div class="scan-actions">
+                <button class="btn-secondary" id="btnEnableCamera" style="display:none;">
+                    📷 Activar cámara
+                </button>
                 <button class="btn-secondary" id="btnManualCode">
                     ⌨️ Ingresar código manualmente
                 </button>
@@ -283,6 +286,6 @@ if ($nombreCompleto === '') {
             }
         });
     </script>
-    <script src="../../public/js/inicioMensajero.js"></script>
+    <script src="../../public/js/inicioMensajero.js?v=20260411-1"></script>
 </body>
 </html>

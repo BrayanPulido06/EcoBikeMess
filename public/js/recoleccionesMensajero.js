@@ -1008,14 +1008,7 @@ function inicializarApp() {
         document.body.classList.add('pwa-instalada');
     }
     
-    // Registrar Service Worker para funcionamiento offline (opcional)
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').then(() => {
-            console.log('Service Worker registrado');
-        }).catch(err => {
-            console.log('Error registrando Service Worker:', err);
-        });
-    }
+    // Service Worker deshabilitado: estaba causando caché agresiva y estilos/scripts desactualizados en móvil.
     
     console.log('App de recolecciones inicializada');
 }

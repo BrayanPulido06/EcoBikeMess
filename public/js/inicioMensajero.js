@@ -1,4 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Desactivar Service Worker/caché agresiva en móvil (puede impedir permisos de cámara y cargar JS/CSS viejos)
+    try {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister())).catch(() => {});
+        }
+        if (window.caches && typeof window.caches.keys === 'function') {
+            window.caches.keys().then(keys => keys.forEach(k => window.caches.delete(k))).catch(() => {});
+        }
+    } catch (_) {}
     
     // Estado de la aplicación
     let scannedQRs = [];
@@ -45,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeManualModal = document.getElementById('closeManualModal');
     const btnConfirmManual = document.getElementById('btnConfirmManual');
     const btnCancelManual = document.getElementById('btnCancelManual');
+    const btnEnableCamera = document.getElementById('btnEnableCamera');
     const manualCodeInput = document.getElementById('manualCode');
     const qrCounter = document.getElementById('qrCounter');
     const scannedList = document.getElementById('scannedList');
@@ -162,6 +172,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Importante: en móviles, la cámara debe abrirse desde un gesto del usuario (sin setTimeout/await previo)
         startScanning({ userGesture: true });
     });
+
+    if (btnEnableCamera) {
+        btnEnableCamera.addEventListener('click', function() {
+            startScanning({ userGesture: true });
+        });
+    }
     
     closeScanModal.addEventListener('click', function() {
         stopScanning().then(() => {
@@ -192,6 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const readerEl = document.getElementById('reader');
         const modalCounterEl = document.getElementById('modalQrCounter');
         const btnFlash = document.getElementById('btnFlash');
+        if (btnEnableCamera) btnEnableCamera.style.display = 'none';
 
         try {
             // UI inicial
@@ -249,6 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             btnFlash.style.display = 'block';
                             btnFlash.onclick = toggleFlash;
                         }
+                        if (btnEnableCamera) btnEnableCamera.style.display = 'none';
                     })
                     .catch(async err => {
                         console.error("Error iniciando cámara:", err);
@@ -266,15 +284,32 @@ document.addEventListener('DOMContentLoaded', function() {
                                     btnFlash.style.display = 'block';
                                     btnFlash.onclick = toggleFlash;
                                 }
+                                if (btnEnableCamera) btnEnableCamera.style.display = 'none';
                                 return;
                             }
                         } catch (_) {}
 
+                        const name = String(err?.name || '');
+                        const msg = String(err?.message || '');
+                        let help = 'No se pudo abrir la cámara. Revisa permisos del navegador (Cámara: Permitir) y que estés en HTTPS/localhost.';
+                        if (/NotAllowedError|PermissionDeniedError/i.test(name) || /denied|permission/i.test(msg)) {
+                            help = 'Permiso de cámara denegado. En Chrome: toca el candado → Permisos → Cámara → Permitir, recarga y vuelve a intentar.';
+                        } else if (/NotFoundError/i.test(name)) {
+                            help = 'No se encontró una cámara disponible en el dispositivo.';
+                        } else if (/NotReadableError/i.test(name)) {
+                            help = 'La cámara está en uso por otra app. Cierra otras apps que usen la cámara e inténtalo de nuevo.';
+                        } else if (/OverconstrainedError/i.test(name)) {
+                            help = 'No se pudo usar la cámara trasera. Intenta de nuevo o cambia de navegador.';
+                        } else if (/SecurityError/i.test(name)) {
+                            help = 'El navegador bloqueó la cámara por seguridad. Asegúrate de estar en HTTPS.';
+                        }
+
                         if (readerEl) {
                             readerEl.innerHTML =
-                                '<p style="color:#dc3545; padding:1rem;">No se pudo abrir la cámara. Revisa permisos del navegador (Cámara: Permitir) y que estés en HTTPS/localhost.</p>';
+                                `<p style="color:#dc3545; padding:1rem;">${help}</p>`;
                         }
                         showToast('No se pudo abrir la cámara', 'error');
+                        if (btnEnableCamera) btnEnableCamera.style.display = 'block';
                     })
                     .finally(() => {
                         isScannerStarting = false;

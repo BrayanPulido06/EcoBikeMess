@@ -21,7 +21,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <link rel="manifest" href="manifest.json">
     
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
-    <link rel="stylesheet" href="../../public/css/recoleccionesMensajero.css">
+    <link rel="stylesheet" href="../../public/css/recoleccionesMensajero.css?v=20260411-1">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     
@@ -296,7 +296,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
         <p>Procesando...</p>
     </div>
 
-    <script src="../../public/js/mensajeroLayout.js"></script>
-    <script src="../../public/js/recoleccionesMensajero.js"></script>
+    <script src="../../public/js/mensajeroLayout.js?v=20260411-1"></script>
+    <script src="../../public/js/recoleccionesMensajero.js?v=20260411-1"></script>
 </body>
 </html>
