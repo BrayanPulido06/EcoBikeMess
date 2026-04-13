@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (btnFlash) btnFlash.style.display = 'none';
 
             // Validaciones de compatibilidad / contexto seguro (muy común en celulares por HTTP en IP local)
-            const isSecure = window.isSecureContext === true;
+            const isSecure = window.isSecureContext === true || location.protocol === 'https:';
             const host = (location && location.hostname) ? location.hostname : '';
             const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1';
             
@@ -292,11 +292,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } catch (_) {}
 
-            // Intentar forzar el prompt de permisos
-            try {
-                await preflightCameraPermission();
-            } catch (pErr) {
-                console.warn("Preflight permission error:", pErr);
+            // Validar existencia de mediaDevices
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error("Tu navegador no soporta el acceso a la cámara o está bloqueado por falta de HTTPS real.");
             }
 
             // Verificar que la librería html5-qrcode cargó correctamente (si falla, Html5Qrcode queda undefined)
@@ -313,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Config más estable: fps moderado (menos "traba" en equipos lentos) y sin aspectRatio fijo
             const config = {
                 fps: 10,
-                qrbox: { width: 220, height: 220 },
+                qrbox: { width: 250, height: 250 },
                 disableFlip: true
             };
 
@@ -336,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             html5QrCode = new Html5Qrcode("reader");
-            await html5QrCode.start({ facingMode: { ideal: "environment" } }, config, onScanSuccess, onScanFailure);
+            await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
 
             if (btnFlash) {
                 btnFlash.style.display = 'block';
@@ -352,11 +350,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const msg = String(err?.message || '');
                 const isRef = /ReferenceError/i.test(name) || /not defined/i.test(msg);
                 
-                let baseHelp = 'No se pudo acceder a la cámara. Verifica permisos del navegador y que estés en HTTPS/localhost.';
+                let baseHelp = 'No se pudo acceder a la cámara. Asegúrate de estar usando HTTPS y de no tener otra app usando la cámara.';
+                
                 if (isRef) {
                     baseHelp = 'Ocurrió un error cargando el escáner (posible JS/Dependencia no cargada). Recarga y revisa la consola del navegador.';
-                } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
-                    baseHelp = '<strong>Permiso Denegado:</strong> Has bloqueado el acceso a la cámara. Toca el candado junto a la URL y selecciona "Permitir" para la cámara.';
+                } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || msg.includes('denied')) {
+                    baseHelp = '<strong>🚫 Permiso Denegado:</strong> Has bloqueado la cámara. <br><br>Para arreglarlo:<br>1. Toca el <b>icono del candado</b> arriba junto a la URL.<br>2. Busca <b>"Permisos"</b> o <b>"Cámara"</b>.<br>3. Activa el interruptor o dale a <b>"Permitir"</b>.<br>4. Recarga la página.';
+                } else if (name === 'NotReadableError' || name === 'TrackStartError') {
+                    baseHelp = '<strong>📷 Cámara en uso:</strong> Otra aplicación está usando la cámara (quizás WhatsApp o la cámara del celular). Ciérralas e intenta de nuevo.';
                 }
 
                 readerEl.innerHTML = `
