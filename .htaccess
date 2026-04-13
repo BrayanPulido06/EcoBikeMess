@@ -1,7 +1,14 @@
+# Forzar HTTPS en Hostinger
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Evitar listado de directorios
+Options -Indexes
+
 # Permitir uso de cámara/GPS en el dominio (algunos hostings lo bloquean por Permissions-Policy)
 <IfModule mod_headers.c>
   Header always set Permissions-Policy "camera=(self), microphone=(self), geolocation=(self)"
   # Compatibilidad antigua (Feature-Policy fue deprecado, pero algunos navegadores antiguos la leen)
   Header always set Feature-Policy "camera 'self'; microphone 'self'; geolocation 'self'"
 </IfModule>
-

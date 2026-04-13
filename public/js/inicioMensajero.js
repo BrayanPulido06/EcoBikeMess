@@ -224,13 +224,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const readerEl = document.getElementById('reader');
         const modalCounterEl = document.getElementById('modalQrCounter');
         const btnFlash = document.getElementById('btnFlash');
-        if (btnEnableCamera) btnEnableCamera.style.display = 'none';
-
-        // 1. Intentar forzar el prompt de permisos antes de las validaciones
-        await preflightCameraPermission();
-
+        
         try {
             // UI inicial
+            if (btnEnableCamera) btnEnableCamera.style.display = 'none';
+            if (btnFlash) btnFlash.style.display = 'none';
             if (readerEl) readerEl.innerHTML = '<p style="padding:1rem;color:#6c757d;">Iniciando cámara...</p>';
             if (modalCounterEl) modalCounterEl.textContent = scannedQRs.length;
 
@@ -240,16 +238,22 @@ document.addEventListener('DOMContentLoaded', function() {
             if (btnFlash) btnFlash.style.display = 'none';
 
             // Validaciones de compatibilidad / contexto seguro (muy común en celulares por HTTP en IP local)
-            const isSecure = (typeof window.isSecureContext === 'boolean') ? window.isSecureContext : false;
+            const isSecure = window.isSecureContext === true;
             const host = (location && location.hostname) ? location.hostname : '';
             const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1';
+            
             if (!isSecure && !isLocalhost) {
                 if (readerEl) {
                     readerEl.innerHTML =
-                        '<p style="color:#dc3545; padding:1rem;"><strong>Error de Seguridad:</strong> La cámara requiere HTTPS.<br><br>Asegúrate de acceder mediante <strong>https://</strong>. Si ya tienes SSL, verifica que no estés entrando por el enlace sin seguridad.</p>';
+                        '<div style="color:#dc3545; padding:1.5rem; text-align:center;">' +
+                        '<h3 style="margin-top:0;">⚠️ HTTPS Requerido</h3>' +
+                        '<p>La cámara solo funciona en sitios seguros.</p>' +
+                        '<p>Por favor, pulsa el botón para recargar el sistema con seguridad:</p>' +
+                        '<button onclick="location.protocol=\'https:\'" style="margin-top:15px; padding:12px 20px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Entrar con HTTPS</button></div>';
                 }
                 showToast('Se requiere HTTPS para la cámara', 'error');
-                // No hacemos return aquí para intentar forzar el prompt si el navegador lo permite
+                isScannerStarting = false;
+                return;
             }
 
             // Si el navegador expone Permissions Policy, validar que "camera" esté permitida.
@@ -270,6 +274,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } catch (_) {}
 
+            // Intentar forzar el prompt de permisos
+            try {
+                await preflightCameraPermission();
+            } catch (pErr) {
+                console.warn("Preflight permission error:", pErr);
+            }
+
             // Verificar que la librería html5-qrcode cargó correctamente (si falla, Html5Qrcode queda undefined)
             if (typeof window.Html5Qrcode !== 'function') {
                 if (readerEl) {
@@ -277,6 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         '<p style="color:#dc3545; padding:1rem;">No se cargó la librería de escaneo (html5-qrcode). Revisa conexión, bloqueadores (AdBlock) y recarga la página.</p>';
                 }
                 showToast('Falta librería de escaneo (html5-qrcode)', 'error');
+                isScannerStarting = false;
                 return;
             }
 
@@ -368,15 +380,26 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (err) {
             console.error("Error iniciando cámara:", err);
+            isScannerStarting = false;
             if (readerEl) {
                 const name = String(err?.name || '');
                 const msg = String(err?.message || '');
                 const isRef = /ReferenceError/i.test(name) || /not defined/i.test(msg);
-                const baseHelp = isRef
-                    ? 'Ocurrió un error cargando el escáner (posible JS/Dependencia no cargada). Recarga y revisa la consola del navegador.'
-                    : 'No se pudo acceder a la cámara. Verifica permisos del navegador y que estés en HTTPS/localhost.';
-                readerEl.innerHTML =
-                    `<p style="color:#dc3545; padding:1rem;">${baseHelp}${name || msg ? `<br><small style="opacity:.85">Detalle: ${[name, msg].filter(Boolean).join(' - ')}</small>` : ''}</p>`;
+                
+                let baseHelp = 'No se pudo acceder a la cámara. Verifica permisos del navegador y que estés en HTTPS/localhost.';
+                if (isRef) {
+                    baseHelp = 'Ocurrió un error cargando el escáner (posible JS/Dependencia no cargada). Recarga y revisa la consola del navegador.';
+                } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+                    baseHelp = '<strong>Permiso Denegado:</strong> Has bloqueado el acceso a la cámara. Toca el candado junto a la URL y selecciona "Permitir" para la cámara.';
+                }
+
+                readerEl.innerHTML = `
+                    <div style="color:#dc3545; padding:1.5rem; text-align:left;">
+                        <p>${baseHelp}</p>
+                        ${name || msg ? `<hr style="opacity:0.2;margin:10px 0;"><small style="opacity:.85">Error: ${name} ${msg}</small>` : ''}
+                        <button onclick="location.reload()" style="margin-top:10px; padding:8px 15px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">Recargar Página</button>
+                    </div>
+                `;
             }
             showToast('No se pudo acceder a la cámara', 'error');
             if (btnEnableCamera) btnEnableCamera.style.display = 'block';
@@ -1228,4 +1251,3 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ============================================
     // INICIALIZAR
-    // ===
