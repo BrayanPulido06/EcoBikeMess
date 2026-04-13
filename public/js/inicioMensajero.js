@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (scanModal.classList.contains('active')) scanModal.classList.remove('active');
             scanModal.classList.add('active');
-            // Importante: en móviles, la cámara debe abrirse desde un gesto del usuario
+            // Iniciamos el escaneo directamente
             startScanning({ userGesture: true });
         });
     }
@@ -200,22 +200,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     // LÓGICA DE ESCANEO (HTML5-QRCODE)
     // ============================================
-
-    async function preflightCameraPermission() {
-        // Fuerza el prompt de permisos en móviles. Si ya está permitido, retorna rápido.
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
-        let stream = null;
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: 'environment' } },
-                audio: false
-            });
-        } finally {
-            try {
-                stream?.getTracks?.().forEach(t => t.stop());
-            } catch (_) {}
-        }
-    }
 
     function isHtml5QrCodeScanning(instance) {
         if (!instance) return false;
@@ -255,27 +239,28 @@ document.addEventListener('DOMContentLoaded', function() {
             if (btnFlash) btnFlash.style.display = 'none';
             if (readerEl) readerEl.innerHTML = '<div style="padding:2rem; text-align:center; color:#64748b;"><p>Iniciando cámara...</p></div>';
             if (modalCounterEl) modalCounterEl.textContent = String(scannedQRs.length);
+            if (btnEnableCamera) btnEnableCamera.style.display = 'none';
 
             // Resetear variables de control
             lastScannedCode = null;
             isFlashOn = false;
             if (btnFlash) btnFlash.style.display = 'none';
 
-            // Validaciones de compatibilidad / contexto seguro (muy común en celulares por HTTP en IP local)
+            // Validaciones de contexto seguro (Obligatorio para acceder a la cámara en producción)
             const isSecure = window.isSecureContext === true || location.protocol === 'https:';
-            const host = (location && location.hostname) ? location.hostname : '';
-            const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1';
-            
+            const host = window.location.hostname;
+            const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host.startsWith('192.168.');
+
             if (!isSecure && !isLocalhost) {
                 if (readerEl) {
                     readerEl.innerHTML =
                         '<div style="color:#dc3545; padding:1.5rem; text-align:center;">' +
-                        '<h3 style="margin-top:0;">⚠️ HTTPS Requerido</h3>' +
-                        '<p>La cámara solo funciona en sitios seguros.</p>' +
-                        '<p>Por favor, pulsa el botón para recargar el sistema con seguridad:</p>' +
-                        '<button onclick="location.protocol=\'https:\'" style="margin-top:15px; padding:12px 20px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Entrar con HTTPS</button></div>';
+                        '<h3 style="margin-top:0;">⚠️ Conexión No Segura (HTTP)</h3>' +
+                        '<p>Para usar el escáner en el servidor real (Hostinger), <b>es obligatorio usar una conexión segura HTTPS</b>.</p>' +
+                        '<p>Por favor, pulsa el botón para activar la seguridad:</p>' +
+                        '<button onclick="location.href=\'https://\' + location.host + location.pathname + location.search" style="margin-top:15px; padding:12px 20px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Entrar con HTTPS (Seguro)</button></div>';
                 }
-                showToast('Se requiere HTTPS para la cámara', 'error');
+                showToast('Se requiere HTTPS para usar la cámara', 'error');
                 isScannerStarting = false;
                 return;
             }
@@ -297,13 +282,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             } catch (_) {}
-
-            // Forzar prompt de permisos antes de iniciar la librería
-            try {
-                if (userGesture) await preflightCameraPermission();
-            } catch (pErr) {
-                console.warn("Preflight error:", pErr);
-            }
 
             // Validar existencia de mediaDevices
             if (!navigator.mediaDevices || (!navigator.mediaDevices.getUserMedia && !navigator.getUserMedia)) {
@@ -370,12 +348,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const msg = String(err?.message || '');
                 const isRef = /ReferenceError|TypeError/i.test(name) || /not defined|null|properties|textContent/i.test(msg);
                 
-                let baseHelp = 'No se pudo acceder a la cámara. Asegúrate de usar HTTPS, permitir el permiso y no tener la cámara abierta en otra app.';
+                let baseHelp = 'No se pudo acceder a la cámara. Verifica que el <b>permiso de cámara</b> no esté bloqueado y que el <b>SSL</b> de Hostinger esté activo.';
                 
                 if (isRef) {
                     baseHelp = '<strong>Error de Interfaz:</strong> Se detectó un fallo al intentar actualizar la pantalla. Por favor, recarga la página.';
                 } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || msg.includes('denied')) {
-                    baseHelp = '<strong>🚫 Permiso Denegado:</strong> Has bloqueado la cámara. <br><br>Para arreglarlo:<br>1. Toca el <b>icono del candado</b> arriba junto a la URL.<br>2. Busca <b>"Permisos"</b> o <b>"Cámara"</b>.<br>3. Activa el interruptor o dale a <b>"Permitir"</b>.<br>4. Recarga la página.';
+                    baseHelp = '<strong>🚫 Permiso Denegado:</strong> El acceso a la cámara está bloqueado. <br><br><b>Para solucionarlo:</b><br>1. Toca el <b>candado 🔒</b> en la parte superior (junto a la dirección web).<br>2. Entra en <b>"Permisos"</b> o <b>"Configuración del sitio"</b>.<br>3. Cambia la opción de <b>Cámara</b> a <b>"Permitir"</b>.<br>4. Recarga la página e intenta de nuevo.';
                 } else if (name === 'NotReadableError' || name === 'TrackStartError') {
                     baseHelp = '<strong>📷 Cámara en uso:</strong> Otra aplicación está usando la cámara (quizás WhatsApp o la cámara del celular). Ciérralas e intenta de nuevo.';
                 }
