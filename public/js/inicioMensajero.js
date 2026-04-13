@@ -343,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (btnEnableCamera) btnEnableCamera.style.display = 'none';
 
         } catch (err) {
-            console.error("Error iniciando cámara:", err);
+            console.error("Error crítico iniciando cámara:", err);
             isScannerStarting = false;
             if (readerEl) {
                 const name = String(err?.name || '');
@@ -371,7 +371,8 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast('No se pudo acceder a la cámara', 'error');
             if (btnEnableCamera) btnEnableCamera.style.display = 'block';
         } finally {
-            if (!userGesture) isScannerStarting = false;
+            // Siempre liberar el estado de inicio al terminar el proceso
+            isScannerStarting = false;
         }
     }
 
@@ -630,7 +631,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // CÓDIGO MANUAL
     // ============================================
     
-    btnManualCode.addEventListener('click', function() {
+    btnManualCode?.addEventListener('click', function() {
         stopScanning().then(() => {
             scanModal.classList.remove('active');
             manualModal.classList.add('active');
@@ -639,15 +640,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    closeManualModal.addEventListener('click', function() {
+    closeManualModal?.addEventListener('click', function() {
         manualModal.classList.remove('active');
     });
     
-    btnCancelManual.addEventListener('click', function() {
+    btnCancelManual?.addEventListener('click', function() {
         manualModal.classList.remove('active');
     });
     
-    btnConfirmManual.addEventListener('click', function() {
+    btnConfirmManual?.addEventListener('click', function() {
         const code = normalizarCodigoEscaneado(manualCodeInput.value);
         const errorSpan = document.getElementById('manualError');
         
@@ -684,7 +685,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Enter para confirmar
-    manualCodeInput.addEventListener('keypress', function(e) {
+    manualCodeInput?.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             btnConfirmManual.click();
         }
