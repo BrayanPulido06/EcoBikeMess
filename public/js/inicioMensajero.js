@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('EcoBikeMess inicioMensajero.js v1.2.1 cargado'); // Marcador para verificar actualización
     // Desactivar Service Worker/caché agresiva en móvil (puede impedir permisos de cámara y cargar JS/CSS viejos)
     try {
         if ('serviceWorker' in navigator) {
@@ -218,8 +219,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const userGesture = options.userGesture === true;
         const currentToken = ++scannerStartToken;
         const readerEl = document.getElementById('reader');
-        const modalCounterEl = document.getElementById('modalQrCounter');
+        const modalCounterRef = document.getElementById('modalQrCounter');
         const btnFlash = document.getElementById('btnFlash');
+
+        if (!readerEl) {
+            console.error("Error: Elemento 'reader' no encontrado en el DOM.");
+            showToast('Error interno: Contenedor de cámara no encontrado (ID: reader).', 'error');
+            return; // Detener ejecución si el elemento principal no existe
+        }
         
         try {
             // UI inicial
@@ -238,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (btnEnableCamera) btnEnableCamera.style.display = 'none';
             if (btnFlash) btnFlash.style.display = 'none';
             if (readerEl) readerEl.innerHTML = '<div style="padding:2rem; text-align:center; color:#64748b;"><p>Iniciando cámara...</p></div>';
-            if (modalCounterEl) modalCounterEl.textContent = String(scannedQRs?.length || 0);
+            if (modalCounterRef) modalCounterRef.textContent = String(scannedQRs?.length || 0);
             if (btnEnableCamera) btnEnableCamera.style.display = 'none';
 
             // Resetear variables de control
@@ -255,10 +262,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (readerEl) {
                     readerEl.innerHTML =
                         '<div style="color:#dc3545; padding:1.5rem; text-align:center;">' +
-                    '<h3 style="margin-top:0;">⚠️ Conexión no segura</h3>' +
-                    '<p>Hostinger requiere HTTPS para activar la cámara del celular.</p>' +
-                    '<p>Usa el botón para entrar al sitio seguro:</p>' +
-                    '<button onclick="location.href=\'https://\' + location.host + location.pathname + location.search" style="margin-top:15px; padding:12px 20px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Entrar con Seguridad (HTTPS)</button></div>';
+                    '<h3 style="margin-top:0;">⚠️ HTTPS Requerido (v1.2.1)</h3>' +
+                    '<p>Hostinger bloquea el acceso a la cámara si no usas una conexión segura. Por favor, asegúrate de que la URL empieza con <b>https://</b></p>' +
+                    '<p>Pulsa el botón para activar la seguridad SSL (si tu sitio ya tiene certificado):</p>' +
+                    '<button onclick="location.href=\'https://\' + location.host + location.pathname + location.search" style="margin-top:15px; padding:12px 20px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Intentar con HTTPS</button></div>';
                 }
                 showToast('Se requiere HTTPS para usar la cámara', 'error');
                 isScannerStarting = false;
@@ -346,12 +353,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (readerEl) {
                 const name = String(err?.name || '');
                 const msg = String(err?.message || '');
-                const isRef = /ReferenceError|TypeError/i.test(name) || /not defined|null|properties|textContent|setting|undefined/i.test(msg);
+                const isRef = /ReferenceError|TypeError/i.test(name) || /not defined|null|properties|textContent|setting|undefined|reading/i.test(msg);
                 
-                let baseHelp = 'No se pudo activar la cámara. Verifica que hayas <b>permitido el permiso</b> cuando el navegador lo solicitó.';
+                let baseHelp = 'No se pudo abrir la cámara. Verifica que hayas <b>permitido el permiso</b> y que el SSL de Hostinger esté activo. (v1.2.1)';
                 
                 if (isRef) {
-                    baseHelp = '<strong>Error Técnico:</strong> Se detectó un fallo en la interfaz. Esto ocurre si el archivo JS es viejo o el HTML cambió. Por favor, limpia la caché y recarga.';
+                    baseHelp = '<strong>Error de Interfaz (v1.2.1):</strong> Se detectó un problema visual. Por favor, limpia la caché del navegador y recarga.';
                 } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || msg.includes('denied')) {
                     baseHelp = '<strong>🚫 Permiso Denegado:</strong> El acceso está bloqueado. <br><br><b>Cómo arreglarlo:</b><br>1. Toca el <b>candado 🔒</b> en la barra de direcciones.<br>2. Entra en <b>"Permisos"</b> o <b>"Configuración del sitio"</b>.<br>3. Cambia <b>Cámara</b> a <b>"Permitir"</b>.<br>4. Recarga la página.';
                 } else if (name === 'NotReadableError' || name === 'TrackStartError') {
@@ -361,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 readerEl.innerHTML = `
                     <div style="color:#dc3545; padding:1.5rem; text-align:left;">
                         <p>${baseHelp}</p>
-                        ${(name || msg) && !isRef ? `<hr style="opacity:0.2;margin:10px 0;"><small style="opacity:.85">Detalle: ${name} ${msg}</small>` : ''}
+                        ${(name || msg) && !isRef ? `<hr style="opacity:0.2;margin:10px 0;"><small style="opacity:.85">Detalle Técnico: ${name} ${msg}</small>` : ''}
                         <button onclick="location.reload()" style="margin-top:10px; padding:8px 15px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">Recargar Página</button>
                     </div>
                 `;
@@ -738,16 +745,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     function updateQRCounter() {
-        const count = scannedQRs?.length || 0;
-        if (qrCounter) qrCounter.textContent = String(count);
+        const countTotal = scannedQRs?.length || 0;
+        if (qrCounter) qrCounter.textContent = String(countTotal);
 
-        const modalCounter = document.getElementById('modalQrCounter');
-        if (modalCounter) modalCounter.textContent = String(count);
+        const modalCounterLocal = document.getElementById('modalQrCounter');
+        if (modalCounterLocal) modalCounterLocal.textContent = String(countTotal);
         
         // Mostrar/ocultar sección de entrega
-        if (count > 0) {
+        if (countTotal > 0) {
             if (deliverSection) deliverSection.style.display = 'block';
-            if (deliverCount) deliverCount.textContent = `${count} paquete${count > 1 ? 's' : ''}`;
+            if (deliverCount) deliverCount.textContent = `${countTotal} paquete${countTotal > 1 ? 's' : ''}`;
             if (btnResetCounter) btnResetCounter.style.display = 'block';
         } else {
             if (deliverSection) deliverSection.style.display = 'none';
