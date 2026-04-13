@@ -226,6 +226,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const btnFlash = document.getElementById('btnFlash');
         if (btnEnableCamera) btnEnableCamera.style.display = 'none';
 
+        // 1. Intentar forzar el prompt de permisos antes de las validaciones
+        await preflightCameraPermission();
+
         try {
             // UI inicial
             if (readerEl) readerEl.innerHTML = '<p style="padding:1rem;color:#6c757d;">Iniciando cámara...</p>';
@@ -243,10 +246,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!isSecure && !isLocalhost) {
                 if (readerEl) {
                     readerEl.innerHTML =
-                        '<p style="color:#dc3545; padding:1rem;">La cámara solo funciona en HTTPS o en localhost. Abre el sistema con HTTPS (o desde localhost) y vuelve a intentar.</p>';
+                        '<p style="color:#dc3545; padding:1rem;"><strong>Error de Seguridad:</strong> La cámara requiere HTTPS.<br><br>Asegúrate de acceder mediante <strong>https://</strong>. Si ya tienes SSL, verifica que no estés entrando por el enlace sin seguridad.</p>';
                 }
-                showToast('La cámara requiere HTTPS (o localhost)', 'warning');
-                return;
+                showToast('Se requiere HTTPS para la cámara', 'error');
+                // No hacemos return aquí para intentar forzar el prompt si el navegador lo permite
             }
 
             // Si el navegador expone Permissions Policy, validar que "camera" esté permitida.
@@ -277,15 +280,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                if (readerEl) {
-                    readerEl.innerHTML =
-                        '<p style="color:#dc3545; padding:1rem;">Este navegador no soporta acceso a cámara (getUserMedia).</p>';
-                }
-                showToast('Navegador sin soporte de cámara', 'error');
-                return;
-            }
-
             // Config más estable: fps moderado (menos "traba" en equipos lentos) y sin aspectRatio fijo
             const config = {
                 fps: 10,
@@ -294,21 +288,6 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             if (userGesture) {
-                // En móvil, NO usar setTimeout/await antes del start: puede bloquear el prompt de permisos.
-                try {
-                    await preflightCameraPermission();
-                } catch (err) {
-                    const name = String(err?.name || '');
-                    const msg = String(err?.message || '');
-                    if (readerEl) {
-                        readerEl.innerHTML =
-                            `<p style="color:#dc3545; padding:1rem;">Permiso/cámara bloqueada. ${name ? `(${name}) ` : ''}${msg ? ` ${msg}` : ''}</p>`;
-                    }
-                    showToast('Permiso de cámara bloqueado', 'error');
-                    if (btnEnableCamera) btnEnableCamera.style.display = 'block';
-                    return;
-                }
-
                 if (html5QrCode && isHtml5QrCodeScanning(html5QrCode)) return;
                 if (html5QrCode) {
                     try { html5QrCode.clear(); } catch (_) {}
@@ -1249,70 +1228,4 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ============================================
     // INICIALIZAR
-    // ============================================
-    
-    function init() {
-        cargarEstadoEscaneoLocal();
-        cargarDashboard();
-        updateQRCounter();
-        renderScannedList(); // LocalStorage o sesión actual
-        if (isRouteMode && scannedQRs.length > 0) {
-            construirRutaDesdeEscaneados();
-        }
-        solicitarPermisosGPS(); // Solicitar GPS apenas carga el dashboard
-        
-        // Animación de entrada
-        const cards = document.querySelectorAll('.stat-card, .qr-counter-card, .collections-section');
-        cards.forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            
-            setTimeout(() => {
-                card.style.transition = 'all 0.5s ease';
-                card.style.opacity = '1';
-                card.style.transform = 'translateY(0)';
-            }, index * 100);
-        });
-    }
-    
-    // Cerrar modales al hacer clic fuera
-    scanModal.addEventListener('click', function(e) {
-        if (e.target === scanModal) {
-            stopScanning().then(() => {
-                scanModal.classList.remove('active');
-            });
-        }
-    });
-    
-    manualModal.addEventListener('click', function(e) {
-        if (e.target === manualModal) {
-            manualModal.classList.remove('active');
-        }
-    });
-
-    if (routeDetailModal) {
-        routeDetailModal.addEventListener('click', function(e) {
-            if (e.target === routeDetailModal) {
-                cerrarDetalleRuta();
-            }
-        });
-    }
-    
-    // Prevenir zoom en inputs (iOS)
-    document.querySelectorAll('input').forEach(input => {
-        input.addEventListener('focus', function() {
-            document.querySelector('meta[name=viewport]').setAttribute('content', 
-                'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-        });
-        
-        input.addEventListener('blur', function() {
-            document.querySelector('meta[name=viewport]').setAttribute('content', 
-                'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-        });
-    });
-    
-    // Inicializar
-    init();
-    
-    console.log('Dashboard de mensajero cargado ✓');
-});
+    // ===
