@@ -134,15 +134,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // MENÚ LATERAL
     // ============================================
     
-    menuBtn.addEventListener('click', function() {
-        sideMenu.classList.add('active');
-        menuOverlay.classList.add('active');
-    });
-    
-    menuOverlay.addEventListener('click', function() {
-        sideMenu.classList.remove('active');
-        menuOverlay.classList.remove('active');
-    });
+    if (menuBtn && sideMenu && menuOverlay) {
+        menuBtn.addEventListener('click', function() {
+            sideMenu.classList.add('active');
+            menuOverlay.classList.add('active');
+        });
+        
+        menuOverlay.addEventListener('click', function() {
+            sideMenu.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        });
+    }
     
     // ============================================
     // TEMPORIZADOR DE SESIÓN
@@ -166,12 +168,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // ESCANEAR QR
     // ============================================
     
-    btnScanQR.addEventListener('click', function() {
-        if (scanModal.classList.contains('active')) return;
-        scanModal.classList.add('active');
-        // Importante: en móviles, la cámara debe abrirse desde un gesto del usuario (sin setTimeout/await previo)
-        startScanning({ userGesture: true });
-    });
+    if (btnScanQR && scanModal) {
+        btnScanQR.addEventListener('click', function() {
+            if (scanModal.classList.contains('active')) return;
+            scanModal.classList.add('active');
+            // Importante: en móviles, la cámara debe abrirse desde un gesto del usuario
+            startScanning({ userGesture: true });
+        });
+    }
 
     if (btnEnableCamera) {
         btnEnableCamera.addEventListener('click', function() {
@@ -179,11 +183,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    closeScanModal.addEventListener('click', function() {
-        stopScanning().then(() => {
-            scanModal.classList.remove('active');
+    if (closeScanModal && scanModal) {
+        closeScanModal.addEventListener('click', function() {
+            stopScanning().then(() => {
+                scanModal.classList.remove('active');
+            });
         });
-    });
+    }
 
     // ============================================
     // LÓGICA DE ESCANEO (HTML5-QRCODE)
@@ -227,6 +233,18 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             // UI inicial
+            if (typeof window.Html5Qrcode !== 'function') {
+                if (readerEl) {
+                    readerEl.innerHTML =
+                        '<div style="color:#dc3545; padding:1.5rem; text-align:center;">' +
+                        '<p><strong>Error:</strong> No se cargó la librería de escaneo.</p>' +
+                        '<p>Revisa tu conexión a internet y recarga la página.</p></div>';
+                }
+                showToast('Falta librería de escaneo', 'error');
+                isScannerStarting = false;
+                return;
+            }
+
             if (btnEnableCamera) btnEnableCamera.style.display = 'none';
             if (btnFlash) btnFlash.style.display = 'none';
             if (readerEl) readerEl.innerHTML = '<p style="padding:1rem;color:#6c757d;">Iniciando cámara...</p>';
@@ -300,76 +318,22 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             if (userGesture) {
-                if (html5QrCode && isHtml5QrCodeScanning(html5QrCode)) return;
+                if (html5QrCode && isHtml5QrCodeScanning(html5QrCode)) {
+                    isScannerStarting = false;
+                    return;
+                }
                 if (html5QrCode) {
                     try { html5QrCode.clear(); } catch (_) {}
                     html5QrCode = null;
                 }
-
-                html5QrCode = new Html5Qrcode("reader");
-                const startPromise = html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
-
-                startPromise
-                    .then(() => {
-                        if (btnFlash) {
-                            btnFlash.style.display = 'block';
-                            btnFlash.onclick = toggleFlash;
-                        }
-                        if (btnEnableCamera) btnEnableCamera.style.display = 'none';
-                    })
-                    .catch(async err => {
-                        console.error("Error iniciando cámara:", err);
-
-                        // Fallback: intentar con cameraId si facingMode falla en el dispositivo
-                        try {
-                            const cameras = await Html5Qrcode.getCameras();
-                            const backCam = Array.isArray(cameras) && cameras.length > 0
-                                ? (cameras.find(c => /back|rear|traser|environment/i.test(c.label || '')) || cameras[cameras.length - 1])
-                                : null;
-
-                            if (backCam && backCam.id) {
-                                await html5QrCode.start(backCam.id, config, onScanSuccess, onScanFailure);
-                                if (btnFlash) {
-                                    btnFlash.style.display = 'block';
-                                    btnFlash.onclick = toggleFlash;
-                                }
-                                if (btnEnableCamera) btnEnableCamera.style.display = 'none';
-                                return;
-                            }
-                        } catch (_) {}
-
-                        const name = String(err?.name || '');
-                        const msg = String(err?.message || '');
-                        let help = 'No se pudo abrir la cámara. Revisa permisos del navegador (Cámara: Permitir) y que estés en HTTPS/localhost.';
-                        if (/NotAllowedError|PermissionDeniedError/i.test(name) || /denied|permission/i.test(msg)) {
-                            help = 'Permiso de cámara denegado. En Chrome: toca el candado → Permisos → Cámara → Permitir, recarga y vuelve a intentar.';
-                        } else if (/NotFoundError/i.test(name)) {
-                            help = 'No se encontró una cámara disponible en el dispositivo.';
-                        } else if (/NotReadableError/i.test(name)) {
-                            help = 'La cámara está en uso por otra app. Cierra otras apps que usen la cámara e inténtalo de nuevo.';
-                        } else if (/OverconstrainedError/i.test(name)) {
-                            help = 'No se pudo usar la cámara trasera. Intenta de nuevo o cambia de navegador.';
-                        } else if (/SecurityError/i.test(name)) {
-                            help = 'El navegador bloqueó la cámara por seguridad. Asegúrate de estar en HTTPS.';
-                        }
-
-                        if (readerEl) {
-                            readerEl.innerHTML =
-                                `<p style="color:#dc3545; padding:1rem;">${help}${name ? `<br><small style="opacity:.85">Detalle: ${name}</small>` : ''}</p>`;
-                        }
-                        showToast('No se pudo abrir la cámara', 'error');
-                        if (btnEnableCamera) btnEnableCamera.style.display = 'block';
-                    })
-                    .finally(() => {
-                        isScannerStarting = false;
-                    });
-
-                return;
             }
 
-            // Flujo normal (no dependiente de gesto): detener instancia previa y arrancar
+            // Detener instancia previa
             await stopScanning({ cancelPendingStart: false });
-            if (currentToken !== scannerStartToken) return;
+            if (currentToken !== scannerStartToken) {
+                isScannerStarting = false;
+                return;
+            }
 
             html5QrCode = new Html5Qrcode("reader");
             await html5QrCode.start({ facingMode: { ideal: "environment" } }, config, onScanSuccess, onScanFailure);
@@ -378,6 +342,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 btnFlash.style.display = 'block';
                 btnFlash.onclick = toggleFlash;
             }
+            if (btnEnableCamera) btnEnableCamera.style.display = 'none';
+
         } catch (err) {
             console.error("Error iniciando cámara:", err);
             isScannerStarting = false;
@@ -1248,6 +1214,9 @@ document.addEventListener('DOMContentLoaded', function() {
             { enableHighAccuracy: true }
         );
     }
-    
-    // ============================================
-    // INICIALIZAR
+
+    // Llamadas iniciales
+    cargarEstadoEscaneoLocal();
+    cargarDashboard();
+    solicitarPermisosGPS();
+});
