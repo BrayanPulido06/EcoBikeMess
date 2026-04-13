@@ -294,7 +294,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Validar existencia de mediaDevices
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error("Tu navegador no soporta el acceso a la cámara o está bloqueado por falta de HTTPS real.");
+                if (readerEl) {
+                    readerEl.innerHTML = '<p style="color:#dc3545; padding:1rem;">Tu navegador no tiene acceso a la cámara. Asegúrate de estar en <b>HTTPS</b> y no en una ventana de navegación privada restrictiva.</p>';
+                }
+                isScannerStarting = false;
+                return;
             }
 
             // Verificar que la librería html5-qrcode cargó correctamente (si falla, Html5Qrcode queda undefined)
@@ -335,11 +339,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (readerEl) readerEl.innerHTML = ''; // Limpiar contenedor antes de iniciar
             html5QrCode = new Html5Qrcode("reader");
-            // Usar ideal: "environment" es más compatible con diversos navegadores móviles
-            await html5QrCode.start({ facingMode: { ideal: "environment" } }, config, onScanSuccess, onScanFailure);
+            // Usar facingMode simple para máxima compatibilidad en móviles
+            await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
 
             if (btnFlash) {
-                btnFlash.style.display = 'block';
+                btnFlash.style.display = 'inline-flex';
                 btnFlash.onclick = toggleFlash;
             }
             if (btnEnableCamera) btnEnableCamera.style.display = 'none';
@@ -349,12 +353,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (readerEl) {
                 const name = String(err?.name || '');
                 const msg = String(err?.message || '');
-                const isRef = /ReferenceError/i.test(name) || /not defined/i.test(msg);
+                const isRef = /ReferenceError|TypeError/i.test(name) || /not defined/i.test(msg);
                 
-                let baseHelp = 'No se pudo acceder a la cámara. Asegúrate de estar usando HTTPS y de no tener otra app usando la cámara.';
+                let baseHelp = 'No se pudo activar la cámara. Verifica que tengas el candado de HTTPS activo y que hayas permitido el acceso.';
                 
                 if (isRef) {
-                    baseHelp = 'Ocurrió un error cargando el escáner (posible JS/Dependencia no cargada). Recarga y revisa la consola del navegador.';
+                    baseHelp = '<strong>Error de Software:</strong> Se detectó un fallo en los elementos de la página. Por favor, limpia la caché del navegador.';
                 } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || msg.includes('denied')) {
                     baseHelp = '<strong>🚫 Permiso Denegado:</strong> Has bloqueado la cámara. <br><br>Para arreglarlo:<br>1. Toca el <b>icono del candado</b> arriba junto a la URL.<br>2. Busca <b>"Permisos"</b> o <b>"Cámara"</b>.<br>3. Activa el interruptor o dale a <b>"Permitir"</b>.<br>4. Recarga la página.';
                 } else if (name === 'NotReadableError' || name === 'TrackStartError') {
@@ -741,25 +745,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function updateQRCounter() {
         const count = scannedQRs.length;
-        qrCounter.textContent = count;
+        if (qrCounter) qrCounter.textContent = count;
 
         const modalCounter = document.getElementById('modalQrCounter');
         if (modalCounter) modalCounter.textContent = count;
         
         // Mostrar/ocultar sección de entrega
         if (count > 0) {
-            deliverSection.style.display = 'block';
-            deliverCount.textContent = `${count} paquete${count > 1 ? 's' : ''}`;
-            btnResetCounter.style.display = 'block';
+            if (deliverSection) deliverSection.style.display = 'block';
+            if (deliverCount) deliverCount.textContent = `${count} paquete${count > 1 ? 's' : ''}`;
+            if (btnResetCounter) btnResetCounter.style.display = 'block';
         } else {
-            deliverSection.style.display = 'none';
-            btnResetCounter.style.display = 'none';
+            if (deliverSection) deliverSection.style.display = 'none';
+            if (btnResetCounter) btnResetCounter.style.display = 'none';
         }
         
         // Animación del contador
-        qrCounter.style.transform = 'scale(1.2)';
+        if (qrCounter) qrCounter.style.transform = 'scale(1.2)';
         setTimeout(() => {
-            qrCounter.style.transform = 'scale(1)';
+            if (qrCounter) qrCounter.style.transform = 'scale(1)';
         }, 200);
     }
     
