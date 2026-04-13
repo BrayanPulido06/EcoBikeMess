@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (btnEnableCamera) btnEnableCamera.style.display = 'none';
             if (btnFlash) btnFlash.style.display = 'none';
             if (readerEl) readerEl.innerHTML = '<div style="padding:2rem; text-align:center; color:#64748b;"><p>Iniciando cámara...</p></div>';
-            if (modalCounterEl) modalCounterEl.textContent = String(scannedQRs.length);
+            if (modalCounterEl) modalCounterEl.textContent = String(scannedQRs?.length || 0);
             if (btnEnableCamera) btnEnableCamera.style.display = 'none';
 
             // Resetear variables de control
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
             isFlashOn = false;
             if (btnFlash) btnFlash.style.display = 'none';
 
-            // Validaciones de contexto seguro (Obligatorio para acceder a la cámara en producción)
+            // 1. Validaciones de Contexto Seguro (Obligatorio en producción)
             const isSecure = window.isSecureContext === true || location.protocol === 'https:';
             const host = window.location.hostname;
             const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host.startsWith('192.168.');
@@ -255,10 +255,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (readerEl) {
                     readerEl.innerHTML =
                         '<div style="color:#dc3545; padding:1.5rem; text-align:center;">' +
-                        '<h3 style="margin-top:0;">⚠️ Conexión No Segura (HTTP)</h3>' +
-                        '<p>Para usar el escáner en el servidor real (Hostinger), <b>es obligatorio usar una conexión segura HTTPS</b>.</p>' +
-                        '<p>Por favor, pulsa el botón para activar la seguridad:</p>' +
-                        '<button onclick="location.href=\'https://\' + location.host + location.pathname + location.search" style="margin-top:15px; padding:12px 20px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Entrar con HTTPS (Seguro)</button></div>';
+                        '<h3 style="margin-top:0;">⚠️ HTTPS Requerido</h3>' +
+                        '<p>En servidores como Hostinger, la cámara solo funciona bajo conexión segura.</p>' +
+                        '<p>Pulsa el botón para recargar con SSL:</p>' +
+                        '<button onclick="location.href=\'https://\' + location.host + location.pathname + location.search" style="margin-top:15px; padding:12px 20px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Activar HTTPS</button></div>';
                 }
                 showToast('Se requiere HTTPS para usar la cámara', 'error');
                 isScannerStarting = false;
@@ -346,22 +346,22 @@ document.addEventListener('DOMContentLoaded', function() {
             if (readerEl) {
                 const name = String(err?.name || '');
                 const msg = String(err?.message || '');
-                const isRef = /ReferenceError|TypeError/i.test(name) || /not defined|null|properties|textContent/i.test(msg);
+                const isRef = /ReferenceError|TypeError/i.test(name) || /not defined|null|properties|textContent|setting/i.test(msg);
                 
-                let baseHelp = 'No se pudo acceder a la cámara. Verifica que el <b>permiso de cámara</b> no esté bloqueado y que el <b>SSL</b> de Hostinger esté activo.';
+                let baseHelp = 'No se pudo acceder a la cámara. Asegúrate de <b>permitir el acceso</b> en el navegador y cerrar otras apps que usen la cámara.';
                 
                 if (isRef) {
-                    baseHelp = '<strong>Error de Interfaz:</strong> Se detectó un fallo al intentar actualizar la pantalla. Por favor, recarga la página.';
+                    baseHelp = '<strong>Error de Sistema:</strong> Se detectó un problema visual al cargar el escáner. Por favor, recarga la página.';
                 } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || msg.includes('denied')) {
-                    baseHelp = '<strong>🚫 Permiso Denegado:</strong> El acceso a la cámara está bloqueado. <br><br><b>Para solucionarlo:</b><br>1. Toca el <b>candado 🔒</b> en la parte superior (junto a la dirección web).<br>2. Entra en <b>"Permisos"</b> o <b>"Configuración del sitio"</b>.<br>3. Cambia la opción de <b>Cámara</b> a <b>"Permitir"</b>.<br>4. Recarga la página e intenta de nuevo.';
+                    baseHelp = '<strong>🚫 Permiso Denegado:</strong> El acceso está bloqueado. <br><br><b>Cómo arreglarlo:</b><br>1. Toca el <b>candado 🔒</b> en la barra de direcciones.<br>2. Entra en <b>"Permisos"</b> o <b>"Configuración del sitio"</b>.<br>3. Cambia <b>Cámara</b> a <b>"Permitir"</b>.<br>4. Recarga la página.';
                 } else if (name === 'NotReadableError' || name === 'TrackStartError') {
-                    baseHelp = '<strong>📷 Cámara en uso:</strong> Otra aplicación está usando la cámara (quizás WhatsApp o la cámara del celular). Ciérralas e intenta de nuevo.';
+                    baseHelp = '<strong>📷 Cámara en uso:</strong> Otra aplicación está usando la cámara (WhatsApp, Instagram, etc.). Ciérralas e intenta de nuevo.';
                 }
 
                 readerEl.innerHTML = `
                     <div style="color:#dc3545; padding:1.5rem; text-align:left;">
                         <p>${baseHelp}</p>
-                        ${name || msg ? `<hr style="opacity:0.2;margin:10px 0;"><small style="opacity:.85">Error: ${name} ${msg}</small>` : ''}
+                        ${(name || msg) && !isRef ? `<hr style="opacity:0.2;margin:10px 0;"><small style="opacity:.85">Detalle: ${name} ${msg}</small>` : ''}
                         <button onclick="location.reload()" style="margin-top:10px; padding:8px 15px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">Recargar Página</button>
                     </div>
                 `;
@@ -617,7 +617,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Actualizar contador dentro del modal
         const modalCounter = document.getElementById('modalQrCounter');
-        if (modalCounter) modalCounter.innerText = scannedQRs.length;
+        if (modalCounter) modalCounter.textContent = String(scannedQRs.length);
     }
 
     function onScanFailure(error) {
@@ -738,11 +738,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     function updateQRCounter() {
-        const count = scannedQRs.length;
-        if (qrCounter) qrCounter.textContent = count;
+        const count = scannedQRs?.length || 0;
+        if (qrCounter) qrCounter.textContent = String(count);
 
         const modalCounter = document.getElementById('modalQrCounter');
-        if (modalCounter) modalCounter.textContent = count;
+        if (modalCounter) modalCounter.textContent = String(count);
         
         // Mostrar/ocultar sección de entrega
         if (count > 0) {
