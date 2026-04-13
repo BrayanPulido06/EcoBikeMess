@@ -311,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Config más estable: fps moderado (menos "traba" en equipos lentos) y sin aspectRatio fijo
             const config = {
                 fps: 10,
-                qrbox: { width: 250, height: 250 },
+                qrbox: { width: 220, height: 220 }, // Tamaño más conservador para pantallas pequeñas
                 disableFlip: true
             };
 
@@ -621,7 +621,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Actualizar contador dentro del modal
         const modalCounter = document.getElementById('modalQrCounter');
-        if (modalCounter) modalCounter.textContent = scannedQRs.length;
+        if (modalCounter) modalCounter.innerText = scannedQRs.length;
     }
 
     function onScanFailure(error) {
@@ -1104,10 +1104,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     function showToast(message, type = 'success') {
+        // 1. Intentar usar el sistema de UI global si existe (más robusto)
+        if (window.EcoBikeUI && typeof window.EcoBikeUI.toast === 'function') {
+            window.EcoBikeUI.toast(message, { type: type });
+            return;
+        }
+
+        // 2. Fallback al sistema local validando nulos
         const toast = document.getElementById('toast');
         const toastIcon = document.getElementById('toastIcon');
         const toastMessage = document.getElementById('toastMessage');
         
+        if (!toast || !toastIcon || !toastMessage) {
+            console.warn(`Toast Fallback [${type}]: ${message}`);
+            return;
+        }
+
         const icons = {
             success: '✓',
             error: '✕',
@@ -1115,9 +1127,8 @@ document.addEventListener('DOMContentLoaded', function() {
             warning: '⚠️'
         };
         
-        toastIcon.textContent = icons[type] || icons.success;
-        toastMessage.textContent = message;
-        
+        toastIcon.innerText = icons[type] || icons.success;
+        toastMessage.innerText = message;
         toast.classList.add('show');
         
         setTimeout(() => {
