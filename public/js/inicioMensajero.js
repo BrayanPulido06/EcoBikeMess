@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         const sessionTime = document.getElementById('sessionTime');
-        if (sessionTime) sessionTime.innerText = timeString;
+        if (sessionTime) sessionTime.textContent = timeString;
     }
     
     sessionTimer = setInterval(updateSessionTime, 1000);
@@ -170,7 +170,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (btnScanQR && scanModal) {
         btnScanQR.addEventListener('click', function() {
-            if (scanModal.classList.contains('active')) return;
+            // Forzar reseteo de estado si el modal estaba "trabado"
+            if (isScannerStarting) {
+                console.log('Reiniciando estado del escáner...');
+                isScannerStarting = false;
+            }
+            
+            if (scanModal.classList.contains('active')) scanModal.classList.remove('active');
             scanModal.classList.add('active');
             // Importante: en móviles, la cámara debe abrirse desde un gesto del usuario
             startScanning({ userGesture: true });
@@ -247,8 +253,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (btnEnableCamera) btnEnableCamera.style.display = 'none';
             if (btnFlash) btnFlash.style.display = 'none';
-            if (readerEl) readerEl.innerHTML = '<div style="padding:2rem; text-align:center; color:#64748b;"><p>Solicitando acceso a la cámara...</p></div>';
-            if (modalCounterEl) modalCounterEl.innerText = String(scannedQRs.length);
+            if (readerEl) readerEl.innerHTML = '<div style="padding:2rem; text-align:center; color:#64748b;"><p>Iniciando cámara...</p></div>';
+            if (modalCounterEl) modalCounterEl.textContent = String(scannedQRs.length);
 
             // Resetear variables de control
             lastScannedCode = null;
@@ -340,11 +346,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            if (readerEl) readerEl.innerHTML = ''; // Limpiar contenedor antes de iniciar
+            // Validar que el elemento existe antes de pasarle el ID a la librería
+            if (!document.getElementById("reader")) {
+                throw new Error("El contenedor de la cámara (reader) no existe en la página.");
+            }
+
+            if (readerEl) readerEl.innerHTML = ''; 
             html5QrCode = new Html5Qrcode("reader");
             
             // Usar objeto de restricciones más robusto para móviles
-            await html5QrCode.start({ facingMode: { ideal: "environment" } }, config, onScanSuccess, onScanFailure);
+            await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
 
             if (btnFlash) {
                 btnFlash.style.display = 'inline-flex';
@@ -357,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (readerEl) {
                 const name = String(err?.name || '');
                 const msg = String(err?.message || '');
-                const isRef = /ReferenceError|TypeError/i.test(name) || /not defined|null|properties/i.test(msg);
+                const isRef = /ReferenceError|TypeError/i.test(name) || /not defined|null|properties|textContent/i.test(msg);
                 
                 let baseHelp = 'No se pudo acceder a la cámara. Asegúrate de usar HTTPS, permitir el permiso y no tener la cámara abierta en otra app.';
                 
@@ -380,8 +391,8 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast('No se pudo acceder a la cámara', 'error');
             if (btnEnableCamera) btnEnableCamera.style.display = 'block';
         } finally {
-            // Siempre liberar el estado de inicio al terminar el proceso
-            isScannerStarting = false;
+            // Retraso mínimo para permitir que el hardware se libere
+            setTimeout(() => { isScannerStarting = false; }, 500);
         }
     }
 
@@ -750,15 +761,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function updateQRCounter() {
         const count = scannedQRs.length;
-        if (qrCounter) qrCounter.innerText = count;
+        if (qrCounter) qrCounter.textContent = count;
 
         const modalCounter = document.getElementById('modalQrCounter');
-        if (modalCounter) modalCounter.innerText = count;
+        if (modalCounter) modalCounter.textContent = count;
         
         // Mostrar/ocultar sección de entrega
         if (count > 0) {
             if (deliverSection) deliverSection.style.display = 'block';
-            if (deliverCount) deliverCount.innerText = `${count} paquete${count > 1 ? 's' : ''}`;
+            if (deliverCount) deliverCount.textContent = `${count} paquete${count > 1 ? 's' : ''}`;
             if (btnResetCounter) btnResetCounter.style.display = 'block';
         } else {
             if (deliverSection) deliverSection.style.display = 'none';
@@ -878,10 +889,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const statGanancias = document.getElementById('statGanancias');
         const statKilometros = document.getElementById('statKilometros');
 
-        if (statEntregadas) statEntregadas.innerText = String(statsData.entregadas || 0);
-        if (statPendientes) statPendientes.innerText = String(statsData.pendientes || 0);
-        if (statGanancias) statGanancias.innerText = '$' + Number(statsData.ganancias || 0).toLocaleString('es-CO');
-        if (statKilometros) statKilometros.innerText = String(statsData.kilometros || 0) + ' km';
+        if (statEntregadas) statEntregadas.textContent = String(statsData.entregadas || 0);
+        if (statPendientes) statPendientes.textContent = String(statsData.pendientes || 0);
+        if (statGanancias) statGanancias.textContent = '$' + Number(statsData.ganancias || 0).toLocaleString('es-CO');
+        if (statKilometros) statKilometros.textContent = String(statsData.kilometros || 0) + ' km';
     }
     
     // ============================================
@@ -896,9 +907,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const pending = collectionsData.filter(c => c.status === 'pending').length;
         const completed = collectionsData.filter(c => c.status === 'completed').length;
         
-        if (collectionsBadge) collectionsBadge.innerText = String(pending);
-        if (collectionAsignadas) collectionAsignadas.innerText = String(collectionsData.length);
-        if (collectionCompletadas) collectionCompletadas.innerText = String(completed);
+        if (collectionsBadge) collectionsBadge.textContent = String(pending);
+        if (collectionAsignadas) collectionAsignadas.textContent = String(collectionsData.length);
+        if (collectionCompletadas) collectionCompletadas.textContent = String(completed);
         
         const listHTML = collectionsData.map(col => `
             <div class="collection-item">
@@ -952,7 +963,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (json.mensajero?.nombre) {
                 const userName = document.querySelector('.user-name');
-                if (userName) userName.innerText = json.mensajero.nombre;
+                if (userName) userName.textContent = json.mensajero.nombre;
             }
 
             statsData = json.stats || statsData;
@@ -1135,8 +1146,8 @@ document.addEventListener('DOMContentLoaded', function() {
             warning: '⚠️'
         };
         
-        toastIcon.innerText = icons[type] || icons.success;
-        toastMessage.innerText = message;
+        toastIcon.textContent = icons[type] || icons.success;
+        toastMessage.textContent = message;
         toast.classList.add('show');
         
         setTimeout(() => {
@@ -1210,7 +1221,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const statusText = document.querySelector('.status-text');
                     if(statusDot && statusText) {
                         if (statusDot) statusDot.style.background = '#28a745';
-                        if (statusText) statusText.innerText = 'En línea - GPS Activo';
+                        if (statusText) statusText.textContent = 'En línea - GPS Activo';
                     }
                     
                     // 2. Iniciar tracking continuo
