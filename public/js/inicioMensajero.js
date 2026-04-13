@@ -255,10 +255,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (readerEl) {
                     readerEl.innerHTML =
                         '<div style="color:#dc3545; padding:1.5rem; text-align:center;">' +
-                        '<h3 style="margin-top:0;">⚠️ HTTPS Requerido</h3>' +
-                        '<p>En servidores como Hostinger, la cámara solo funciona bajo conexión segura.</p>' +
-                        '<p>Pulsa el botón para recargar con SSL:</p>' +
-                        '<button onclick="location.href=\'https://\' + location.host + location.pathname + location.search" style="margin-top:15px; padding:12px 20px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Activar HTTPS</button></div>';
+                    '<h3 style="margin-top:0;">⚠️ Conexión no segura</h3>' +
+                    '<p>Hostinger requiere HTTPS para activar la cámara del celular.</p>' +
+                    '<p>Usa el botón para entrar al sitio seguro:</p>' +
+                    '<button onclick="location.href=\'https://\' + location.host + location.pathname + location.search" style="margin-top:15px; padding:12px 20px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Entrar con Seguridad (HTTPS)</button></div>';
                 }
                 showToast('Se requiere HTTPS para usar la cámara', 'error');
                 isScannerStarting = false;
@@ -346,12 +346,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (readerEl) {
                 const name = String(err?.name || '');
                 const msg = String(err?.message || '');
-                const isRef = /ReferenceError|TypeError/i.test(name) || /not defined|null|properties|textContent|setting/i.test(msg);
+                const isRef = /ReferenceError|TypeError/i.test(name) || /not defined|null|properties|textContent|setting|undefined/i.test(msg);
                 
-                let baseHelp = 'No se pudo acceder a la cámara. Asegúrate de <b>permitir el acceso</b> en el navegador y cerrar otras apps que usen la cámara.';
+                let baseHelp = 'No se pudo activar la cámara. Verifica que hayas <b>permitido el permiso</b> cuando el navegador lo solicitó.';
                 
                 if (isRef) {
-                    baseHelp = '<strong>Error de Sistema:</strong> Se detectó un problema visual al cargar el escáner. Por favor, recarga la página.';
+                    baseHelp = '<strong>Error Técnico:</strong> Se detectó un fallo en la interfaz. Esto ocurre si el archivo JS es viejo o el HTML cambió. Por favor, limpia la caché y recarga.';
                 } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || msg.includes('denied')) {
                     baseHelp = '<strong>🚫 Permiso Denegado:</strong> El acceso está bloqueado. <br><br><b>Cómo arreglarlo:</b><br>1. Toca el <b>candado 🔒</b> en la barra de direcciones.<br>2. Entra en <b>"Permisos"</b> o <b>"Configuración del sitio"</b>.<br>3. Cambia <b>Cámara</b> a <b>"Permitir"</b>.<br>4. Recarga la página.';
                 } else if (name === 'NotReadableError' || name === 'TrackStartError') {
@@ -800,7 +800,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // LIMPIAR CONTADOR
     // ============================================
     
-    btnResetCounter.addEventListener('click', function() {
+    if (btnResetCounter) btnResetCounter.addEventListener('click', function() {
         if (confirm('¿Estás seguro de limpiar todos los códigos escaneados?')) {
             scannedQRs = [];
             routeDeliveriesData = [];
