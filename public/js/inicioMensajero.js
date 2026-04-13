@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         const sessionTime = document.getElementById('sessionTime');
-        if (sessionTime) sessionTime.textContent = timeString;
+        if (sessionTime) sessionTime.innerText = timeString;
     }
     
     sessionTimer = setInterval(updateSessionTime, 1000);
@@ -247,8 +247,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (btnEnableCamera) btnEnableCamera.style.display = 'none';
             if (btnFlash) btnFlash.style.display = 'none';
-            if (readerEl) readerEl.innerHTML = '<p style="padding:1rem;color:#6c757d;">Iniciando cámara...</p>';
-            if (modalCounterEl) modalCounterEl.textContent = scannedQRs.length;
+            if (readerEl) readerEl.innerHTML = '<div style="padding:2rem; text-align:center; color:#64748b;"><p>Iniciando cámara...</p></div>';
+            if (modalCounterEl) modalCounterEl.innerText = scannedQRs.length;
 
             // Resetear variables de control
             lastScannedCode = null;
@@ -293,12 +293,8 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (_) {}
 
             // Validar existencia de mediaDevices
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                if (readerEl) {
-                    readerEl.innerHTML = '<p style="color:#dc3545; padding:1rem;">Tu navegador no tiene acceso a la cámara. Asegúrate de estar en <b>HTTPS</b> y no en una ventana de navegación privada restrictiva.</p>';
-                }
-                isScannerStarting = false;
-                return;
+            if (!navigator.mediaDevices || (!navigator.mediaDevices.getUserMedia && !navigator.getUserMedia)) {
+                throw new Error("Tu navegador no soporta el acceso a la cámara o está bloqueado por falta de HTTPS real.");
             }
 
             // Verificar que la librería html5-qrcode cargó correctamente (si falla, Html5Qrcode queda undefined)
@@ -339,7 +335,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (readerEl) readerEl.innerHTML = ''; // Limpiar contenedor antes de iniciar
             html5QrCode = new Html5Qrcode("reader");
-            // Usar facingMode simple para máxima compatibilidad en móviles
+            
+            // Iniciar cámara con facingMode directo para evitar errores de restricción en algunos Android
             await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
 
             if (btnFlash) {
@@ -355,10 +352,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const msg = String(err?.message || '');
                 const isRef = /ReferenceError|TypeError/i.test(name) || /not defined/i.test(msg);
                 
-                let baseHelp = 'No se pudo activar la cámara. Verifica que tengas el candado de HTTPS activo y que hayas permitido el acceso.';
+                let baseHelp = 'No se pudo acceder a la cámara. Asegúrate de estar usando HTTPS y de permitir el acceso.';
                 
                 if (isRef) {
-                    baseHelp = '<strong>Error de Software:</strong> Se detectó un fallo en los elementos de la página. Por favor, limpia la caché del navegador.';
+                    baseHelp = '<strong>Error de Software:</strong> Se detectó un fallo en la carga de elementos. Por favor, limpia la caché del navegador o usa modo incógnito.';
                 } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || msg.includes('denied')) {
                     baseHelp = '<strong>🚫 Permiso Denegado:</strong> Has bloqueado la cámara. <br><br>Para arreglarlo:<br>1. Toca el <b>icono del candado</b> arriba junto a la URL.<br>2. Busca <b>"Permisos"</b> o <b>"Cámara"</b>.<br>3. Activa el interruptor o dale a <b>"Permitir"</b>.<br>4. Recarga la página.';
                 } else if (name === 'NotReadableError' || name === 'TrackStartError') {
@@ -745,15 +742,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function updateQRCounter() {
         const count = scannedQRs.length;
-        if (qrCounter) qrCounter.textContent = count;
+        if (qrCounter) qrCounter.innerText = count;
 
         const modalCounter = document.getElementById('modalQrCounter');
-        if (modalCounter) modalCounter.textContent = count;
+        if (modalCounter) modalCounter.innerText = count;
         
         // Mostrar/ocultar sección de entrega
         if (count > 0) {
             if (deliverSection) deliverSection.style.display = 'block';
-            if (deliverCount) deliverCount.textContent = `${count} paquete${count > 1 ? 's' : ''}`;
+            if (deliverCount) deliverCount.innerText = `${count} paquete${count > 1 ? 's' : ''}`;
             if (btnResetCounter) btnResetCounter.style.display = 'block';
         } else {
             if (deliverSection) deliverSection.style.display = 'none';
