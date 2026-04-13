@@ -249,6 +249,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            // Si el navegador expone Permissions Policy, validar que "camera" esté permitida.
+            // Esto falla típicamente cuando el sitio está embebido en un iframe o el servidor envía Permissions-Policy: camera=()
+            try {
+                const policy = document.permissionsPolicy || document.featurePolicy;
+                if (policy && typeof policy.allowsFeature === 'function') {
+                    const allowsCamera = policy.allowsFeature('camera');
+                    if (!allowsCamera) {
+                        if (readerEl) {
+                            readerEl.innerHTML =
+                                '<p style="color:#dc3545; padding:1rem;">El navegador bloqueó la cámara por la política de permisos (Permissions-Policy). Abre el sistema directamente (sin iframe) y verifica que el servidor permita camera=(self).</p>';
+                        }
+                        showToast('Cámara bloqueada por Permissions-Policy', 'error');
+                        if (btnEnableCamera) btnEnableCamera.style.display = 'block';
+                        return;
+                    }
+                }
+            } catch (_) {}
+
+            // Verificar que la librería html5-qrcode cargó correctamente (si falla, Html5Qrcode queda undefined)
+            if (typeof window.Html5Qrcode !== 'function') {
+                if (readerEl) {
+                    readerEl.innerHTML =
+                        '<p style="color:#dc3545; padding:1rem;">No se cargó la librería de escaneo (html5-qrcode). Revisa conexión, bloqueadores (AdBlock) y recarga la página.</p>';
+                }
+                showToast('Falta librería de escaneo (html5-qrcode)', 'error');
+                return;
+            }
+
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 if (readerEl) {
                     readerEl.innerHTML =
@@ -362,10 +390,17 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (err) {
             console.error("Error iniciando cámara:", err);
             if (readerEl) {
+                const name = String(err?.name || '');
+                const msg = String(err?.message || '');
+                const isRef = /ReferenceError/i.test(name) || /not defined/i.test(msg);
+                const baseHelp = isRef
+                    ? 'Ocurrió un error cargando el escáner (posible JS/Dependencia no cargada). Recarga y revisa la consola del navegador.'
+                    : 'No se pudo acceder a la cámara. Verifica permisos del navegador y que estés en HTTPS/localhost.';
                 readerEl.innerHTML =
-                    '<p style="color:#dc3545; padding:1rem;">No se pudo acceder a la cámara. Verifica permisos del navegador y que estés en HTTPS/localhost.</p>';
+                    `<p style="color:#dc3545; padding:1rem;">${baseHelp}${name || msg ? `<br><small style="opacity:.85">Detalle: ${[name, msg].filter(Boolean).join(' - ')}</small>` : ''}</p>`;
             }
             showToast('No se pudo acceder a la cámara', 'error');
+            if (btnEnableCamera) btnEnableCamera.style.display = 'block';
         } finally {
             if (!userGesture) isScannerStarting = false;
         }
