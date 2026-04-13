@@ -335,9 +335,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (readerEl) readerEl.innerHTML = ''; // Limpiar contenedor antes de iniciar
             html5QrCode = new Html5Qrcode("reader");
-            
-            // Iniciar cámara con facingMode directo para evitar errores de restricción en algunos Android
-            await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
+
+            // Usar ideal: "environment" para mejorar la compatibilidad en navegadores móviles
+            await html5QrCode.start({ facingMode: { ideal: "environment" } }, config, onScanSuccess, onScanFailure);
 
             if (btnFlash) {
                 btnFlash.style.display = 'inline-flex';
@@ -350,12 +350,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (readerEl) {
                 const name = String(err?.name || '');
                 const msg = String(err?.message || '');
-                const isRef = /ReferenceError|TypeError/i.test(name) || /not defined/i.test(msg);
+                const isRef = /ReferenceError|TypeError/i.test(name) || /not defined|null/i.test(msg);
                 
-                let baseHelp = 'No se pudo acceder a la cámara. Asegúrate de estar usando HTTPS y de permitir el acceso.';
+                let baseHelp = 'No se pudo acceder a la cámara. Asegúrate de usar HTTPS, permitir el permiso y no tener la cámara abierta en otra app.';
                 
                 if (isRef) {
-                    baseHelp = '<strong>Error de Software:</strong> Se detectó un fallo en la carga de elementos. Por favor, limpia la caché del navegador o usa modo incógnito.';
+                    baseHelp = '<strong>Error de Interfaz:</strong> Se detectó un fallo al intentar actualizar la pantalla. Por favor, recarga la página.';
                 } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || msg.includes('denied')) {
                     baseHelp = '<strong>🚫 Permiso Denegado:</strong> Has bloqueado la cámara. <br><br>Para arreglarlo:<br>1. Toca el <b>icono del candado</b> arriba junto a la URL.<br>2. Busca <b>"Permisos"</b> o <b>"Cámara"</b>.<br>3. Activa el interruptor o dale a <b>"Permitir"</b>.<br>4. Recarga la página.';
                 } else if (name === 'NotReadableError' || name === 'TrackStartError') {
@@ -636,44 +636,45 @@ document.addEventListener('DOMContentLoaded', function() {
     btnManualCode?.addEventListener('click', function() {
         stopScanning().then(() => {
             scanModal.classList.remove('active');
-            manualModal.classList.add('active');
-            manualCodeInput.value = '';
-            document.getElementById('manualError').textContent = '';
+            if (manualModal) manualModal.classList.add('active');
+            if (manualCodeInput) manualCodeInput.value = '';
+            const errEl = document.getElementById('manualError');
+            if (errEl) errEl.innerText = '';
         });
     });
     
     closeManualModal?.addEventListener('click', function() {
-        manualModal.classList.remove('active');
+        manualModal?.classList.remove('active');
     });
     
     btnCancelManual?.addEventListener('click', function() {
-        manualModal.classList.remove('active');
+        manualModal?.classList.remove('active');
     });
     
     btnConfirmManual?.addEventListener('click', function() {
         const code = normalizarCodigoEscaneado(manualCodeInput.value);
         const errorSpan = document.getElementById('manualError');
         
-        errorSpan.textContent = '';
+        if (errorSpan) errorSpan.innerText = '';
         
-        if (!manualCodeInput.value.trim()) {
-            errorSpan.textContent = 'Por favor ingresa un código';
+        if (!manualCodeInput?.value.trim()) {
+            if (errorSpan) errorSpan.innerText = 'Por favor ingresa un código';
             return;
         }
         
         if (!code) {
-            errorSpan.textContent = 'Código inválido. Debe incluir una guía válida';
+            if (errorSpan) errorSpan.innerText = 'Código inválido. Debe incluir una guía válida';
             return;
         }
         
         if (scannedQRs.find(qr => qr.code === code)) {
-            errorSpan.textContent = 'Este código ya fue escaneado';
+            if (errorSpan) errorSpan.innerText = 'Este código ya fue escaneado';
             return;
         }
 
         validarGuiaEnServidor(code).then(result => {
             if (!result.ok) {
-                errorSpan.textContent = result.message || 'No se pudo validar el paquete';
+                if (errorSpan) errorSpan.innerText = result.message || 'No se pudo validar el paquete';
                 return;
             }
 
@@ -682,7 +683,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             addScannedQR(code, extraerInformacionQR(manualCodeInput.value));
-            manualModal.classList.remove('active');
+            manualModal?.classList.remove('active');
         });
     });
     
