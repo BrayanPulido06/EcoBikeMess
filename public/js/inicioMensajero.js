@@ -333,15 +333,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            if (readerEl) readerEl.innerHTML = ''; // Limpiar contenedor antes de iniciar
             html5QrCode = new Html5Qrcode("reader");
-            await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
+            // Usar ideal: "environment" es más compatible con diversos navegadores móviles
+            await html5QrCode.start({ facingMode: { ideal: "environment" } }, config, onScanSuccess, onScanFailure);
 
             if (btnFlash) {
                 btnFlash.style.display = 'block';
                 btnFlash.onclick = toggleFlash;
             }
             if (btnEnableCamera) btnEnableCamera.style.display = 'none';
-
         } catch (err) {
             console.error("Error crítico iniciando cámara:", err);
             isScannerStarting = false;
@@ -767,6 +768,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     function renderScannedList() {
+        if (!scannedList) return;
         if (scannedQRs.length === 0) {
             scannedList.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 1rem;">No hay códigos escaneados</p>';
             return;
