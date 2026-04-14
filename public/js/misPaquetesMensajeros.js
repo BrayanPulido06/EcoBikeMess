@@ -65,6 +65,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 function inicializarApp() {
     console.log('App de paquetes inicializada');
+
+    // Forzar scroll nativo y eliminar bloqueos residuales
+    document.body.style.overflow = 'auto';
+    document.body.style.height = 'auto';
+    document.body.style.touchAction = 'auto';
+    document.documentElement.style.overflow = 'auto';
+    document.documentElement.style.height = 'auto';
+    document.documentElement.style.touchAction = 'auto';
     
     // Wake Lock para mantener pantalla activa
     if ('wakeLock' in navigator) {
@@ -1243,7 +1251,10 @@ function configurarEventListeners() {
 // UTILIDADES
 // ============================================
 function volverALista() {
-    document.body.style.overflow = 'auto'; // Forzar que el scroll sea posible
+    document.body.style.overflow = ''; 
+    document.documentElement.style.overflow = '';
+    document.body.style.touchAction = 'auto';
+
     window.scrollTo(0, 0); // Volver arriba
     document.getElementById('vistaDetalle').classList.add('oculto');
     document.getElementById('vistaFormularioEntrega').classList.add('oculto');
@@ -1310,12 +1321,16 @@ function mostrarLoading(mostrar, texto = 'Procesando...') {
     const textoElement = document.getElementById('loadingTexto');
     
     if (mostrar) {
-        textoElement.textContent = texto;
-        overlay.classList.remove('oculto');
-        document.body.style.overflow = 'hidden'; // Bloquear scroll mientras carga
+        if (textoElement) textoElement.textContent = texto;
+        if (overlay) overlay.classList.remove('oculto');
+        document.body.style.setProperty('overflow', 'hidden', 'important');
+        document.documentElement.style.setProperty('overflow', 'hidden', 'important');
     } else {
-        overlay.classList.add('oculto');
-        document.body.style.overflow = 'auto'; // Liberar scroll al terminar
+        if (overlay) overlay.classList.add('oculto');
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        document.body.style.touchAction = 'auto';
+        document.documentElement.style.touchAction = 'auto';
     }
 }
 
@@ -1372,7 +1387,8 @@ function mostrarModalDecision(titulo, mensaje) {
     tituloEl.textContent = titulo;
     mensajeEl.textContent = mensaje;
     modal.classList.remove('oculto');
-    document.body.style.overflow = 'hidden'; // Bloquear scroll con el modal abierto
+    document.body.style.setProperty('overflow', 'hidden', 'important');
+    document.documentElement.style.setProperty('overflow', 'hidden', 'important');
 
     return new Promise(resolve => {
         resolverDecisionActual = resolve;
@@ -1382,7 +1398,9 @@ function mostrarModalDecision(titulo, mensaje) {
 function resolverModalDecision(valor) {
     const modal = document.getElementById('modalDecision');
     if (modal) modal.classList.add('oculto');
-    document.body.style.overflow = 'auto'; // Liberar scroll
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+
     if (resolverDecisionActual) {
         const resolve = resolverDecisionActual;
         resolverDecisionActual = null;
