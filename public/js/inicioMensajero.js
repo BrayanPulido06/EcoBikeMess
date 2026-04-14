@@ -795,6 +795,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    function updateStats() {
+        const entregadas = document.getElementById('statsEntregadas');
+        const pendientes = document.getElementById('statsPendientes');
+        const ganancias = document.getElementById('statsGanancias');
+        
+        if (entregadas) entregadas.textContent = statsData.entregadas;
+        if (pendientes) pendientes.textContent = statsData.pendientes;
+        if (ganancias) ganancias.textContent = `$${statsData.ganancias.toLocaleString('es-CO')}`;
+    }
+
     async function cargarDashboard() {
         try {
             const resp = await fetch(`${API_INICIO_MENSAJERO}?action=dashboard`);

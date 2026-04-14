@@ -154,8 +154,32 @@ if ($nombreCompleto === '') {
     <!-- Menu Lateral -->
     <?php include '../layouts/mensajeroSidebar.php'; ?>
 
+    <!-- Notificaciones Toast -->
+    <div id="toast" class="toast-container">
+        <div class="toast-content">
+            <span id="toastIcon"></span>
+            <span id="toastMessage"></span>
+        </div>
+    </div>
+
     <!-- Contenido Principal -->
     <main class="main-content">
+        <!-- Dashboard Stats -->
+        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+            <div class="stat-card" style="background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <span class="stat-value" id="statsEntregadas" style="display: block; font-size: 1.5rem; font-weight: bold; color: #5cb85c;">0</span>
+                <span class="stat-label" style="font-size: 0.75rem; color: #64748b;">Entregas</span>
+            </div>
+            <div class="stat-card" style="background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <span class="stat-value" id="statsPendientes" style="display: block; font-size: 1.5rem; font-weight: bold; color: #f59e0b;">0</span>
+                <span class="stat-label" style="font-size: 0.75rem; color: #64748b;">Pendientes</span>
+            </div>
+            <div class="stat-card" style="background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <span class="stat-value" id="statsGanancias" style="display: block; font-size: 1.1rem; font-weight: bold; color: #2563eb;">$0</span>
+                <span class="stat-label" style="font-size: 0.75rem; color: #64748b;">Recaudo</span>
+            </div>
+        </div>
+
         <!-- Tarjeta de Información Importante -->
         <div class="info-card">
             <div class="info-card-header">
@@ -210,6 +234,22 @@ if ($nombreCompleto === '') {
                 <span class="deliver-text">Realizar Ruta</span>
                 <span class="deliver-count" id="deliverCount">0 paquetes</span>
             </button>
+        </div>
+
+        <!-- Secciones de Tareas -->
+        <div class="tasks-sections" style="margin-top: 20px;">
+            <div class="section-container" style="margin-bottom: 20px;">
+                <h3 style="margin-bottom: 10px; font-size: 1rem;">📥 Recolecciones <span class="badge" id="collectionsBadge" style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;">0</span></h3>
+                <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">
+                    Asignadas: <strong id="collectionAsignadas">0</strong> | Completadas: <strong id="collectionCompletadas">0</strong>
+                </div>
+                <div id="collectionsList"></div>
+            </div>
+
+            <div class="section-container">
+                <h3 style="margin-bottom: 10px; font-size: 1rem;">🚚 Entregas en Curso</h3>
+                <div id="deliveriesList"></div>
+            </div>
         </div>
 
     </main>
