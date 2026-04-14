@@ -55,6 +55,25 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             height: auto !important;
             touch-action: auto !important;
         }
+
+        /* Estilos para que Detalle y Formularios funcionen como Modales a pantalla completa */
+        .vista-detalle, .vista-formulario {
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            background-color: #f4f7f6 !important; /* Fondo sólido para que no se vea la lista atrás */
+            z-index: 5000 !important; /* Por encima de headers y menús */
+            overflow-y: auto !important; /* Permite scroll si el formulario es largo */
+            -webkit-overflow-scrolling: touch !important;
+            padding: 0 !important; /* Ajustamos padding para que ocupe todo */
+            display: block;
+        }
+
+        .oculto {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
