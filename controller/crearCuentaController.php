@@ -12,8 +12,14 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
-        // IMPORTANTE: Verifica que el nombre del archivo coincida exactamente (Mayúsculas/Minúsculas)
-        require_once '../models/crearCuentamodels.php';
+        /**
+         * FIX 1: Usar rutas absolutas con __DIR__ para evitar fallos de apertura.
+         * IMPORTANTE: Si el archivo en tu carpeta 'models' tiene Mayúsculas (ej: crearCuentaModels.php),
+         * debes escribirlo exactamente igual aquí.
+         */
+        $modelPath = dirname(__DIR__) . '/models/crearCuentamodels.php';
+        if (!file_exists($modelPath)) throw new Exception("No se encontró el archivo del modelo en: " . $modelPath);
+        require_once $modelPath;
         require_once __DIR__ . '/../includes/upload.php';
 
         $model = new UsuarioModel();
@@ -62,8 +68,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $datos['tipo_sangre'] = $_POST['tipo_sangre'] ?? '';
             $datos['direccion_residencia'] = $_POST['direccion_residencia'] ?? '';
             
-            // Estructurar datos complejos
-            $datos['emergencia'] = json_encode([
+            // FIX 2: El modelo espera ARRAYS, no JSON. Quitamos json_encode.
+            $datos['emergencia'] = [
                 'contacto1' => [
                     'nombre' => $_POST['nombre_emergencia1'] ?? '',
                     'apellido' => $_POST['apellido_emergencia1'] ?? '',
@@ -74,17 +80,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     'apellido' => $_POST['apellido_emergencia2'] ?? '',
                     'telefono' => $_POST['telefono_emergencia2'] ?? ''
                 ]
-            ]);
+            ];
             
             $tipoTransporte = $_POST['tipo_transporte'] ?? '';
             if ($tipoTransporte === 'vehiculo') {
                 $tipoTransporte = 'Carro';
             }
 
-            $datos['transporte'] = json_encode([
+            $datos['transporte'] = [
                 'tipo' => $tipoTransporte,
                 'placa' => trim($_POST['placa_vehiculo'] ?? ''),
-            ]);
+            ];
 
             // Manejo de Archivos (Fotos y PDFs)
             $uploadDir = dirname(__DIR__) . '/uploads/mensajeros/';
@@ -109,7 +115,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $rutas[$archivo] = null;
                 }
             }
-            $datos['rutas_archivos'] = json_encode($rutas);
+            // El modelo espera el array de rutas para insertar cada una por separado
+            $datos['rutas_archivos'] = $rutas;
         }
 
         // Intentar registrar
