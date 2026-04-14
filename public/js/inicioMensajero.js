@@ -222,6 +222,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const modalCounterRef = document.getElementById('modalQrCounter');
         const btnFlash = document.getElementById('btnFlash');
 
+        // Obtener la librería de forma segura
+        const ScannerLib = window.Html5Qrcode || (typeof Html5Qrcode !== 'undefined' ? Html5Qrcode : null);
+
         if (!readerEl) {
             console.error("Error: Elemento 'reader' no encontrado en el DOM.");
             showToast('Error interno: Contenedor de cámara no encontrado (ID: reader).', 'error');
@@ -230,14 +233,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
-            // UI inicial
-            if (typeof window.Html5Qrcode !== 'function') {
-                if (readerEl) {
-                    readerEl.innerHTML =
-                        '<div style="color:#dc3545; padding:1.5rem; text-align:center;">' +
-                        '<p><strong>Error:</strong> No se cargó la librería de escaneo.</p>' +
-                        '<p>Revisa tu conexión a internet y recarga la página.</p></div>';
-                }
+            if (!ScannerLib) {
+                readerEl.innerHTML =
+                    '<div style="color:#dc3545; padding:1.5rem; text-align:center;">' +
+                    '<p><strong>Error:</strong> No se cargó la librería de escaneo.</p>' +
+                    '<p>Revisa tu conexión a internet y recarga la página.</p></div>';
                 showToast('Falta librería de escaneo', 'error');
                 isScannerStarting = false;
                 return;
@@ -338,7 +338,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if (readerEl) readerEl.innerHTML = ''; 
-            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode = new ScannerLib("reader");
             
             // Usar objeto de restricciones más robusto para móviles
             await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
