@@ -67,6 +67,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             z-index: 5000 !important; /* Por encima de headers y menús */
             overflow-y: auto !important; /* Permite scroll si el formulario es largo */
             -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
             padding: 0 !important; /* Ajustamos padding para que ocupe todo */
             display: block;
         }
@@ -422,5 +423,24 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <script src="../../public/js/mensajeroLayout.js?v=20260411-1"></script>
     <script src="../../public/js/uiToast.js"></script>
     <script src="../../public/js/misPaquetesMensajeros.js?v=20260411-1"></script>
+
+    <script>
+        // Garantizar que todos los botones "Volver" regresen a la lista principal
+        document.addEventListener('DOMContentLoaded', function() {
+            const vistaLista = document.getElementById('vistaLista');
+            const modales = ['vistaDetalle', 'vistaFormularioEntrega', 'vistaFormularioNovedad'];
+            const botonesVolver = ['btnVolverDetalle', 'btnVolverEntrega', 'btnVolverNovedad'];
+
+            botonesVolver.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', function() {
+                        modales.forEach(mId => document.getElementById(mId).classList.add('oculto'));
+                        vistaLista.classList.remove('oculto');
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>
