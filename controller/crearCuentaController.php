@@ -14,10 +14,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
         /**
          * FIX 1: Usar rutas absolutas con __DIR__ para evitar fallos de apertura.
-         * IMPORTANTE: Si el archivo en tu carpeta 'models' tiene Mayúsculas (ej: crearCuentaModels.php),
+         * IMPORTANTE: El archivo en el servidor se llama crearCuentaModels.php (con M mayúscula).
          * debes escribirlo exactamente igual aquí.
          */
-        $modelPath = dirname(__DIR__) . '/models/crearCuentamodels.php';
+        $modelPath = dirname(__DIR__) . '/models/crearCuentaModels.php';
         if (!file_exists($modelPath)) throw new Exception("No se encontró el archivo del modelo en: " . $modelPath);
         require_once $modelPath;
         require_once __DIR__ . '/../includes/upload.php';
