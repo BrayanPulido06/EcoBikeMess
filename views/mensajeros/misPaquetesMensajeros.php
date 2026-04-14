@@ -26,27 +26,34 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <style>
-        /* Habilitar el desplazamiento vertical en la página */
+        /* RESET DE SCROLL AGRESIVO */
         html, body {
             overflow-y: auto !important;
+            overflow-x: hidden !important;
             height: auto !important;
-            min-height: 100vh;
-            /* Soporte para scroll suave en dispositivos móviles */
-            -webkit-overflow-scrolling: touch;
+            min-height: 100vh !important;
+            /* Crucial: permite el scroll táctil nativo con un dedo */
+            touch-action: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior-y: auto !important;
         }
 
-        /* Asegurar que el contenedor principal permita scroll si el contenido sobrepasa la pantalla */
+        /* Forzar al contenedor principal a ser elástico */
         .main-content {
-            overflow-y: visible !important;
+            position: relative !important; /* Evita que fixed o absolute bloqueen el flujo */
+            overflow: visible !important;
             display: block !important;
-            padding-bottom: 100px; /* Espacio extra al final para que no lo tape el menú inferior si existe */
             height: auto !important;
+            min-height: 100% !important;
+            padding-bottom: 120px !important;
+            touch-action: auto !important;
         }
 
-        /* Ajuste para las listas de paquetes */
+        /* Asegurar que la lista no capture y bloquee el scroll */
         .lista-paquetes {
-            overflow-y: visible !important;
+            overflow: visible !important;
             height: auto !important;
+            touch-action: auto !important;
         }
     </style>
 </head>
