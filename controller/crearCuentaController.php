@@ -9,20 +9,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $model = new UsuarioModel();
         
         // Recoger datos comunes
-        $tipo_usuario = $_POST['tipo_usuario'];
-        $nombres = trim($_POST['nombres']);
-        $apellidos = trim($_POST['apellidos']);
-        $correo = trim($_POST['correo']);
-        $telefono = trim($_POST['telefono']);
-        $password = $_POST['password'];
-        $confirm_password = $_POST['confirm_password'];
+        $tipo_usuario = $_POST['tipo_usuario'] ?? '';
+        $nombres = trim($_POST['nombres'] ?? '');
+        $apellidos = trim($_POST['apellidos'] ?? '');
+        $correo = trim($_POST['correo'] ?? '');
+        $telefono = trim($_POST['telefono'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $confirm_password = $_POST['confirm_password'] ?? '';
 
         // Validaciones básicas
-        if ($password !== $confirm_password) {
+        if (empty($password) || $password !== $confirm_password) {
             throw new Exception("Las contraseñas no coinciden");
         }
 
-        if ($model->existeCorreo($correo)) {
+        if (empty($correo) || $model->existeCorreo($correo)) {
             throw new Exception("El correo ya está registrado");
         }
 
@@ -36,10 +36,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         ];
 
         if ($tipo_usuario == 'cliente') {
-            $datos['nombre_emprendimiento'] = trim($_POST['nombre_emprendimiento']);
-            $datos['tipo_producto'] = trim($_POST['tipo_producto']);
-            $datos['instagram'] = trim($_POST['instagram']);
-            $datos['direccion_principal'] = trim($_POST['direccion_principal']);
+            $datos['nombre_emprendimiento'] = trim($_POST['nombre_emprendimiento'] ?? '');
+            $datos['tipo_producto'] = trim($_POST['tipo_producto'] ?? '');
+            $datos['instagram'] = trim($_POST['instagram'] ?? '');
+            $datos['direccion_principal'] = trim($_POST['direccion_principal'] ?? '');
 
             if (empty($datos['direccion_principal'])) {
                 throw new Exception("La dirección principal es obligatoria para completar el registro.");
@@ -47,22 +47,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
         } elseif ($tipo_usuario == 'mensajero') {
             // Datos específicos mensajero
-            $datos['tipo_documento'] = $_POST['tipo_documento'];
-            $datos['numDocumento'] = $_POST['numDocumento'];
-            $datos['tipo_sangre'] = $_POST['tipo_sangre'];
-            $datos['direccion_residencia'] = $_POST['direccion_residencia'];
+            $datos['tipo_documento'] = $_POST['tipo_documento'] ?? '';
+            $datos['numDocumento'] = $_POST['numDocumento'] ?? '';
+            $datos['tipo_sangre'] = $_POST['tipo_sangre'] ?? '';
+            $datos['direccion_residencia'] = $_POST['direccion_residencia'] ?? '';
             
             // Estructurar datos complejos
             $datos['emergencia'] = [
                 'contacto1' => [
-                    'nombre' => $_POST['nombre_emergencia1'],
-                    'apellido' => $_POST['apellido_emergencia1'],
-                    'telefono' => $_POST['telefono_emergencia1']
+                    'nombre' => $_POST['nombre_emergencia1'] ?? '',
+                    'apellido' => $_POST['apellido_emergencia1'] ?? '',
+                    'telefono' => $_POST['telefono_emergencia1'] ?? ''
                 ],
                 'contacto2' => [
-                    'nombre' => $_POST['nombre_emergencia2'],
-                    'apellido' => $_POST['apellido_emergencia2'],
-                    'telefono' => $_POST['telefono_emergencia2']
+                    'nombre' => $_POST['nombre_emergencia2'] ?? '',
+                    'apellido' => $_POST['apellido_emergencia2'] ?? '',
+                    'telefono' => $_POST['telefono_emergencia2'] ?? ''
                 ]
             ];
             
@@ -78,6 +78,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Manejo de Archivos (Fotos y PDFs)
             $uploadDir = dirname(__DIR__) . '/uploads/mensajeros/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
 
             $archivos = ['foto', 'licencia_conducir', 'soat', 'tecnomecanica'];
             $rutas = [];
@@ -107,7 +110,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             throw new Exception("Error al guardar en la base de datos");
         }
 
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         error_log('crearCuentaController: ' . $e->getMessage());
         // Redirigir con error
         $errorMsg = urlencode($e->getMessage());
