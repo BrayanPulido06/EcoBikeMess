@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('EcoBikeMess inicioMensajero.js v1.2.3 cargado'); // Marcador para verificar actualización
+    console.log('EcoBikeMess inicioMensajero.js v1.2.4 cargado'); // Versión corregida
     // Desactivar Service Worker/caché agresiva en móvil (puede impedir permisos de cámara y cargar JS/CSS viejos)
     try {
         if ('serviceWorker' in navigator) {
@@ -263,10 +263,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (readerEl) {
                     readerEl.innerHTML =
                         '<div style="color:#dc3545; padding:1.5rem; text-align:center;">' +
-                    '<h3 style="margin-top:0;">⚠️ Seguridad Requerida (v1.2.3)</h3>' +
+                    '<h3 style="margin-top:0;">⚠️ Seguridad Requerida</h3>' +
                     '<p>Hostinger requiere HTTPS para la cámara. Verifica que la URL sea <b>https://</b></p>' +
                     '<p>Si ya tienes SSL, pulsa aquí:</p>' +
-                    '<button onclick="location.protocol=\'https:\'" style="margin-top:15px; padding:12px 20px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Cambiar a HTTPS</button></div>';
+                    '<button onclick="location.href=\'https://\' + location.host + location.pathname" style="margin-top:15px; padding:12px 20px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Cambiar a HTTPS</button></div>';
                 }
                 showToast('Se requiere HTTPS para usar la cámara', 'error');
                 isScannerStarting = false;
@@ -356,10 +356,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const msg = String(err?.message || '');
                 const isRef = /ReferenceError|TypeError/i.test(name) || /not defined|null|properties|textContent|setting|undefined|reading/i.test(msg);
                 
-                let baseHelp = 'No se pudo abrir la cámara. Verifica permisos y SSL en Hostinger. (v1.2.3)';
+                let baseHelp = 'No se pudo abrir la cámara. Verifica que el <b>ID "reader"</b> exista y hayas dado permisos.';
                 
                 if (isRef) {
-                    baseHelp = '<strong>Error de Sistema (v1.2.3):</strong> Se detectó un fallo al intentar actualizar el texto en pantalla. Verifica que el HTML coincida con el JS.';
+                    baseHelp = '<strong>Error de Interfaz:</strong> Se detectó un fallo al intentar actualizar la pantalla. Por favor, recarga la página.';
                 } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || msg.includes('denied')) {
                     baseHelp = '<strong>🚫 Permiso Denegado:</strong> El acceso está bloqueado. <br><br><b>Cómo arreglarlo:</b><br>1. Toca el <b>candado 🔒</b> en la barra de direcciones.<br>2. Entra en <b>"Permisos"</b> o <b>"Configuración del sitio"</b>.<br>3. Cambia <b>Cámara</b> a <b>"Permitir"</b>.<br>4. Recarga la página.';
                 } else if (name === 'NotReadableError' || name === 'TrackStartError') {
@@ -734,151 +734,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isRouteMode) construirRutaDesdeEscaneados();
         guardarEstadoEscaneoLocal();
         showToast('✓ QR escaneado correctamente', 'success');
-        
-        // Vibración (si está disponible)
-        if (navigator.vibrate) {
-            navigator.vibrate(200);
-        }
-    }
-    
-    // ============================================
-    // ACTUALIZAR CONTADOR
-    // ============================================
-    
-    function updateQRCounter() {
-        const countTotal = scannedQRs?.length || 0;
-        if (qrCounter) qrCounter.textContent = String(countTotal);
-
-        const modalCounterLocal = document.getElementById('modalQrCounter');
-        if (modalCounterLocal) modalCounterLocal.textContent = String(countTotal);
-        
-        // Mostrar/ocultar sección de entrega
-        if (countTotal > 0) {
-            if (deliverSection) deliverSection.style.display = 'block';
-            if (deliverCount) deliverCount.textContent = `${countTotal} paquete${countTotal > 1 ? 's' : ''}`;
-            if (btnResetCounter) btnResetCounter.style.display = 'block';
-        } else {
-            if (deliverSection) deliverSection.style.display = 'none';
-            if (btnResetCounter) btnResetCounter.style.display = 'none';
-        }
-        
-        // Animación del contador
-        if (qrCounter) qrCounter.style.transform = 'scale(1.2)';
-        setTimeout(() => {
-            if (qrCounter) qrCounter.style.transform = 'scale(1)';
-        }, 200);
-    }
-    
-    // ============================================
-    // RENDERIZAR LISTA DE ESCANEADOS
-    // ============================================
-    
-    function renderScannedList() {
-        if (!scannedList) return;
-        if (scannedQRs.length === 0) {
-            scannedList.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 1rem;">No hay códigos escaneados</p>';
-            return;
-        }
-        
-        scannedList.innerHTML = scannedQRs.map((qr, index) => `
-            <div class="scanned-item">
-                <div>
-                    <div class="scanned-code">${qr.code}</div>
-                    <div class="scanned-time">Escaneado: ${qr.dateTime}</div>
-                </div>
-                <button class="btn-remove" onclick="removeQR(${index})">×</button>
-            </div>
-        `).join('');
-    }
-    
-    // ============================================
-    // ELIMINAR QR
-    // ============================================
-    
-    window.removeQR = function(index) {
-        scannedQRs.splice(index, 1);
-        updateQRCounter();
-        renderScannedList();
-        if (isRouteMode) construirRutaDesdeEscaneados();
-        guardarEstadoEscaneoLocal();
-        showToast('QR eliminado', 'info');
-    };
-    
-    // ============================================
-    // LIMPIAR CONTADOR
-    // ============================================
-    
-    if (btnResetCounter) btnResetCounter.addEventListener('click', function() {
-        if (confirm('¿Estás seguro de limpiar todos los códigos escaneados?')) {
-            scannedQRs = [];
-            routeDeliveriesData = [];
-            isRouteMode = false;
-            updateQRCounter();
-            renderScannedList();
-            renderDeliveries();
-            guardarEstadoEscaneoLocal();
-            showToast('Contador limpiado', 'info');
-        }
-    });
-    
-    // ============================================
-    // ENTREGAR PAQUETES
-    // ============================================
-    
-    function normalizarGuiaParaCruce(value) {
-        const raw = (value || '').toString().trim().toUpperCase();
-        if (!raw) return '';
-        return raw.startsWith('QR-') ? raw.substring(3) : raw;
-    }
-
-    function construirRutaDesdeEscaneados() {
-        routeDeliveriesData = scannedQRs.map((qr, index) => {
-            const qrNormalizado = normalizarGuiaParaCruce(qr.code);
-            const entregaEncontrada = deliveriesData.find(d => {
-                return normalizarGuiaParaCruce(d.guia) === qrNormalizado;
-            });
-
-            return {
-                id: entregaEncontrada ? entregaEncontrada.id : null,
-                guia: qr.code,
-                guiaBase: qrNormalizado,
-                nombre: qr.details?.nombre || qr.details?.remitente || 'Nombre no disponible',
-                address: entregaEncontrada ? entregaEncontrada.address : (qr.details?.direccion || 'Dirección no disponible'),
-                estado: entregaEncontrada ? (entregaEncontrada.estado || 'pendiente') : 'sin_asignar',
-                scannedAt: qr.time,
-                scannedDate: qr.date || '',
-                scannedDateTime: qr.dateTime || '',
-                details: qr.details || {},
-                rawText: qr.rawText || '',
-                orden: index + 1
-            };
-        });
-
-        isRouteMode = true;
-        renderDeliveries();
-        guardarEstadoEscaneoLocal();
-    }
-
-    if (btnDeliver) btnDeliver.addEventListener('click', function() {
-        if (scannedQRs.length === 0) return;
-        construirRutaDesdeEscaneados();
-        window.location.href = 'misPaquetesMensajeros.php';
-    });
-    
-    // ============================================
-    // ACTUALIZAR ESTADÍSTICAS
-    // ============================================
-    
-    function updateStats() {
-        const statEntregadas = document.getElementById('statEntregadas');
-        const statPendientes = document.getElementById('statPendientes');
-        const statGanancias = document.getElementById('statGanancias');
-        const statKilometros = document.getElementById('statKilometros');
-
-        if (statEntregadas) statEntregadas.textContent = String(statsData.entregadas || 0);
-        if (statPendientes) statPendientes.textContent = String(statsData.pendientes || 0);
-        if (statGanancias) statGanancias.textContent = '$' + Number(statsData.ganancias || 0).toLocaleString('es-CO');
-        if (statKilometros) statKilometros.textContent = String(statsData.kilometros || 0) + ' km';
+        if (navigator.vibrate) navigator.vibrate(200);
     }
     
     // ============================================
