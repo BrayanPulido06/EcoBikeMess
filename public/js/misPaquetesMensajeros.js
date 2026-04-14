@@ -49,13 +49,18 @@ function mostrarToast(mensaje, tipo = 'info', opts = {}) {
 // ============================================
 // INICIALIZACIÓN
 // ============================================
-document.addEventListener('DOMContentLoaded', function() {
-    inicializarApp();
-    cargarQREscaneadosLocales();
-    cargarPaquetes();
-    configurarEventListeners();
-    inicializarGeolocalización();
-    actualizarFechaHora();
+document.addEventListener('DOMContentLoaded', async function() {
+    mostrarLoading(true, 'Cargando paquetes...');
+    try {
+        inicializarApp();
+        cargarQREscaneadosLocales();
+        await cargarPaquetes(); // Esperamos a que los datos carguen
+        configurarEventListeners();
+        inicializarGeolocalización();
+        actualizarFechaHora();
+    } finally {
+        mostrarLoading(false); // Aseguramos que el loader desaparezca y libere el scroll
+    }
 });
 
 function inicializarApp() {
@@ -422,6 +427,7 @@ function verDetallePaquete(id) {
     
     if (!paqueteActual) return;
     
+    window.scrollTo(0, 0); // Resetear posición al inicio
     document.getElementById('vistaLista').classList.add('oculto');
     document.getElementById('vistaDetalle').classList.remove('oculto');
     
@@ -538,6 +544,7 @@ function abrirFormularioEntrega(id) {
         return;
     }
     
+    window.scrollTo(0, 0); // Resetear posición al inicio
     document.getElementById('vistaLista').classList.add('oculto');
     document.getElementById('vistaDetalle').classList.add('oculto');
     document.getElementById('vistaFormularioEntrega').classList.remove('oculto');
@@ -867,6 +874,7 @@ function abrirFormularioNovedad(id, tipo) {
     fotoNovedad = null;
     fotoNovedadAdicional = null;
 
+    window.scrollTo(0, 0); // Resetear posición al inicio
     document.getElementById('vistaLista').classList.add('oculto');
     document.getElementById('vistaDetalle').classList.add('oculto');
     document.getElementById('vistaFormularioEntrega').classList.add('oculto');
@@ -1218,12 +1226,11 @@ function configurarEventListeners() {
     // Actualizar
     document.getElementById('btnActualizar')?.addEventListener('click', function() {
         feedbackClick();
-        mostrarLoading(true, 'Actualizando...');
-        setTimeout(() => {
-            cargarPaquetes();
+        mostrarLoading(true, 'Sincronizando...');
+        cargarPaquetes().finally(() => {
             mostrarLoading(false);
             feedbackExito();
-        }, 1000);
+        });
     });
 
     document.getElementById('btnGuardarCierreJornada')?.addEventListener('click', function() {
@@ -1236,6 +1243,8 @@ function configurarEventListeners() {
 // UTILIDADES
 // ============================================
 function volverALista() {
+    document.body.style.overflow = 'auto'; // Forzar que el scroll sea posible
+    window.scrollTo(0, 0); // Volver arriba
     document.getElementById('vistaDetalle').classList.add('oculto');
     document.getElementById('vistaFormularioEntrega').classList.add('oculto');
     document.getElementById('vistaFormularioNovedad').classList.add('oculto');
@@ -1303,8 +1312,10 @@ function mostrarLoading(mostrar, texto = 'Procesando...') {
     if (mostrar) {
         textoElement.textContent = texto;
         overlay.classList.remove('oculto');
+        document.body.style.overflow = 'hidden'; // Bloquear scroll mientras carga
     } else {
         overlay.classList.add('oculto');
+        document.body.style.overflow = 'auto'; // Liberar scroll al terminar
     }
 }
 
@@ -1361,6 +1372,7 @@ function mostrarModalDecision(titulo, mensaje) {
     tituloEl.textContent = titulo;
     mensajeEl.textContent = mensaje;
     modal.classList.remove('oculto');
+    document.body.style.overflow = 'hidden'; // Bloquear scroll con el modal abierto
 
     return new Promise(resolve => {
         resolverDecisionActual = resolve;
@@ -1370,6 +1382,7 @@ function mostrarModalDecision(titulo, mensaje) {
 function resolverModalDecision(valor) {
     const modal = document.getElementById('modalDecision');
     if (modal) modal.classList.add('oculto');
+    document.body.style.overflow = 'auto'; // Liberar scroll
     if (resolverDecisionActual) {
         const resolve = resolverDecisionActual;
         resolverDecisionActual = null;
