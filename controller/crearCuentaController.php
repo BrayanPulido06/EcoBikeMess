@@ -1,11 +1,21 @@
 <?php
-ob_start();
-session_start();
-require_once '../models/crearCuentamodels.php';
-require_once __DIR__ . '/../includes/upload.php';
+/**
+ * Error 500 Troubleshooting: 
+ * Si el error persiste, descomenta las siguientes 3 líneas para ver el error real en pantalla:
+ */
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+
+ob_start(); 
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
+        // IMPORTANTE: Verifica que el nombre del archivo coincida exactamente (Mayúsculas/Minúsculas)
+        require_once '../models/crearCuentamodels.php';
+        require_once __DIR__ . '/../includes/upload.php';
+
         $model = new UsuarioModel();
         
         // Recoger datos comunes
@@ -53,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $datos['direccion_residencia'] = $_POST['direccion_residencia'] ?? '';
             
             // Estructurar datos complejos
-            $datos['emergencia'] = [
+            $datos['emergencia'] = json_encode([
                 'contacto1' => [
                     'nombre' => $_POST['nombre_emergencia1'] ?? '',
                     'apellido' => $_POST['apellido_emergencia1'] ?? '',
@@ -64,17 +74,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     'apellido' => $_POST['apellido_emergencia2'] ?? '',
                     'telefono' => $_POST['telefono_emergencia2'] ?? ''
                 ]
-            ];
+            ]);
             
             $tipoTransporte = $_POST['tipo_transporte'] ?? '';
             if ($tipoTransporte === 'vehiculo') {
                 $tipoTransporte = 'Carro';
             }
 
-            $datos['transporte'] = [
+            $datos['transporte'] = json_encode([
                 'tipo' => $tipoTransporte,
                 'placa' => trim($_POST['placa_vehiculo'] ?? ''),
-            ];
+            ]);
 
             // Manejo de Archivos (Fotos y PDFs)
             $uploadDir = dirname(__DIR__) . '/uploads/mensajeros/';
@@ -99,11 +109,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $rutas[$archivo] = null;
                 }
             }
-            $datos['rutas_archivos'] = $rutas;
+            $datos['rutas_archivos'] = json_encode($rutas);
         }
 
         // Intentar registrar
         if ($model->registrarUsuario($datos)) {
+            if (ob_get_length()) ob_clean();
             header("Location: ../views/login.php?mensaje=Cuenta creada exitosamente. Por favor inicia sesión.");
             exit();
         } else {
@@ -112,10 +123,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     } catch (Throwable $e) {
         error_log('crearCuentaController: ' . $e->getMessage());
-        // Redirigir con error
+        
+        // Limpiar el búfer para que el error no impida la redirección
+        if (ob_get_length()) ob_clean();
+
         $errorMsg = urlencode($e->getMessage());
         header("Location: ../views/crearCuenta.php?error=" . $errorMsg . "&tipo=" . ($_POST['tipo_usuario'] ?? 'cliente'));
-        exit();
+        exit("Error detectado: " . $e->getMessage()); 
     }
 } else {
     header("Location: ../views/crearCuenta.php");
