@@ -24,6 +24,57 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <link rel="stylesheet" href="../../public/css/recoleccionesMensajero.css?v=20260411-1">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
     <link rel="stylesheet" href="../../public/css/responsive.css">
+    <style>
+        /* RESET DE SCROLL AGRESIVO */
+        html, body {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            height: auto !important;
+            min-height: 100vh !important;
+            /* Crucial: permite el scroll táctil nativo con un dedo */
+            touch-action: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior-y: auto !important;
+        }
+
+        /* Forzar al contenedor principal a ser elástico */
+        .main-content {
+            position: relative !important;
+            overflow: visible !important;
+            display: block !important;
+            height: auto !important;
+            min-height: 100% !important;
+            padding-bottom: 120px !important;
+            touch-action: auto !important;
+        }
+
+        /* Asegurar que la lista no capture y bloquee el scroll */
+        .lista-recolecciones {
+            overflow: visible !important;
+            height: auto !important;
+            touch-action: auto !important;
+        }
+
+        /* Estilos para que Detalle y Formularios funcionen como Modales a pantalla completa */
+        .vista-detalle, .vista-formulario {
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            background-color: #f4f7f6 !important;
+            z-index: 5000 !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
+            padding: 0 !important;
+            display: block;
+        }
+
+        .oculto {
+            display: none !important;
+        }
+    </style>
     
     <!-- PWA Icons -->
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📦</text></svg>">
@@ -298,5 +349,24 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
 
     <script src="../../public/js/mensajeroLayout.js?v=20260411-1"></script>
     <script src="../../public/js/recoleccionesMensajero.js?v=20260411-1"></script>
+
+    <script>
+        // Lógica de navegación para los botones "Volver" en Recolecciones
+        document.addEventListener('DOMContentLoaded', function() {
+            const vistaLista = document.getElementById('vistaLista');
+            const modales = ['vistaDetalle', 'vistaFormulario'];
+            const botonesVolver = ['btnVolver', 'btnVolverFormulario', 'btnCancelarFormulario'];
+
+            botonesVolver.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', function() {
+                        modales.forEach(mId => document.getElementById(mId).classList.add('oculto'));
+                        vistaLista.classList.remove('oculto');
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>
