@@ -25,6 +25,30 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <link rel="stylesheet" href="../../public/css/misPaquetesMensajeros.css?v=20260411-1">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
     <link rel="stylesheet" href="../../public/css/responsive.css">
+    <style>
+        /* Habilitar el desplazamiento vertical en la página */
+        html, body {
+            overflow-y: auto !important;
+            height: auto !important;
+            min-height: 100vh;
+            /* Soporte para scroll suave en dispositivos móviles */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Asegurar que el contenedor principal permita scroll si el contenido sobrepasa la pantalla */
+        .main-content {
+            overflow-y: visible !important;
+            display: block !important;
+            padding-bottom: 100px; /* Espacio extra al final para que no lo tape el menú inferior si existe */
+            height: auto !important;
+        }
+
+        /* Ajuste para las listas de paquetes */
+        .lista-paquetes {
+            overflow-y: visible !important;
+            height: auto !important;
+        }
+    </style>
 </head>
 <body>
     <!-- Header Móvil (Diseño Unificado) -->
