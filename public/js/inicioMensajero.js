@@ -129,6 +129,9 @@ document.addEventListener('DOMContentLoaded', function() {
             scannedQRs = [];
             isRouteMode = false;
         }
+
+        updateQRCounter();
+        renderScannedList();
     }
     
     // ============================================
@@ -582,50 +585,55 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function onScanSuccess(decodedText, decodedResult) {
         const now = Date.now();
-        const normalizedCode = normalizarCodigoEscaneado(decodedText);
-        const qrInfo = extraerInformacionQR(decodedText);
+        try {
+            const normalizedCode = normalizarCodigoEscaneado(decodedText);
+            const qrInfo = extraerInformacionQR(decodedText);
 
-        // Evitar lecturas múltiples del mismo código en menos de 2 segundos
-        if (normalizedCode && normalizedCode === lastScannedCode && (now - lastScannedTime) < 2000) {
-            return;
+            // Evitar lecturas múltiples del mismo código en menos de 2 segundos
+            if (normalizedCode && normalizedCode === lastScannedCode && (now - lastScannedTime) < 2000) {
+                return;
+            }
+            lastScannedCode = normalizedCode || decodedText;
+            lastScannedTime = now;
+
+            // 1. Validar formato del sistema
+            if (!normalizedCode) {
+                playScanSound('error');
+                showToast('Código inválido. No se encontró una guía válida', 'error');
+                return;
+            }
+
+            // 2. Verificar duplicados
+            if (scannedQRs.find(qr => qr.code === normalizedCode)) {
+                playScanSound('error');
+                showToast('Este paquete ya fue escaneado', 'warning');
+                return;
+            }
+
+            const validation = await validarGuiaEnServidor(normalizedCode);
+            if (!validation.ok) {
+                playScanSound('error');
+                const message = validation.message || 'No se pudo validar el paquete';
+                const type = validation.type || 'warning';
+                showToast(message, type);
+                return;
+            }
+
+            if (validation.notice) {
+                showToast(validation.notice, 'info');
+            }
+
+            // 3. Éxito: Agregar y continuar escaneando (No cerramos el modal)
+            playScanSound('success');
+            addScannedQR(normalizedCode, qrInfo);
+            
+            // Actualizar contador dentro del modal
+            const modalCounter = document.getElementById('modalQrCounter');
+            if (modalCounter) modalCounter.textContent = String(scannedQRs.length);
+        } catch (err) {
+            console.error("Error en el callback de escaneo:", err);
+            showToast('Error al procesar el código', 'error');
         }
-        lastScannedCode = normalizedCode || decodedText;
-        lastScannedTime = now;
-
-        // 1. Validar formato del sistema
-        if (!normalizedCode) {
-            playScanSound('error');
-            showToast('Código inválido. No se encontró una guía válida', 'error');
-            return;
-        }
-
-        // 2. Verificar duplicados
-        if (scannedQRs.find(qr => qr.code === normalizedCode)) {
-            playScanSound('error');
-            showToast('Este paquete ya fue escaneado', 'warning');
-            return;
-        }
-
-        const validation = await validarGuiaEnServidor(normalizedCode);
-        if (!validation.ok) {
-            playScanSound('error');
-            const message = validation.message || 'No se pudo validar el paquete';
-            const type = validation.type || 'warning';
-            showToast(message, type);
-            return;
-        }
-
-        if (validation.notice) {
-            showToast(validation.notice, 'info');
-        }
-
-        // 3. Éxito: Agregar y continuar escaneando (No cerramos el modal)
-        playScanSound('success');
-        addScannedQR(normalizedCode, qrInfo);
-        
-        // Actualizar contador dentro del modal
-        const modalCounter = document.getElementById('modalQrCounter');
-        if (modalCounter) modalCounter.textContent = String(scannedQRs.length);
     }
 
     function onScanFailure(error) {
@@ -1100,6 +1108,97 @@ document.addEventListener('DOMContentLoaded', function() {
             error => console.warn('Pérdida de señal GPS'),
             { enableHighAccuracy: true }
         );
+    }
+
+    // ============================================
+    // FUNCIONES DE UI PARA ESCANEO (CORRECCIÓN)
+    // ============================================
+
+    function updateQRCounter() {
+        if (qrCounter) qrCounter.textContent = scannedQRs.length;
+        if (deliverCount) deliverCount.textContent = scannedQRs.length;
+        
+        if (deliverSection) {
+            if (scannedQRs.length > 0) {
+                deliverSection.classList.add('active');
+            } else {
+                deliverSection.classList.remove('active');
+            }
+        }
+    }
+
+    function renderScannedList() {
+        if (!scannedList) return;
+        
+        if (scannedQRs.length === 0) {
+            scannedList.innerHTML = '<div style="text-align:center; padding:1.5rem; color:#64748b;">No hay paquetes escaneados</div>';
+            return;
+        }
+        
+        scannedList.innerHTML = scannedQRs.map((qr, index) => `
+            <div class="scanned-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #eee; background:#fff; margin-bottom:5px; border-radius:8px;">
+                <div class="scanned-info">
+                    <div class="scanned-code" style="font-weight:bold; color: #16a34a;">${qr.code}</div>
+                    <div class="scanned-time" style="font-size:0.8rem; color:#64748b;">${qr.time}</div>
+                </div>
+                <button type="button" class="btn-remove" onclick="removeScannedQR(${index})" style="background:none; border:none; color:#ef4444; font-size:1.2rem; cursor:pointer; padding:5px;">
+                    ✕
+                </button>
+            </div>
+        `).join('');
+    }
+
+    window.removeScannedQR = function(index) {
+        scannedQRs.splice(index, 1);
+        updateQRCounter();
+        renderScannedList();
+        if (isRouteMode) construirRutaDesdeEscaneados();
+        guardarEstadoEscaneoLocal();
+    };
+
+    function construirRutaDesdeEscaneados() {
+        routeDeliveriesData = scannedQRs.map((qr, index) => ({
+            guia: qr.code,
+            address: qr.details?.direccion || 'Dirección no detectada',
+            nombre: qr.details?.nombre || 'Nombre no detectado',
+            orden: index + 1,
+            scannedAt: qr.time,
+            scannedDate: qr.date,
+            scannedDateTime: qr.dateTime,
+            estado: 'escaneado',
+            details: qr.details,
+            rawText: qr.rawText
+        }));
+        
+        renderDeliveries();
+    }
+
+    if (btnResetCounter) {
+        btnResetCounter.addEventListener('click', function() {
+            if (confirm('¿Estás seguro de que deseas limpiar la lista de escaneados?')) {
+                scannedQRs = [];
+                updateQRCounter();
+                renderScannedList();
+                if (isRouteMode) {
+                    routeDeliveriesData = [];
+                    renderDeliveries();
+                }
+                guardarEstadoEscaneoLocal();
+                showToast('Lista reiniciada', 'info');
+            }
+        });
+    }
+
+    if (btnDeliver) {
+        btnDeliver.addEventListener('click', function() {
+            if (scannedQRs.length === 0) return;
+            isRouteMode = true;
+            construirRutaDesdeEscaneados();
+            guardarEstadoEscaneoLocal();
+            showToast('Ruta generada con los paquetes escaneados', 'success');
+            const deliveriesSection = document.getElementById('deliveriesSection');
+            if (deliveriesSection) deliveriesSection.scrollIntoView({ behavior: 'smooth' });
+        });
     }
 
     // Llamadas iniciales
