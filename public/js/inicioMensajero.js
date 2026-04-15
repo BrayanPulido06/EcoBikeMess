@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastScannedCode = null;
     let lastScannedTime = 0;
     let isFlashOn = false;
+    let isProcessingScan = false; // Nueva bandera para evitar bloqueos por concurrencia
     let ubicacionActual = null;
     let watchId = null;
     const pendingValidations = new Set();
@@ -248,7 +249,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (btnEnableCamera) btnEnableCamera.style.display = 'none';
             if (btnFlash) btnFlash.style.display = 'none';
-            if (readerEl) readerEl.innerHTML = '<div style="padding:2rem; text-align:center; color:#64748b;"><p>Iniciando cámara...</p></div>';
+            if (readerEl) {
+                readerEl.style.minHeight = '250px';
+                readerEl.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:250px; color:#64748b;"><div class="scanner-loader" style="width:30px; height:30px; border:3px solid #eee; border-top:3px solid #16a34a; border-radius:50%; animation: scanner-spin 0.8s linear infinite; margin-bottom:10px;"></div><p>Cargando cámara...</p></div><style>@keyframes scanner-spin { to { transform: rotate(360deg); } }</style>';
+            }
             if (modalCounterRef) modalCounterRef.textContent = String(scannedQRs?.length || 0);
             if (btnEnableCamera) btnEnableCamera.style.display = 'none';
 
@@ -310,10 +314,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Config más estable: fps moderado (menos "traba" en equipos lentos) y sin aspectRatio fijo
+            // Configuración optimizada para evitar lag en el hardware del móvil
             const config = {
-                fps: 10,
-                qrbox: { width: 220, height: 220 }, // Tamaño más conservador para pantallas pequeñas
+                fps: 15, // Un poco más alto mejora la fluidez
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
+                    const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                    const size = Math.floor(minEdge * 0.7);
+                    return { width: size, height: size };
+                },
+                aspectRatio: 1.0,
                 disableFlip: true
             };
 
@@ -329,22 +338,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // Detener instancia previa
-            await stopScanning({ cancelPendingStart: false });
+            try { await stopScanning({ cancelPendingStart: false }); } catch (e) {}
+            
             if (currentToken !== scannerStartToken) {
                 isScannerStarting = false;
                 return;
-            }
-
-            // Validar que el elemento existe antes de pasarle el ID a la librería
-            if (!document.getElementById("reader")) {
-                throw new Error("El contenedor de la cámara (reader) no existe en la página.");
             }
 
             if (readerEl) readerEl.innerHTML = ''; 
             html5QrCode = new ScannerLib("reader");
             
             // Usar objeto de restricciones más robusto para móviles
-            await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
+            await html5QrCode.start(
+                { facingMode: "environment" }, 
+                config, 
+                onScanSuccess, 
+                onScanFailure
+            );
 
             if (btnFlash) {
                 btnFlash.style.display = 'inline-flex';
@@ -433,6 +443,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Generar sonido de confirmación (Beep)
     function playScanSound(type = 'success') {
         try {
+            if (!window.AudioContext && !window.webkitAudioContext) return;
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
@@ -451,6 +462,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            oscillator.onended = () => audioCtx.close(); // MUY IMPORTANTE: Cerrar para no agotar memoria
             
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + 0.2);
@@ -584,22 +596,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function onScanSuccess(decodedText, decodedResult) {
+        if (isProcessingScan) return; // Ignorar si ya hay una validación en curso
+
         const now = Date.now();
         try {
-            const normalizedCode = normalizarCodigoEscaneado(decodedText);
-            const qrInfo = extraerInformacionQR(decodedText);
-
             // Evitar lecturas múltiples del mismo código en menos de 2 segundos
-            if (normalizedCode && normalizedCode === lastScannedCode && (now - lastScannedTime) < 2000) {
+            if (decodedText === lastScannedCode && (now - lastScannedTime) < 2500) {
                 return;
             }
-            lastScannedCode = normalizedCode || decodedText;
+
+            isProcessingScan = true;
+            lastScannedCode = decodedText;
             lastScannedTime = now;
+
+            const normalizedCode = normalizarCodigoEscaneado(decodedText);
+            const qrInfo = extraerInformacionQR(decodedText);
 
             // 1. Validar formato del sistema
             if (!normalizedCode) {
                 playScanSound('error');
                 showToast('Código inválido. No se encontró una guía válida', 'error');
+                isProcessingScan = false;
                 return;
             }
 
@@ -607,6 +624,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (scannedQRs.find(qr => qr.code === normalizedCode)) {
                 playScanSound('error');
                 showToast('Este paquete ya fue escaneado', 'warning');
+                isProcessingScan = false;
                 return;
             }
 
@@ -616,6 +634,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const message = validation.message || 'No se pudo validar el paquete';
                 const type = validation.type || 'warning';
                 showToast(message, type);
+                isProcessingScan = false;
                 return;
             }
 
@@ -633,6 +652,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (err) {
             console.error("Error en el callback de escaneo:", err);
             showToast('Error al procesar el código', 'error');
+        } finally {
+            // Pequeña pausa antes de permitir el siguiente escaneo para dar feedback visual
+            setTimeout(() => { isProcessingScan = false; }, 600);
         }
     }
 
