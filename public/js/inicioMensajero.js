@@ -308,11 +308,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Config más estable: fps moderado (menos "traba" en equipos lentos) y sin aspectRatio fijo
+            // Configuración optimizada para evitar que el video se congele en móviles
             const config = {
-                fps: 10,
-                qrbox: { width: 220, height: 220 }, // Tamaño más conservador para pantallas pequeñas
-                disableFlip: true
+                fps: 15,
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
+                    // El cuadro de escaneo será siempre el 70% del lado más corto
+                    const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                    const size = Math.floor(minEdge * 0.7);
+                    return { width: size, height: size };
+                },
+                aspectRatio: 1.0, // Forzar proporción cuadrada mejora la detección
+                disableFlip: true // Ahorra procesamiento
             };
 
             if (userGesture) {
@@ -465,11 +471,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!text) return null;
 
         // 1) Formato etiqueta: "Guía: EBM-2024-001" (o ECO legacy)
-        const matchGuia = text.match(/(?:gu[ií]a)\s*[:#-]?\s*((?:EBM|ECO)-[A-Z0-9-]+)/i);
+        const matchGuia = text.match(/(?:gu[ií]a|guia)\s*[:#-]?\s*((?:EBM|ECO)[A-Z0-9-]+)/i);
         if (matchGuia && matchGuia[1]) return matchGuia[1].toUpperCase();
 
         // 2) Guía directa en cualquier parte del texto
-        const matchEco = text.match(/\b((?:EBM|ECO)-[A-Z0-9-]{3,})\b/i);
+        const matchEco = text.match(/\b((?:EBM|ECO)[A-Z0-9-]{3,})\b/i);
         if (matchEco && matchEco[1]) return matchEco[1].toUpperCase();
 
         // 3) Compatibilidad con códigos guardados como QR-EBM-XXX / QR-ECO-XXX
@@ -584,12 +590,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function onScanSuccess(decodedText, decodedResult) {
+        console.log("QR Detectado:", decodedText); // Debug para ver qué lee la cámara
         if (isProcessingScan) return; // Evitar procesar múltiples veces
         
         const now = Date.now();
         try {
             const normalizedCode = normalizarCodigoEscaneado(decodedText);
             const qrInfo = extraerInformacionQR(decodedText);
+            console.log("Código Normalizado:", normalizedCode);
 
             // Evitar lecturas múltiples del mismo código en menos de 2.5 segundos
             if (normalizedCode && normalizedCode === lastScannedCode && (now - lastScannedTime) < 2500) {
