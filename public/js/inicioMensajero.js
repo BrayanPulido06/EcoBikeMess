@@ -596,14 +596,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function onScanSuccess(decodedText, decodedResult) {
-        console.log('onScanSuccess - decodedText:', decodedText, 'decodedResult:', decodedResult);
         if (isProcessingScan) return; // Ignorar si ya hay una validación en curso
 
         const now = Date.now();
         try {
             // Evitar lecturas múltiples del mismo código en menos de 2 segundos
             if (decodedText === lastScannedCode && (now - lastScannedTime) < 2500) {
-                console.log('onScanSuccess - ignoring duplicate/too fast scan:', decodedText);
                 return;
             }
 
@@ -616,7 +614,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 1. Validar formato del sistema
             if (!normalizedCode) {
-                console.log('onScanSuccess - normalizedCode is NULL. decodedText:', decodedText);
                 playScanSound('error');
                 showToast('Código inválido. No se encontró una guía válida', 'error');
                 isProcessingScan = false;
