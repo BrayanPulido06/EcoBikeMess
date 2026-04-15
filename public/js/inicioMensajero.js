@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastScannedCode = null;
     let lastScannedTime = 0;
     let isFlashOn = false;
-    let isProcessingScan = false; // Nueva bandera para evitar bloqueos por concurrencia
     let ubicacionActual = null;
     let watchId = null;
     const pendingValidations = new Set();
@@ -130,9 +129,6 @@ document.addEventListener('DOMContentLoaded', function() {
             scannedQRs = [];
             isRouteMode = false;
         }
-
-        updateQRCounter();
-        renderScannedList();
     }
     
     // ============================================
@@ -249,10 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (btnEnableCamera) btnEnableCamera.style.display = 'none';
             if (btnFlash) btnFlash.style.display = 'none';
-            if (readerEl) {
-                readerEl.style.minHeight = '250px';
-                readerEl.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:250px; color:#64748b;"><div class="scanner-loader" style="width:30px; height:30px; border:3px solid #eee; border-top:3px solid #16a34a; border-radius:50%; animation: scanner-spin 0.8s linear infinite; margin-bottom:10px;"></div><p>Cargando cámara...</p></div><style>@keyframes scanner-spin { to { transform: rotate(360deg); } }</style>';
-            }
+            if (readerEl) readerEl.innerHTML = '<div style="padding:2rem; text-align:center; color:#64748b;"><p>Iniciando cámara...</p></div>';
             if (modalCounterRef) modalCounterRef.textContent = String(scannedQRs?.length || 0);
             if (btnEnableCamera) btnEnableCamera.style.display = 'none';
 
@@ -314,15 +307,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Configuración optimizada para evitar lag en el hardware del móvil
+            // Config más estable: fps moderado (menos "traba" en equipos lentos) y sin aspectRatio fijo
             const config = {
-                fps: 15, // Un poco más alto mejora la fluidez
-                qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                    const size = Math.floor(minEdge * 0.7);
-                    return { width: size, height: size };
-                },
-                aspectRatio: 1.0,
+                fps: 10,
+                qrbox: { width: 220, height: 220 }, // Tamaño más conservador para pantallas pequeñas
                 disableFlip: true
             };
 
@@ -338,23 +326,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // Detener instancia previa
-            try { await stopScanning({ cancelPendingStart: false }); } catch (e) {}
-            
+            await stopScanning({ cancelPendingStart: false });
             if (currentToken !== scannerStartToken) {
                 isScannerStarting = false;
                 return;
+            }
+
+            // Validar que el elemento existe antes de pasarle el ID a la librería
+            if (!document.getElementById("reader")) {
+                throw new Error("El contenedor de la cámara (reader) no existe en la página.");
             }
 
             if (readerEl) readerEl.innerHTML = ''; 
             html5QrCode = new ScannerLib("reader");
             
             // Usar objeto de restricciones más robusto para móviles
-            await html5QrCode.start(
-                { facingMode: "environment" }, 
-                config, 
-                onScanSuccess, 
-                onScanFailure
-            );
+            await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
 
             if (btnFlash) {
                 btnFlash.style.display = 'inline-flex';
@@ -443,7 +430,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Generar sonido de confirmación (Beep)
     function playScanSound(type = 'success') {
         try {
-            if (!window.AudioContext && !window.webkitAudioContext) return;
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
@@ -462,7 +448,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            oscillator.onended = () => audioCtx.close(); // MUY IMPORTANTE: Cerrar para no agotar memoria
             
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + 0.2);
@@ -596,66 +581,51 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function onScanSuccess(decodedText, decodedResult) {
-        if (isProcessingScan) return; // Ignorar si ya hay una validación en curso
-
         const now = Date.now();
-        try {
-            // Evitar lecturas múltiples del mismo código en menos de 2 segundos
-            if (decodedText === lastScannedCode && (now - lastScannedTime) < 2500) {
-                return;
-            }
+        const normalizedCode = normalizarCodigoEscaneado(decodedText);
+        const qrInfo = extraerInformacionQR(decodedText);
 
-            isProcessingScan = true;
-            lastScannedCode = decodedText;
-            lastScannedTime = now;
-
-            const normalizedCode = normalizarCodigoEscaneado(decodedText);
-            const qrInfo = extraerInformacionQR(decodedText);
-
-            // 1. Validar formato del sistema
-            if (!normalizedCode) {
-                playScanSound('error');
-                showToast('Código inválido. No se encontró una guía válida', 'error');
-                isProcessingScan = false;
-                return;
-            }
-
-            // 2. Verificar duplicados
-            if (scannedQRs.find(qr => qr.code === normalizedCode)) {
-                playScanSound('error');
-                showToast('Este paquete ya fue escaneado', 'warning');
-                isProcessingScan = false;
-                return;
-            }
-
-            const validation = await validarGuiaEnServidor(normalizedCode);
-            if (!validation.ok) {
-                playScanSound('error');
-                const message = validation.message || 'No se pudo validar el paquete';
-                const type = validation.type || 'warning';
-                showToast(message, type);
-                isProcessingScan = false;
-                return;
-            }
-
-            if (validation.notice) {
-                showToast(validation.notice, 'info');
-            }
-
-            // 3. Éxito: Agregar y continuar escaneando (No cerramos el modal)
-            playScanSound('success');
-            addScannedQR(normalizedCode, qrInfo);
-            
-            // Actualizar contador dentro del modal
-            const modalCounter = document.getElementById('modalQrCounter');
-            if (modalCounter) modalCounter.textContent = String(scannedQRs.length);
-        } catch (err) {
-            console.error("Error en el callback de escaneo:", err);
-            showToast('Error al procesar el código', 'error');
-        } finally {
-            // Pequeña pausa antes de permitir el siguiente escaneo para dar feedback visual
-            setTimeout(() => { isProcessingScan = false; }, 600);
+        // Evitar lecturas múltiples del mismo código en menos de 2 segundos
+        if (normalizedCode && normalizedCode === lastScannedCode && (now - lastScannedTime) < 2000) {
+            return;
         }
+        lastScannedCode = normalizedCode || decodedText;
+        lastScannedTime = now;
+
+        // 1. Validar formato del sistema
+        if (!normalizedCode) {
+            playScanSound('error');
+            showToast('Código inválido. No se encontró una guía válida', 'error');
+            return;
+        }
+
+        // 2. Verificar duplicados
+        if (scannedQRs.find(qr => qr.code === normalizedCode)) {
+            playScanSound('error');
+            showToast('Este paquete ya fue escaneado', 'warning');
+            return;
+        }
+
+        const validation = await validarGuiaEnServidor(normalizedCode);
+        if (!validation.ok) {
+            playScanSound('error');
+            const message = validation.message || 'No se pudo validar el paquete';
+            const type = validation.type || 'warning';
+            showToast(message, type);
+            return;
+        }
+
+        if (validation.notice) {
+            showToast(validation.notice, 'info');
+        }
+
+        // 3. Éxito: Agregar y continuar escaneando (No cerramos el modal)
+        playScanSound('success');
+        addScannedQR(normalizedCode, qrInfo);
+        
+        // Actualizar contador dentro del modal
+        const modalCounter = document.getElementById('modalQrCounter');
+        if (modalCounter) modalCounter.textContent = String(scannedQRs.length);
     }
 
     function onScanFailure(error) {
@@ -1130,97 +1100,6 @@ document.addEventListener('DOMContentLoaded', function() {
             error => console.warn('Pérdida de señal GPS'),
             { enableHighAccuracy: true }
         );
-    }
-
-    // ============================================
-    // FUNCIONES DE UI PARA ESCANEO (CORRECCIÓN)
-    // ============================================
-
-    function updateQRCounter() {
-        if (qrCounter) qrCounter.textContent = scannedQRs.length;
-        if (deliverCount) deliverCount.textContent = scannedQRs.length;
-        
-        if (deliverSection) {
-            if (scannedQRs.length > 0) {
-                deliverSection.classList.add('active');
-            } else {
-                deliverSection.classList.remove('active');
-            }
-        }
-    }
-
-    function renderScannedList() {
-        if (!scannedList) return;
-        
-        if (scannedQRs.length === 0) {
-            scannedList.innerHTML = '<div style="text-align:center; padding:1.5rem; color:#64748b;">No hay paquetes escaneados</div>';
-            return;
-        }
-        
-        scannedList.innerHTML = scannedQRs.map((qr, index) => `
-            <div class="scanned-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #eee; background:#fff; margin-bottom:5px; border-radius:8px;">
-                <div class="scanned-info">
-                    <div class="scanned-code" style="font-weight:bold; color: #16a34a;">${qr.code}</div>
-                    <div class="scanned-time" style="font-size:0.8rem; color:#64748b;">${qr.time}</div>
-                </div>
-                <button type="button" class="btn-remove" onclick="removeScannedQR(${index})" style="background:none; border:none; color:#ef4444; font-size:1.2rem; cursor:pointer; padding:5px;">
-                    ✕
-                </button>
-            </div>
-        `).join('');
-    }
-
-    window.removeScannedQR = function(index) {
-        scannedQRs.splice(index, 1);
-        updateQRCounter();
-        renderScannedList();
-        if (isRouteMode) construirRutaDesdeEscaneados();
-        guardarEstadoEscaneoLocal();
-    };
-
-    function construirRutaDesdeEscaneados() {
-        routeDeliveriesData = scannedQRs.map((qr, index) => ({
-            guia: qr.code,
-            address: qr.details?.direccion || 'Dirección no detectada',
-            nombre: qr.details?.nombre || 'Nombre no detectado',
-            orden: index + 1,
-            scannedAt: qr.time,
-            scannedDate: qr.date,
-            scannedDateTime: qr.dateTime,
-            estado: 'escaneado',
-            details: qr.details,
-            rawText: qr.rawText
-        }));
-        
-        renderDeliveries();
-    }
-
-    if (btnResetCounter) {
-        btnResetCounter.addEventListener('click', function() {
-            if (confirm('¿Estás seguro de que deseas limpiar la lista de escaneados?')) {
-                scannedQRs = [];
-                updateQRCounter();
-                renderScannedList();
-                if (isRouteMode) {
-                    routeDeliveriesData = [];
-                    renderDeliveries();
-                }
-                guardarEstadoEscaneoLocal();
-                showToast('Lista reiniciada', 'info');
-            }
-        });
-    }
-
-    if (btnDeliver) {
-        btnDeliver.addEventListener('click', function() {
-            if (scannedQRs.length === 0) return;
-            isRouteMode = true;
-            construirRutaDesdeEscaneados();
-            guardarEstadoEscaneoLocal();
-            showToast('Ruta generada con los paquetes escaneados', 'success');
-            const deliveriesSection = document.getElementById('deliveriesSection');
-            if (deliveriesSection) deliveriesSection.scrollIntoView({ behavior: 'smooth' });
-        });
     }
 
     // Llamadas iniciales
