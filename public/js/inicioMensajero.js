@@ -255,13 +255,23 @@ document.addEventListener('DOMContentLoaded', function() {
             isFlashOn = false;
             if (btnFlash) btnFlash.style.display = 'none';
 
-            // 1. Validaciones de Contexto Seguro (Informativo, no bloqueante)
+            // 1. Validaciones de Contexto Seguro (Obligatorio en producción / Hostinger)
             const isSecure = window.isSecureContext === true || location.protocol === 'https:';
             const host = window.location.hostname;
             const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host.startsWith('192.168.') || host.startsWith('10.');
 
             if (!isSecure && !isLocalhost) {
-                console.warn('Contexto no seguro. La cámara podría fallar si el navegador lo restringe.');
+                if (readerEl) {
+                    readerEl.innerHTML = 
+                        '<div style="color:#dc3545; padding:1.5rem; text-align:center; background:#fff5f5; border-radius:10px; border:1px solid #feb2b2;">' +
+                        '<h3 style="margin:0 0 10px 0;">⚠️ Seguridad Requerida</h3>' +
+                        '<p style="font-size:0.9rem; margin-bottom:15px;">Hostinger requiere <b>HTTPS</b> para permitir el uso de la cámara. Verifica que tu URL comience con https://</p>' +
+                        '<button onclick="location.href=\'https://\' + location.host + location.pathname" style="padding:10px 15px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Cambiar a HTTPS ahora</button>' +
+                        '</div>';
+                }
+                showToast('Se requiere HTTPS para usar la cámara', 'error');
+                isScannerStarting = false;
+                return;
             }
 
             // Validar existencia de mediaDevices
@@ -282,14 +292,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Configuración optimizada para evitar que el video se congele en móviles
             const config = {
-                fps: 10, // Menos FPS permite mejor enfoque automático en móviles
+                fps: 20, // Mayor frecuencia para capturar mejor códigos en movimiento
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    // Cuadro de escaneo al 90% para que sea casi imposible no atinarle al QR
+                    // El cuadro de escaneo será siempre el 75% del lado más corto (balance ideal)
                     const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                    const size = Math.floor(minEdge * 0.9);
+                    const size = Math.floor(minEdge * 0.75);
                     return { width: size, height: size };
                 },
-                aspectRatio: 1.0, // Forzar proporción cuadrada mejora la detección
+                // aspectRatio: 1.0, // Eliminado para máxima compatibilidad con sensores móviles
                 disableFlip: true // Ahorra procesamiento
             };
 
@@ -319,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (readerEl) readerEl.innerHTML = ''; 
             html5QrCode = new ScannerLib("reader");
             
-            // Usar objeto de restricciones más robusto para móviles
+            // Iniciar cámara trasera
             await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
 
             if (btnFlash) {
@@ -451,12 +461,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (matchGenerico && matchGenerico[1]) return matchGenerico[1].toUpperCase();
 
         // 3) Si el texto es corto (4-25 caracteres) y no tiene espacios, asumirlo como el código directamente
-        if (text.length >= 2 && text.length <= 50 && !/\s/.test(text)) {
+        if (text.length >= 3 && text.length <= 40 && !/\s/.test(text)) {
             return text.toUpperCase();
         }
 
-        // 4) Fallback TOTAL: Si hay texto, es un código. No filtramos nada.
-        return text.substring(0, 100).toUpperCase();
+        // 4) Fallback total: Devolver el texto limpio (truncado)
+        return text.substring(0, 50).toUpperCase();
     }
 
     function normalizarCodigoEscaneado(decodedText) {
@@ -589,13 +599,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // 2. Éxito inmediato (No esperamos al servidor para mostrar info)
+            // 2. Éxito inmediato: Agregar a la lista y sonar
             playScanSound('success');
             addScannedQR(normalizedCode, qrInfo);
             
-            // 3. Validación en segundo plano (No bloquea el escaneo)
+            // 3. Validación en segundo plano (no bloquea la UI)
             validarGuiaEnServidor(normalizedCode).then(validation => {
-                if (!validation.ok) showToast(validation.message || 'Código externo leído', 'info');
+                if (!validation.ok) console.log('Guía no registrada en sistema, tratada como externa');
                 if (validation.notice) showToast(validation.notice, 'info');
             });
 
