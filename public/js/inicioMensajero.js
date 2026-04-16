@@ -282,11 +282,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Configuración optimizada para evitar que el video se congele en móviles
             const config = {
-                fps: 20, // Mayor frecuencia para capturar mejor códigos en movimiento
+                fps: 15, // Velocidad equilibrada para procesadores móviles
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    // El cuadro de escaneo será siempre el 70% del lado más corto
+                    // El cuadro de escaneo será siempre el 80% del lado más corto para mayor área
                     const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                    const size = Math.floor(minEdge * 0.7);
+                    const size = Math.floor(minEdge * 0.8);
                     return { width: size, height: size };
                 },
                 aspectRatio: 1.0, // Forzar proporción cuadrada mejora la detección
@@ -451,11 +451,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (matchGenerico && matchGenerico[1]) return matchGenerico[1].toUpperCase();
 
         // 3) Si el texto es corto (4-25 caracteres) y no tiene espacios, asumirlo como el código directamente
-        if (text.length >= 4 && text.length <= 25 && !/\s/.test(text)) {
+        if (text.length >= 3 && text.length <= 40 && !/\s/.test(text)) {
             return text.toUpperCase();
         }
 
-        return null;
+        // 4) Fallback TOTAL: Si nada coincide, devolver el texto limpio (truncado si es muy largo)
+        return text.substring(0, 50).toUpperCase();
     }
 
     function normalizarCodigoEscaneado(decodedText) {
@@ -581,14 +582,7 @@ document.addEventListener('DOMContentLoaded', function() {
             lastScannedCode = normalizedCode || decodedText;
             lastScannedTime = now;
 
-            // 1. Validar formato del sistema
-            if (!normalizedCode) {
-                playScanSound('error');
-                showToast('Código inválido. No se encontró una guía válida', 'error');
-                return;
-            }
-
-            // 2. Verificar duplicados
+            // 1. Verificar duplicados
             if (scannedQRs.find(qr => qr.code === normalizedCode)) {
                 playScanSound('error');
                 showToast('Este paquete ya fue escaneado', 'warning');
@@ -597,10 +591,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const validation = await validarGuiaEnServidor(normalizedCode);
             if (!validation.ok) {
-                playScanSound('error');
-                const message = validation.message || 'No se pudo validar el paquete';
-                const type = validation.type || 'warning';
-                showToast(message, type);
+                // Si falla la validación, permitimos agregarlo de todos modos como código externo
+                playScanSound('success');
+                addScannedQR(normalizedCode, qrInfo);
+                showToast(validation.message || 'Información leída (No en sistema)', 'info');
                 return;
             }
 
