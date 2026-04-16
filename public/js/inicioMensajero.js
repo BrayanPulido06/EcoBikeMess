@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('EcoBikeMess inicioMensajero.js v1.2.4 cargado'); // Versión corregida
+    console.log('EcoBikeMess inicioMensajero.js v1.3.0 cargado'); 
     // Desactivar Service Worker/caché agresiva en móvil (puede impedir permisos de cámara y cargar JS/CSS viejos)
     try {
         if ('serviceWorker' in navigator) {
@@ -74,6 +74,57 @@ document.addEventListener('DOMContentLoaded', function() {
     const collectionsList = document.getElementById('collectionsList');
     const deliveriesList = document.getElementById('deliveriesList');
 
+    // ============================================
+    // 1. ASIGNACIÓN INMEDIATA DE EVENTOS (CRÍTICO)
+    // ============================================
+    
+    // Menú Lateral (Sidebar)
+    if (menuBtn && sideMenu && menuOverlay) {
+        menuBtn.addEventListener('click', function() {
+            sideMenu.classList.add('active');
+            menuOverlay.classList.add('active');
+        });
+        
+        menuOverlay.addEventListener('click', function() {
+            sideMenu.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        });
+    }
+
+    // Botón Principal de Escaneo
+    if (btnScanQR && scanModal) {
+        btnScanQR.addEventListener('click', function() {
+            isScannerStarting = false; // Resetear bandera por seguridad
+            if (scanModal.classList.contains('active')) scanModal.classList.remove('active');
+            scanModal.classList.add('active');
+            startScanning({ userGesture: true });
+        });
+    }
+
+    // Cerrar Modal Escaneo
+    if (closeScanModal && scanModal) {
+        closeScanModal.addEventListener('click', function() {
+            stopScanning().then(() => {
+                scanModal.classList.remove('active');
+            });
+        });
+    }
+
+    // Código Manual
+    btnManualCode?.addEventListener('click', function() {
+        stopScanning().then(() => {
+            scanModal.classList.remove('active');
+            if (manualModal) manualModal.classList.add('active');
+            if (manualCodeInput) manualCodeInput.value = '';
+            const errEl = document.getElementById('manualError');
+            if (errEl) errEl.innerText = '';
+        });
+    });
+
+    // ============================================
+    // 2. UTILIDADES DE ESTADO
+    // ============================================
+
     function guardarEstadoEscaneoLocal() {
         try {
             localStorage.setItem(STORAGE_SCANNED_QR_KEY, JSON.stringify(scannedQRs));
@@ -85,18 +136,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function normalizarItemEscaneado(item) {
         if (!item || !item.code) return null;
-
         const rawTimestamp = item.timestamp ? new Date(item.timestamp) : new Date();
         const safeDate = isNaN(rawTimestamp.getTime()) ? new Date() : rawTimestamp;
-        const timeString = item.time || safeDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-        const dateString = item.date || safeDate.toLocaleDateString('es-CO');
-        const dateTimeString = item.dateTime || `${dateString} ${timeString}`;
-
         return {
             code: String(item.code).trim().toUpperCase(),
-            time: timeString,
-            date: dateString,
-            dateTime: dateTimeString,
+            time: item.time || safeDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+            date: item.date || safeDate.toLocaleDateString('es-CO'),
+            dateTime: item.dateTime || `${item.date} ${item.time}`,
             timestamp: safeDate.toISOString(),
             rawText: item.rawText || '',
             details: {
@@ -131,34 +177,13 @@ document.addEventListener('DOMContentLoaded', function() {
             isRouteMode = false;
         }
     }
-    
-    // ============================================
-    // MENÚ LATERAL
-    // ============================================
-    
-    if (menuBtn && sideMenu && menuOverlay) {
-        menuBtn.addEventListener('click', function() {
-            sideMenu.classList.add('active');
-            menuOverlay.classList.add('active');
-        });
-        
-        menuOverlay.addEventListener('click', function() {
-            sideMenu.classList.remove('active');
-            menuOverlay.classList.remove('active');
-        });
-    }
-    
-    // ============================================
-    // TEMPORIZADOR DE SESIÓN
-    // ============================================
-    
+
     function updateSessionTime() {
         const now = new Date();
         const diff = now - sessionStartTime;
         const hours = Math.floor(diff / 3600000);
         const minutes = Math.floor((diff % 3600000) / 60000);
         const seconds = Math.floor((diff % 60000) / 1000);
-        
         const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         const sessionTime = document.getElementById('sessionTime');
         if (sessionTime) sessionTime.textContent = timeString;
@@ -166,41 +191,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     sessionTimer = setInterval(updateSessionTime, 1000);
     
-    // ============================================
-    // ESCANEAR QR
-    // ============================================
-    
-    if (btnScanQR && scanModal) {
-        btnScanQR.addEventListener('click', function() {
-            // Forzar reseteo de estado si el modal estaba "trabado"
-            if (isScannerStarting) {
-                console.log('Reiniciando estado del escáner...');
-                isScannerStarting = false;
-            }
-            
-            if (scanModal.classList.contains('active')) scanModal.classList.remove('active');
-            scanModal.classList.add('active');
-            // Iniciamos el escaneo directamente
-            startScanning({ userGesture: true });
-        });
-    }
-
     if (btnEnableCamera) {
         btnEnableCamera.addEventListener('click', function() {
             startScanning({ userGesture: true });
         });
     }
-    
-    if (closeScanModal && scanModal) {
-        closeScanModal.addEventListener('click', function() {
-            stopScanning().then(() => {
-                scanModal.classList.remove('active');
-            });
-        });
-    }
 
     // ============================================
-    // LÓGICA DE ESCANEO (HTML5-QRCODE)
+    // 3. LÓGICA DE ESCANEO (HTML5-QRCODE)
     // ============================================
 
     function isHtml5QrCodeScanning(instance) {
@@ -255,51 +253,20 @@ document.addEventListener('DOMContentLoaded', function() {
             isFlashOn = false;
             if (btnFlash) btnFlash.style.display = 'none';
 
-            // 1. Validaciones de Contexto Seguro (Obligatorio en producción / Hostinger)
-            const isSecure = window.isSecureContext === true || location.protocol === 'https:';
-            const host = window.location.hostname;
-            const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host.startsWith('192.168.') || host.startsWith('10.');
-
-            if (!isSecure && !isLocalhost) {
-                if (readerEl) {
-                    readerEl.innerHTML = 
-                        '<div style="color:#dc3545; padding:1.5rem; text-align:center; background:#fff5f5; border-radius:10px; border:1px solid #feb2b2;">' +
-                        '<h3 style="margin:0 0 10px 0;">⚠️ Seguridad Requerida</h3>' +
-                        '<p style="font-size:0.9rem; margin-bottom:15px;">Hostinger requiere <b>HTTPS</b> para permitir el uso de la cámara. Verifica que tu URL comience con https://</p>' +
-                        '<button onclick="location.href=\'https://\' + location.host + location.pathname" style="padding:10px 15px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Cambiar a HTTPS ahora</button>' +
-                        '</div>';
-                }
-                showToast('Se requiere HTTPS para usar la cámara', 'error');
-                isScannerStarting = false;
-                return;
-            }
-
             // Validar existencia de mediaDevices
             if (!navigator.mediaDevices || (!navigator.mediaDevices.getUserMedia && !navigator.getUserMedia)) {
                 console.error("Acceso a mediaDevices no disponible directamente.");
             }
 
-            // Verificar que la librería html5-qrcode cargó correctamente (si falla, Html5Qrcode queda undefined)
-            if (typeof window.Html5Qrcode !== 'function') {
-                if (readerEl) {
-                    readerEl.innerHTML =
-                        '<p style="color:#dc3545; padding:1rem;">No se cargó la librería de escaneo (html5-qrcode). Revisa conexión, bloqueadores (AdBlock) y recarga la página.</p>';
-                }
-                showToast('Falta librería de escaneo (html5-qrcode)', 'error');
-                isScannerStarting = false;
-                return;
-            }
-
             // Configuración optimizada para evitar que el video se congele en móviles
             const config = {
-                fps: 20, // Mayor frecuencia para capturar mejor códigos en movimiento
+                fps: 15, // FPS balanceado
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    // El cuadro de escaneo será siempre el 75% del lado más corto (balance ideal)
+                    // Cuadro de escaneo al 85%
                     const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                    const size = Math.floor(minEdge * 0.75);
+                    const size = Math.floor(minEdge * 0.85);
                     return { width: size, height: size };
                 },
-                // aspectRatio: 1.0, // Eliminado para máxima compatibilidad con sensores móviles
                 disableFlip: true // Ahorra procesamiento
             };
 
@@ -314,7 +281,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Detener instancia previa
             await stopScanning({ cancelPendingStart: false });
             if (currentToken !== scannerStartToken) {
                 isScannerStarting = false;
@@ -329,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (readerEl) readerEl.innerHTML = ''; 
             html5QrCode = new ScannerLib("reader");
             
-            // Iniciar cámara trasera
+            // Usar objeto de restricciones más robusto para móviles
             await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
 
             if (btnFlash) {
@@ -461,47 +427,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (matchGenerico && matchGenerico[1]) return matchGenerico[1].toUpperCase();
 
         // 3) Si el texto es corto (4-25 caracteres) y no tiene espacios, asumirlo como el código directamente
-        if (text.length >= 3 && text.length <= 40 && !/\s/.test(text)) {
+        if (text.length >= 2 && text.length <= 50 && !/\s/.test(text)) {
             return text.toUpperCase();
         }
-
-        // 4) Fallback total: Devolver el texto limpio (truncado)
         return text.substring(0, 50).toUpperCase();
     }
 
     function normalizarCodigoEscaneado(decodedText) {
         if (!decodedText) return null;
         const raw = String(decodedText).trim();
-        if (!raw) return null;
-
-        // A) Intentar como URL con parámetros (ej: ?guia=EBM-2024-001)
-        try {
-            const maybeUrl = new URL(raw);
-            const keys = ['guia', 'numero_guia', 'codigo', 'code', 'qr_code'];
-            for (const key of keys) {
-                const value = maybeUrl.searchParams.get(key);
-                const parsed = extraerCodigoDesdeTexto(value);
-                if (parsed) return parsed;
-            }
-        } catch (_) {
-            // No es URL válida, continuar
-        }
-
-        // B) Intentar como JSON
-        if (raw.startsWith('{') && raw.endsWith('}')) {
-            try {
-                const json = JSON.parse(raw);
-                const keys = ['numero_guia', 'guia', 'codigo', 'qr_code', 'code'];
-                for (const key of keys) {
-                    const parsed = extraerCodigoDesdeTexto(json[key]);
-                    if (parsed) return parsed;
-                }
-            } catch (_) {
-                // No es JSON válido, continuar
-            }
-        }
-
-        // C) Texto plano (incluye multilinea)
         return extraerCodigoDesdeTexto(raw);
     }
 
@@ -599,13 +533,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // 2. Éxito inmediato: Agregar a la lista y sonar
+            // 2. Éxito inmediato (No esperamos al servidor para mostrar info)
             playScanSound('success');
             addScannedQR(normalizedCode, qrInfo);
             
-            // 3. Validación en segundo plano (no bloquea la UI)
+            // 3. Validación en segundo plano (No bloquea el escaneo)
             validarGuiaEnServidor(normalizedCode).then(validation => {
-                if (!validation.ok) console.log('Guía no registrada en sistema, tratada como externa');
+                if (!validation.ok) showToast(validation.message || 'Código externo leído', 'info');
                 if (validation.notice) showToast(validation.notice, 'info');
             });
 
