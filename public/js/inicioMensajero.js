@@ -282,21 +282,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Configuración optimizada para evitar que el video se congele en móviles
             const config = {
-                fps: 15, // Equilibrio entre fluidez y consumo de CPU
+                fps: 10, // Reducir a 10 FPS da más tiempo al procesador para decodificar sin congelar la pantalla
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    // Reducimos al 70% para que el procesador analice menos píxeles por cuadro
                     const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                    const size = Math.floor(minEdge * 0.65); // Reducimos un poco más para ganar fluidez
+                    const size = Math.floor(minEdge * 0.7); 
                     return { width: size, height: size };
                 },
-                // Forzar resolución baja para evitar saturar el procesador del móvil
                 videoConstraints: { 
+                    facingMode: "environment",
                     width: { ideal: 640 }, 
                     height: { ideal: 480 } 
                 },
-                disableFlip: true,
-                // USAR MOTOR NATIVO: Esto evita que el celular se trabe al delegar el escaneo al sistema operativo
-                experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+                disableFlip: true
             };
 
             if (userGesture) {
@@ -572,54 +569,53 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function onScanSuccess(decodedText, decodedResult) {
-        console.log("QR Detectado:", decodedText); // Debug para ver qué lee la cámara
         if (isProcessingScan) return; // Evitar procesar múltiples veces
+        isProcessingScan = true; // Bloqueo de seguridad inmediato
         
         const now = Date.now();
-        try {
-            // Feedback Háptico (Vibración corta de 100ms)
-            if ("vibrate" in navigator) navigator.vibrate(100);
+        
+        // Feedback instantáneo: vibración y cambio visual del contenedor
+        if ("vibrate" in navigator) navigator.vibrate(100);
+        const readerEl = document.getElementById('reader');
+        if (readerEl) readerEl.style.border = '4px solid #28a745';
 
-            const normalizedCode = normalizarCodigoEscaneado(decodedText);
-            const qrInfo = extraerInformacionQR(decodedText);
-            console.log("Lectura QR - Código:", normalizedCode, "Info:", qrInfo);
+        // Ejecutar el procesamiento fuera del ciclo de animación de la cámara para evitar trabas
+        setTimeout(async () => {
+            try {
+                const normalizedCode = normalizarCodigoEscaneado(decodedText);
+                const qrInfo = extraerInformacionQR(decodedText);
 
-            // Evitar lecturas múltiples del mismo código en menos de 1.5 segundos (más ágil)
-            if (normalizedCode && normalizedCode === lastScannedCode && (now - lastScannedTime) < 1500) {
-                return;
+                // Si es el mismo código leído hace menos de 2 segundos, ignorar silenciosamente
+                if (normalizedCode && normalizedCode === lastScannedCode && (now - lastScannedTime) < 2000) {
+                    isProcessingScan = false;
+                    if (readerEl) readerEl.style.border = 'none';
+                    return;
+                }
+
+                lastScannedCode = normalizedCode || decodedText;
+                lastScannedTime = now;
+
+                if (scannedQRs.find(qr => qr.code === normalizedCode)) {
+                    playScanSound('error');
+                    showToast('Este paquete ya fue escaneado', 'warning');
+                } else {
+                    playScanSound('success');
+                    addScannedQR(normalizedCode, qrInfo);
+                    
+                    validarGuiaEnServidor(normalizedCode).then(v => {
+                        if (v.notice) showToast(v.notice, 'info');
+                    });
+                }
+            } catch (e) {
+                console.error("Error en procesamiento QR:", e);
+            } finally {
+                // Liberar el scanner tras una pausa de 1.5s para asegurar estabilidad
+                setTimeout(() => {
+                    isProcessingScan = false;
+                    if (readerEl) readerEl.style.border = 'none';
+                }, 1500);
             }
-            
-            isProcessingScan = true;
-            lastScannedCode = normalizedCode || decodedText;
-            lastScannedTime = now;
-
-            // 1. Verificar duplicados
-            if (scannedQRs.find(qr => qr.code === normalizedCode)) {
-                playScanSound('error');
-                showToast('Este paquete ya fue escaneado', 'warning');
-                return;
-            }
-            
-            // 2. Éxito inmediato (No esperamos al servidor para mostrar info)
-            playScanSound('success');
-            addScannedQR(normalizedCode, qrInfo);
-            
-            // 3. Validación en segundo plano (No bloquea el escaneo)
-            validarGuiaEnServidor(normalizedCode).then(validation => {
-                if (!validation.ok) showToast(validation.message || 'Código externo leído', 'info');
-                if (validation.notice) showToast(validation.notice, 'info');
-            });
-
-            const modalCounter = document.getElementById('modalQrCounter');
-            if (modalCounter) modalCounter.textContent = String(scannedQRs.length);
-
-        } catch (err) {
-            console.error("Error en el callback de escaneo:", err);
-            showToast('Error al procesar el código', 'error');
-        } finally {
-            // Pausa pequeña antes de permitir el siguiente escaneo
-            setTimeout(() => { isProcessingScan = false; }, 800);
-        }
+        }, 10);
     }
 
     function onScanFailure(error) {
