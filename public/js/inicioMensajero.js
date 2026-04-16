@@ -286,12 +286,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
                     // Reducimos al 70% para que el procesador analice menos píxeles por cuadro
                     const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                    const size = Math.floor(minEdge * 0.7);
+                    const size = Math.floor(minEdge * 0.65); // Reducimos un poco más para ganar fluidez
                     return { width: size, height: size };
                 },
-                // Evitamos resoluciones muy altas (4K/1080p) que traban el procesamiento en móviles
-                videoConstraints: { width: { ideal: 640 }, height: { ideal: 480 } },
-                disableFlip: true // Ahorra procesamiento
+                // Forzar resolución baja para evitar saturar el procesador del móvil
+                videoConstraints: { 
+                    width: { ideal: 640 }, 
+                    height: { ideal: 480 } 
+                },
+                disableFlip: true,
+                // USAR MOTOR NATIVO: Esto evita que el celular se trabe al delegar el escaneo al sistema operativo
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true }
             };
 
             if (userGesture) {
@@ -572,6 +577,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const now = Date.now();
         try {
+            // Feedback Háptico (Vibración corta de 100ms)
+            if ("vibrate" in navigator) navigator.vibrate(100);
+
             const normalizedCode = normalizarCodigoEscaneado(decodedText);
             const qrInfo = extraerInformacionQR(decodedText);
             console.log("Lectura QR - Código:", normalizedCode, "Info:", qrInfo);
@@ -720,7 +728,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isRouteMode) construirRutaDesdeEscaneados();
         guardarEstadoEscaneoLocal();
         showToast('✓ QR escaneado correctamente', 'success');
-        if (navigator.vibrate) navigator.vibrate(200);
     }
     
     // ============================================
