@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('EcoBikeMess inicioMensajero.js v1.2.4 cargado'); // Versión corregida
+    console.log('EcoBikeMess inicioMensajero.js v1.2.6 - Ultra Estable'); 
     // Desactivar Service Worker/caché agresiva en móvil (puede impedir permisos de cámara y cargar JS/CSS viejos)
     try {
         if ('serviceWorker' in navigator) {
@@ -282,16 +282,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Configuración optimizada para evitar que el video se congele en móviles
             const config = {
-                fps: 10, // Reducir a 10 FPS da más tiempo al procesador para decodificar sin congelar la pantalla
+                fps: 5, // FPS muy bajo para evitar que el procesador del móvil se sature y se congele
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                    const size = Math.floor(minEdge * 0.7); 
-                    return { width: size, height: size };
+                    // Cuadro de escaneo del 80% para facilitar el enfoque
+                    const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.8;
+                    return { width: Math.floor(size), height: Math.floor(size) };
                 },
                 videoConstraints: { 
                     facingMode: "environment",
-                    width: { ideal: 640 }, 
-                    height: { ideal: 480 } 
+                    width: { ideal: 1280 }, 
+                    height: { ideal: 720 } 
                 },
                 disableFlip: true
             };
@@ -444,60 +444,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function extraerCodigoDesdeTexto(rawText) {
         if (!rawText) return null;
-        const text = String(rawText).trim();
-        if (!text) return null;
-
-        // 1) Buscar patrones conocidos con prefijo EBM o ECO (incluye multilinea)
-        const matchPrefijo = text.match(/(?:gu[ií]a|guia|num|code)?\s*[:#-]?\s*\b((?:EBM|ECO)[A-Z0-9-]+)\b/i);
-        if (matchPrefijo && matchPrefijo[1]) return matchPrefijo[1].toUpperCase();
-
-        // 2) Buscar patrones que parezcan guías aunque no tengan el prefijo (Ej: 20240416-ABCDE)
-        const matchGenerico = text.match(/\b([A-Z0-9]{4,}-[A-Z0-9-]{4,})\b/i);
-        if (matchGenerico && matchGenerico[1]) return matchGenerico[1].toUpperCase();
-
-        // 3) Si el texto es corto (4-25 caracteres) y no tiene espacios, asumirlo como el código directamente
-        if (text.length >= 2 && text.length <= 50 && !/\s/.test(text)) {
-            return text.toUpperCase();
-        }
-
-        // 4) Fallback TOTAL: Si hay texto, es un código. No filtramos nada.
-        return text.substring(0, 100).toUpperCase();
+        // MÁXIMA PERMISIVIDAD: Devolvemos el texto tal cual (limpio) para asegurar que lea cualquier QR
+        return String(rawText).trim().substring(0, 60).toUpperCase();
     }
 
     function normalizarCodigoEscaneado(decodedText) {
         if (!decodedText) return null;
-        const raw = String(decodedText).trim();
-        if (!raw) return null;
-
-        // A) Intentar como URL con parámetros (ej: ?guia=EBM-2024-001)
-        try {
-            const maybeUrl = new URL(raw);
-            const keys = ['guia', 'numero_guia', 'codigo', 'code', 'qr_code'];
-            for (const key of keys) {
-                const value = maybeUrl.searchParams.get(key);
-                const parsed = extraerCodigoDesdeTexto(value);
-                if (parsed) return parsed;
-            }
-        } catch (_) {
-            // No es URL válida, continuar
-        }
-
-        // B) Intentar como JSON
-        if (raw.startsWith('{') && raw.endsWith('}')) {
-            try {
-                const json = JSON.parse(raw);
-                const keys = ['numero_guia', 'guia', 'codigo', 'qr_code', 'code'];
-                for (const key of keys) {
-                    const parsed = extraerCodigoDesdeTexto(json[key]);
-                    if (parsed) return parsed;
-                }
-            } catch (_) {
-                // No es JSON válido, continuar
-            }
-        }
-
-        // C) Texto plano (incluye multilinea)
-        return extraerCodigoDesdeTexto(raw);
+        return extraerCodigoDesdeTexto(decodedText);
     }
 
     function normalizarEtiquetaCampo(key) {
@@ -568,54 +521,48 @@ document.addEventListener('DOMContentLoaded', function() {
         return info;
     }
 
-    async function onScanSuccess(decodedText, decodedResult) {
-        if (isProcessingScan) return; // Evitar procesar múltiples veces
-        isProcessingScan = true; // Bloqueo de seguridad inmediato
+    function onScanSuccess(decodedText) {
+        if (isProcessingScan) return;
+        isProcessingScan = true;
         
-        const now = Date.now();
-        
-        // Feedback instantáneo: vibración y cambio visual del contenedor
-        if ("vibrate" in navigator) navigator.vibrate(100);
+        // Vibración inmediata al detectar
+        if ("vibrate" in navigator) navigator.vibrate(80);
+
         const readerEl = document.getElementById('reader');
         if (readerEl) readerEl.style.border = '4px solid #28a745';
 
-        // Ejecutar el procesamiento fuera del ciclo de animación de la cámara para evitar trabas
-        setTimeout(async () => {
-            try {
-                const normalizedCode = normalizarCodigoEscaneado(decodedText);
-                const qrInfo = extraerInformacionQR(decodedText);
+        try {
+            const normalizedCode = normalizarCodigoEscaneado(decodedText);
+            const qrInfo = extraerInformacionQR(decodedText);
+            const now = Date.now();
 
-                // Si es el mismo código leído hace menos de 2 segundos, ignorar silenciosamente
-                if (normalizedCode && normalizedCode === lastScannedCode && (now - lastScannedTime) < 2000) {
-                    isProcessingScan = false;
-                    if (readerEl) readerEl.style.border = 'none';
-                    return;
-                }
-
-                lastScannedCode = normalizedCode || decodedText;
-                lastScannedTime = now;
-
-                if (scannedQRs.find(qr => qr.code === normalizedCode)) {
-                    playScanSound('error');
-                    showToast('Este paquete ya fue escaneado', 'warning');
-                } else {
-                    playScanSound('success');
-                    addScannedQR(normalizedCode, qrInfo);
-                    
-                    validarGuiaEnServidor(normalizedCode).then(v => {
-                        if (v.notice) showToast(v.notice, 'info');
-                    });
-                }
-            } catch (e) {
-                console.error("Error en procesamiento QR:", e);
-            } finally {
-                // Liberar el scanner tras una pausa de 1.5s para asegurar estabilidad
-                setTimeout(() => {
-                    isProcessingScan = false;
-                    if (readerEl) readerEl.style.border = 'none';
-                }, 1500);
+            // Evitar re-escaneos accidentales del mismo código en 3 segundos
+            if (normalizedCode === lastScannedCode && (now - lastScannedTime) < 3000) {
+                throw "cooldown";
             }
-        }, 10);
+
+            lastScannedCode = normalizedCode;
+            lastScannedTime = now;
+
+            if (scannedQRs.find(qr => qr.code === normalizedCode)) {
+                playScanSound('error');
+                showToast('Ya escaneado: ' + normalizedCode, 'warning');
+            } else {
+                addScannedQR(normalizedCode, qrInfo);
+                playScanSound('success');
+                validarGuiaEnServidor(normalizedCode).then(v => {
+                    if (v.notice) showToast(v.notice, 'info');
+                });
+            }
+        } catch (e) {
+            if (e !== "cooldown") console.error("Fallo lectura QR:", e);
+        } finally {
+            // Pausa obligatoria de 2 segundos para liberar recursos del móvil
+            setTimeout(() => {
+                isProcessingScan = false;
+                if (readerEl) readerEl.style.border = 'none';
+            }, 2000);
+        }
     }
 
     function onScanFailure(error) {
