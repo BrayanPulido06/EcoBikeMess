@@ -255,46 +255,18 @@ document.addEventListener('DOMContentLoaded', function() {
             isFlashOn = false;
             if (btnFlash) btnFlash.style.display = 'none';
 
-            // 1. Validaciones de Contexto Seguro (Obligatorio en producción)
+            // 1. Validaciones de Contexto Seguro (Informativo, no bloqueante)
             const isSecure = window.isSecureContext === true || location.protocol === 'https:';
             const host = window.location.hostname;
-            const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host.startsWith('192.168.');
+            const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host.startsWith('192.168.') || host.startsWith('10.');
 
             if (!isSecure && !isLocalhost) {
-                if (readerEl) {
-                    readerEl.innerHTML =
-                        '<div style="color:#dc3545; padding:1.5rem; text-align:center;">' +
-                    '<h3 style="margin-top:0;">⚠️ Seguridad Requerida</h3>' +
-                    '<p>Hostinger requiere HTTPS para la cámara. Verifica que la URL sea <b>https://</b></p>' +
-                    '<p>Si ya tienes SSL, pulsa aquí:</p>' +
-                    '<button onclick="location.href=\'https://\' + location.host + location.pathname" style="margin-top:15px; padding:12px 20px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Cambiar a HTTPS</button></div>';
-                }
-                showToast('Se requiere HTTPS para usar la cámara', 'error');
-                isScannerStarting = false;
-                return;
+                console.warn('Contexto no seguro. La cámara podría fallar si el navegador lo restringe.');
             }
-
-            // Si el navegador expone Permissions Policy, validar que "camera" esté permitida.
-            // Esto falla típicamente cuando el sitio está embebido en un iframe o el servidor envía Permissions-Policy: camera=()
-            try {
-                const policy = document.permissionsPolicy || document.featurePolicy;
-                if (policy && typeof policy.allowsFeature === 'function') {
-                    const allowsCamera = policy.allowsFeature('camera');
-                    if (!allowsCamera) {
-                        if (readerEl) {
-                            readerEl.innerHTML =
-                                '<p style="color:#dc3545; padding:1rem;">El navegador bloqueó la cámara por la política de permisos (Permissions-Policy). Abre el sistema directamente (sin iframe) y verifica que el servidor permita camera=(self).</p>';
-                        }
-                        showToast('Cámara bloqueada por Permissions-Policy', 'error');
-                        if (btnEnableCamera) btnEnableCamera.style.display = 'block';
-                        return;
-                    }
-                }
-            } catch (_) {}
 
             // Validar existencia de mediaDevices
             if (!navigator.mediaDevices || (!navigator.mediaDevices.getUserMedia && !navigator.getUserMedia)) {
-                throw new Error("Tu navegador no soporta el acceso a la cámara o está bloqueado por falta de HTTPS real.");
+                console.error("Acceso a mediaDevices no disponible directamente.");
             }
 
             // Verificar que la librería html5-qrcode cargó correctamente (si falla, Html5Qrcode queda undefined)
@@ -310,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Configuración optimizada para evitar que el video se congele en móviles
             const config = {
-                fps: 15,
+                fps: 20, // Mayor frecuencia para capturar mejor códigos en movimiento
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
                     // El cuadro de escaneo será siempre el 70% del lado más corto
                     const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
@@ -470,17 +442,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const text = String(rawText).trim();
         if (!text) return null;
 
-        // 1) Formato etiqueta: "Guía: EBM-2024-001" (o ECO legacy)
-        const matchGuia = text.match(/(?:gu[ií]a|guia)\s*[:#-]?\s*((?:EBM|ECO)[A-Z0-9-]+)/i);
-        if (matchGuia && matchGuia[1]) return matchGuia[1].toUpperCase();
+        // 1) Buscar patrones conocidos con prefijo EBM o ECO (incluye multilinea)
+        const matchPrefijo = text.match(/(?:gu[ií]a|guia|num|code)?\s*[:#-]?\s*\b((?:EBM|ECO)[A-Z0-9-]+)\b/i);
+        if (matchPrefijo && matchPrefijo[1]) return matchPrefijo[1].toUpperCase();
 
-        // 2) Guía directa en cualquier parte del texto
-        const matchEco = text.match(/\b((?:EBM|ECO)[A-Z0-9-]{3,})\b/i);
-        if (matchEco && matchEco[1]) return matchEco[1].toUpperCase();
+        // 2) Buscar patrones que parezcan guías aunque no tengan el prefijo (Ej: 20240416-ABCDE)
+        const matchGenerico = text.match(/\b([A-Z0-9]{4,}-[A-Z0-9-]{4,})\b/i);
+        if (matchGenerico && matchGenerico[1]) return matchGenerico[1].toUpperCase();
 
-        // 3) Compatibilidad con códigos guardados como QR-EBM-XXX / QR-ECO-XXX
-        const matchQrEco = text.match(/\b(QR-(?:EBM|ECO)-[A-Z0-9-]{2,})\b/i);
-        if (matchQrEco && matchQrEco[1]) return matchQrEco[1].toUpperCase();
+        // 3) Si el texto es corto (4-25 caracteres) y no tiene espacios, asumirlo como el código directamente
+        if (text.length >= 4 && text.length <= 25 && !/\s/.test(text)) {
+            return text.toUpperCase();
+        }
 
         return null;
     }
@@ -597,10 +570,10 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const normalizedCode = normalizarCodigoEscaneado(decodedText);
             const qrInfo = extraerInformacionQR(decodedText);
-            console.log("Código Normalizado:", normalizedCode);
+            console.log("Lectura QR - Código:", normalizedCode, "Info:", qrInfo);
 
-            // Evitar lecturas múltiples del mismo código en menos de 2.5 segundos
-            if (normalizedCode && normalizedCode === lastScannedCode && (now - lastScannedTime) < 2500) {
+            // Evitar lecturas múltiples del mismo código en menos de 1.5 segundos (más ágil)
+            if (normalizedCode && normalizedCode === lastScannedCode && (now - lastScannedTime) < 1500) {
                 return;
             }
             
@@ -1163,6 +1136,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.removeScannedQR = function(index) {
         scannedQRs.splice(index, 1);
+        if (scannedQRs.length === 0) lastScannedCode = null; // Resetear bloqueo si se vacía la lista
         updateQRCounter();
         renderScannedList();
         if (isRouteMode) construirRutaDesdeEscaneados();
