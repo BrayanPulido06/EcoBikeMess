@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p>${baseHelp}</p>
                         ${(name || msg) && !isRef ? `<hr style="opacity:0.2;margin:10px 0;"><small style="opacity:.85">Detalle Técnico: ${name} ${msg}</small>` : ''}
                         <button onclick="location.reload()" style="margin-top:10px; padding:8px 15px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">Recargar Página</button>
-                    </div>
+                    </div> 
                 `;
             }
             showToast('No se pudo acceder a la cámara', 'error');
