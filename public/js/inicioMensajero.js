@@ -470,16 +470,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const text = String(rawText).trim();
         if (!text) return null;
 
-        // 1) Formato etiqueta: "Guía: EBM-2024-001" (más flexible con espacios y guiones)
-        const matchGuia = text.match(/(?:gu[ií]a|guia|code|gu[ií]a\s*n[o°])\s*[:#\-\s]?\s*([A-Z0-9\-]{4,})/i);
+        // 1) Formato etiqueta: "Guía: EBM-2024-001" (o ECO legacy)
+        const matchGuia = text.match(/(?:gu[ií]a|guia)\s*[:#-]?\s*((?:EBM|ECO)[A-Z0-9-]+)/i);
         if (matchGuia && matchGuia[1]) return matchGuia[1].toUpperCase();
 
-        // 2) Guía directa (EBM o ECO) en cualquier parte del texto
+        // 2) Guía directa en cualquier parte del texto
         const matchEco = text.match(/\b((?:EBM|ECO)[A-Z0-9-]{3,})\b/i);
         if (matchEco && matchEco[1]) return matchEco[1].toUpperCase();
 
-        // 3) Patrón genérico para códigos de barras/QR de guías si no hay prefijo
-        const matchQrEco = text.match(/\b(QR-[A-Z0-9-]{3,})\b/i);
+        // 3) Compatibilidad con códigos guardados como QR-EBM-XXX / QR-ECO-XXX
+        const matchQrEco = text.match(/\b(QR-(?:EBM|ECO)-[A-Z0-9-]{2,})\b/i);
         if (matchQrEco && matchQrEco[1]) return matchQrEco[1].toUpperCase();
 
         return null;
@@ -550,13 +550,11 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const json = JSON.parse(info.rawText);
                 Object.keys(json).forEach(k => {
-                    const key = normalizarEtiquetaCampo(k).replace(/\s+/g, '_');
+                    const key = normalizarEtiquetaCampo(k);
                     const value = json[k];
                     if (value === undefined || value === null || value === '') return;
                     info.campos[key] = String(value);
                 });
-                // Si es JSON, intentar sacar la guía directamente
-                info.guia = info.guia || json.guia || json.numero_guia || json.code;
             } catch (_) {}
         } else {
             // Texto multilinea tipo "Campo: Valor"
@@ -579,11 +577,11 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         info.guia = info.guia || tomar(['guia', 'numero_guia', 'codigo', 'qr_code', 'code']);
-        info.nombre = tomar(['destinatario', 'destinatario_nombre', 'nombre_destinatario', 'nombre_receptor', 'nombre', 'recibe']);
-        info.direccion = tomar(['direccion', 'direccion_destino', 'direccion_entrega', 'destino', 'dir']);
-        info.remitente = tomar(['remitente', 'remitente_nombre', 'tienda', 'cliente', 'origen']);
-        info.telefono = tomar(['telefono', 'destinatario_telefono', 'telefono_destinatario', 'tel', 'cel', 'celular']);
-        info.total = tomar(['total', 'total_a_cobrar', 'recaudo', 'valor_recaudo', 'valor', 'cobrar']);
+        info.nombre = tomar(['destinatario', 'destinatario_nombre', 'nombre_destinatario', 'nombre_receptor', 'nombre']);
+        info.direccion = tomar(['direccion', 'direccion_destino', 'direccion_entrega']);
+        info.remitente = tomar(['remitente', 'remitente_nombre', 'tienda', 'cliente']);
+        info.telefono = tomar(['telefono', 'destinatario_telefono', 'telefono_destinatario']);
+        info.total = tomar(['total', 'total_a_cobrar', 'recaudo', 'valor_recaudo']);
 
         // Si vino "Guía: ECO..." en campos, normalizarla también
         if (info.guia) info.guia = normalizarCodigoEscaneado(info.guia) || String(info.guia).toUpperCase();
@@ -593,22 +591,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function onScanSuccess(decodedText, decodedResult) {
         console.log("QR Detectado:", decodedText); // Debug para ver qué lee la cámara
-        if (isProcessingScan) return; 
+        if (isProcessingScan) return; // Evitar procesar múltiples veces
         
         const now = Date.now();
         try {
             const normalizedCode = normalizarCodigoEscaneado(decodedText);
+            const qrInfo = extraerInformacionQR(decodedText);
+            console.log("Código Normalizado:", normalizedCode);
 
-            // 1. Evitar lecturas múltiples rápidas (si es el mismo texto que el anterior)
-            if (decodedText === lastScannedCode && (now - lastScannedTime) < 3000) {
+            // Evitar lecturas múltiples del mismo código en menos de 2.5 segundos
+            if (normalizedCode && normalizedCode === lastScannedCode && (now - lastScannedTime) < 2500) {
                 return;
             }
             
             isProcessingScan = true;
-            lastScannedCode = decodedText;
+            lastScannedCode = normalizedCode || decodedText;
             lastScannedTime = now;
-
-            const qrInfo = extraerInformacionQR(decodedText);
 
             // 1. Validar formato del sistema
             if (!normalizedCode) {
@@ -638,13 +636,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // 3. Éxito
             playScanSound('success');
             addScannedQR(normalizedCode, qrInfo);
-
+            
             const modalCounter = document.getElementById('modalQrCounter');
             if (modalCounter) modalCounter.textContent = String(scannedQRs.length);
 
         } catch (err) {
             console.error("Error en el callback de escaneo:", err);
-            // No mostramos toast aquí para no interrumpir el flujo si es un error menor
+            showToast('Error al procesar el código', 'error');
         } finally {
             // Pausa pequeña antes de permitir el siguiente escaneo
             setTimeout(() => { isProcessingScan = false; }, 800);
