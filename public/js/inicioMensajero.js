@@ -282,14 +282,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Configuración optimizada para evitar que el video se congele en móviles
             const config = {
-                fps: 10, // Menos FPS permite mejor enfoque automático en móviles
+                fps: 15, // Equilibrio entre fluidez y consumo de CPU
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    // Cuadro de escaneo al 90% para que sea casi imposible no atinarle al QR
+                    // Reducimos al 70% para que el procesador analice menos píxeles por cuadro
                     const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                    const size = Math.floor(minEdge * 0.9);
+                    const size = Math.floor(minEdge * 0.7);
                     return { width: size, height: size };
                 },
-                aspectRatio: 1.0, // Forzar proporción cuadrada mejora la detección
+                // Evitamos resoluciones muy altas (4K/1080p) que traban el procesamiento en móviles
+                videoConstraints: { width: { ideal: 640 }, height: { ideal: 480 } },
                 disableFlip: true // Ahorra procesamiento
             };
 
@@ -406,17 +407,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Instancia única para evitar fugas de memoria y bloqueos de audio
+    let scanAudioCtx = null;
     // Generar sonido de confirmación (Beep)
     function playScanSound(type = 'success') {
         try {
             if (!window.AudioContext && !window.webkitAudioContext) return;
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (!scanAudioCtx) scanAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const audioCtx = scanAudioCtx;
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
             
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
-            oscillator.onended = () => audioCtx.close(); // Importante: cerrar para liberar memoria
             
             if (type === 'success') {
                 oscillator.type = 'sine';
