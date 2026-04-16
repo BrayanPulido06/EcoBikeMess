@@ -282,11 +282,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Configuración optimizada para evitar que el video se congele en móviles
             const config = {
-                fps: 15, // Velocidad equilibrada para procesadores móviles
+                fps: 10, // Menos FPS permite mejor enfoque automático en móviles
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    // El cuadro de escaneo será siempre el 80% del lado más corto para mayor área
+                    // Cuadro de escaneo al 90% para que sea casi imposible no atinarle al QR
                     const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                    const size = Math.floor(minEdge * 0.8);
+                    const size = Math.floor(minEdge * 0.9);
                     return { width: size, height: size };
                 },
                 aspectRatio: 1.0, // Forzar proporción cuadrada mejora la detección
@@ -451,12 +451,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (matchGenerico && matchGenerico[1]) return matchGenerico[1].toUpperCase();
 
         // 3) Si el texto es corto (4-25 caracteres) y no tiene espacios, asumirlo como el código directamente
-        if (text.length >= 3 && text.length <= 40 && !/\s/.test(text)) {
+        if (text.length >= 2 && text.length <= 50 && !/\s/.test(text)) {
             return text.toUpperCase();
         }
 
-        // 4) Fallback TOTAL: Si nada coincide, devolver el texto limpio (truncado si es muy largo)
-        return text.substring(0, 50).toUpperCase();
+        // 4) Fallback TOTAL: Si hay texto, es un código. No filtramos nada.
+        return text.substring(0, 100).toUpperCase();
     }
 
     function normalizarCodigoEscaneado(decodedText) {
@@ -588,22 +588,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 showToast('Este paquete ya fue escaneado', 'warning');
                 return;
             }
-
-            const validation = await validarGuiaEnServidor(normalizedCode);
-            if (!validation.ok) {
-                // Si falla la validación, permitimos agregarlo de todos modos como código externo
-                playScanSound('success');
-                addScannedQR(normalizedCode, qrInfo);
-                showToast(validation.message || 'Información leída (No en sistema)', 'info');
-                return;
-            }
-
-            if (validation.notice) showToast(validation.notice, 'info');
-
-            // 3. Éxito
+            
+            // 2. Éxito inmediato (No esperamos al servidor para mostrar info)
             playScanSound('success');
             addScannedQR(normalizedCode, qrInfo);
             
+            // 3. Validación en segundo plano (No bloquea el escaneo)
+            validarGuiaEnServidor(normalizedCode).then(validation => {
+                if (!validation.ok) showToast(validation.message || 'Código externo leído', 'info');
+                if (validation.notice) showToast(validation.notice, 'info');
+            });
+
             const modalCounter = document.getElementById('modalQrCounter');
             if (modalCounter) modalCounter.textContent = String(scannedQRs.length);
 
