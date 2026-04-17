@@ -51,6 +51,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const v = vRaw.toLowerCase();
         const allowed = new Set(['0', '2000', '4000', '7000', '10000', '12000', 'notificar']);
         if (allowed.has(v)) return v;
+        const numericMap = {
+            '1': '0',
+            '2': '2000',
+            '3': '4000',
+            '4': '7000',
+            '5': '10000',
+            '6': '12000',
+            '7': 'notificar'
+        };
+        if (numericMap[v]) return numericMap[v];
         const map = {
             'menor o igual a 20 x 20 cm': '0',
             'menor o igual a 20x20 cm': '0',
@@ -64,6 +74,17 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         return map[v] || '';
     };
+
+    const normalizeHeaderRow = (row = []) => row.map(cell =>
+        cell ? cell.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : ''
+    );
+
+    const findTemplateHeaderRowIndex = (rows = []) => rows.findIndex(row => {
+        const normalized = normalizeHeaderRow(row);
+        return normalized.some(cell => cell.includes('nombre completo')) &&
+            normalized.some(cell => cell.includes('direccion de destino') || cell.includes('direccion')) &&
+            normalized.some(cell => cell.includes('dimensiones del paquete'));
+    });
 
     // --- NAVEGACIÓN ENTRE PASOS ---
     btnNext.addEventListener('click', () => {
@@ -240,14 +261,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     // Normalizar cabeceras (quitar tildes y minúsculas) para arreglar problema de "Teléfono"
                     const normalize = (str) => str ? str.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : '';
-                    const headers = jsonData[0].map(h => normalize(h));
+                    const headerRowIndex = findTemplateHeaderRowIndex(jsonData);
+                    const finalHeaderIndex = headerRowIndex >= 0 ? headerRowIndex : 0;
+                    const headers = jsonData[finalHeaderIndex].map(h => normalize(h));
+                    const structuredTemplate = finalHeaderIndex > 0;
                     
-                    const dataRows = jsonData.slice(1);
+                    const dataRows = jsonData.slice(finalHeaderIndex + 1).filter(row =>
+                        Array.isArray(row) && row.some(cell => String(cell ?? '').trim() !== '')
+                    );
 
                     // --- MODO MASIVO ---
                     if (dataRows.length > 1) {
                         if(confirm(`Se encontraron ${dataRows.length} registros. ¿Deseas cargarlos en modo masivo?`)) {
-                            initBulkMode(headers, dataRows);
+                            initBulkMode(headers, dataRows, { structuredTemplate });
                             return;
                         }
                     }
@@ -260,6 +286,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         const index = headers.findIndex(h => h.includes(keyPart));
                         return index !== -1 ? row[index] : '';
                     };
+                    const getStructuredValue = (index, fallback = '') =>
+                        structuredTemplate && index < row.length ? row[index] : fallback;
 
                     // Helper para asignar valor y disparar eventos
                     const setField = (id, val) => {
@@ -270,21 +298,27 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     };
 
+                    // 0. Llenar Remitente si viene en la plantilla
+                    setField('remitente_nombre', getStructuredValue(0, getValue('remitente nombre') || getValue('datos remitente nombre') || getValue('nombre remitente')));
+                    setField('remitente_telefono', getStructuredValue(1, getValue('remitente telefono') || getValue('telefono remitente')));
+                    setField('remitente_email', getStructuredValue(2, getValue('remitente email') || getValue('email de contacto') || getValue('correo remitente')));
+                    setField('remitente_direccion', getStructuredValue(3, getValue('direccion de origen') || getValue('remitente direccion') || getValue('origen')));
+
                     // 1. Llenar Destinatario
-                    setField('destinatario_nombre', getValue('nombre') || getValue('destinatario'));
+                    setField('destinatario_nombre', getStructuredValue(4, getValue('nombre') || getValue('destinatario')));
                     // Agregamos 'movil' y la normalización arregla 'Teléfono'
-                    setField('destinatario_telefono', getValue('num destinatario') || getValue('telefono') || getValue('celular') || getValue('movil'));
-                    setField('destinatario_direccion', getValue('direccion') || getValue('destino'));
-                    setField('instrucciones_entrega', getValue('instrucciones') || getValue('observaciones'));
+                    setField('destinatario_telefono', getStructuredValue(5, getValue('num destinatario') || getValue('telefono') || getValue('celular') || getValue('movil')));
+                    setField('destinatario_direccion', getStructuredValue(6, getValue('direccion') || getValue('destino')));
+                    setField('instrucciones_entrega', getStructuredValue(7, getValue('instrucciones') || getValue('observaciones')));
 
                     // 2. Llenar Paquete
-                    const dimensionesVal = normalizeDimensiones(getValue('dimensiones'));
+                    const dimensionesVal = normalizeDimensiones(getStructuredValue(10, getValue('dimensiones')));
                     if (dimensionesVal) setField('dimensiones_paquete', dimensionesVal);
 
-                    const mismoDia = parseSiNo(getValue('mismo dia') || getValue('envio mismo dia'));
-                    const zonaPeriferica = parseSiNo(getValue('zona periferica'));
-                    const recogerCambios = parseSiNo(getValue('recoger cambios'));
-                    const sumarEnvio = parseSiNo(getValue('sumar envio'));
+                    const mismoDia = parseSiNo(getStructuredValue(11, getValue('mismo dia') || getValue('envio mismo dia')));
+                    const zonaPeriferica = parseSiNo(getStructuredValue(12, getValue('zona periferica')));
+                    const recogerCambios = parseSiNo(getStructuredValue(13, getValue('recoger cambios')));
+                    const sumarEnvio = parseSiNo(getStructuredValue(14, getValue('sumar envio')));
 
                     const chkMismoDia = document.getElementById('envio_mismo_dia');
                     const chkZona = document.getElementById('zona_periferica');
@@ -297,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Se podría implementar una lógica para mapear cm a la opción correcta si se desea.
 
                     // Recaudo
-                    const recaudoVal = getValue('valor recaudo') || getValue('recaudo') || getValue('valor');
+                    const recaudoVal = getStructuredValue(9, getValue('valor recaudo') || getValue('recaudo') || getValue('valor'));
                     if (recaudoVal && !isNaN(parseFloat(recaudoVal)) && parseFloat(recaudoVal) > 0) {
                         if (!tieneRecaudoCheckbox.checked) tieneRecaudoCheckbox.click();
                         setField('valor_recaudo', recaudoVal);
@@ -310,8 +344,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (sumarEnvio && radioSumar) radioSumar.checked = true;
                     if (!sumarEnvio && radioNo) radioNo.checked = true;
 
-                    // 3. Auto-llenar Remitente (Datos del usuario logueado)
-                    if (autoFillBtn) autoFillBtn.click();
+                    // 3. Auto-llenar Remitente solo si la plantilla no lo trajo
+                    const remitenteNombreInput = document.getElementById('remitente_nombre');
+                    if (autoFillBtn && remitenteNombreInput && !String(remitenteNombreInput.value || '').trim()) {
+                        autoFillBtn.click();
+                    }
 
                     calcularCostoAutomatico();
 
@@ -328,7 +365,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- LÓGICA DE MODO MASIVO ---
-    function initBulkMode(headers, rows) {
+    function initBulkMode(headers, rows, options = {}) {
+        const structuredTemplate = options.structuredTemplate === true;
         // Ocultar formulario normal y mostrar contenedor masivo
         document.getElementById('envioForm').style.display = 'none';
         document.querySelector('.steps-indicator').style.display = 'none';
@@ -346,14 +384,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 const idx = headers.findIndex(h => h.includes(keyPart));
                 return idx !== -1 ? row[idx] : '';
             };
+            const getStructuredValue = (index, fallback = '') =>
+                structuredTemplate && index < row.length ? row[index] : fallback;
 
-            const dimensionesVal = normalizeDimensiones(getValue('dimensiones'));
-            const mismoDia = parseSiNo(getValue('mismo dia') || getValue('envio mismo dia'));
-            const zonaPeriferica = parseSiNo(getValue('zona periferica'));
-            const recogerCambios = parseSiNo(getValue('recoger cambios'));
-            const sumarEnvio = parseSiNo(getValue('sumar envio'));
-            const valorRecaudo = parseFloat(getValue('valor recaudo') || getValue('recaudo') || 0) || 0;
-            const tieneRecaudo = parseSiNo(getValue('tiene recaudo')) || valorRecaudo > 0;
+            const dimensionesVal = normalizeDimensiones(getStructuredValue(10, getValue('dimensiones')));
+            const mismoDia = parseSiNo(getStructuredValue(11, getValue('mismo dia') || getValue('envio mismo dia')));
+            const zonaPeriferica = parseSiNo(getStructuredValue(12, getValue('zona periferica')));
+            const recogerCambios = parseSiNo(getStructuredValue(13, getValue('recoger cambios')));
+            const sumarEnvio = parseSiNo(getStructuredValue(14, getValue('sumar envio')));
+            const valorRecaudo = parseFloat(getStructuredValue(9, getValue('valor recaudo') || getValue('recaudo') || 0)) || 0;
+            const tieneRecaudo = parseSiNo(getStructuredValue(8, getValue('tiene recaudo') || getValue('pago contra entrega'))) || valorRecaudo > 0;
 
             const recargoDimensiones = parseInt(dimensionesVal, 10) || 0;
             const recargoMismoDia = mismoDia ? 2000 : 0;
@@ -372,14 +412,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const item = {
                 id: index,
                 cliente_id: document.getElementById('cliente_id')?.value || '',
-                remitente_nombre: document.getElementById('remitente_nombre').value || (window.remitenteData?.nombre_completo), // Usar datos del usuario logueado
-                remitente_telefono: document.getElementById('remitente_telefono').value || (window.remitenteData?.telefono),
-                remitente_email: document.getElementById('remitente_email').value || (window.remitenteData?.correo),
-                remitente_direccion: document.getElementById('remitente_direccion').value || (window.remitenteData?.direccion),
-                destinatario_nombre: getValue('nombre') || getValue('destinatario'),
-                destinatario_telefono: getValue('num destinatario') || getValue('telefono') || getValue('celular') || getValue('movil'),
-                destinatario_direccion: getValue('direccion') || getValue('destino'),
-                instrucciones_entrega: getValue('instrucciones') || getValue('observaciones'),
+                remitente_nombre: getStructuredValue(0, getValue('remitente nombre') || getValue('datos remitente nombre') || getValue('nombre remitente')) || document.getElementById('remitente_nombre').value || (window.remitenteData?.nombre_completo),
+                remitente_telefono: getStructuredValue(1, getValue('remitente telefono') || getValue('telefono remitente')) || document.getElementById('remitente_telefono').value || (window.remitenteData?.telefono),
+                remitente_email: getStructuredValue(2, getValue('remitente email') || getValue('email de contacto') || getValue('correo remitente')) || document.getElementById('remitente_email').value || (window.remitenteData?.correo),
+                remitente_direccion: getStructuredValue(3, getValue('direccion de origen') || getValue('remitente direccion') || getValue('origen')) || document.getElementById('remitente_direccion').value || (window.remitenteData?.direccion),
+                destinatario_nombre: getStructuredValue(4, getValue('nombre') || getValue('destinatario')),
+                destinatario_telefono: getStructuredValue(5, getValue('num destinatario') || getValue('telefono') || getValue('celular') || getValue('movil')),
+                destinatario_direccion: getStructuredValue(6, getValue('direccion') || getValue('destino')),
+                instrucciones_entrega: getStructuredValue(7, getValue('instrucciones') || getValue('observaciones')),
                 descripcion_contenido: getValue('descripcion contenido') || getValue('contenido') || getValue('producto') || getValue('paquete'),
                 dimensiones_paquete: dimensionesVal,
                 envio_mismo_dia: mismoDia ? 'on' : '',
@@ -582,7 +622,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
     if (btnDownloadTemplate) {
         btnDownloadTemplate.addEventListener('click', () => {
             try {
-                const templateData = [
+                const plantillaAoa = [
                     {
                         "Destinatario Nombre": "Ej: María González",
                         "Num Destinatario": "3001234567",
@@ -598,27 +638,55 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                         "Sumar Envío al Recaudo (si/no)": "no"
                     }
                 ];
-                const ws = XLSX.utils.json_to_sheet(templateData);
+                const ws = (() => {
+                    const sheet = XLSX.utils.aoa_to_sheet([
+                        ["Numero", "Dimenciones", "Costo adicional"],
+                        [1, "Menor o igual a 20 x 20 cm", 0],
+                        [2, "Entre 21x21 y 30x30 cm", 2000],
+                        [3, "Entre 31x31 y 35x35 cm", 4000],
+                        [4, "Entre 36x36 y 40x40 cm", 7000],
+                        [5, "Entre 41x41 y 45x45 cm", 10000],
+                        [6, "Entre 46x46 y 49x49 cm", 12000],
+                        [7, "Igual o mayor a 50 x 50 cm", "Notificar"],
+                        [],
+                        ["Datos Remitente", "", "", "", "Datos Destinatario", "", "", "", "Información Del Paquete", "", "", "", "", "", ""],
+                        ["Nombre Completo", "Telefono", "Email de contacto", "Direccion de Origen", "Nombre Completo", "Telefono", "Direccion de Destino", "Observaciones y/o Descripciones", "Pago Contra Entrega (si/no)", "Valor recaudo", "Dimensiones del paquete", "Entrega Mismo Dia (si/no)", "Zona Periférica (si/no)", "Recoger Cambios (si/no)", "Sumar envio al recaudo (si/no)"],
+                        ["Ej: Pepito Perez", "1234567890", "pepito@gmail.com", "Carrera 5 #33-22", "Maria Perez", "1234567890", "Calle 4 #23-10 Este", "Ninguna", "si", 100000, 3, "no", "no", "si", "si"]
+                    ]);
+                    sheet['!cols'] = [
+                        { wch: 18 }, { wch: 26 }, { wch: 16 }, { wch: 22 },
+                        { wch: 18 }, { wch: 14 }, { wch: 20 }, { wch: 24 },
+                        { wch: 18 }, { wch: 14 }, { wch: 16 }, { wch: 18 },
+                        { wch: 16 }, { wch: 16 }, { wch: 20 }
+                    ];
+                    sheet['!merges'] = [
+                        { s: { r: 9, c: 0 }, e: { r: 9, c: 3 } },
+                        { s: { r: 9, c: 4 }, e: { r: 9, c: 7 } },
+                        { s: { r: 9, c: 8 }, e: { r: 9, c: 14 } }
+                    ];
+                    return sheet;
+                })();
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
 
                 const wsList = XLSX.utils.aoa_to_sheet([
-                    ["Menor o igual a 20 x 20 cm"],
-                    ["Entre 21x21 y 30x30 cm"],
-                    ["Entre 31x31 y 35x35 cm"],
-                    ["Entre 36x36 y 40x40 cm"],
-                    ["Entre 41x41 y 45x45 cm"],
-                    ["Entre 46x46 y 49x49 cm"],
-                    ["Igual o mayor a 50 x 50 cm (Notificar)"]
+                    ["Numero", "Dimension", "Costo"],
+                    [1, "Menor o igual a 20 x 20 cm", 0],
+                    [2, "Entre 21x21 y 30x30 cm", 2000],
+                    [3, "Entre 31x31 y 35x35 cm", 4000],
+                    [4, "Entre 36x36 y 40x40 cm", 7000],
+                    [5, "Entre 41x41 y 45x45 cm", 10000],
+                    [6, "Entre 46x46 y 49x49 cm", 12000],
+                    [7, "Igual o mayor a 50 x 50 cm", "Notificar"]
                 ]);
                 wsList['!hidden'] = 1;
                 XLSX.utils.book_append_sheet(wb, wsList, "Listas");
 
                 ws['!dataValidation'] = [{
-                    sqref: 'F2:F1000',
+                    sqref: 'K12:K1000',
                     type: 'list',
                     allowBlank: true,
-                    formula1: 'Listas!$A$1:$A$7'
+                    formula1: 'Listas!$A$2:$A$8'
                 }];
 
                 XLSX.writeFile(wb, "Plantilla_Envio_EcoBikeMess.xlsx");
