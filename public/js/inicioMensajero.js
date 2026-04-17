@@ -280,18 +280,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Configuración optimizada para evitar que el video se congele en móviles
+            // Configuración simplificada: evita cálculos dinámicos pesados que congelan la pantalla
             const config = {
-                fps: 10, // 10 FPS es el punto dulce entre fluidez y bajo consumo
-                qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.75;
-                    return { width: Math.floor(size), height: Math.floor(size) };
-                },
-                videoConstraints: { 
-                    facingMode: { exact: "environment" }, // Forzar cámara trasera con autofocus
-                    width: { ideal: 640 }, // Resolución baja para evitar congelamiento
-                    height: { ideal: 480 } 
-                },
+                fps: 10,
+                qrbox: { width: 250, height: 250 }, // Tamaño fijo para mayor rendimiento
+                aspectRatio: 1.0,
                 disableFlip: true
             };
 
@@ -321,8 +314,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (readerEl) readerEl.innerHTML = ''; 
             html5QrCode = new ScannerLib("reader");
             
-            // Usar objeto de restricciones más robusto para móviles
-            await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
+            // IMPORTANTE: Quitamos "exact" de environment. 
+            // Esto permite que funcione en computadores (usando la webcam) 
+            // y evita que los celulares se queden "pensando" qué cámara usar.
+            await html5QrCode.start(
+                { facingMode: "environment" }, 
+                config, 
+                onScanSuccess,
+                null // Pasamos null a failure para no saturar la consola
+            );
 
             if (btnFlash) {
                 btnFlash.style.display = 'inline-flex';
