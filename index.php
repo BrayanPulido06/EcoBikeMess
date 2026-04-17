@@ -242,23 +242,23 @@
                         <div class="service-details" id="details-cancelados">
                             <p><strong>Cancelación Antes de la Entrega:</strong></p>
                             <ul>
-                                <p><strong>Si el cliente cancela el pedido después de que el mensajero ya salió a distribución:</strong></p>
+                                <p>Si el cliente cancela el pedido después de que el mensajero ya salió a distribución:</p>
                                 <li>Costo: $5.000 (cubre logística y desplazamiento)</li>
                                 <li>Devolución del paquete: 3 días hábiles</li>
                             </ul>
-                            <p><strong>Cliente Ausente o no Responde:</strong></p>
+                            <p>Cliente Ausente o no Responde:</p>
                             <ul>
-                                <p><strong>Primer Intento:</strong></p>
+                                <p>Primer Intento:</p>
                                 <li>Intentamos contacto telefónico o vía WhatsApp</li>
                                 <li>Si no hay respuesta, reprogramamos para el día siguiente sin costo</li>
-                                <p><strong>Segundo Intento:</strong></p>
+                                <p>Segundo Intento:</p>
                                 <li>Si el cliente no ha dado respuesta por llamada o por Whatsapp, se retorna el paquete y se cobra $5.000 por servicio</li>
                                 <li>Devolución: 3 días hábiles</li> 
                             </ul>
                             <p><strong>Cliente Rechaza el Paquete:</strong></p>  
 
                             <ul>
-                                <p><strong>Si el destinatario se niega a recibir el envío::</strong></p>
+                                <p>Si el destinatario se niega a recibir el envío:</p>
                                 <li>Se cobra el valor completo del servicio ($8.000 o $11.000 según sea entrega o contraentrega)</li>
                                 <li>Devolución del paquete: 3 días hábiles</li>
                             </ul>
