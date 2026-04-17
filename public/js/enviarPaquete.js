@@ -86,6 +86,31 @@ document.addEventListener('DOMContentLoaded', function() {
             normalized.some(cell => cell.includes('dimensiones del paquete'));
     });
 
+    const generarNumeroGuia = (sequence = null) => {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const suffix = sequence !== null
+            ? String(sequence).padStart(4, '0')
+            : Math.random().toString(36).substring(2, 7).toUpperCase();
+        return `EBM-${year}/${month}/${day}-${suffix}`;
+    };
+
+    const descripcionDimension = (value) => {
+        const normalized = normalizeDimensiones(value);
+        const labels = {
+            '0': '1. Menor o igual a 20 x 20 cm',
+            '2000': '2. Entre 21x21 y 30x30 cm',
+            '4000': '3. Entre 31x31 y 35x35 cm',
+            '7000': '4. Entre 36x36 y 40x40 cm',
+            '10000': '5. Entre 41x41 y 45x45 cm',
+            '12000': '6. Entre 46x46 y 49x49 cm',
+            'notificar': '7. Igual o mayor a 50 x 50 cm'
+        };
+        return labels[normalized] || 'Sin definir';
+    };
+
     // --- NAVEGACIÓN ENTRE PASOS ---
     btnNext.addEventListener('click', () => {
         if (validateStep(currentStep)) {
@@ -370,7 +395,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Ocultar formulario normal y mostrar contenedor masivo
         document.getElementById('envioForm').style.display = 'none';
         document.querySelector('.steps-indicator').style.display = 'none';
-        document.querySelector('.page-header h1').textContent = 'Carga Masiva';
+        const mainEnvioContainer = document.getElementById('mainEnvioContainer');
+        if (mainEnvioContainer) mainEnvioContainer.style.display = 'none';
         if(bulkContainer) bulkContainer.style.display = 'block';
 
         const tbody = document.getElementById('bulkTableBody');
@@ -430,7 +456,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 envio_destinatario: sumarEnvio ? 'si' : 'no',
                 costo_total: total,
                 // Generar guía temporal
-                numero_guia: `EBM-${new Date().getFullYear()}${Math.random().toString(36).substring(2, 7).toUpperCase()}`
+                numero_guia: generarNumeroGuia(index + 1)
             };
 
             bulkData.push(item);
@@ -439,11 +465,29 @@ document.addEventListener('DOMContentLoaded', function() {
             const tr = document.createElement('tr');
             tr.id = `row-${index}`;
             tr.innerHTML = `
-                <td>${item.destinatario_nombre}</td>
-                <td>${item.destinatario_telefono}</td>
-                <td>${item.destinatario_direccion}</td>
-                <td></td>
-                <td>$${total.toLocaleString('es-CO')}</td>
+                <td><span class="bulk-chip">${item.numero_guia}</span></td>
+                <td>
+                    <div class="bulk-cell-stack">
+                        <strong>${item.remitente_nombre || 'Sin nombre'}</strong>
+                        <small>${item.remitente_telefono || 'Sin teléfono'}</small>
+                        <small>${item.remitente_direccion || 'Sin dirección'}</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="bulk-cell-stack">
+                        <strong>${item.destinatario_nombre || 'Sin nombre'}</strong>
+                        <small>${item.destinatario_telefono || 'Sin teléfono'}</small>
+                        <small>${item.destinatario_direccion || 'Sin dirección'}</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="bulk-cell-stack">
+                        <strong>${descripcionDimension(item.dimensiones_paquete)}</strong>
+                        <small>Recaudo: $${Number(item.valor_recaudo || 0).toLocaleString('es-CO')}</small>
+                        <small>Mismo día: ${item.envio_mismo_dia ? 'Sí' : 'No'} | Cambios: ${item.recoger_cambios ? 'Sí' : 'No'}</small>
+                    </div>
+                </td>
+                <td><strong>$${total.toLocaleString('es-CO')}</strong></td>
                 <td class="status-pending" id="status-${index}">Pendiente</td>
                 <td id="actions-${index}"></td>
             `;
@@ -664,6 +708,37 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                         { s: { r: 9, c: 4 }, e: { r: 9, c: 7 } },
                         { s: { r: 9, c: 8 }, e: { r: 9, c: 14 } }
                     ];
+                    const border = {
+                        top: { style: 'thin', color: { rgb: '000000' } },
+                        bottom: { style: 'thin', color: { rgb: '000000' } },
+                        left: { style: 'thin', color: { rgb: '000000' } },
+                        right: { style: 'thin', color: { rgb: '000000' } }
+                    };
+                    const centerStyle = {
+                        alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+                        border
+                    };
+                    const paintRange = (startRow, endRow, startCol, endCol, fill, bold = false) => {
+                        for (let r = startRow; r <= endRow; r++) {
+                            for (let c = startCol; c <= endCol; c++) {
+                                const ref = XLSX.utils.encode_cell({ r, c });
+                                if (!sheet[ref]) continue;
+                                sheet[ref].s = {
+                                    ...centerStyle,
+                                    font: { bold, color: { rgb: '1F2937' } },
+                                    fill: fill ? { fgColor: { rgb: fill } } : undefined
+                                };
+                            }
+                        }
+                    };
+                    paintRange(0, 7, 0, 2, 'FFF2CC', true);
+                    paintRange(9, 9, 0, 3, 'E8B7E6', true);
+                    paintRange(9, 9, 4, 7, 'BFE5F3', true);
+                    paintRange(9, 9, 8, 14, 'F8CBAD', true);
+                    paintRange(10, 10, 0, 3, 'DFF0D0', true);
+                    paintRange(10, 10, 4, 7, 'E5F5CC', true);
+                    paintRange(10, 10, 8, 14, 'FCE4D6', true);
+                    paintRange(11, 11, 0, 14, 'FFFFFF', false);
                     return sheet;
                 })();
                 const wb = XLSX.utils.book_new();
@@ -922,12 +997,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         const totalCobrarTexto = `$${totalCobrar.toLocaleString('es-CO')}`;
         document.getElementById('confirm_total_cobrar').textContent = totalCobrarTexto;
 
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const random = Math.random().toString(36).substring(2, 7).toUpperCase();
-        const numeroGuia = `EBM-${year}${month}${day}-${random}`;
+        const numeroGuia = generarNumeroGuia();
         document.getElementById('numeroGuia').textContent = numeroGuia;
         // Guardar la guía en el input oculto para enviarla al backend
         if (numeroGuiaHiddenInput) {

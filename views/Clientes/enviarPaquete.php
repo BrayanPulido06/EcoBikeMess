@@ -172,9 +172,70 @@ $remitente_data = [
             padding-left: 6px;
         }
         /* Estilos para carga masiva */
-        .bulk-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        .bulk-table th, .bulk-table td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; font-size: 0.9rem; }
-        .bulk-table th { background: #f8f9fa; font-weight: 600; color: #2d3e50; }
+        .bulk-preview-container {
+            padding-top: 1rem;
+        }
+        .bulk-summary {
+            margin: 0 0 1rem;
+            padding: 0.9rem 1rem;
+            border: 1px solid #d8ead8;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f7fcf7, #eef9f1);
+            color: #314559;
+        }
+        .bulk-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 0.5rem;
+            border: 1px solid #dfe7dc;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .bulk-table th,
+        .bulk-table td {
+            padding: 12px;
+            border-right: 1px solid #edf2eb;
+            border-bottom: 1px solid #edf2eb;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 0.9rem;
+        }
+        .bulk-table th:last-child,
+        .bulk-table td:last-child {
+            border-right: none;
+        }
+        .bulk-table tr:last-child td {
+            border-bottom: none;
+        }
+        .bulk-table th {
+            background: #f8f9fa;
+            font-weight: 700;
+            color: #2d3e50;
+        }
+        .bulk-chip {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: #eef6ee;
+            color: #2f6a3b;
+        }
+        .bulk-cell-stack {
+            display: grid;
+            gap: 4px;
+            text-align: left;
+        }
+        .bulk-cell-stack strong {
+            color: #243548;
+            font-size: 0.92rem;
+        }
+        .bulk-cell-stack small {
+            color: #6b7a89;
+            font-size: 0.8rem;
+        }
         .status-pending { color: #f0ad4e; font-weight: bold; }
         .status-success { color: #28a745; font-weight: bold; }
         .status-error { color: #dc3545; font-weight: bold; }
@@ -208,7 +269,7 @@ $remitente_data = [
         <?php include '../layouts/clienteNavbar.php'; ?>
 
         <!-- Content -->
-        <div class="content-container">
+        <div class="content-container" id="mainEnvioContainer">
             <!-- Mensajes de Validación y Feedback -->
             <?php if (isset($_GET['error'])): ?>
                 <div style="background-color: #ffebee; color: #c62828; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ef9a9a; margin-top: 100px;">
@@ -566,7 +627,7 @@ $remitente_data = [
     </div>
 
     <!-- Contenedor para Carga Masiva (Oculto por defecto) -->
-    <div id="bulkPreviewContainer" class="content-container" style="display: none;">
+    <div id="bulkPreviewContainer" class="content-container bulk-preview-container" style="display: none;">
         <div class="card">
             <div class="card-header">
                 <h2>📦 Carga Masiva de Envíos</h2>
@@ -576,14 +637,14 @@ $remitente_data = [
                 </div>
             </div>
             <div class="card-body">
-                <p>Se han detectado múltiples envíos. Revise la información antes de procesar.</p>
+                <p class="bulk-summary">Se han detectado múltiples envíos. Revisa la información cargada antes de procesar.</p>
                 <div class="table-responsive">
                     <table class="bulk-table">
                         <thead>
                             <tr>
+                                <th>Guía</th>
+                                <th>Remitente</th>
                                 <th>Destinatario</th>
-                                <th>Teléfono</th>
-                                <th>Dirección</th>
                                 <th>Paquete</th>
                                 <th>Costo</th>
                                 <th>Estado</th>
@@ -622,6 +683,6 @@ $remitente_data = [
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <script src="../../public/js/imageLightbox.js"></script>
-    <script src="../../public/js/enviarPaquete.js?v=20260417-2"></script>
+    <script src="../../public/js/enviarPaquete.js?v=20260417-3"></script>
 </body>
 </html>
