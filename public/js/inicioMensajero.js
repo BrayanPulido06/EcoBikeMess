@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('EcoBikeMess inicioMensajero.js v1.2.6 - Ultra Estable'); 
+    console.log('EcoBikeMess inicioMensajero.js v1.2.7 - Máximo Rendimiento'); 
     // Desactivar Service Worker/caché agresiva en móvil (puede impedir permisos de cámara y cargar JS/CSS viejos)
     try {
         if ('serviceWorker' in navigator) {
@@ -282,16 +282,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Configuración optimizada para evitar que el video se congele en móviles
             const config = {
-                fps: 5, // FPS muy bajo para evitar que el procesador del móvil se sature y se congele
+                fps: 10, // 10 FPS es el punto dulce entre fluidez y bajo consumo
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    // Cuadro de escaneo del 80% para facilitar el enfoque
-                    const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.8;
+                    const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.75;
                     return { width: Math.floor(size), height: Math.floor(size) };
                 },
                 videoConstraints: { 
-                    facingMode: "environment",
-                    width: { ideal: 1280 }, 
-                    height: { ideal: 720 } 
+                    facingMode: { exact: "environment" }, // Forzar cámara trasera con autofocus
+                    width: { ideal: 640 }, // Resolución baja para evitar congelamiento
+                    height: { ideal: 480 } 
                 },
                 disableFlip: true
             };
@@ -444,8 +443,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function extraerCodigoDesdeTexto(rawText) {
         if (!rawText) return null;
-        // MÁXIMA PERMISIVIDAD: Devolvemos el texto tal cual (limpio) para asegurar que lea cualquier QR
-        return String(rawText).trim().substring(0, 60).toUpperCase();
+        const textoLimpio = String(rawText).trim();
+        if (!textoLimpio) return null;
+        // MÁXIMA PERMISIVIDAD: Devolvemos todo el texto detectado
+        return textoLimpio.toUpperCase();
     }
 
     function normalizarCodigoEscaneado(decodedText) {
@@ -525,10 +526,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isProcessingScan) return;
         isProcessingScan = true;
         
-        // Vibración inmediata al detectar
-        if ("vibrate" in navigator) navigator.vibrate(80);
-
         const readerEl = document.getElementById('reader');
+        console.log("Lectura detectada:", decodedText);
+
+        if ("vibrate" in navigator) navigator.vibrate(100); // Feedback háptico solicitado
         if (readerEl) readerEl.style.border = '4px solid #28a745';
 
         try {
@@ -545,7 +546,7 @@ document.addEventListener('DOMContentLoaded', function() {
             lastScannedTime = now;
 
             if (scannedQRs.find(qr => qr.code === normalizedCode)) {
-                playScanSound('error');
+                if (lastScannedCode !== normalizedCode) playScanSound('error');
                 showToast('Ya escaneado: ' + normalizedCode, 'warning');
             } else {
                 addScannedQR(normalizedCode, qrInfo);
@@ -555,13 +556,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         } catch (e) {
-            if (e !== "cooldown") console.error("Fallo lectura QR:", e);
+            if (e !== "cooldown") console.error("Error procesando scan:", e);
         } finally {
-            // Pausa obligatoria de 2 segundos para liberar recursos del móvil
+            // Pausa de seguridad para que el móvil respire
             setTimeout(() => {
                 isProcessingScan = false;
                 if (readerEl) readerEl.style.border = 'none';
-            }, 2000);
+            }, 1500);
         }
     }
 
