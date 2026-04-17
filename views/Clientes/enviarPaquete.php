@@ -173,7 +173,10 @@ $remitente_data = [
         }
         /* Estilos para carga masiva */
         .bulk-preview-container {
-            padding-top: 1rem;
+            margin-left: 260px;
+            padding: 90px 24px 24px;
+            max-width: calc(100% - 260px);
+            box-sizing: border-box;
         }
         .bulk-summary {
             margin: 0 0 1rem;
@@ -236,6 +239,18 @@ $remitente_data = [
             color: #6b7a89;
             font-size: 0.8rem;
         }
+        .bulk-preview-container .card {
+            margin-top: 0;
+        }
+        .bulk-preview-container .card-header {
+            padding-top: 1.25rem;
+            padding-bottom: 1.25rem;
+        }
+        body.sidebar-collapsed .bulk-preview-container,
+        .sidebar.collapsed ~ .bulk-preview-container {
+            margin-left: 70px;
+            max-width: calc(100% - 70px);
+        }
         .status-pending { color: #f0ad4e; font-weight: bold; }
         .status-success { color: #28a745; font-weight: bold; }
         .status-error { color: #dc3545; font-weight: bold; }
@@ -257,6 +272,23 @@ $remitente_data = [
         .radio-card input[type="radio"] { transform: scale(1.5); accent-color: #28a745; margin: 0; }
         .radio-card-content strong { display: block; font-size: 1.1rem; color: #333; margin-bottom: 2px; }
         .radio-card-content small { color: #666; font-size: 0.9rem; }
+        @media (max-width: 992px) {
+            .bulk-preview-container {
+                margin-left: 0;
+                max-width: 100%;
+                padding: 84px 14px 16px;
+            }
+        }
+        @media (max-width: 768px) {
+            .bulk-preview-container {
+                padding: 82px 10px 14px;
+            }
+        }
+        @media (max-width: 480px) {
+            .bulk-preview-container {
+                padding: 78px 8px 12px;
+            }
+        }
     </style>
 </head>
 <body>
