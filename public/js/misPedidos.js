@@ -486,12 +486,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const totalTexto = formatMoney(datos.recaudo);
         const qrData = `Guía: ${datos.guia}\nRemitente: ${datos.tienda_nombre || datos.remitente_nombre}\nDestinatario: ${datos.destinatario_nombre}\nDirección: ${datos.destinatario_direccion}\nTotal a Cobrar: ${totalTexto}`;
         const qrCode = new QRCodeStyling({
-            width: 220,
-            height: 220,
+            width: 260,
+            height: 260,
             type: "canvas",
-            data: qrData,
-            dotsOptions: { color: "#000", type: "rounded" },
-            backgroundOptions: { color: "#fff" }
+            data: datos.guia,
+            dotsOptions: { color: "#000", type: "square" },
+            backgroundOptions: { color: "#fff" },
+            qrOptions: { errorCorrectionLevel: 'M' }
         });
         qrCode.append(qrContainer);
 

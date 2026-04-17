@@ -494,11 +494,11 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
             const qrCode = new QRCodeStyling({
                 width: 300,
                 height: 300,
-                data: infoParaQR,
-                dotsOptions: { color: "#000000", type: "rounded" },
+                data: numeroGuia,
+                dotsOptions: { color: "#000000", type: "square" },
                 backgroundOptions: { color: "#ffffff" },
                 imageOptions: { crossOrigin: "anonymous", margin: 4 },
-                qrOptions: { errorCorrectionLevel: 'H' }
+                qrOptions: { errorCorrectionLevel: 'M' }
             });
 
             const qrBlob = await qrCode.getRawData('png');
@@ -887,13 +887,13 @@ ${qrFinanciero}
         
         // Crear nueva instancia de QR con logo
         qrCodeStylingInstance = new QRCodeStyling({
-            width: 220,
-            height: 220,
-            data: infoParaQR,
+            width: 260,
+            height: 260,
+            data: numeroGuia,
             // image: "../../public/img/logo_qr.png", // Desactivado para asegurar que el QR funcione. Actívalo cuando tengas el logo.
             dotsOptions: {
                 color: "#000000",
-                type: "rounded"
+                type: "square"
             },
             backgroundOptions: {
                 color: "#ffffff",
@@ -903,7 +903,7 @@ ${qrFinanciero}
                 margin: 4
             },
             qrOptions: {
-                errorCorrectionLevel: 'H' // Nivel alto para que el logo no afecte la lectura
+                errorCorrectionLevel: 'M' // Menos densidad y mejor lectura en pantalla
             }
         });
 

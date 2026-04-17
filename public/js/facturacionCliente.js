@@ -614,20 +614,16 @@ document.addEventListener('DOMContentLoaded', function() {
         qrContainer.innerHTML = ''; // Limpiar anterior
         
         // Construir datos completos para el QR
-        const qrData = `GUIA: ${pedido.guia}
-REM: ${pedido.remitente.nombre}
-DEST: ${pedido.destinatario.nombre}
-DIR: ${pedido.destinatario.direccion}
-TEL: ${pedido.destinatario.telefono}
-TOTAL: ${totalTexto}`;
+        const qrData = pedido.guia;
 
         const qrCode = new QRCodeStyling({
-            width: 220,
-            height: 220,
+            width: 260,
+            height: 260,
             type: "canvas",
             data: qrData,
             dotsOptions: { color: "#000", type: "square" },
-            backgroundOptions: { color: "#fff" }
+            backgroundOptions: { color: "#fff" },
+            qrOptions: { errorCorrectionLevel: 'M' }
         });
         qrCode.append(qrContainer);
 

@@ -622,6 +622,6 @@ $remitente_data = [
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <script src="../../public/js/imageLightbox.js"></script>
-    <script src="../../public/js/enviarPaquete.js"></script>
+    <script src="../../public/js/enviarPaquete.js?v=20260417-1"></script>
 </body>
 </html>

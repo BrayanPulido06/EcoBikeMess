@@ -538,9 +538,9 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
             const qrContainer = document.getElementById('rotulo_qr_code');
             qrContainer.innerHTML = '';
             
-            const qrData = `Guía: ${datos.guia}\nRemitente: ${datos.tienda_nombre || datos.remitente_nombre}\nDestinatario: ${datos.destinatario_nombre}\nDirección: ${datos.destinatario_direccion}\nTotal a Cobrar: ${totalTexto}`;
-            
-            const qrCode = new QRCodeStyling({ width: 220, height: 220, type: "canvas", data: qrData, dotsOptions: { color: "#000", type: "rounded" }, backgroundOptions: { color: "#fff" } });
+            const qrData = datos.guia;
+
+            const qrCode = new QRCodeStyling({ width: 260, height: 260, type: "canvas", data: qrData, dotsOptions: { color: "#000", type: "square" }, backgroundOptions: { color: "#fff" }, qrOptions: { errorCorrectionLevel: 'M' } });
             qrCode.append(qrContainer);
 
             modal.style.display = 'flex';
