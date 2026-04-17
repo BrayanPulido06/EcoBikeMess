@@ -393,10 +393,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function initBulkMode(headers, rows, options = {}) {
         const structuredTemplate = options.structuredTemplate === true;
         // Ocultar formulario normal y mostrar contenedor masivo
+        document.body.classList.add('bulk-mode');
         document.getElementById('envioForm').style.display = 'none';
         document.querySelector('.steps-indicator').style.display = 'none';
-        const mainEnvioContainer = document.getElementById('mainEnvioContainer');
-        if (mainEnvioContainer) mainEnvioContainer.style.display = 'none';
         if(bulkContainer) bulkContainer.style.display = 'block';
 
         const tbody = document.getElementById('bulkTableBody');
