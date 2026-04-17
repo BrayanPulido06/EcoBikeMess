@@ -294,6 +294,6 @@ if ($nombreCompleto === '') {
             }
         });
     </script>
-    <script src="../../public/js/inicioMensajero.js?v=20260417-2"></script>
+    <script src="../../public/js/inicioMensajero.js?v=20260417-3"></script>
 </body>
 </html>
