@@ -255,7 +255,7 @@
                                 <li>Si el cliente no ha dado respuesta por llamada o por Whatsapp, se retorna el paquete y se cobra $5.000 por servicio</li>
                                 <li>Devolución: 3 días hábiles</li> 
                             </ul>
-                            <p><strong>Cliente Rechaza el Paquete:</strong></p>  
+                            <p>Cliente Rechaza el Paquete:</p>  
 
                             <ul>
                                 <p>Si el destinatario se niega a recibir el envío:</p>
