@@ -317,12 +317,48 @@ document.addEventListener('DOMContentLoaded', function() {
             // IMPORTANTE: Quitamos "exact" de environment. 
             // Esto permite que funcione en computadores (usando la webcam) 
             // y evita que los celulares se queden "pensando" qué cámara usar.
-            await html5QrCode.start(
-                { facingMode: "environment" }, 
-                config, 
-                onScanSuccess,
-                null // Pasamos null a failure para no saturar la consola
-            );
+            let started = false;
+            const startStrategies = [
+                { facingMode: { ideal: "environment" } },
+                { facingMode: "environment" },
+                undefined
+            ];
+
+            for (const cameraConfig of startStrategies) {
+                try {
+                    if (cameraConfig === undefined) {
+                        const cameras = typeof ScannerLib.getCameras === 'function'
+                            ? await ScannerLib.getCameras()
+                            : [];
+                        const rearCamera = cameras.find(camera => /back|rear|trasera|environment/i.test(camera.label || ''));
+                        const selectedCamera = rearCamera?.id || cameras[0]?.id;
+                        if (!selectedCamera) continue;
+
+                        await html5QrCode.start(
+                            selectedCamera,
+                            config,
+                            onScanSuccess,
+                            null
+                        );
+                    } else {
+                        await html5QrCode.start(
+                            cameraConfig,
+                            config,
+                            onScanSuccess,
+                            null
+                        );
+                    }
+
+                    started = true;
+                    break;
+                } catch (startError) {
+                    console.warn('Fallo iniciando cámara con estrategia', cameraConfig, startError);
+                }
+            }
+
+            if (!started) {
+                throw new Error('No fue posible iniciar la cámara con una configuración compatible');
+            }
 
             if (btnFlash) {
                 btnFlash.style.display = 'inline-flex';
@@ -569,6 +605,164 @@ document.addEventListener('DOMContentLoaded', function() {
     function onScanFailure(error) {
         // Se ejecuta continuamente mientras busca QR, no es necesario loguear todo
         // console.warn(`Code scan error = ${error}`);
+    }
+
+    // Sobrescrituras defensivas: algunos QRs contienen varias líneas y el escáner
+    // debe quedarse con la guía, no con todo el texto bruto.
+    function extraerCodigoDesdeTexto(rawText) {
+        if (!rawText) return null;
+
+        const textoLimpio = String(rawText).replace(/\r/g, '').trim();
+        if (!textoLimpio) return null;
+
+        const lineas = textoLimpio
+            .split('\n')
+            .map(line => line.trim())
+            .filter(Boolean);
+
+        const candidatos = [];
+        const regexEtiqueta = /(?:^|\b)(?:guia|guía|numero_guia|nro_guia|codigo|código|qr_code|code)\s*[:#-]?\s*([A-Z0-9][A-Z0-9\-_/]{2,})/i;
+        const regexGuiaLibre = /\b(?:[A-Z]{2,10}-)?\d{2,6}-[A-Z0-9]{2,}\b/i;
+
+        for (const linea of lineas) {
+            const matchEtiqueta = linea.match(regexEtiqueta);
+            if (matchEtiqueta?.[1]) candidatos.push(matchEtiqueta[1]);
+
+            const matchLibre = linea.match(regexGuiaLibre);
+            if (matchLibre?.[0]) candidatos.push(matchLibre[0]);
+        }
+
+        if (textoLimpio.startsWith('{') && textoLimpio.endsWith('}')) {
+            try {
+                const json = JSON.parse(textoLimpio);
+                ['guia', 'guía', 'numero_guia', 'codigo', 'qr_code', 'code'].forEach(key => {
+                    if (json[key]) candidatos.push(String(json[key]));
+                });
+            } catch (_) {}
+        }
+
+        if (candidatos.length === 0 && lineas.length === 1 && !lineas[0].includes(':')) {
+            candidatos.push(lineas[0]);
+        }
+
+        return candidatos
+            .map(valor => String(valor).trim().toUpperCase())
+            .map(valor => valor.replace(/^[\s#:.-]+|[\s#:.-]+$/g, ''))
+            .find(Boolean) || null;
+    }
+
+    function normalizarCodigoEscaneado(decodedText) {
+        return extraerCodigoDesdeTexto(decodedText);
+    }
+
+    function extraerInformacionQR(rawText) {
+        const info = {
+            rawText: rawText ? String(rawText).trim() : '',
+            guia: null,
+            nombre: null,
+            direccion: null,
+            remitente: null,
+            telefono: null,
+            total: null,
+            campos: {}
+        };
+
+        if (!info.rawText) return info;
+
+        if (info.rawText.startsWith('{') && info.rawText.endsWith('}')) {
+            try {
+                const json = JSON.parse(info.rawText);
+                Object.keys(json).forEach(k => {
+                    const key = normalizarEtiquetaCampo(k);
+                    const value = json[k];
+                    if (value === undefined || value === null || value === '') return;
+                    info.campos[key] = String(value);
+                });
+            } catch (_) {}
+        } else {
+            info.rawText.split(/\r?\n/).forEach(line => {
+                const parts = line.split(':');
+                if (parts.length < 2) return;
+                const key = normalizarEtiquetaCampo(parts.shift());
+                const value = parts.join(':').trim();
+                if (!value) return;
+                info.campos[key] = value;
+            });
+        }
+
+        const tomar = (keys) => {
+            for (const k of keys) {
+                const kk = normalizarEtiquetaCampo(k);
+                if (info.campos[kk]) return info.campos[kk];
+            }
+            return null;
+        };
+
+        info.guia = tomar(['guia', 'numero_guia', 'codigo', 'qr_code', 'code']) || extraerCodigoDesdeTexto(info.rawText);
+        info.nombre = tomar(['destinatario', 'destinatario_nombre', 'nombre_destinatario', 'nombre_receptor', 'nombre']);
+        info.direccion = tomar(['direccion', 'direccion_destino', 'direccion_entrega']);
+        info.remitente = tomar(['remitente', 'remitente_nombre', 'tienda', 'cliente']);
+        info.telefono = tomar(['telefono', 'destinatario_telefono', 'telefono_destinatario']);
+        info.total = tomar(['total', 'total_a_cobrar', 'recaudo', 'valor_recaudo']);
+
+        if (info.guia) info.guia = normalizarCodigoEscaneado(info.guia) || String(info.guia).toUpperCase();
+
+        return info;
+    }
+
+    function onScanSuccess(decodedText) {
+        if (isProcessingScan) return;
+        isProcessingScan = true;
+
+        const readerEl = document.getElementById('reader');
+        console.log("Lectura detectada:", decodedText);
+
+        if ("vibrate" in navigator) navigator.vibrate(100);
+        if (readerEl) readerEl.style.border = '4px solid #28a745';
+
+        try {
+            const normalizedCode = normalizarCodigoEscaneado(decodedText);
+            const qrInfo = extraerInformacionQR(decodedText);
+            const now = Date.now();
+
+            if (!normalizedCode) {
+                throw new Error('No se detectó una guía válida dentro del QR');
+            }
+
+            if (normalizedCode === lastScannedCode && (now - lastScannedTime) < 3000) {
+                throw "cooldown";
+            }
+
+            lastScannedCode = normalizedCode;
+            lastScannedTime = now;
+
+            if (scannedQRs.find(qr => qr.code === normalizedCode)) {
+                playScanSound('error');
+                showToast('Ya escaneado: ' + normalizedCode, 'warning');
+            } else {
+                validarGuiaEnServidor(normalizedCode).then(v => {
+                    if (!v.ok) {
+                        playScanSound('error');
+                        showToast(v.message || 'No se pudo validar el paquete', v.type || 'warning');
+                        return;
+                    }
+
+                    addScannedQR(normalizedCode, {
+                        ...qrInfo,
+                        guia: normalizedCode
+                    });
+                    playScanSound('success');
+                    if (v.notice) showToast(v.notice, 'info');
+                });
+            }
+        } catch (e) {
+            if (e !== "cooldown") console.error("Error procesando scan:", e);
+        } finally {
+            setTimeout(() => {
+                isProcessingScan = false;
+                if (readerEl) readerEl.style.border = 'none';
+            }, 1500);
+        }
     }
     
     // ============================================

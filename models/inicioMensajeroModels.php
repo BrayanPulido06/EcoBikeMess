@@ -70,14 +70,31 @@ class InicioMensajeroModels
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    private function extraerNumeroGuia($texto)
+    {
+        $raw = strtoupper(trim((string) $texto));
+        if ($raw === '') {
+            return '';
+        }
+
+        if (preg_match('/(?:GUIA|GUÍA|NUMERO_GUIA|NRO_GUIA|CODIGO|CÓDIGO|QR_CODE|CODE)\s*[:#-]?\s*([A-Z0-9][A-Z0-9\-_\/]{2,})/u', $raw, $match)) {
+            return trim($match[1]);
+        }
+
+        if (preg_match('/\b(?:[A-Z]{2,10}-)?\d{2,6}-[A-Z0-9]{2,}\b/', $raw, $match)) {
+            return trim($match[0]);
+        }
+
+        return $raw;
+    }
+
     public function validarGuiaParaEscaneo($mensajeroId, $numeroGuia)
     {
-        $guia = trim((string) $numeroGuia);
+        $guia = $this->extraerNumeroGuia($numeroGuia);
         if ($guia === '') {
             return ['status' => 'invalid'];
         }
 
-        $guia = strtoupper($guia);
         $guiaBase = preg_replace('/^QR-/', '', $guia);
 
         $sql = "SELECT id, numero_guia, estado, mensajero_id
