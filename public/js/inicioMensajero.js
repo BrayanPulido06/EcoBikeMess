@@ -213,6 +213,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    async function solicitarStreamCamaraBasico() {
+        if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+            return null;
+        }
+
+        const intentos = [
+            { video: { facingMode: { ideal: 'environment' } }, audio: false },
+            { video: { facingMode: 'environment' }, audio: false },
+            { video: true, audio: false }
+        ];
+
+        for (const constraints of intentos) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                return stream;
+            } catch (error) {
+                console.warn('Fallo getUserMedia con restricciones', constraints, error);
+            }
+        }
+
+        return null;
+    }
+
     async function startScanning(options = {}) {
         if (isScannerStarting) return;
         isScannerStarting = true;
@@ -282,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Configuración simplificada: evita cálculos dinámicos pesados que congelan la pantalla
             const config = {
-                fps: 10,
+                fps: 8,
                 qrbox: { width: 250, height: 250 }, // Tamaño fijo para mayor rendimiento
                 aspectRatio: 1.0,
                 disableFlip: true
@@ -311,7 +334,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error("El contenedor de la cámara (reader) no existe en la página.");
             }
 
-            if (readerEl) readerEl.innerHTML = ''; 
+            if (readerEl) readerEl.innerHTML = '';
+
+            const streamPrueba = await solicitarStreamCamaraBasico();
+            if (streamPrueba) {
+                streamPrueba.getTracks().forEach(track => track.stop());
+            }
+
             html5QrCode = new ScannerLib("reader");
             
             // IMPORTANTE: Quitamos "exact" de environment. 
@@ -319,8 +348,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // y evita que los celulares se queden "pensando" qué cámara usar.
             let started = false;
             const startStrategies = [
+                { facingMode: { exact: "environment" } },
                 { facingMode: { ideal: "environment" } },
                 { facingMode: "environment" },
+                { facingMode: "user" },
                 undefined
             ];
 
