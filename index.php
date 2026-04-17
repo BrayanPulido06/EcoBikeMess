@@ -119,7 +119,7 @@
             <div class="container">
                 <h2>¿Quiénes Somos?</h2>
                 <p>EcoBikeMess es una empresa de mensajería urbana comprometida con el medio ambiente. Utilizamos bicicletas para realizar entregas rápidas, eficientes y sin emisiones de CO2 en toda Bogotá.</p>
-                <p>Con más de 5 años de experiencia, nos hemos convertido en líderes en logística sostenible, atendiendo a empresas y particulares con el mismo nivel de profesionalismo y rapidez.</p>
+                <p>Con más de 7 años de experiencia, nos hemos convertido en líderes en logística sostenible, atendiendo a empresas y particulares con el mismo nivel de profesionalismo y rapidez.</p>
             </div>
         </section>
 
@@ -139,13 +139,12 @@
                             <p><strong>Entregas:</strong></p>
                             <ul>
                                 <li>Mismo día o siguiente: Gestionamos tu pedido en el transcurso del día (sin horario fijo).</li>
-                                <li>Prioridad same-day: Asegura tu envío el mismo día por $10.000 (Bogotá) o $14.000 (Soacha/zonas verde oscuro).</li>
+                                <li>Prioridad same-day: Asegura tu envío el mismo día por un adicional de $2.000.</li>
                             </ul>
                             <p><strong>Cobertura y precios base:</strong></p>
                             <ul>
                                 <li>$8.000: Envío estándar en Bogotá (paquetes hasta 2kg y 20x20x20cm).</li>
                                 <li>$12.000: Para Soacha y zonas verdes oscuras en Bogotá (ver mapa de cobertura).</li>
-                                <li>Todo paquete con tarifa plena tendra entre 1 a 2 dias de entrega</li>
                             </ul>
                             <p><strong>⚠️ Importante:</strong></p>
                             <ul>
@@ -198,7 +197,7 @@
                             </ul>
                             <p><strong>Devolución del dinero:</strong></p>
                             <ul>
-                                <li>Máximo en 2 días hábiles después de la entrega.</li>
+                                <li>Máximo en 3 días hábiles después de la entrega.</li>
                                 <li>Métodos: Transferencia a Nequi, Daviplata, Davivienda o Bancolombia (o efectivo si es posible).</li>
                             </ul>
                             <p><strong>Tarifas transparentes:</strong></p>
@@ -235,29 +234,33 @@
                     </div>
                     <div class="service-card">
                         <h3>Servicios Cancelados y/o Devoluciones</h3>
-                        <p>Cuando el cliente no recibe, no aparece y no se logra llevar a cabo la entrega.</p>
+                        <p>En caso de que no se pueda completar la entrega por causas ajenas a Eco BikeMess.</p>
                         <button class="btn-expand" data-service="cancelados">
                             <span>Ver más detalles</span>
                             <span class="arrow">▼</span>
                         </button>
                         <div class="service-details" id="details-cancelados">
-                            <p><strong>Características:</strong></p>
+                            <p><strong>Cancelación Antes de la Entrega:</strong></p>
                             <ul>
-                                <li>Facturación electrónica</li>
-                                <li>Reporte de entregas mensual</li>
-                                <li>Atención prioritaria</li>
+                                <p><strong>Si el cliente cancela el pedido después de que el mensajero ya salió a distribución:</strong></p>
+                                <li>Costo: $5.000 (cubre logística y desplazamiento)</li>
+                                <li>Devolución del paquete: 3 días hábiles</li>
                             </ul>
-                            <p><strong>Características:</strong></p>
+                            <p><strong>Cliente Ausente o no Responde:</strong></p>
                             <ul>
-                                <li>Facturación electrónica</li>
-                                <li>Reporte de entregas mensual</li>
-                                <li>Atención prioritaria</li>
+                                <p><strong>Primer Intento:</strong></p>
+                                <li>Intentamos contacto telefónico o vía WhatsApp</li>
+                                <li>Si no hay respuesta, reprogramamos para el día siguiente sin costo</li>
+                                <p><strong>Segundo Intento:</strong></p>
+                                <li>Si el cliente no ha dado respuesta por llamada o por Whatsapp, se retorna el paquete y se cobra $5.000 por servicio</li>
+                                <li>Devolución: 3 días hábiles</li> 
                             </ul>
-                            <p><strong>Características:</strong></p>
+                            <p><strong>Cliente Rechaza el Paquete:</strong></p>  
+
                             <ul>
-                                <li>Facturación electrónica</li>
-                                <li>Reporte de entregas mensual</li>
-                                <li>Atención prioritaria</li>
+                                <p><strong>Si el destinatario se niega a recibir el envío::</strong></p>
+                                <li>Se cobra el valor completo del servicio ($8.000 o $11.000 según sea entrega o contraentrega)</li>
+                                <li>Devolución del paquete: 3 días hábiles</li>
                             </ul>
                         </div>
                     </div>
