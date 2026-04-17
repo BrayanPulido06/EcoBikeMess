@@ -86,15 +86,13 @@ document.addEventListener('DOMContentLoaded', function() {
             normalized.some(cell => cell.includes('dimensiones del paquete'));
     });
 
-    const generarNumeroGuia = (sequence = null) => {
+    const generarNumeroGuia = () => {
         const date = new Date();
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        const suffix = sequence !== null
-            ? String(sequence).padStart(4, '0')
-            : Math.random().toString(36).substring(2, 7).toUpperCase();
-        return `EBM-${year}/${month}/${day}-${suffix}`;
+        const random = Math.random().toString(36).substring(2, 7).toUpperCase();
+        return `EBM-${year}${month}${day}-${random}`;
     };
 
     const descripcionDimension = (value) => {
@@ -455,7 +453,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 envio_destinatario: sumarEnvio ? 'si' : 'no',
                 costo_total: total,
                 // Generar guía temporal
-                numero_guia: generarNumeroGuia(index + 1)
+                numero_guia: generarNumeroGuia()
             };
 
             bulkData.push(item);
@@ -661,10 +659,125 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         }
     };
 
+    async function descargarPlantillaExcelEstilizada() {
+        if (typeof ExcelJS === 'undefined') {
+            throw new Error('ExcelJS no está disponible');
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet('Plantilla');
+
+        const rows = [
+            ["Numero", "Dimenciones", "Costo adicional"],
+            [1, "Menor o igual a 20 x 20 cm", 0],
+            [2, "Entre 21x21 y 30x30 cm", 2000],
+            [3, "Entre 31x31 y 35x35 cm", 4000],
+            [4, "Entre 36x36 y 40x40 cm", 7000],
+            [5, "Entre 41x41 y 45x45 cm", 10000],
+            [6, "Entre 46x46 y 49x49 cm", 12000],
+            [7, "Igual o mayor a 50 x 50 cm", "Notificar"],
+            [],
+            ["Datos Remitente", "", "", "", "Datos Destinatario", "", "", "", "Información del Paquete", "", "", "", "", "", ""],
+            ["Nombre Completo", "Telefono", "Email de contacto", "Direccion de Origen", "Nombre Completo", "Telefono", "Direccion de Destino", "Observaciones y/o Descripciones", "Pago Contra Entrega (si/no)", "Valor recaudo", "Dimensiones del paquete", "Entrega Mismo Dia (si/no)", "Zona Periférica (si/no)", "Recoger Cambios (si/no)", "Sumar envio al recaudo (si/no)"],
+            ["Ej: Pepito Perez", "1234567890", "pepito@gmail.com", "Carrera 5 #33-22", "Maria Perez", "1234567890", "Calle 4 #23-10 Este", "Ninguna", "si", 100000, 3, "no", "no", "si", "si"]
+        ];
+
+        rows.forEach(row => sheet.addRow(row));
+        sheet.columns = [
+            { width: 18 }, { width: 26 }, { width: 16 }, { width: 22 },
+            { width: 18 }, { width: 14 }, { width: 20 }, { width: 24 },
+            { width: 18 }, { width: 14 }, { width: 16 }, { width: 18 },
+            { width: 16 }, { width: 16 }, { width: 20 }
+        ];
+
+        sheet.mergeCells('A10:D10');
+        sheet.mergeCells('E10:H10');
+        sheet.mergeCells('I10:O10');
+
+        const border = {
+            top: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+        };
+
+        const styleRange = (rowStart, rowEnd, colStart, colEnd, fill, bold = false) => {
+            for (let row = rowStart; row <= rowEnd; row++) {
+                for (let col = colStart; col <= colEnd; col++) {
+                    const cell = sheet.getCell(row, col);
+                    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                    cell.border = border;
+                    if (fill) {
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: fill }
+                        };
+                    }
+                    cell.font = {
+                        bold,
+                        color: { argb: 'FF1F2937' },
+                        size: row === 10 ? 12 : 11
+                    };
+                }
+            }
+        };
+
+        styleRange(1, 8, 1, 3, 'FFFFF2CC', true);
+        styleRange(10, 10, 1, 4, 'FFE8B7E6', true);
+        styleRange(10, 10, 5, 8, 'FFBFE5F3', true);
+        styleRange(10, 10, 9, 15, 'FFF8CBAD', true);
+        styleRange(11, 11, 1, 4, 'FFDFF0D0', true);
+        styleRange(11, 11, 5, 8, 'FFE5F5CC', true);
+        styleRange(11, 11, 9, 15, 'FFFCE4D6', true);
+        styleRange(12, 12, 1, 15, 'FFFFFFFF', false);
+
+        for (let row = 1; row <= 12; row++) {
+            sheet.getRow(row).height = row === 10 ? 24 : 20;
+        }
+
+        const listSheet = workbook.addWorksheet('Listas', { state: 'hidden' });
+        [
+            ["Numero", "Dimension", "Costo"],
+            [1, "Menor o igual a 20 x 20 cm", 0],
+            [2, "Entre 21x21 y 30x30 cm", 2000],
+            [3, "Entre 31x31 y 35x35 cm", 4000],
+            [4, "Entre 36x36 y 40x40 cm", 7000],
+            [5, "Entre 41x41 y 45x45 cm", 10000],
+            [6, "Entre 46x46 y 49x49 cm", 12000],
+            [7, "Igual o mayor a 50 x 50 cm", "Notificar"]
+        ].forEach(row => listSheet.addRow(row));
+
+        for (let row = 12; row <= 1000; row++) {
+            sheet.getCell(`K${row}`).dataValidation = {
+                type: 'list',
+                allowBlank: true,
+                formulae: ['Listas!$A$2:$A$8']
+            };
+        }
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'Plantilla_Envio_EcoBikeMess.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
     // --- DESCARGAR PLANTILLA EXCEL ---
     if (btnDownloadTemplate) {
-        btnDownloadTemplate.addEventListener('click', () => {
+        btnDownloadTemplate.addEventListener('click', async () => {
             try {
+                if (typeof ExcelJS !== 'undefined') {
+                    await descargarPlantillaExcelEstilizada();
+                    return;
+                }
                 const plantillaAoa = [
                     {
                         "Destinatario Nombre": "Ej: María González",
