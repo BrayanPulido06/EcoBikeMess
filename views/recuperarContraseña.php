@@ -27,7 +27,7 @@
         <!-- Cuerpo del formulario -->
         <div class="login-body">
             <!-- Formulario de Recuperación de Contraseña -->
-            <form id="forgotPasswordForm" class="form-container active" action="recovery.php" method="POST">
+            <form id="forgotPasswordForm" class="form-container active" action="views/recovery.php" method="POST">
                     <h2>Recuperar Contraseña</h2>
                     <p class="form-subtitle">Te enviaremos un enlace de recuperación</p>
 

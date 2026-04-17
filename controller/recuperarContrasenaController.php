@@ -49,14 +49,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
     
-    // --- ACCIÓN 2: CAMBIAR CONTRASEÑA (Viene de recovery.php) ---
+    // --- ACCIÓN 2: CAMBIAR CONTRASEÑA (Viene de cambioContraseña.php) ---
     elseif (isset($_POST['token']) && isset($_POST['password'])) {
         $token = $_POST['token'];
         $password = $_POST['password'];
         $confirm_password = $_POST['confirm_password'];
 
         if ($password !== $confirm_password) {
-            header("Location: ../views/recovery.php?token=$token&error=Las contraseñas no coinciden");
+            header("Location: ../views/cambioContraseña.php?token=$token&error=Las contraseñas no coinciden");
             exit();
         }
 
