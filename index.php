@@ -1,8 +1,13 @@
+<?php require_once __DIR__ . '/includes/paths.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="<?php echo htmlspecialchars(app_url('/') . '/', ENT_QUOTES, 'UTF-8'); ?>">
+    <script>
+        window.APP_BASE_PATH = <?php echo json_encode(app_url(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+    </script>
     <title>EcoBikeMess - Mensajería Ecológica en Bicicleta</title>
     <link rel="icon" href="public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="public/css/styles.css">
@@ -101,7 +106,7 @@
                 <a href="#pricing">Cobertura</a>
                 <a href="#contact">Contacto</a>
             </div>
-            <a href="views/login.php" class="btn-login" id="btnLogin">Iniciar Sesión</a>
+            <a href="<?php echo htmlspecialchars(route_url('login'), ENT_QUOTES, 'UTF-8'); ?>" class="btn-login" id="btnLogin">Iniciar Sesión</a>
         </nav>
     </header>
 

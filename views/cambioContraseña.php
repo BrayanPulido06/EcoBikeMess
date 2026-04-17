@@ -1,8 +1,13 @@
+<?php require_once __DIR__ . '/../includes/paths.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="<?php echo htmlspecialchars(app_url('/') . '/', ENT_QUOTES, 'UTF-8'); ?>">
+    <script>
+        window.APP_BASE_PATH = <?php echo json_encode(app_url(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+    </script>
     <title>Restablecer Contraseña - EcoBikeMess</title>
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../public/css/login.css">
@@ -24,7 +29,7 @@
             $token = $_GET['token'] ?? '';
             if (empty($token)) {
                 echo "<div class='form-container active'><p class='error-message' style='display:block; text-align:center;'>Token no válido o faltante.</p>";
-                echo "<div class='form-footer'><a href='login.php' class='link'>Volver al inicio</a></div></div>";
+                echo "<div class='form-footer'><a href='" . htmlspecialchars(route_url('login'), ENT_QUOTES, 'UTF-8') . "' class='link'>Volver al inicio</a></div></div>";
             } else {
             ?>
                 <form action="../controller/recuperarContrasenaController.php" method="POST" class="form-container active">
@@ -51,7 +56,7 @@
                     <button type="submit" class="btn-submit">Cambiar Contraseña</button>
                     
                     <div class="form-footer">
-                        <p><a href="login.php" class="link">Cancelar</a></p>
+                        <p><a href="<?php echo htmlspecialchars(route_url('login'), ENT_QUOTES, 'UTF-8'); ?>" class="link">Cancelar</a></p>
                     </div>
                 </form>
             <?php } ?>

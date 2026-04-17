@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/paths.php';
 function ensureSessionStarted()
 {
     if (session_status() === PHP_SESSION_NONE) {
@@ -15,9 +16,10 @@ function userHasRole($roles)
     return in_array($role, $roles, true);
 }
 
-function requireWebAuth($roles = null, $redirect = '../login.php?error=Debes iniciar sesión.')
+function requireWebAuth($roles = null, $redirect = null)
 {
     ensureSessionStarted();
+    $redirect = $redirect ?? route_url('login', ['error' => 'Debes iniciar sesión.']);
     if (!isset($_SESSION['user_id']) || !userHasRole($roles)) {
         header("Location: {$redirect}");
         exit;

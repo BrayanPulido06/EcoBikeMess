@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/../../includes/paths.php'; ?>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="logo">
@@ -12,42 +13,42 @@
     <nav class="sidebar-nav">
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="../admin/inicioAdmin.php" class="nav-link">
+                <a href="<?php echo htmlspecialchars(route_url('admin.dashboard'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
                     <span class="nav-icon">📊</span>
                     <span class="nav-text">Dashboard</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="../admin/paquetesAdmin.php" class="nav-link">
+                <a href="<?php echo htmlspecialchars(route_url('admin.packages'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
                     <span class="nav-icon">📦</span>
                     <span class="nav-text">Gestión Paquetes</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="../admin/digitarAdmin.php" class="nav-link">
+                <a href="<?php echo htmlspecialchars(route_url('admin.create-shipment'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
                     <span class="nav-icon">📝</span>
                     <span class="nav-text">Digitar Envío</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="../admin/asignarRecolecciones.php" class="nav-link">
+                <a href="<?php echo htmlspecialchars(route_url('admin.collections'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
                     <span class="nav-icon">🚚</span>
                     <span class="nav-text">Recolecciones</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="../admin/facturacionAdmin.php" class="nav-link">
+                <a href="<?php echo htmlspecialchars(route_url('admin.billing'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
                     <span class="nav-icon">f</span>
                     <span class="nav-text">Facturación</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="../admin/añadirAdmin.php" class="nav-link">
+                <a href="<?php echo htmlspecialchars(route_url('admin.users'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
                     <span class="nav-icon">👥</span>
                     <span class="nav-text">Usuarios</span>
                 </a>

@@ -1,8 +1,13 @@
+<?php require_once __DIR__ . '/../includes/paths.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="<?php echo htmlspecialchars(app_url('/') . '/', ENT_QUOTES, 'UTF-8'); ?>">
+    <script>
+        window.APP_BASE_PATH = <?php echo json_encode(app_url(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+    </script>
     <title>Crear Cuenta - EcoBikeMess</title>
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../public/css/crearCuenta.css">
@@ -43,7 +48,7 @@
 <body>
     <div class="register-container">
         <!-- Botón para volver -->
-        <a href="login.php" class="btn-back">
+        <a href="<?php echo htmlspecialchars(route_url('login'), ENT_QUOTES, 'UTF-8'); ?>" class="btn-back">
             <span class="back-arrow">←</span>
             <span>Volver al inicio de sesión</span>
         </a>
@@ -328,7 +333,7 @@
 
         <!-- Footer -->
         <div class="register-footer">
-            <p>¿Ya tienes una cuenta? <a href="login.php" class="link">Iniciar sesión</a></p>
+            <p>¿Ya tienes una cuenta? <a href="<?php echo htmlspecialchars(route_url('login'), ENT_QUOTES, 'UTF-8'); ?>" class="link">Iniciar sesión</a></p>
         </div>
     </div>
 

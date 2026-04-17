@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../includes/paths.php';
 // Asegurarse de que la sesión esté iniciada para acceder a $_SESSION
 if (session_status() === PHP_SESSION_NONE) session_start();
 ?>
@@ -37,14 +38,14 @@ if (session_status() === PHP_SESSION_NONE) session_start();
                 </div>
                 <ul class="dropdown-menu">
                     <li>
-                        <a href="../layouts/miPerfilAdmin.php" class="dropdown-item">
+                        <a href="<?php echo htmlspecialchars(route_url('admin.profile'), ENT_QUOTES, 'UTF-8'); ?>" class="dropdown-item">
                             <span class="dropdown-icon">👤</span>
                             <span>Mi Perfil</span>
                         </a>
                     </li>
                     <li class="dropdown-divider"></li>
                     <li>
-                        <a href="../../controller/logout.php" class="dropdown-item logout">
+                        <a href="<?php echo htmlspecialchars(route_url('logout'), ENT_QUOTES, 'UTF-8'); ?>" class="dropdown-item logout">
                             <span class="dropdown-icon">🚪</span>
                             <span>Cerrar Sesión</span>
                         </a>

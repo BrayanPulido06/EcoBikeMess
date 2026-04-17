@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../includes/paths.php';
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -16,12 +17,12 @@ if ($nombreCompleto === '') {
         <p>Mensajero Activo</p>
     </div>
     <ul class="menu-list">
-        <li><a href="inicioMensajero.php" class="active">📊 Inicio</a></li>
-        <li><a href="misPaquetesMensajeros.php">📦 Mis Paquetes</a></li>
-        <li><a href="historialMensajero.php">📚 Historial</a></li>
-        <li><a href="recoleccionesMensajero.php">📦 Recolecciones</a></li>
-        <li><a href="miPerfilMensajeros.php">👤 Mi Perfil</a></li>
-        <li><a href="../../controller/logout.php" class="logout">🚪 Cerrar Sesión</a></li>
+        <li><a href="<?php echo htmlspecialchars(route_url('messenger.dashboard'), ENT_QUOTES, 'UTF-8'); ?>" class="active">📊 Inicio</a></li>
+        <li><a href="<?php echo htmlspecialchars(route_url('messenger.packages'), ENT_QUOTES, 'UTF-8'); ?>">📦 Mis Paquetes</a></li>
+        <li><a href="<?php echo htmlspecialchars(route_url('messenger.history'), ENT_QUOTES, 'UTF-8'); ?>">📚 Historial</a></li>
+        <li><a href="<?php echo htmlspecialchars(route_url('messenger.pickups'), ENT_QUOTES, 'UTF-8'); ?>">📦 Recolecciones</a></li>
+        <li><a href="<?php echo htmlspecialchars(route_url('messenger.profile'), ENT_QUOTES, 'UTF-8'); ?>">👤 Mi Perfil</a></li>
+        <li><a href="<?php echo htmlspecialchars(route_url('logout'), ENT_QUOTES, 'UTF-8'); ?>" class="logout">🚪 Cerrar Sesión</a></li>
     </ul>
 </nav>
 

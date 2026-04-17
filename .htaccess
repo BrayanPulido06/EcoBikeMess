@@ -3,6 +3,63 @@ RewriteEngine On
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
+# Redirecciones desde rutas físicas antiguas hacia URLs amigables
+RewriteRule ^index\.php$ ./ [R=301,L,NE]
+RewriteRule ^views/login\.php$ login [R=301,L,NE]
+RewriteRule ^views/crearCuenta\.php$ crear-cuenta [R=301,L,NE]
+RewriteRule ^views/recuperarContraseña\.php$ recuperar-contrasena [R=301,L,NE]
+RewriteRule ^views/cambioContraseña\.php$ cambiar-contrasena [R=301,L,NE]
+RewriteRule ^views/Clientes/inicioCliente\.php$ cliente/inicio [R=301,L,NE]
+RewriteRule ^views/Clientes/enviarPaquete\.php$ cliente/enviar-paquete [R=301,L,NE]
+RewriteRule ^views/Clientes/misPedidos\.php$ cliente/mis-pedidos [R=301,L,NE]
+RewriteRule ^views/Clientes/equipoTrabajo\.php$ cliente/equipo-trabajo [R=301,L,NE]
+RewriteRule ^views/Clientes/facturacionCliente\.php$ cliente/facturacion [R=301,L,NE]
+RewriteRule ^views/layouts/miPerfilCliente\.php$ cliente/mi-perfil [R=301,L,NE]
+RewriteRule ^views/admin/inicioAdmin\.php$ admin/inicio [R=301,L,NE]
+RewriteRule ^views/admin/paquetesAdmin\.php$ admin/paquetes [R=301,L,NE]
+RewriteRule ^views/admin/digitarAdmin\.php$ admin/digitar-envio [R=301,L,NE]
+RewriteRule ^views/admin/asignarRecolecciones\.php$ admin/asignar-recolecciones [R=301,L,NE]
+RewriteRule ^views/admin/facturacionAdmin\.php$ admin/facturacion [R=301,L,NE]
+RewriteRule ^views/admin/añadirAdmin\.php$ admin/usuarios [R=301,L,NE]
+RewriteRule ^views/layouts/miPerfilAdmin\.php$ admin/mi-perfil [R=301,L,NE]
+RewriteRule ^views/mensajeros/inicioMensajero\.php$ mensajero/inicio [R=301,L,NE]
+RewriteRule ^views/mensajeros/misPaquetesMensajeros\.php$ mensajero/mis-paquetes [R=301,L,NE]
+RewriteRule ^views/mensajeros/historialMensajero\.php$ mensajero/historial [R=301,L,NE]
+RewriteRule ^views/mensajeros/recoleccionesMensajero\.php$ mensajero/recolecciones [R=301,L,NE]
+RewriteRule ^views/mensajeros/miPerfilMensajeros\.php$ mensajero/mi-perfil [R=301,L,NE]
+RewriteRule ^controller/logout\.php$ logout [R=301,L,NE]
+
+# Mantener acceso directo a archivos y carpetas reales
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# URLs amigables
+RewriteRule ^$ index.php [L,QSA]
+RewriteRule ^login/?$ views/login.php [L,QSA]
+RewriteRule ^crear-cuenta/?$ views/crearCuenta.php [L,QSA]
+RewriteRule ^recuperar-contrasena/?$ views/recuperarContraseña.php [L,QSA]
+RewriteRule ^cambiar-contrasena/?$ views/cambioContraseña.php [L,QSA]
+RewriteRule ^cliente/inicio/?$ views/Clientes/inicioCliente.php [L,QSA]
+RewriteRule ^cliente/enviar-paquete/?$ views/Clientes/enviarPaquete.php [L,QSA]
+RewriteRule ^cliente/mis-pedidos/?$ views/Clientes/misPedidos.php [L,QSA]
+RewriteRule ^cliente/equipo-trabajo/?$ views/Clientes/equipoTrabajo.php [L,QSA]
+RewriteRule ^cliente/facturacion/?$ views/Clientes/facturacionCliente.php [L,QSA]
+RewriteRule ^cliente/mi-perfil/?$ views/layouts/miPerfilCliente.php [L,QSA]
+RewriteRule ^admin/inicio/?$ views/admin/inicioAdmin.php [L,QSA]
+RewriteRule ^admin/paquetes/?$ views/admin/paquetesAdmin.php [L,QSA]
+RewriteRule ^admin/digitar-envio/?$ views/admin/digitarAdmin.php [L,QSA]
+RewriteRule ^admin/asignar-recolecciones/?$ views/admin/asignarRecolecciones.php [L,QSA]
+RewriteRule ^admin/facturacion/?$ views/admin/facturacionAdmin.php [L,QSA]
+RewriteRule ^admin/usuarios/?$ views/admin/añadirAdmin.php [L,QSA]
+RewriteRule ^admin/mi-perfil/?$ views/layouts/miPerfilAdmin.php [L,QSA]
+RewriteRule ^mensajero/inicio/?$ views/mensajeros/inicioMensajero.php [L,QSA]
+RewriteRule ^mensajero/mis-paquetes/?$ views/mensajeros/misPaquetesMensajeros.php [L,QSA]
+RewriteRule ^mensajero/historial/?$ views/mensajeros/historialMensajero.php [L,QSA]
+RewriteRule ^mensajero/recolecciones/?$ views/mensajeros/recoleccionesMensajero.php [L,QSA]
+RewriteRule ^mensajero/mi-perfil/?$ views/mensajeros/miPerfilMensajeros.php [L,QSA]
+RewriteRule ^logout/?$ controller/logout.php [L,QSA]
+
 # Evitar listado de directorios
 Options -Indexes
 

@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/../../includes/paths.php'; ?>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="logo">
@@ -12,21 +13,21 @@
     <nav class="sidebar-nav">
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="../Clientes/inicioCliente.php" class="nav-link">
+                <a href="<?php echo htmlspecialchars(route_url('client.dashboard'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
                     <span class="nav-icon">📊</span>
                     <span class="nav-text">Inicio</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="../Clientes/enviarPaquete.php" class="nav-link">
+                <a href="<?php echo htmlspecialchars(route_url('client.send-package'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
                     <span class="nav-icon">📦</span>
                     <span class="nav-text">Enviar Paquete</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="../Clientes/misPedidos.php" class="nav-link">
+                <a href="<?php echo htmlspecialchars(route_url('client.orders'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
                     <span class="nav-icon">📋</span>
                     <span class="nav-text">Mis Pedidos</span>
                 </a>
@@ -35,7 +36,7 @@
 
             <?php if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'colaborador'): ?>
             <li class="nav-item">
-                <a href="../Clientes/equipoTrabajo.php" class="nav-link">
+                <a href="<?php echo htmlspecialchars(route_url('client.team'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
                     <span class="nav-icon">💬</span>
                     <span class="nav-text">Equipo de Trabajo</span>
                 </a>

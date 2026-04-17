@@ -1,10 +1,15 @@
 // Esperar a que el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', function() {
+    const appBasePath = window.APP_BASE_PATH || '';
+    const appUrl = (path) => {
+        const cleanPath = String(path || '').replace(/^\/+/, '');
+        return cleanPath ? `${appBasePath}/${cleanPath}` : (appBasePath || '/');
+    };
     
     // Funcionalidad del botón de Iniciar Sesión
     const btnLogin = document.getElementById('btnLogin');
     btnLogin.addEventListener('click', function() {
-        window.location.href = btnLogin.getAttribute('href') || 'views/login.php';
+        window.location.href = btnLogin.getAttribute('href') || appUrl('login');
     });
     
     // Funcionalidad para expandir/contraer detalles de servicios

@@ -1,8 +1,13 @@
+<?php require_once __DIR__ . '/../includes/paths.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="<?php echo htmlspecialchars(app_url('/') . '/', ENT_QUOTES, 'UTF-8'); ?>">
+    <script>
+        window.APP_BASE_PATH = <?php echo json_encode(app_url(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+    </script>
     <title>Iniciar Sesión - EcoBikeMess</title>
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../public/css/login.css">
@@ -110,16 +115,16 @@
                             <input type="checkbox" id="rememberMe" name="remember_me" <?php echo isset($_COOKIE['remember_email']) ? 'checked' : ''; ?>>
                             <span>Recordarme</span>
                         </label>
-                        <a href="recuperarContraseña.php" class="link">¿Olvidaste tu contraseña?</a>
+                        <a href="<?php echo htmlspecialchars(route_url('forgot-password'), ENT_QUOTES, 'UTF-8'); ?>" class="link">¿Olvidaste tu contraseña?</a>
                     </div>
 
                     <button type="submit" class="btn-submit">Iniciar Sesión</button>
 
                     <div class="form-footer">
-                        <p>¿No tienes una cuenta? <a href="crearCuenta.php" class="link">Crear cuenta</a></p>
+                        <p>¿No tienes una cuenta? <a href="<?php echo htmlspecialchars(route_url('register'), ENT_QUOTES, 'UTF-8'); ?>" class="link">Crear cuenta</a></p>
                     </div>
                     <!-- Botón para volver -->
-                    <a class="volver" href="../index.php">← Volver al inicio</a>
+                    <a class="volver" href="<?php echo htmlspecialchars(route_url('home'), ENT_QUOTES, 'UTF-8'); ?>">← Volver al inicio</a>
                 </form>
             </div>
         </div>

@@ -1,8 +1,8 @@
 <?php
+require_once __DIR__ . '/../../includes/paths.php';
 session_start();
 if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['cliente', 'colaborador'], true)) {
-    header("Location: ../login.php?error=Debes iniciar sesión.");
-    exit();
+    redirect_route('login', ['error' => 'Debes iniciar sesión.']);
 }
 
 require_once '../../models/inicioClienteModel.php';
@@ -40,6 +40,10 @@ foreach ($chartDataRaw as $row) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="<?php echo htmlspecialchars(app_url('/') . '/', ENT_QUOTES, 'UTF-8'); ?>">
+    <script>
+        window.APP_BASE_PATH = <?php echo json_encode(app_url(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+    </script>
     <title>Dashboard - EcoBikeMess</title>
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
