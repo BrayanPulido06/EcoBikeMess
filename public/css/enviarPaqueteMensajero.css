@@ -1,0 +1,65 @@
+@import url('./enviarPaquete.css');
+
+body {
+    background: #f8fdf9;
+}
+
+.envio-mensajero-main {
+    max-width: 980px;
+    padding-bottom: 2rem;
+}
+
+.envio-mensajero-main .content-container,
+.envio-mensajero-main .bulk-preview-container {
+    margin-top: 0;
+}
+
+.envio-mensajero-header {
+    margin-top: 0.25rem;
+}
+
+.envio-mensajero-main .page-header,
+.envio-mensajero-main .card,
+.envio-mensajero-main .bulk-table,
+.envio-mensajero-main .bulk-summary {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.envio-mensajero-main .header-right .btn-secondary {
+    white-space: nowrap;
+}
+
+@media (min-width: 992px) {
+    .envio-mensajero-main {
+        padding-top: 90px;
+        max-width: 1180px;
+    }
+
+    .side-menu {
+        left: 0;
+    }
+
+    .menu-overlay {
+        display: none !important;
+    }
+
+    .mobile-header {
+        left: 280px;
+        width: calc(100% - 280px);
+    }
+
+    .envio-mensajero-main,
+    #bulkPreviewContainer.bulk-preview-container {
+        margin-left: 300px;
+        margin-right: 20px;
+        max-width: none;
+    }
+}
+
+@media (max-width: 991px) {
+    .envio-mensajero-main .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+}
