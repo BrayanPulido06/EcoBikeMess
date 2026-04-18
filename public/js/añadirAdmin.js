@@ -18,6 +18,7 @@ const PERMISOS_POR_ROL = {
 
 // Helper para verificar si el usuario es administrador (cualquier tipo)
 function isAdmin() {
+    if (currentUser.rol === 'super_admin') return true;
     const rol = String(currentUser.rol || '').toLowerCase();
     return rol.includes('admin') || rol === 'super_admin';
 }
@@ -571,20 +572,26 @@ function verDetallesMensajero(id) {
 
 // Toggle estado mensajero
 async function toggleEstadoMensajero(id) {
-    if (!isAdmin()) {
+    // Si isAdmin falla, intentamos validar contra los roles de BD directamente
+    const rolActual = String(currentUser.rol || '').toLowerCase();
+    if (!isAdmin() && rolActual !== 'administrador') {
         showNotification('No tiene permisos para esta acción', 'error');
         return;
     }
 
     const mensajero = mensajeros.find(m => m.id === id);
-    if (!mensajero) return;
-    
+    if (!mensajero) {
+        showNotification('No se encontró la información del mensajero', 'error');
+        return;
+    }
+
+    // Priorizamos el usuario_id para que el cambio impacte en la tabla 'usuarios'
+    const targetId = mensajero.usuario_id || id;
     const nuevoEstado = (mensajero.estado === 'activo' || mensajero.estado === 'en_ruta') ? 'inactivo' : 'activo';
     
     const formData = new FormData();
     formData.append('action', 'cambiar_estado_admin');
-    // Usamos el usuario_id si está disponible, de lo contrario el id del registro
-    formData.append('id', mensajero.usuario_id || id);
+    formData.append('id', targetId);
     formData.append('estado', nuevoEstado);
 
     try {

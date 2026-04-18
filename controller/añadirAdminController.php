@@ -35,6 +35,14 @@ try {
             $data = $model->getMensajeros();
             // Formatear ubicación para mostrar en tabla
             $formatted = array_map(function($m) {
+                // Aseguramos que el objeto tenga las propiedades que el JS espera
+                $m['id'] = $m['id']; // ID de la tabla mensajeros
+                $m['usuario_id'] = $m['usuario_id'] ?? null; // ID de la tabla usuarios (vital para el estado)
+                $m['nombre'] = $m['nombre'] ?? ($m['nombres'] . ' ' . $m['apellidos']);
+                $m['paquetesAsignados'] = $m['paquetesAsignados'] ?? 0;
+                $m['entregasHoy'] = $m['entregasHoy'] ?? 0;
+                $m['rendimiento'] = $m['rendimiento'] ?? 0;
+
                 $m['ubicacionActual'] = ($m['ubicacion_actual_lat'] && $m['ubicacion_actual_lng']) 
                     ? $m['ubicacion_actual_lat'] . ', ' . $m['ubicacion_actual_lng'] 
                     : 'No disponible';
