@@ -74,6 +74,7 @@ function app_routes(): array
         'admin.users' => 'admin/usuarios',
         'admin.profile' => 'admin/mi-perfil',
         'messenger.dashboard' => 'mensajero/inicio',
+        'messenger.send-package' => 'mensajero/enviar-paquete',
         'messenger.packages' => 'mensajero/mis-paquetes',
         'messenger.history' => 'mensajero/historial',
         'messenger.pickups' => 'mensajero/recolecciones',

@@ -62,7 +62,7 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
 
         <div class="profile-container">
             <form action="../../controller/perfilController.php" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="action" value="update_profile_mensajero">
+                <input type="hidden" name="action" value="update_profile">
                 
                 <!-- Cabecera con Foto -->
                 <div class="profile-card">
@@ -81,6 +81,28 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
                         <h1 class="profile-name" style="text-align: center; margin-top: 10px;"><?php echo htmlspecialchars($usuario['nombres'] . ' ' . $usuario['apellidos']); ?></h1>
                         <div class="profile-role" style="text-align: center; color: #64748b;">
                             Mensajero <?php echo ucfirst($mensajero['estado_aprobacion'] ?? 'Pendiente'); ?>
+                        </div>
+                        <?php if (isset($_GET['mensaje'])): ?>
+                            <div class="alert alert-success" style="margin-top: 15px; display: block; width: fit-content; margin-left: auto; margin-right: auto; padding: 10px 20px;"><?php echo htmlspecialchars($_GET['mensaje']); ?></div>
+                        <?php endif; ?>
+                        <?php if (isset($_GET['error'])): ?>
+                            <div class="alert alert-error" style="margin-top: 15px; display: block; width: fit-content; margin-left: auto; margin-right: auto; padding: 10px 20px;"><?php echo htmlspecialchars($_GET['error']); ?></div>
+                        <?php endif; ?>
+                    </div>
+
+                    <h4 style="margin-top: 2rem; margin-bottom: 1rem; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">ðŸ”’ Cambiar ContraseÃ±a (Opcional)</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>ContraseÃ±a Actual</label>
+                            <input type="password" name="current_password" placeholder="Solo si desea cambiarla">
+                        </div>
+                        <div class="form-group">
+                            <label>Nueva ContraseÃ±a</label>
+                            <input type="password" name="new_password" placeholder="MÃ­nimo 8 caracteres">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirmar Nueva ContraseÃ±a</label>
+                            <input type="password" name="confirm_password">
                         </div>
                     </div>
                 </div>
