@@ -16,6 +16,12 @@ const PERMISOS_POR_ROL = {
     admin_mensajeros: ['asignar_mensajeros', 'gestionar_mensajeros']
 };
 
+// Helper para verificar si el usuario es administrador (cualquier tipo)
+function isAdmin() {
+    const rol = String(currentUser.rol || '').toLowerCase();
+    return rol.includes('admin') || rol === 'super_admin';
+}
+
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
@@ -26,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Inicializar aplicación
 function initializeApp() {
     // Verificar permisos del usuario actual
-    if (currentUser.rol !== 'super_admin' && currentUser.rol !== 'admin' && currentUser.rol !== 'administrador') {
+    if (!isAdmin()) {
         document.getElementById('btnNuevoAdmin').style.display = 'none';
     }
 }
@@ -197,7 +203,7 @@ function renderAdministradores() {
             <td>${formatRelativeTime(admin.ultimoAcceso)}</td>
             <td>
                 <div class="action-buttons">
-                    ${(currentUser.rol === 'super_admin' || currentUser.rol === 'admin' || currentUser.rol === 'administrador') ? `
+                    ${isAdmin() ? `
                         <button class="btn btn-sm btn-info" onclick="editarAdmin(${admin.id})" title="Editar">✏️</button>
                         <button class="btn btn-sm btn-warning" onclick="toggleEstadoAdmin(${admin.id})" title="Cambiar estado">
                             ${admin.estado === 'activo' ? '🔒' : '🔓'}
@@ -307,7 +313,7 @@ function renderLogs() {
 
 // Abrir modal administrador
 function abrirModalAdmin(adminId = null) {
-    if (currentUser.rol !== 'super_admin' && currentUser.rol !== 'admin' && currentUser.rol !== 'administrador') {
+    if (!isAdmin()) {
         showNotification('No tiene permisos para crear administradores', 'error');
         return;
     }
@@ -352,7 +358,7 @@ function editarAdmin(id) {
 async function guardarAdministrador(e) {
     e.preventDefault();
     
-    if (currentUser.rol !== 'super_admin' && currentUser.rol !== 'admin' && currentUser.rol !== 'administrador') {
+    if (!isAdmin()) {
         showNotification('No tiene permisos para esta acción', 'error');
         return;
     }
@@ -406,7 +412,7 @@ async function guardarAdministrador(e) {
 
 // Toggle estado admin
 async function toggleEstadoAdmin(id) {
-    if (currentUser.rol !== 'super_admin' && currentUser.rol !== 'admin' && currentUser.rol !== 'administrador') {
+    if (!isAdmin()) {
         showNotification('No tiene permisos para esta acción', 'error');
         return;
     }
@@ -441,7 +447,7 @@ async function toggleEstadoAdmin(id) {
 
 // Eliminar admin
 async function eliminarAdmin(id) {
-    if (currentUser.rol !== 'super_admin' && currentUser.rol !== 'admin' && currentUser.rol !== 'administrador') {
+    if (!isAdmin()) {
         showNotification('No tiene permisos para esta acción', 'error');
         return;
     }
@@ -565,7 +571,7 @@ function verDetallesMensajero(id) {
 
 // Toggle estado mensajero
 async function toggleEstadoMensajero(id) {
-    if (currentUser.rol !== 'super_admin' && currentUser.rol !== 'admin' && currentUser.rol !== 'administrador') {
+    if (!isAdmin()) {
         showNotification('No tiene permisos para esta acción', 'error');
         return;
     }
@@ -602,7 +608,7 @@ async function toggleEstadoMensajero(id) {
 
 // Eliminar mensajero
 function eliminarMensajero(id) {
-    if (currentUser.rol !== 'super_admin' && currentUser.rol !== 'admin' && currentUser.rol !== 'administrador') {
+    if (!isAdmin()) {
         showNotification('No tiene permisos para esta acción', 'error');
         return;
     }
