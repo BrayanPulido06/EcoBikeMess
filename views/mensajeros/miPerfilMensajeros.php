@@ -2,21 +2,18 @@
 session_start();
 require_once '../../models/conexionGlobal.php';
 
-// Verificar sesión
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'mensajero') {
-    header("Location: ../login.php?error=Debes iniciar sesión.");
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajero') {
+    header('Location: ../login.php?error=Debes iniciar sesion.');
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
 $conn = conexionDB();
 
-// Obtener datos de usuario (Tabla usuarios)
 $stmt = $conn->prepare("SELECT * FROM usuarios WHERE id = :id");
 $stmt->execute([':id' => $user_id]);
 $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Obtener datos de mensajero (Tabla mensajeros)
 $stmtM = $conn->prepare("SELECT * FROM mensajeros WHERE usuario_id = :id");
 $stmtM->execute([':id' => $user_id]);
 $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
@@ -34,10 +31,9 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="../../public/css/responsive.css">
 </head>
 <body>
-    <!-- Header Móvil -->
     <header class="mobile-header">
         <button class="menu-btn" id="menuBtn">
-            <span class="menu-icon">☰</span>
+            <span class="menu-icon">Menu</span>
         </button>
         <div class="header-info">
             <h1><img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:35px;height:35px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
@@ -45,7 +41,6 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
         </div>
     </header>
 
-    <!-- Sidebar -->
     <?php include '../layouts/mensajeroSidebar.php'; ?>
 
     <main class="main-content">
@@ -55,7 +50,7 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
                 <span class="status-text">Perfil Activo</span>
             </div>
             <div class="session-time">
-                <span class="time-icon">👤</span>
+                <span class="time-icon">Perfil</span>
                 <span>Datos del mensajero</span>
             </div>
         </div>
@@ -63,24 +58,23 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
         <div class="profile-container">
             <form action="../../controller/perfilController.php" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="update_profile">
-                
-                <!-- Cabecera con Foto -->
+
                 <div class="profile-card">
                     <div class="profile-bg"></div>
                     <div class="profile-header-content">
                         <div class="avatar-container" style="position: relative; width: 100px; margin: 0 auto;">
-                            <img src="<?php echo !empty($mensajero['foto']) ? $mensajero['foto'] : '../../public/img/default-avatar.png'; ?>" 
-                                 alt="Avatar" class="profile-avatar-large" 
+                            <img src="<?php echo !empty($mensajero['foto']) ? htmlspecialchars($mensajero['foto']) : '../../public/img/default-avatar.png'; ?>"
+                                 alt="Avatar" class="profile-avatar-large"
                                  onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%228%22 r=%224%22 fill=%22%235cb85c%22/%3E%3Cpath d=%22M12 14c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z%22 fill=%22%235cb85c%22/%3E%3C/svg%3E'"
                                  style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                             <label for="foto_perfil" style="position: absolute; bottom: 0; right: 0; background: #2563eb; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                                📷
+                                Foto
                             </label>
                             <input type="file" id="foto_perfil" name="foto_perfil" style="display: none;" accept="image/*">
                         </div>
-                        <h1 class="profile-name" style="text-align: center; margin-top: 10px;"><?php echo htmlspecialchars($usuario['nombres'] . ' ' . $usuario['apellidos']); ?></h1>
+                        <h1 class="profile-name" style="text-align: center; margin-top: 10px;"><?php echo htmlspecialchars(($usuario['nombres'] ?? '') . ' ' . ($usuario['apellidos'] ?? '')); ?></h1>
                         <div class="profile-role" style="text-align: center; color: #64748b;">
-                            Mensajero <?php echo ucfirst($mensajero['estado_aprobacion'] ?? 'Pendiente'); ?>
+                            Mensajero <?php echo htmlspecialchars(ucfirst($mensajero['estado_aprobacion'] ?? 'Pendiente')); ?>
                         </div>
                         <?php if (isset($_GET['mensaje'])): ?>
                             <div class="alert alert-success" style="margin-top: 15px; display: block; width: fit-content; margin-left: auto; margin-right: auto; padding: 10px 20px;"><?php echo htmlspecialchars($_GET['mensaje']); ?></div>
@@ -89,99 +83,92 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
                             <div class="alert alert-error" style="margin-top: 15px; display: block; width: fit-content; margin-left: auto; margin-right: auto; padding: 10px 20px;"><?php echo htmlspecialchars($_GET['error']); ?></div>
                         <?php endif; ?>
                     </div>
+                </div>
 
-                    <h4 style="margin-top: 2rem; margin-bottom: 1rem; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">ðŸ”’ Cambiar ContraseÃ±a (Opcional)</h4>
+                <div class="profile-card">
+                    <h3 class="form-section-title">Informacion Personal</h3>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>ContraseÃ±a Actual</label>
+                            <label>Nombres</label>
+                            <input type="text" name="nombres" value="<?php echo htmlspecialchars($usuario['nombres'] ?? ''); ?>" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Apellidos</label>
+                            <input type="text" name="apellidos" value="<?php echo htmlspecialchars($usuario['apellidos'] ?? ''); ?>" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Telefono</label>
+                            <input type="tel" name="telefono" value="<?php echo htmlspecialchars($usuario['telefono'] ?? ''); ?>" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Correo Electronico</label>
+                            <input type="email" value="<?php echo htmlspecialchars($usuario['correo'] ?? ''); ?>" disabled>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top: 2rem; margin-bottom: 1rem; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">Cambiar Contrasena (Opcional)</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Contrasena Actual</label>
                             <input type="password" name="current_password" placeholder="Solo si desea cambiarla">
                         </div>
                         <div class="form-group">
-                            <label>Nueva ContraseÃ±a</label>
-                            <input type="password" name="new_password" placeholder="MÃ­nimo 8 caracteres">
+                            <label>Nueva Contrasena</label>
+                            <input type="password" name="new_password" placeholder="Minimo 8 caracteres">
                         </div>
                         <div class="form-group">
-                            <label>Confirmar Nueva ContraseÃ±a</label>
+                            <label>Confirmar Nueva Contrasena</label>
                             <input type="password" name="confirm_password">
                         </div>
                     </div>
                 </div>
 
-                <!-- Datos Personales -->
                 <div class="profile-card">
-                    <h3 class="form-section-title">👤 Información Personal</h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Nombres</label>
-                            <input type="text" name="nombres" value="<?php echo htmlspecialchars($usuario['nombres']); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Apellidos</label>
-                            <input type="text" name="apellidos" value="<?php echo htmlspecialchars($usuario['apellidos']); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Teléfono</label>
-                            <input type="tel" name="telefono" value="<?php echo htmlspecialchars($usuario['telefono']); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Correo Electrónico</label>
-                            <input type="email" value="<?php echo htmlspecialchars($usuario['correo']); ?>" disabled>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Datos Operativos -->
-                <div class="profile-card">
-                    <h3 class="form-section-title">📋 Documentación</h3>
+                    <h3 class="form-section-title">Documentacion</h3>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Tipo de Documento</label>
                             <select name="tipo_documento">
-                                <option value="cedula" <?php echo ($mensajero['tipo_documento'] == 'cedula') ? 'selected' : ''; ?>>Cédula de Ciudadanía</option>
-                                <option value="cedula_extranjeria" <?php echo ($mensajero['tipo_documento'] == 'cedula_extranjeria') ? 'selected' : ''; ?>>Cédula de Extranjería</option>
-                                <option value="pasaporte" <?php echo ($mensajero['tipo_documento'] == 'pasaporte') ? 'selected' : ''; ?>>Pasaporte</option>
+                                <option value="cedula" <?php echo (($mensajero['tipo_documento'] ?? '') === 'cedula') ? 'selected' : ''; ?>>Cedula de Ciudadania</option>
+                                <option value="cedula_extranjeria" <?php echo (($mensajero['tipo_documento'] ?? '') === 'cedula_extranjeria') ? 'selected' : ''; ?>>Cedula de Extranjeria</option>
+                                <option value="pasaporte" <?php echo (($mensajero['tipo_documento'] ?? '') === 'pasaporte') ? 'selected' : ''; ?>>Pasaporte</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Número de Documento</label>
+                            <label>Numero de Documento</label>
                             <input type="text" name="numDocumento" value="<?php echo htmlspecialchars($mensajero['numDocumento'] ?? ''); ?>">
                         </div>
                         <div class="form-group">
                             <label>Tipo de Sangre</label>
                             <select name="tipo_sangre">
-                                <?php 
-                                $tipos = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-                                foreach($tipos as $tipo) {
-                                    $selected = ($mensajero['tipo_sangre'] == $tipo) ? 'selected' : '';
-                                    echo "<option value='$tipo' $selected>$tipo</option>";
-                                }
-                                ?>
+                                <?php foreach (['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $tipo): ?>
+                                    <option value="<?php echo $tipo; ?>" <?php echo (($mensajero['tipo_sangre'] ?? '') === $tipo) ? 'selected' : ''; ?>><?php echo $tipo; ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Dirección de Residencia</label>
+                            <label>Direccion de Residencia</label>
                             <input type="text" name="direccion_residencia" value="<?php echo htmlspecialchars($mensajero['direccion_residencia'] ?? ''); ?>">
                         </div>
                         <div class="form-group">
                             <label>Hoja de Vida (PDF)</label>
-                            <?php if(!empty($mensajero['hoja_vida'])): ?>
-                                <a href="<?php echo $mensajero['hoja_vida']; ?>" target="_blank" style="display:block; margin-bottom:5px; color:#2563eb; font-size:0.9rem;">📄 Ver Hoja de Vida Actual</a>
+                            <?php if (!empty($mensajero['hoja_vida'])): ?>
+                                <a href="<?php echo htmlspecialchars($mensajero['hoja_vida']); ?>" target="_blank" style="display:block; margin-bottom:5px; color:#2563eb; font-size:0.9rem;">Ver Hoja de Vida Actual</a>
                             <?php endif; ?>
                             <input type="file" name="hoja_vida" accept=".pdf,.doc,.docx">
                         </div>
                     </div>
                 </div>
 
-                <!-- Vehículo -->
                 <div class="profile-card">
-                    <h3 class="form-section-title">🛵 Vehículo</h3>
+                    <h3 class="form-section-title">Vehiculo</h3>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Tipo de Transporte</label>
                             <select name="tipo_transporte">
-                                <option value="bicicleta" <?php echo ($mensajero['tipo_transporte'] == 'bicicleta') ? 'selected' : ''; ?>>Bicicleta</option>
-                                <option value="moto" <?php echo ($mensajero['tipo_transporte'] == 'moto') ? 'selected' : ''; ?>>Moto</option>
-                                <option value="vehiculo" <?php echo ($mensajero['tipo_transporte'] == 'vehiculo') ? 'selected' : ''; ?>>Vehículo</option>
+                                <option value="bicicleta" <?php echo (($mensajero['tipo_transporte'] ?? '') === 'bicicleta') ? 'selected' : ''; ?>>Bicicleta</option>
+                                <option value="moto" <?php echo (($mensajero['tipo_transporte'] ?? '') === 'moto') ? 'selected' : ''; ?>>Moto</option>
+                                <option value="vehiculo" <?php echo (($mensajero['tipo_transporte'] ?? '') === 'vehiculo') ? 'selected' : ''; ?>>Vehiculo</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -199,22 +186,20 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
                     </div>
                 </div>
 
-                <!-- Contactos de Emergencia -->
                 <div class="profile-card">
-                    <h3 class="form-section-title">🆘 Contactos de Emergencia</h3>
-                    
+                    <h3 class="form-section-title">Contactos de Emergencia</h3>
                     <h4 style="margin: 10px 0; color: #64748b; font-size: 0.9rem;">Contacto Principal</h4>
                     <div class="form-grid">
                         <div class="form-group"><label>Nombre</label><input type="text" name="nombre_emergencia1" value="<?php echo htmlspecialchars($mensajero['nombre_emergencia1'] ?? ''); ?>"></div>
                         <div class="form-group"><label>Apellido</label><input type="text" name="apellido_emergencia1" value="<?php echo htmlspecialchars($mensajero['apellido_emergencia1'] ?? ''); ?>"></div>
-                        <div class="form-group"><label>Teléfono</label><input type="tel" name="telefono_emergencia1" value="<?php echo htmlspecialchars($mensajero['telefono_emergencia1'] ?? ''); ?>"></div>
+                        <div class="form-group"><label>Telefono</label><input type="tel" name="telefono_emergencia1" value="<?php echo htmlspecialchars($mensajero['telefono_emergencia1'] ?? ''); ?>"></div>
                     </div>
 
                     <h4 style="margin: 15px 0 10px; color: #64748b; font-size: 0.9rem; border-top: 1px solid #eee; padding-top: 10px;">Contacto Secundario</h4>
                     <div class="form-grid">
                         <div class="form-group"><label>Nombre</label><input type="text" name="nombre_emergencia2" value="<?php echo htmlspecialchars($mensajero['nombre_emergencia2'] ?? ''); ?>"></div>
                         <div class="form-group"><label>Apellido</label><input type="text" name="apellido_emergencia2" value="<?php echo htmlspecialchars($mensajero['apellido_emergencia2'] ?? ''); ?>"></div>
-                        <div class="form-group"><label>Teléfono</label><input type="tel" name="telefono_emergencia2" value="<?php echo htmlspecialchars($mensajero['telefono_emergencia2'] ?? ''); ?>"></div>
+                        <div class="form-group"><label>Telefono</label><input type="tel" name="telefono_emergencia2" value="<?php echo htmlspecialchars($mensajero['telefono_emergencia2'] ?? ''); ?>"></div>
                     </div>
                 </div>
 

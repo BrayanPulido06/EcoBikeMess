@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 ensureSessionStarted();
-requireWebAuth(['mensajero'], '../views/login.php?error=Debes iniciar sesión.');
+requireWebAuth(['mensajero'], '../views/login.php?error=Debes iniciar sesion.');
 
 require_once '../models/enviarPaqueteMensajeroModels.php';
 
@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $usuario_id = (int) ($_SESSION['user_id'] ?? 0);
         if ($usuario_id <= 0) {
-            throw new Exception('No se pudo identificar el mensajero que crea el envío.');
+            throw new Exception('No se pudo identificar el mensajero que crea el envio.');
         }
 
         $datos = $_POST;
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $datos['costo_total'] = str_replace(['$', '.', ','], '', $datos['costo_total'] ?? '0');
 
         if ($envioModel->verificarGuia((string) $datos['numero_guia'])) {
-            throw new Exception("El número de guía {$datos['numero_guia']} ya existe en el sistema.");
+            throw new Exception("El numero de guia {$datos['numero_guia']} ya existe en el sistema.");
         }
 
         if ($envioModel->registrarEnvio($datos)) {
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
 
-        throw new Exception('Error desconocido al intentar guardar el envío del mensajero.');
+        throw new Exception('Error desconocido al intentar guardar el envio del mensajero.');
     } catch (Exception $e) {
         if (isset($isAjax) && $isAjax) {
             header('Content-Type: application/json; charset=utf-8');

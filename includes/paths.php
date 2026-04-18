@@ -75,6 +75,7 @@ function app_routes(): array
         'admin.profile' => 'admin/mi-perfil',
         'messenger.dashboard' => 'mensajero/inicio',
         'messenger.send-package' => 'mensajero/enviar-paquete',
+        'messenger.orders' => 'mensajero/mis-pedidos',
         'messenger.packages' => 'mensajero/mis-paquetes',
         'messenger.history' => 'mensajero/historial',
         'messenger.pickups' => 'mensajero/recolecciones',

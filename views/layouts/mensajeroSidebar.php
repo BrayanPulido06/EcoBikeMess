@@ -16,14 +16,35 @@ if ($nombreCompleto === '') {
         <h3><?php echo htmlspecialchars($nombreCompleto); ?></h3>
         <p>Mensajero Activo</p>
     </div>
+
     <ul class="menu-list">
-        <li><a href="<?php echo htmlspecialchars(route_url('messenger.dashboard'), ENT_QUOTES, 'UTF-8'); ?>" class="active">Inicio</a></li>
-        <li><a href="<?php echo htmlspecialchars(route_url('messenger.send-package'), ENT_QUOTES, 'UTF-8'); ?>">Crear Envío</a></li>
-        <li><a href="<?php echo htmlspecialchars(route_url('messenger.packages'), ENT_QUOTES, 'UTF-8'); ?>">Mis Paquetes</a></li>
-        <li><a href="<?php echo htmlspecialchars(route_url('messenger.history'), ENT_QUOTES, 'UTF-8'); ?>">Historial</a></li>
-        <li><a href="<?php echo htmlspecialchars(route_url('messenger.pickups'), ENT_QUOTES, 'UTF-8'); ?>">Recolecciones</a></li>
+        <li><a href="<?php echo htmlspecialchars(route_url('messenger.dashboard'), ENT_QUOTES, 'UTF-8'); ?>">Inicio</a></li>
+
+        <li class="menu-group">
+            <button type="button" class="menu-toggle" data-menu-group="mensajeria">
+                <span>Mensajeria</span>
+                <span class="menu-caret">+</span>
+            </button>
+            <ul class="submenu">
+                <li><a href="<?php echo htmlspecialchars(route_url('messenger.pickups'), ENT_QUOTES, 'UTF-8'); ?>">Recolecciones</a></li>
+                <li><a href="<?php echo htmlspecialchars(route_url('messenger.packages'), ENT_QUOTES, 'UTF-8'); ?>">Mis Paquetes</a></li>
+                <li><a href="<?php echo htmlspecialchars(route_url('messenger.history'), ENT_QUOTES, 'UTF-8'); ?>">Historial</a></li>
+            </ul>
+        </li>
+
+        <li class="menu-group">
+            <button type="button" class="menu-toggle" data-menu-group="paqueteria">
+                <span>Paqueteria</span>
+                <span class="menu-caret">+</span>
+            </button>
+            <ul class="submenu">
+                <li><a href="<?php echo htmlspecialchars(route_url('messenger.send-package'), ENT_QUOTES, 'UTF-8'); ?>">Crear envio</a></li>
+                <li><a href="<?php echo htmlspecialchars(route_url('messenger.orders'), ENT_QUOTES, 'UTF-8'); ?>">Mis pedidos</a></li>
+            </ul>
+        </li>
+
         <li><a href="<?php echo htmlspecialchars(route_url('messenger.profile'), ENT_QUOTES, 'UTF-8'); ?>">Mi Perfil</a></li>
-        <li><a href="<?php echo htmlspecialchars(route_url('logout'), ENT_QUOTES, 'UTF-8'); ?>" class="logout">Cerrar Sesión</a></li>
+        <li><a href="<?php echo htmlspecialchars(route_url('logout'), ENT_QUOTES, 'UTF-8'); ?>" class="logout">Cerrar Sesion</a></li>
     </ul>
 </nav>
 

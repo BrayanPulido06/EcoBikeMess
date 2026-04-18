@@ -53,20 +53,29 @@
     padding: 1rem 0;
 }
 
-.menu-list li a {
+.menu-list li a,
+.menu-toggle {
     display: block;
     padding: 1rem 1.5rem;
     color: #2d3e50;
     text-decoration: none;
     font-weight: 500;
     transition: all 0.3s ease;
+    width: 100%;
+    background: transparent;
+    border: none;
+    text-align: left;
+    font-size: 1rem;
+    cursor: pointer;
 }
 
-.menu-list li a:active {
+.menu-list li a:active,
+.menu-toggle:active {
     background: #f8fdf9;
 }
 
-.menu-list li a.active {
+.menu-list li a.active,
+.menu-group.open > .menu-toggle {
     background: linear-gradient(90deg, #e8f5f1 0%, transparent 100%);
     color: #5cb85c;
     border-left: 4px solid #5cb85c;
@@ -74,6 +83,42 @@
 
 .menu-list li a.logout {
     color: #dc3545;
+}
+
+.menu-group {
+    border-top: 1px solid #f3f4f6;
+}
+
+.menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.menu-caret {
+    font-weight: 700;
+    color: #7c8b9a;
+}
+
+.menu-group.open .menu-caret {
+    color: #5cb85c;
+}
+
+.submenu {
+    list-style: none;
+    display: none;
+    padding: 0.25rem 0 0.5rem;
+    background: #fbfefb;
+}
+
+.menu-group.open .submenu {
+    display: block;
+}
+
+.submenu li a {
+    padding: 0.8rem 1.5rem 0.8rem 2.75rem;
+    font-size: 0.95rem;
+    color: #435466;
 }
 
 .menu-overlay {

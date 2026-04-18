@@ -286,7 +286,7 @@ $remitente_data = [
         </div>
         <!-- Content -->
         <div class="content-container" id="mainEnvioContainer">
-            <!-- Mensajes de ValidaciÃ³n y Feedback -->
+            <!-- Mensajes de validacion y feedback -->
             <?php if (isset($_GET['error'])): ?>
                 <div style="background-color: #ffebee; color: #c62828; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ef9a9a; margin-top: 100px;">
                     <strong>Error:</strong> <?php echo htmlspecialchars($_GET['error']); ?>
@@ -294,9 +294,9 @@ $remitente_data = [
             <?php endif; ?>
             <?php if (isset($_GET['msg']) && $_GET['msg'] === 'envio_creado'): ?>
                 <div style="background-color: #e8f5e9; color: #2e7d32; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #a5d6a7; margin-top: 100px;">
-                    <strong>Â¡Ã‰xito!</strong> Su envÃ­o ha sido registrado correctamente.
+                    <strong>Exito!</strong> Su envio ha sido registrado correctamente.
                     <?php if(isset($_GET['guia'])): ?>
-                        <br>NÃºmero de GuÃ­a: <strong><?php echo htmlspecialchars($_GET['guia']); ?></strong>
+                        <br>Numero de Guia: <strong><?php echo htmlspecialchars($_GET['guia']); ?></strong>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
@@ -308,7 +308,7 @@ $remitente_data = [
                 </div>
                 <div class="header-right">
                     <a href="<?php echo htmlspecialchars(route_url('messenger.packages'), ENT_QUOTES, 'UTF-8'); ?>" class="btn-secondary">
-                        <span>ðŸ“‹</span> Ver Mis Paquetes
+                        Ver Mis Paquetes
                     </a>
                 </div>
             </div>
@@ -343,17 +343,17 @@ $remitente_data = [
                 <div class="form-step active" data-step="1">
                     <div class="card">
                         <div class="card-header">
-                            <h2>ðŸ“¤ Datos del Remitente</h2>
+                            <h2>Datos del Remitente</h2>
                             <div style="display: flex; gap: 10px; align-items: center;">
                                 <button type="button" class="btn-text" id="autoFillRemitente">
                                     Usar mis datos
                                 </button>
                                 <input type="file" id="excelUpload" accept=".xlsx, .xls" style="display: none;">
                                 <button type="button" class="btn-text" id="btnUploadExcel" style="color: #2196f3;">
-                                    ðŸ“‚ Cargar Excel
+                                    Cargar Excel
                                 </button>
                                 <button type="button" class="btn-text" id="btnDownloadTemplate" style="color: #28a745;">
-                                    ðŸ“¥ Descargar Plantilla
+                                    Descargar Plantilla
                                 </button>
                             </div>
                         </div>
@@ -365,7 +365,7 @@ $remitente_data = [
                                     <span class="error-message"></span>
                                 </div>
                                 <div class="form-group">
-                                    <label for="remitente_telefono">TelÃ©fono *</label>
+                                    <label for="remitente_telefono">Telefono *</label>
                                     <input type="tel" id="remitente_telefono" name="remitente_telefono" placeholder="300 123 4567" required>
                                     <span class="error-message"></span>
                                 </div>
@@ -376,7 +376,7 @@ $remitente_data = [
                                 <span class="error-message"></span>
                             </div>
                             <div class="form-group">
-                                <label for="remitente_direccion">DirecciÃ³n de Origen Completa *</label>
+                                <label for="remitente_direccion">Direccion de Origen Completa *</label>
                                 <textarea id="remitente_direccion" name="remitente_direccion" rows="3" placeholder="Ej: Calle 123 #45-67, Apto 301, Barrio Centro" required></textarea>
                                 <span class="error-message"></span>
                             </div>
@@ -388,7 +388,7 @@ $remitente_data = [
                 <div class="form-step" data-step="2">
                     <div class="card">
                         <div class="card-header">
-                            <h2>ðŸ“¥ Datos del Destinatario</h2>
+                            <h2>Datos del Destinatario</h2>
                         </div>
                         <div class="card-body">
                             <div class="form-row">
@@ -398,24 +398,24 @@ $remitente_data = [
                                     <span class="error-message"></span>
                                 </div>
                                 <div class="form-group">
-                                    <label for="destinatario_telefono">TelÃ©fono *</label>
+                                    <label for="destinatario_telefono">Telefono *</label>
                                     <input type="tel" id="destinatario_telefono" name="destinatario_telefono" placeholder="3001234567" required maxlength="10" pattern="\d{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                     <span class="error-message"></span>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="destinatario_direccion">DirecciÃ³n de Destino Completa *</label>
+                                <label for="destinatario_direccion">Direccion de Destino Completa *</label>
                                 <textarea id="destinatario_direccion" name="destinatario_direccion" rows="3" placeholder="Ej: Carrera 45 #67-89, Casa 202, Barrio Norte" required></textarea>
                                 <span class="error-message"></span>
                             </div>
                             <div class="form-group">
-                                <label for="instrucciones_entrega">Observaciones y/o DescripciÃ³nes</label>
-                                <textarea id="instrucciones_entrega" name="instrucciones_entrega" rows="3" placeholder="Ej: Tocar el timbre 2 veces, entregar en porterÃ­a, etc."></textarea>
+                                <label for="instrucciones_entrega">Observaciones y/o Descripciones</label>
+                                <textarea id="instrucciones_entrega" name="instrucciones_entrega" rows="3" placeholder="Ej: Tocar el timbre 2 veces, entregar en porteria, etc."></textarea>
                             </div>
                             <div class="form-group">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="tiene_recaudo" name="tiene_recaudo">
-                                    <span>Este envÃ­o tiene recaudo (pago contra entrega)</span>
+                                    <span>Este envio tiene recaudo (pago contra entrega)</span>
                                 </label>
                             </div>
                             <div class="form-group recaudo-field" style="display: none;">
@@ -435,13 +435,13 @@ $remitente_data = [
                 <div class="form-step" data-step="3">
                     <div class="card">
                         <div class="card-header">
-                            <h2>ðŸ“¦ InformaciÃ³n del Paquete</h2>
+                            <h2>Informacion del Paquete</h2>
                         </div>
                         <div class="card-body">
                             <div class="form-group">
                                 <label for="dimensiones_paquete">Dimensiones del Paquete *</label>
                                 <select id="dimensiones_paquete" name="dimensiones_paquete" required>
-                                    <option value="">Seleccionar tamaÃ±o...</option>
+                                    <option value="">Seleccionar tamano...</option>
                                     <option value="0">Menor o igual a 20 x 20 cm</option>
                                     <option value="2000">Entre 21x21 y 30x30 cm (+$2.000)</option>
                                     <option value="4000">Entre 31x31 y 35x35 cm (+$4.000)</option>
@@ -456,29 +456,29 @@ $remitente_data = [
                                 <div class="form-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="envio_mismo_dia" name="envio_mismo_dia">
-                                        <span>Â¿Entrega el mismo dÃ­a? (+$2.000)</span>
+                                        <span>Entrega el mismo dia? (+$2.000)</span>
                                     </label>
                                 </div>
                                 <div class="form-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="zona_periferica" name="zona_periferica">
-                                        <span>Destino Soacha, Usme, C. BolÃ­var o San CristÃ³bal sur (+$4.000)</span>
+                                        <span>Destino Soacha, Usme, C. Bolivar o San Cristobal sur (+$4.000)</span>
                                     </label>
                                 </div>
                                 <div class="form-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="recoger_cambios" name="recoger_cambios">
-                                        <span>Â¿Hay cambios por recoger? (+$5.000)</span>
+                                        <span>Hay cambios por recoger? (+$5.000)</span>
                                     </label>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- CÃ¡lculo de Costo -->
+                    <!-- Calculo de costo -->
                     <div class="card cost-card">
                         <div class="card-header">
-                            <h2>ðŸ’° CÃ¡lculo del Costo</h2>
+                            <h2>Calculo del Costo</h2>
                         </div>
                         <div class="card-body">
                             <div class="cost-breakdown">
@@ -491,11 +491,11 @@ $remitente_data = [
                                     <span id="recargoDimensiones">$0</span>
                                 </div>
                                 <div class="cost-item">
-                                    <span>Entrega mismo dÃ­a:</span>
+                                    <span>Entrega mismo dia:</span>
                                     <span id="recargoMismoDia">$0</span>
                                 </div>
                                 <div class="cost-item">
-                                    <span>Zonas de difÃ­cil acceso:</span>
+                                    <span>Zonas de dificil acceso:</span>
                                     <span id="recargoZona">$0</span>
                                 </div>
                                 <div class="cost-item">
@@ -512,15 +512,15 @@ $remitente_data = [
                                     <span id="costoTotal">$8.000</span>
                                 </div>
                                 
-                                <!-- OpciÃ³n para sumar envÃ­o al recaudo -->
+                                <!-- Opcion para sumar envio al recaudo -->
                                 <div class="form-group" id="container_sumar_envio" style="display: none; margin-top: 25px; border-top: 2px dashed #eee; padding-top: 20px;">
-                                    <label style="font-weight: bold; display: block; margin-bottom: 15px; font-size: 1.1rem; color: #2c3e50;">Â¿Desea sumar el costo del envÃ­o al valor del recaudo? *</label>
+                                    <label style="font-weight: bold; display: block; margin-bottom: 15px; font-size: 1.1rem; color: #2c3e50;">Desea sumar el costo del envio al valor del recaudo? *</label>
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                         <label class="radio-card">
                                             <input type="radio" name="envio_destinatario" value="si" required>
                                             <div class="radio-card-content">
-                                                <strong>SÃ, SUMAR</strong>
-                                                <small>Cobrar envÃ­o al destinatario</small>
+                                                <strong>SI, SUMAR</strong>
+                                                <small>Cobrar envio al destinatario</small>
                                             </div>
                                         </label>
                                         <label class="radio-card">
@@ -537,23 +537,23 @@ $remitente_data = [
 
                                 <!-- Campo oculto para enviar el costo total -->
                                 <input type="hidden" name="costo_total" id="costoTotalHidden" value="8000">
-                                <!-- Campo oculto para enviar el nÃºmero de guÃ­a generado en JS -->
+                                <!-- Campo oculto para enviar el numero de guia generado en JS -->
                                 <input type="hidden" name="numero_guia" id="numeroGuiaHidden">
                             </div>
                             <button type="button" class="btn-text" id="calcularCosto" style="display: none;">
-                                ðŸ”„ Calcular costo
+                                Calcular costo
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- PASO 4: CONFIRMACIÃ“N -->
+                <!-- PASO 4: CONFIRMACION -->
                 <div class="form-step" data-step="4">
                     <div class="card confirmation-card">
                         <div class="card-header">
-                            <h2>âœ“ Confirmar EnvÃ­o</h2>
+                            <h2>Confirmar Envio</h2>
                             <button type="button" class="btn-secondary" id="btnDownloadPDF">
-                                <span>ðŸ“„</span> Descargar GuÃ­a (PDF)
+                                Descargar Guia (PDF)
                             </button>
                         </div>
                         <div class="card-body">
@@ -573,7 +573,7 @@ $remitente_data = [
                                         </tr>
                                         <tr>
                                             <td colspan="2" style="padding-top: 4px;">
-                                                <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUÃA: <span id="numeroGuia" style="font-size: 19px; font-weight: 800; color: #1f2a37;">EBM-2024-XXXXX</span></div>
+                                                <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUIA: <span id="numeroGuia" style="font-size: 19px; font-weight: 800; color: #1f2a37;">EBM-2024-XXXXX</span></div>
                                             </td>
                                         </tr>
                                     </table>
@@ -582,9 +582,9 @@ $remitente_data = [
                                         <tr>
                                             <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
                                                 <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;"> Destinatario</h3>
-                                                <p><strong>DirecciÃ³n:</strong> <span id="confirm_destinatario_direccion" class="rotulo-text-lg bold"></span></p>
+                                                <p><strong>Direccion:</strong> <span id="confirm_destinatario_direccion" class="rotulo-text-lg bold"></span></p>
                                                 <p><strong>Nombre:</strong> <span id="confirm_destinatario_nombre" class="rotulo-text-lg bold"></span></p>
-                                                <p><strong>TelÃ©fono:</strong> <span id="confirm_destinatario_telefono" class="rotulo-text-lg bold"></span></p>
+                                                <p><strong>Telefono:</strong> <span id="confirm_destinatario_telefono" class="rotulo-text-lg bold"></span></p>
                                                 <p><strong>Observaciones:</strong> <span id="confirm_destinatario_observaciones" class="rotulo-text-lg bold"></span></p>
                                             </td>
                                             <td style="width: 4%;"></td>
@@ -625,17 +625,17 @@ $remitente_data = [
                     </div>
                 </div>
 
-                <!-- Botones de NavegaciÃ³n -->
+                <!-- Botones de navegacion -->
                 <div class="form-navigation">
                     <button type="button" class="btn-secondary" id="btnPrevious" style="display: none;">
-                        â† Anterior
+                        Anterior
                     </button>
                     <div class="nav-spacer"></div>
                     <button type="button" class="btn-primary" id="btnNext">
-                        Siguiente â†’
+                        Siguiente
                     </button>
                     <button type="submit" class="btn-success" id="btnSubmit" style="display: none;">
-                        âœ“ Confirmar EnvÃ­o
+                        Confirmar Envio
                     </button>
                 </div>
             </form>
@@ -646,19 +646,19 @@ $remitente_data = [
     <div id="bulkPreviewContainer" class="content-container bulk-preview-container" style="display: none;">
         <div class="card">
             <div class="card-header">
-                <h2>ðŸ“¦ Carga Masiva de EnvÃ­os</h2>
+                <h2>Carga Masiva de Envios</h2>
                 <div class="header-actions">
-                    <button type="button" class="btn-text" id="btnCancelBulk" style="color: #dc3545;">âŒ Cancelar</button>
-                    <button type="button" class="btn-primary" id="btnProcessBulk">ðŸš€ Procesar Todos</button>
+                    <button type="button" class="btn-text" id="btnCancelBulk" style="color: #dc3545;">Cancelar</button>
+                    <button type="button" class="btn-primary" id="btnProcessBulk">Procesar Todos</button>
                 </div>
             </div>
             <div class="card-body">
-                <p class="bulk-summary">Se han detectado mÃºltiples envÃ­os. Revisa la informaciÃ³n cargada antes de procesar.</p>
+                <p class="bulk-summary">Se han detectado multiples envios. Revisa la informacion cargada antes de procesar.</p>
                 <div class="table-responsive">
                     <table class="bulk-table">
                         <thead>
                             <tr>
-                                <th>GuÃ­a</th>
+                                <th>Guia</th>
                                 <th>Remitente</th>
                                 <th>Destinatario</th>
                                 <th>Paquete</th>
@@ -676,13 +676,13 @@ $remitente_data = [
 
     </main>
 
-    <!-- Modal WhatsApp (Agregado dinÃ¡micamente) -->
+    <!-- Modal WhatsApp -->
     <div id="whatsappModal" class="modal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
         <div class="modal-content" style="background: white; padding: 30px; border-radius: 15px; text-align: center; max-width: 400px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); animation: fadeIn 0.3s;">
             <span class="close-wa-modal" style="position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #aaa;">&times;</span>
-            <div style="font-size: 50px; margin-bottom: 15px;">ðŸ“¦</div>
+            <div style="font-size: 50px; margin-bottom: 15px;">Paquete</div>
             <h3 style="margin-bottom: 15px; color: #333;">Dimensiones Especiales</h3>
-            <p style="margin-bottom: 25px; color: #666;">Para paquetes de 50x50 cm o mÃ¡s, por favor contÃ¡ctanos directamente para coordinar el envÃ­o.</p>
+            <p style="margin-bottom: 25px; color: #666;">Para paquetes de 50x50 cm o mas, por favor contactanos directamente para coordinar el envio.</p>
             <a href="https://wa.link/49g8jg" target="_blank" class="btn-whatsapp" style="background-color: #25D366; color: white; padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 10px; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2);">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382C17.117 14.205 15.374 13.349 15.049 13.231C14.724 13.113 14.488 13.054 14.252 13.408C14.016 13.762 13.337 14.559 13.13 14.795C12.924 15.031 12.717 15.06 12.363 14.883C12.009 14.706 10.867 14.332 9.514 13.125C8.455 12.181 7.74 11.016 7.533 10.662C7.326 10.308 7.511 10.116 7.689 9.939C7.847 9.781 8.04 9.529 8.217 9.323C8.394 9.117 8.453 8.969 8.571 8.733C8.689 8.497 8.63 8.291 8.541 8.114C8.452 7.937 7.744 6.195 7.449 5.487C7.162 4.798 6.87 4.892 6.653 4.892C6.456 4.892 6.23 4.892 6.004 4.892C5.778 4.892 5.413 4.976 5.108 5.309C4.803 5.642 3.947 6.448 3.947 8.08C3.947 9.712 5.137 11.292 5.304 11.518C5.471 11.744 7.664 15.125 11.021 16.574C11.819 16.919 12.442 17.125 12.926 17.278C13.88 17.58 14.746 17.536 15.426 17.434C16.183 17.321 17.758 16.481 18.083 15.567C18.408 14.653 18.408 13.887 18.29 13.68C18.172 13.474 17.827 13.415 17.472 13.238V14.382ZM12.046 21.957C10.266 21.957 8.593 21.485 7.127 20.654L6.812 20.467L3.047 21.453L4.052 17.78L3.845 17.45C2.92 15.979 2.432 14.278 2.432 12.518C2.432 7.213 6.748 2.897 12.051 2.897C14.62 2.897 17.035 3.897 18.85 5.712C20.665 7.527 21.665 9.942 21.665 12.511C21.665 17.816 17.349 22.132 12.046 21.957Z" fill="white"/></svg>
                 WhatsApp +57 312318019
@@ -694,7 +694,7 @@ $remitente_data = [
         // Pasar datos de PHP a JavaScript para autocompletar
         window.remitenteData = <?php echo json_encode($remitente_data, JSON_UNESCAPED_UNICODE); ?>;
     </script>
-    <!-- LibrerÃ­as para QR con logo y para generar PDF -->
+    <!-- Librerias para QR con logo y para generar PDF -->
     <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

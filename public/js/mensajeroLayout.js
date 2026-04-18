@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Desactivar Service Worker/caché agresiva en secciones de mensajero (evita que el móvil cargue CSS/JS viejos)
     try {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(regs => {
@@ -29,15 +28,33 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    const currentFile = window.location.pathname.split('/').pop();
-    if (!currentFile || !sideMenu) {
+    if (!sideMenu) {
         return;
     }
 
+    const currentPath = window.location.pathname.replace(/\/+$/, '');
+    const currentFile = currentPath.split('/').pop();
+
     sideMenu.querySelectorAll('a').forEach(function (link) {
         const href = link.getAttribute('href') || '';
-        const linkFile = href.split('/').pop();
-        const isCurrent = linkFile === currentFile;
+        const normalizedHref = href.replace(/\/+$/, '');
+        const linkFile = normalizedHref.split('/').pop();
+        const isCurrent = normalizedHref === currentPath || linkFile === currentFile;
         link.classList.toggle('active', isCurrent);
+
+        if (isCurrent) {
+            const group = link.closest('.menu-group');
+            if (group) {
+                group.classList.add('open');
+            }
+        }
+    });
+
+    sideMenu.querySelectorAll('.menu-toggle').forEach(function (toggle) {
+        toggle.addEventListener('click', function () {
+            const group = toggle.closest('.menu-group');
+            if (!group) return;
+            group.classList.toggle('open');
+        });
     });
 });
