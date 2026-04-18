@@ -346,8 +346,7 @@
                 <h2 id="privacyPolicyTitle">Confidencialidad y Protección de Datos</h2>
             </div>
             <div class="policy-modal-body">
-                <p><strong>ECOBIKES</strong> se compromete a mantener estricta confidencialidad sobre toda la información personal de los clientes de <strong>EFECTO ANGEL S.A.S.</strong> como nombres, direcciones, teléfonos y datos de compra, a la que tenga acceso para la ejecución del servicio.</p>
-                <p>Esta información solo podrá ser utilizada para fines logísticos y no podrá ser cedida, vendida o divulgada a terceros, dando cumplimiento a la <strong>Ley 1581 de 2012</strong> de Protección de Datos Personales (Habeas Data).</p>
+                <p>"En <strong>ECOBIKEMESS</strong> garantizamos la confidencialidad y protección de la información personal de nuestros clientes. Los datos proporcionados serán utilizados exclusivamente para la gestión y ejecución de los servicios contratados, bajo estrictos estándares de seguridad. Nos comprometemos a no compartir, vender ni divulgar dicha información a terceros sin autorización, cumpliendo con la normativa vigente  la <strong>Ley 1581 de 2012</strong> en materia de protección de datos personales.</p>
             </div>
             <div class="policy-modal-actions">
                 <button type="button" class="policy-modal-btn" id="privacyPolicyAccept">Entendido</button>
