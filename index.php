@@ -371,9 +371,9 @@
             <div class="container">
                 <h2>Contáctanos</h2>
                 <div class="contact-grid">
-                    <a href="https://wa.link/49g8jg" class="whatsapp-container" target="_blank">
+                    <a href="https://wa.link/49g8jg" class="whatsapp-container" target="_blank" style="text-decoration: none; color: inherit;">
                     <div class="contact-item">
-                        <div class="contact-icon"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width: 100px; height: 100px;"></div>
+                        <div class="contact-icon"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width: 90px; height: 90px;"></div>
                         <h3>Nuestro WhatsApp</h3>
                         
                         <p>+57 31235180619</p>
