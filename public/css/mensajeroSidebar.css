@@ -54,7 +54,7 @@
 }
 
 .menu-list li a,
-.menu-toggle {
+.menu-section-title {
     display: block;
     padding: 1rem 1.5rem;
     color: #2d3e50;
@@ -63,19 +63,15 @@
     transition: all 0.3s ease;
     width: 100%;
     background: transparent;
-    border: none;
     text-align: left;
     font-size: 1rem;
-    cursor: pointer;
 }
 
-.menu-list li a:active,
-.menu-toggle:active {
+.menu-list li a:active {
     background: #f8fdf9;
 }
 
-.menu-list li a.active,
-.menu-group.open > .menu-toggle {
+.menu-list li a.active {
     background: linear-gradient(90deg, #e8f5f1 0%, transparent 100%);
     color: #5cb85c;
     border-left: 4px solid #5cb85c;
@@ -89,30 +85,45 @@
     border-top: 1px solid #f3f4f6;
 }
 
-.menu-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.menu-caret {
+.menu-section-title {
+    position: relative;
+    margin: 1rem 1.5rem 0.35rem;
+    padding: 0 0 0.65rem 1rem;
+    width: calc(100% - 3rem);
+    font-size: 1.08rem;
     font-weight: 700;
-    color: #7c8b9a;
+    letter-spacing: 0.02em;
+    color: #36a853;
+    text-transform: uppercase;
+    cursor: default;
 }
 
-.menu-group.open .menu-caret {
-    color: #5cb85c;
+.menu-section-title::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.15rem;
+    width: 4px;
+    height: 1.05rem;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #5cb85c 0%, #2f9e44 100%);
+}
+
+.menu-section-title::after {
+    content: "";
+    position: absolute;
+    left: 1rem;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(92, 184, 92, 0.35) 0%, rgba(92, 184, 92, 0) 100%);
 }
 
 .submenu {
     list-style: none;
-    display: none;
+    display: block;
     padding: 0.25rem 0 0.5rem;
     background: #fbfefb;
-}
-
-.menu-group.open .submenu {
-    display: block;
 }
 
 .submenu li a {

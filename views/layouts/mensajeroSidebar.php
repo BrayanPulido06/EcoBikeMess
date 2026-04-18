@@ -21,10 +21,7 @@ if ($nombreCompleto === '') {
         <li><a href="<?php echo htmlspecialchars(route_url('messenger.dashboard'), ENT_QUOTES, 'UTF-8'); ?>">Inicio</a></li>
 
         <li class="menu-group">
-            <button type="button" class="menu-toggle" data-menu-group="mensajeria">
-                <span>Mensajeria</span>
-                <span class="menu-caret">+</span>
-            </button>
+            <div class="menu-section-title">Mensajeria</div>
             <ul class="submenu">
                 <li><a href="<?php echo htmlspecialchars(route_url('messenger.pickups'), ENT_QUOTES, 'UTF-8'); ?>">Recolecciones</a></li>
                 <li><a href="<?php echo htmlspecialchars(route_url('messenger.packages'), ENT_QUOTES, 'UTF-8'); ?>">Mis Paquetes</a></li>
@@ -33,10 +30,7 @@ if ($nombreCompleto === '') {
         </li>
 
         <li class="menu-group">
-            <button type="button" class="menu-toggle" data-menu-group="paqueteria">
-                <span>Paqueteria</span>
-                <span class="menu-caret">+</span>
-            </button>
+            <div class="menu-section-title">Paqueteria</div>
             <ul class="submenu">
                 <li><a href="<?php echo htmlspecialchars(route_url('messenger.send-package'), ENT_QUOTES, 'UTF-8'); ?>">Crear envio</a></li>
                 <li><a href="<?php echo htmlspecialchars(route_url('messenger.orders'), ENT_QUOTES, 'UTF-8'); ?>">Mis pedidos</a></li>
