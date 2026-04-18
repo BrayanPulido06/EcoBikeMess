@@ -324,6 +324,117 @@ body {
     text-decoration: underline;
 }
 
+.policy-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 2000;
+}
+
+.policy-modal.active {
+    display: flex;
+}
+
+.policy-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+}
+
+.policy-modal-dialog {
+    position: relative;
+    width: min(100%, 680px);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 22px;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.22);
+    padding: 1.75rem;
+    animation: policyModalIn 0.22s ease;
+}
+
+.policy-modal-header {
+    padding-right: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.policy-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: #e8f5f1;
+    color: #2f9e44;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.85rem;
+}
+
+.policy-modal-header h2 {
+    color: #1f3347;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.policy-modal-body {
+    color: #4b5d70;
+    line-height: 1.7;
+    font-size: 1rem;
+}
+
+.policy-modal-body p + p {
+    margin-top: 1rem;
+}
+
+.policy-modal-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.policy-modal-btn {
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #5cb85c 0%, #4cae4c 100%);
+    color: white;
+    font-size: 0.98rem;
+    font-weight: 600;
+    padding: 0.85rem 1.35rem;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(92, 184, 92, 0.25);
+}
+
+.policy-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+@keyframes policyModalIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 /* Info box */
 .info-box {
     background: #e8f5f1;
@@ -477,6 +588,27 @@ body {
 
     .register-form h2 {
         font-size: 1.3rem;
+    }
+
+    .policy-modal {
+        padding: 16px;
+    }
+
+    .policy-modal-dialog {
+        padding: 1.25rem;
+        border-radius: 18px;
+    }
+
+    .policy-modal-header h2 {
+        font-size: 1.25rem;
+    }
+
+    .policy-modal-actions {
+        justify-content: stretch;
+    }
+
+    .policy-modal-btn {
+        width: 100%;
     }
 }
 

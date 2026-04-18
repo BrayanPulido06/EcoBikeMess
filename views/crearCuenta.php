@@ -324,7 +324,7 @@
             <div class="form-group checkbox-group">
                 <label class="checkbox-label">
                     <input type="checkbox" id="terms" required>
-                    <span>Acepto los <a href="#" class="link">términos y condiciones</a> y la <a href="#" class="link">política de privacidad</a></span>
+                    <span>Acepto los <a href="#" class="link">términos y condiciones</a> y la <a href="#" class="link" id="privacyPolicyLink">política de privacidad</a></span>
                 </label>
             </div>
 
@@ -334,6 +334,24 @@
         <!-- Footer -->
         <div class="register-footer">
             <p>¿Ya tienes una cuenta? <a href="<?php echo htmlspecialchars(route_url('login'), ENT_QUOTES, 'UTF-8'); ?>" class="link">Iniciar sesión</a></p>
+        </div>
+    </div>
+
+    <div class="policy-modal" id="privacyPolicyModal" aria-hidden="true">
+        <div class="policy-modal-backdrop" data-close-policy-modal></div>
+        <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="privacyPolicyTitle">
+            <button type="button" class="policy-modal-close" id="privacyPolicyClose" aria-label="Cerrar modal">×</button>
+            <div class="policy-modal-header">
+                <span class="policy-badge">Privacidad</span>
+                <h2 id="privacyPolicyTitle">Confidencialidad y Protección de Datos</h2>
+            </div>
+            <div class="policy-modal-body">
+                <p><strong>ECOBIKES</strong> se compromete a mantener estricta confidencialidad sobre toda la información personal de los clientes de <strong>EFECTO ANGEL S.A.S.</strong> como nombres, direcciones, teléfonos y datos de compra, a la que tenga acceso para la ejecución del servicio.</p>
+                <p>Esta información solo podrá ser utilizada para fines logísticos y no podrá ser cedida, vendida o divulgada a terceros, dando cumplimiento a la <strong>Ley 1581 de 2012</strong> de Protección de Datos Personales (Habeas Data).</p>
+            </div>
+            <div class="policy-modal-actions">
+                <button type="button" class="policy-modal-btn" id="privacyPolicyAccept">Entendido</button>
+            </div>
         </div>
     </div>
 
