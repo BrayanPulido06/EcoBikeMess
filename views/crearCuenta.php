@@ -324,7 +324,7 @@
             <div class="form-group checkbox-group">
                 <label class="checkbox-label">
                     <input type="checkbox" id="terms" required>
-                    <span>Acepto los <a href="#" class="link">términos y condiciones</a> y la <a href="#" class="link" id="privacyPolicyLink">política de privacidad</a></span>
+                    <span>Acepto los <a href="#" class="link" id="termsConditionsLink">términos y condiciones</a> y la <a href="#" class="link" id="privacyPolicyLink">política de privacidad</a></span>
                 </label>
             </div>
 
@@ -334,6 +334,29 @@
         <!-- Footer -->
         <div class="register-footer">
             <p>¿Ya tienes una cuenta? <a href="<?php echo htmlspecialchars(route_url('login'), ENT_QUOTES, 'UTF-8'); ?>" class="link">Iniciar sesión</a></p>
+        </div>
+    </div>
+
+    <div class="policy-modal" id="termsConditionsModal" aria-hidden="true">
+        <div class="policy-modal-backdrop" data-close-terms-modal></div>
+        <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="termsConditionsTitle">
+            <button type="button" class="policy-modal-close" id="termsConditionsClose" aria-label="Cerrar modal">×</button>
+            <div class="policy-modal-header">
+                <span class="policy-badge">Términos</span>
+                <h2 id="termsConditionsTitle">Términos y Condiciones</h2>
+            </div>
+            <div class="policy-modal-body">
+                <p>Al registrarte en <strong>EcoBikeMess</strong>, aceptas suministrar información real, completa y actualizada para la creación y administración de tu cuenta como cliente o mensajero.</p>
+                <p>Los usuarios cliente son responsables de registrar correctamente los datos de remitente, destinatario, direcciones, teléfonos, contenido del envío y cualquier instrucción especial necesaria para la entrega o recolección del paquete.</p>
+                <p>Los usuarios mensajeros autorizan el tratamiento y validación de la documentación cargada en la plataforma, incluyendo foto personal, documento de identidad, contactos de emergencia y, cuando aplique, documentos del vehículo como licencia, SOAT y tecnomecánica.</p>
+                <p>EcoBikeMess podrá usar la información registrada para operar el servicio, validar identidades, asignar recolecciones o entregas, hacer seguimiento logístico, brindar soporte y mantener evidencia de las operaciones realizadas dentro de la plataforma.</p>
+                <p>El usuario se compromete a hacer un uso adecuado de la plataforma, a no registrar información falsa, a no suplantar terceros y a no utilizar el servicio para actividades ilegales, mercancías prohibidas o situaciones que puedan poner en riesgo a clientes, mensajeros o a la empresa.</p>
+                <p>La aceptación de este registro no garantiza aprobación automática. EcoBikeMess podrá verificar la información suministrada y rechazar, suspender o cancelar cuentas cuando detecte inconsistencias, incumplimientos o riesgos operativos y de seguridad.</p>
+                <p>Al continuar, aceptas también que las condiciones del servicio, cobertura, tiempos estimados, validaciones y procesos internos pueden actualizarse para mejorar la operación, la seguridad y el cumplimiento legal de la plataforma.</p>
+            </div>
+            <div class="policy-modal-actions">
+                <button type="button" class="policy-modal-btn" id="termsConditionsAccept">Entendido</button>
+            </div>
         </div>
     </div>
 

@@ -9,42 +9,76 @@
     const fotoInput = document.getElementById('mensajero_foto');
     const fotoPreviewContainer = document.getElementById('foto-preview-container');
     const fotoPreviewImg = document.getElementById('foto-preview-img');
+    const termsConditionsLink = document.getElementById('termsConditionsLink');
+    const termsConditionsModal = document.getElementById('termsConditionsModal');
+    const termsConditionsClose = document.getElementById('termsConditionsClose');
+    const termsConditionsAccept = document.getElementById('termsConditionsAccept');
     const privacyPolicyLink = document.getElementById('privacyPolicyLink');
     const privacyPolicyModal = document.getElementById('privacyPolicyModal');
     const privacyPolicyClose = document.getElementById('privacyPolicyClose');
     const privacyPolicyAccept = document.getElementById('privacyPolicyAccept');
 
-    function openPrivacyPolicyModal() {
-        if (!privacyPolicyModal) return;
-        privacyPolicyModal.classList.add('active');
-        privacyPolicyModal.setAttribute('aria-hidden', 'false');
+    function openInfoModal(modal) {
+        if (!modal) return;
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
     }
 
-    function closePrivacyPolicyModal() {
-        if (!privacyPolicyModal) return;
-        privacyPolicyModal.classList.remove('active');
-        privacyPolicyModal.setAttribute('aria-hidden', 'true');
+    function closeInfoModal(modal) {
+        if (!modal) return;
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
     }
 
-    privacyPolicyLink?.addEventListener('click', function(e) {
+    termsConditionsLink?.addEventListener('click', function(e) {
         e.preventDefault();
-        openPrivacyPolicyModal();
+        openInfoModal(termsConditionsModal);
     });
 
-    privacyPolicyClose?.addEventListener('click', closePrivacyPolicyModal);
-    privacyPolicyAccept?.addEventListener('click', closePrivacyPolicyModal);
+    termsConditionsClose?.addEventListener('click', function() {
+        closeInfoModal(termsConditionsModal);
+    });
+
+    termsConditionsAccept?.addEventListener('click', function() {
+        closeInfoModal(termsConditionsModal);
+    });
+
+    privacyPolicyLink?.addEventListener('click', function(e) {
+        e.preventDefault();
+        openInfoModal(privacyPolicyModal);
+    });
+
+    privacyPolicyClose?.addEventListener('click', function() {
+        closeInfoModal(privacyPolicyModal);
+    });
+
+    privacyPolicyAccept?.addEventListener('click', function() {
+        closeInfoModal(privacyPolicyModal);
+    });
+
+    termsConditionsModal?.addEventListener('click', function(e) {
+        if (e.target && e.target.hasAttribute('data-close-terms-modal')) {
+            closeInfoModal(termsConditionsModal);
+        }
+    });
 
     privacyPolicyModal?.addEventListener('click', function(e) {
         if (e.target && e.target.hasAttribute('data-close-policy-modal')) {
-            closePrivacyPolicyModal();
+            closeInfoModal(privacyPolicyModal);
         }
     });
 
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && privacyPolicyModal?.classList.contains('active')) {
-            closePrivacyPolicyModal();
+        if (e.key !== 'Escape') return;
+
+        if (termsConditionsModal?.classList.contains('active')) {
+            closeInfoModal(termsConditionsModal);
+        }
+
+        if (privacyPolicyModal?.classList.contains('active')) {
+            closeInfoModal(privacyPolicyModal);
         }
     });
 
