@@ -564,20 +564,40 @@ function verDetallesMensajero(id) {
 }
 
 // Toggle estado mensajero
-function toggleEstadoMensajero(id) {
+async function toggleEstadoMensajero(id) {
+    if (currentUser.rol !== 'super_admin' && currentUser.rol !== 'admin') {
+        showNotification('No tiene permisos para esta acción', 'error');
+        return;
+    }
+
     const mensajero = mensajeros.find(m => m.id === id);
     if (!mensajero) return;
     
-    if (mensajero.estado === 'activo' || mensajero.estado === 'en_ruta') {
-        mensajero.estado = 'inactivo';
-    } else {
-        mensajero.estado = 'activo';
-    }
+    const nuevoEstado = (mensajero.estado === 'activo' || mensajero.estado === 'en_ruta') ? 'inactivo' : 'activo';
     
-    registrarLog('editar', `Estado de mensajero ${mensajero.nombre} cambiado`);
-    renderMensajeros();
-    actualizarEstadisticas();
-    showNotification('Estado actualizado', 'success');
+    const formData = new FormData();
+    formData.append('action', 'cambiar_estado_admin');
+    // Usamos el usuario_id si está disponible, de lo contrario el id del registro
+    formData.append('id', mensajero.usuario_id || id);
+    formData.append('estado', nuevoEstado);
+
+    try {
+        const response = await fetch('../../controller/añadirAdminController.php', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(result.message, 'success');
+            loadInitialData(); // Recarga los datos para refrescar la tabla y estadísticas
+        } else {
+            showNotification(result.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Error al cambiar estado del mensajero', 'error');
+    }
 }
 
 // Eliminar mensajero
