@@ -281,7 +281,6 @@
                             <p><strong>Tarifas simples:</strong></p>
                             <ul>
                                 <li>$2.000 Incluye: embalaje + sellado + rotulado* con los datos del cliente.</li>
-                                <li>$1.000: Solo rotulado (si el paquete ya está empacado).</li>
                             </ul>
                             <p><strong>Datos requeridos:</strong></p>
                             <ul>
@@ -314,44 +313,36 @@
                             <p><strong>¿Cómo funciona?</strong></p>
                             <ul>
                                 <li>Primeros 20 minutos: Incluidos en el servicio sin costo adicional.</li>
-                                <li>Después de 20 minutos: Se aplica un recargo de $2.000 por cada 10 minutos de espera.</li>
+                                <li>Después de 21 minutos: Se aplica un recargo de $2.000 por cada 10 minutos de espera.</li>
                             </ul>
                             <p><strong> Recomendaciones:</strong></p>
                             <ul>
                                 <li>Programa entregas con tiempo suficiente para evitar esperas.</li>
                                 <li>Comunica cambios de horario con anticipación.</li>
                             </ul>
-                            <p><strong>Mensaje amigable:</strong></p>
-                            <ul>
-                                <li>"Valoramos el tiempo de todos. ¡Coordina con tu destinatario para que todo esté listo al llegar nuestro mensajero!🚴💨"</li>
-                            </ul>
+                            <p>"Valoramos el tiempo de todos. ¡Coordina con tu destinatario para que todo esté listo al llegar nuestro mensajero!🚴💨"</p>
                         </div>
                     </div>
                     <div class="service-card">
                         <h3>Adicionales</h3>
-                        <p>Informacion a tener en cuenta.</p>
+                        <p>Información Requerida al Programar:</p>
                         <button class="btn-expand" data-service="adicionales">
                             <span>Ver más detalles</span>
                             <span class="arrow">▼</span>
                         </button>
                         <div class="service-details" id="details-adicionales">
-                            <p><strong>Características:</strong></p>
+                            <p><strong>🚫 Restricciones Importantes:</strong></p>
                             <ul>
-                                <li>Facturación electrónica</li>
-                                <li>Reporte de entregas mensual</li>
-                                <li>Atención prioritaria</li>
+                                <li>No transportamos: Alimentos perecederos, vidrios, cerámicas u objetos frágiles sin embalaje seguro.</li>
+                                <li>No nos hacemos responsables por paquetes dejados en portería o con el cliente si no están sellados correctamente.</li>
+                                <li>Sellado obligatorio, Evita pérdidas o malentendidos en la entrega</li>
                             </ul>
-                            <p><strong>Características:</strong></p>
+                            <p><strong>para tiendas o quien solicite el servicio:</strong></p>
+                            <p>Ayúdanos a garantizar que tu envío llegue seguro y a tiempo. Proporciona todos los detalles del paquete y asegúrate de que esté bien sellado. ¡Juntos hacemos logística eficiente! 🚴‍♂️📦</p>
+                            <p><strong>💲 Tarifas Adicionales:</strong></p>
                             <ul>
-                                <li>Facturación electrónica</li>
-                                <li>Reporte de entregas mensual</li>
-                                <li>Atención prioritaria</li>
-                            </ul>
-                            <p><strong>Características:</strong></p>
-                            <ul>
-                                <li>Facturación electrónica</li>
-                                <li>Reporte de entregas mensual</li>
-                                <li>Atención prioritaria</li>
+                                <li>📏 Paquetes sobredimensionados: Se calculan bajo la Tarifa Oportuna + ajuste por peso/volumen.</li>
+                                <li>💰 Compras en efectivo: Si requieres que el mensajero retire dinero (ej: para compras), tiene un adicional de $5.000 (no adelantamos o prestamos dinero para compras).</li>
                             </ul>
                         </div>
                     </div>
@@ -380,12 +371,14 @@
             <div class="container">
                 <h2>Contáctanos</h2>
                 <div class="contact-grid">
+                    <a href="https://wa.link/49g8jg" class="whatsapp-container" target="_blank">
                     <div class="contact-item">
-                        <div class="contact-icon">📞</div>
+                        <div class="contact-icon"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp"></div>
                         <h3>Nuestro WhatsApp</h3>
                         
                         <p>+57 31235180619</p>
                     </div>
+                    </a>
                     <div class="contact-item">
                         <div class="contact-icon">✉️</div>
                         <h3>Email</h3>
