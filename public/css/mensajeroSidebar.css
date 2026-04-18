@@ -90,10 +90,10 @@
     margin: 1rem 1.5rem 0.35rem;
     padding: 0 0 0.65rem 1rem;
     width: calc(100% - 3rem);
-    font-size: 1.08rem;
-    font-weight: 700;
+    font-size: 1.12rem;
+    font-weight: 800;
     letter-spacing: 0.02em;
-    color: #36a853;
+    color: #2f9e44;
     text-transform: uppercase;
     cursor: default;
 }

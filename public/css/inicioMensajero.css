@@ -43,18 +43,13 @@ body {
 }
 
 .menu-icon {
-    display: flex;
-    flex-direction: column;
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
-    gap: 5px;
-}
-
-.menu-icon span {
-    display: block;
-    width: 24px;
-    height: 2.5px;
-    border-radius: 999px;
-    background: #18212b;
+    color: #111827;
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 700;
 }
 
 .menu-btn:active, .notif-btn:active {
