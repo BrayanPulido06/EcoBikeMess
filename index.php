@@ -280,7 +280,7 @@
                         <div class="service-details" id="details-extra">
                             <p><strong>Tarifas simples:</strong></p>
                             <ul>
-                                <li>$2.000 Incluye: embalaje + sellado + rotulado* con los datos del cliente.</li>
+                                <li><strong>$2.000 Incluye:</strong> embalaje + sellado + rotulado* con los datos del cliente.</li>
                             </ul>
                             <p><strong>Datos requeridos:</strong></p>
                             <ul>
@@ -291,9 +291,9 @@
                             </ul>
                             <p><strong>Beneficios:</strong></p>
                             <ul>
-                                <li>Prevención de pérdidas: Etiquetamos claramente tu paquete.</li>
-                                <li>Protección básica: Sellado seguro para evitar aperturas accidentales.</li>
-                                <li>Ahorro de tiempo: Nos ocupamos de lo técnico, tú enfócate en lo importante</li>
+                                <li><strong>Prevención de pérdidas:</strong> Etiquetamos claramente tu paquete.</li>
+                                <li><strong>Protección básica:</strong> Sellado seguro para evitar aperturas accidentales.</li>
+                                <li><strong>Ahorro de tiempo:</strong> Nos ocupamos de lo técnico, tú enfócate en lo importante</li>
                             </ul>
                             <p><strong>⚠️ No Embalamos:</strong></p>
                             <ul>
@@ -312,8 +312,8 @@
                         <div class="service-details" id="details-espera">
                             <p><strong>¿Cómo funciona?</strong></p>
                             <ul>
-                                <li>Primeros 20 minutos: Incluidos en el servicio sin costo adicional.</li>
-                                <li>Después de 21 minutos: Se aplica un recargo de $2.000 por cada 10 minutos de espera.</li>
+                                <li><strong>Primeros 20 minutos:</strong> Incluidos en el servicio sin costo adicional.</li>
+                                <li><strong>Después de 21 minutos:</strong> Se aplica un recargo de $2.000 por cada 10 minutos de espera.</li>
                             </ul>
                             <p><strong> Recomendaciones:</strong></p>
                             <ul>
@@ -333,7 +333,7 @@
                         <div class="service-details" id="details-adicionales">
                             <p><strong>🚫 Restricciones Importantes:</strong></p>
                             <ul>
-                                <li>No transportamos: Alimentos perecederos, vidrios, cerámicas u objetos frágiles sin embalaje seguro.</li>
+                                <li><strong>No transportamos:</strong> Alimentos perecederos, vidrios, cerámicas u objetos frágiles sin embalaje seguro.</li>
                                 <li>No nos hacemos responsables por paquetes dejados en portería o con el cliente si no están sellados correctamente.</li>
                                 <li>Sellado obligatorio, Evita pérdidas o malentendidos en la entrega</li>
                             </ul>
@@ -341,8 +341,8 @@
                             <p>Ayúdanos a garantizar que tu envío llegue seguro y a tiempo. Proporciona todos los detalles del paquete y asegúrate de que esté bien sellado. ¡Juntos hacemos logística eficiente! 🚴‍♂️📦</p>
                             <p><strong>💲 Tarifas Adicionales:</strong></p>
                             <ul>
-                                <li>📏 Paquetes sobredimensionados: Se calculan bajo la Tarifa Oportuna + ajuste por peso/volumen.</li>
-                                <li>💰 Compras en efectivo: Si requieres que el mensajero retire dinero (ej: para compras), tiene un adicional de $5.000 (no adelantamos o prestamos dinero para compras).</li>
+                                <li><strong>📏 Paquetes sobredimensionados:</strong> Se calculan bajo la Tarifa Oportuna + ajuste por peso/volumen.</li>
+                                <li><strong>💰 Compras en efectivo:</strong> Si requieres que el mensajero retire dinero (ej: para compras), tiene un adicional de $5.000 (no adelantamos o prestamos dinero para compras).</li>
                             </ul>
                         </div>
                     </div>
