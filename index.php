@@ -143,13 +143,13 @@
                         <div class="service-details" id="details-express">
                             <p><strong>Entregas:</strong></p>
                             <ul>
-                                <li>Mismo día o siguiente: Gestionamos tu pedido en el transcurso del día (sin horario fijo).</li>
+                                <li><strong>Mismo día o siguiente:</strong> Gestionamos tu pedido en el transcurso del día (sin horario fijo).</li>
                                 <li>Prioridad same-day: Asegura tu envío el mismo día por un adicional de $2.000.</li>
                             </ul>
                             <p><strong>Cobertura y precios base:</strong></p>
                             <ul>
-                                <li>$8.000: Envío estándar en Bogotá (paquetes hasta 2kg y 20x20x20cm).</li>
-                                <li>$12.000: Para Soacha y zonas verdes oscuras en Bogotá (ver mapa de cobertura).</li>
+                                <li><strong>$8.000:</strong> Envío estándar en Bogotá (paquetes hasta 2kg y 20x20x20cm).</li>
+                                <li><strong>$12.000:</strong> Para Soacha y zonas verdes oscuras en Bogotá (ver mapa de cobertura).</li>
                             </ul>
                             <p><strong>⚠️ Importante:</strong></p>
                             <ul>
@@ -170,7 +170,7 @@
                         <div class="service-details" id="details-corporate">
                             <p><strong>Valor del servicio:</strong></p>
                             <ul>
-                                <li>$12.000: Cubre los primeros 7 km (desde el punto de recogida hasta la entrega).</li>
+                                <li><strong>$12.000:</strong> Cubre los primeros 7 km (desde el punto de recogida hasta la entrega).</li>
                                 <li>$1.500 Por cada km adicional.</li>
                             </ul>
                             <p><strong>Especificaciones del paquete:</strong></p>
@@ -181,8 +181,8 @@
                             <p><strong>¿Cómo funciona?</strong></p>
                             <ul>
                                 <li>Asignamos un mensajero exclusivo para gestionar tu envío.</li>
-                                <li>Entrega express: Lo más rápido posible o en el horario que nos indiques.</li>
-                                <li>Ruta optimizada: Calculamos la tarifa con base en la distancia real (Google Maps/Waze).</li>
+                                <li><strong>Entrega express:</strong> Lo más rápido posible o en el horario que nos indiques.</li>
+                                <li><strong>Ruta optimizada:</strong> Calculamos la tarifa con base en la distancia real (Google Maps/Waze).</li>
                             </ul>
                         </div>
                     </div>
@@ -228,8 +228,8 @@
                             </ul>
                             <p><strong>Tarifas:</strong></p>
                             <ul>
-                                <li>Retorno en 3 días hábiles: $5.000 adicionales al servicio original.</li>
-                                <li>Retorno al día siguiente: Aplica tarifa normal (Emprendedor u Oportuna).</li>
+                                <li><strong>Retorno en 3 días hábiles:</strong> $5.000 adicionales al servicio original.</li>
+                                <li><strong>Retorno al día siguiente:</strong> Aplica tarifa normal (Emprendedor u Oportuna).</li>
                             </ul>
                             <p><strong>⚠️ Importante:</strong></p>
                             <ul>
