@@ -79,6 +79,7 @@ function app_routes(): array
         'messenger.packages' => 'mensajero/mis-paquetes',
         'messenger.history' => 'mensajero/historial',
         'messenger.pickups' => 'mensajero/recolecciones',
+        'messenger.billing' => 'mensajero/facturacion',
         'messenger.profile' => 'mensajero/mi-perfil',
         'logout' => 'logout',
     ];

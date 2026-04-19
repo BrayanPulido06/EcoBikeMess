@@ -327,6 +327,25 @@ CREATE TABLE IF NOT EXISTS detalle_facturas (
     FOREIGN KEY (paquete_id) REFERENCES paquetes(id)
 );
 
+    CREATE TABLE IF NOT EXISTS facturacion (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        paquete_id INT NOT NULL UNIQUE,
+        cliente_id INT NOT NULL,
+        mensajero_id INT NULL,
+        valor_pago_mensajero DECIMAL(10,2) NOT NULL DEFAULT 7000.00,
+        mostrar_al_mensajero BOOLEAN NOT NULL DEFAULT FALSE,
+        observaciones_admin TEXT NULL,
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (paquete_id) REFERENCES paquetes(id) ON DELETE CASCADE,
+        FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+        FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id) ON DELETE SET NULL
+    );
+
+CREATE INDEX idx_facturacion_cliente ON facturacion(cliente_id);
+CREATE INDEX idx_facturacion_mensajero ON facturacion(mensajero_id);
+CREATE INDEX idx_facturacion_visible ON facturacion(mostrar_al_mensajero);
+
 CREATE TABLE IF NOT EXISTS pagos (
     id INT PRIMARY KEY AUTO_INCREMENT,
     factura_id INT NOT NULL,

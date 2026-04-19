@@ -145,7 +145,7 @@
             <div id="camposCliente" style="display: <?php echo (($_GET['tipo'] ?? 'cliente') === 'mensajero') ? 'none' : 'block'; ?>;">
                 <h2>Información del Emprendimiento</h2>
                 <div class="form-group">
-                    <label for="cliente_nombre_emprendimiento">Nombre del Emprendimiento *</label>
+                    <label for="cliente_nombre_emprendimiento">Nombre de del Emprendimiento/Empresa *</label>
                     <input type="text" id="cliente_nombre_emprendimiento" name="nombre_emprendimiento">
                     <span class="error-message"></span>
                 </div>

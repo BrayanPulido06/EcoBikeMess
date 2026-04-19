@@ -1,256 +1,164 @@
 <?php
-/**
- * facturacionAdmin.php
- * Módulo de facturación administrativa — Clientes y Mensajeros
- * Requiere sesión activa con rol admin
- */
-
-// session_start();
-// if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'admin') {
-//     header('Location: login.php');
-//     exit;
-// }
+require_once __DIR__ . '/../../includes/paths.php';
+require_once __DIR__ . '/../../includes/auth.php';
+requireWebAuth(['admin', 'administrador']);
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Facturación Admin</title>
-  <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
-  <link rel="stylesheet" href="../../public/css/facturacionAdmin.css">
-  <link rel="stylesheet" href="../../public/css/responsive.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facturación Admin - EcoBikeMess</title>
+    <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
+    <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
+    <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
+    <link rel="stylesheet" href="../../public/css/responsive.css">
+    <link rel="stylesheet" href="../../public/css/facturacionPanel.css">
 </head>
-<body>
+<body class="facturacion-page">
+    <?php include '../layouts/adminNavbar.php'; ?>
+    <?php include '../layouts/adminSidebar.php'; ?>
 
-<!-- ══ HEADER ══════════════════════════════════════════════════════════════ -->
-<header class="app-header">
-  <div class="logo">
-    <span>📦</span>
-    Facturación Admin
-  </div>
-  <div class="header-meta" id="headerDate"></div>
-</header>
+    <main class="facturacion-shell">
+        <section
+            id="facturacionApp"
+            data-mode="admin"
+            data-endpoint="../../controller/facturacionAdminController.php"
+        >
+            <div class="facturacion-top">
+                <div>
+                    <h1>Facturación administrativa</h1>
+                    <p>Consulta el saldo actual, la facturación hacia clientes y el valor a pagar a mensajeros.</p>
+                </div>
+                <div class="facturacion-role-badge">Administrador</div>
+            </div>
 
-<!-- ══ MAIN ════════════════════════════════════════════════════════════════ -->
-<main class="main-container">
+            <div class="facturacion-tabs">
+                <button class="facturacion-tab active" data-switch-panel="cliente">Clientes</button>
+                <button class="facturacion-tab" data-switch-panel="mensajero">Mensajeros</button>
+            </div>
 
-  <!-- TABS DE ROL -->
-  <div class="role-tabs">
-    <button class="role-tab active" data-role="clientes" onclick="FacturacionAdmin.switchRole('clientes')">
-      <span class="tab-icon">🏪</span>
-      Clientes
-      <span class="tab-badge" id="badgeClientes">—</span>
-    </button>
-    <button class="role-tab" data-role="mensajeros" onclick="FacturacionAdmin.switchRole('mensajeros')">
-      <span class="tab-icon">🛵</span>
-      Mensajeros
-      <span class="tab-badge" id="badgeMensajeros">—</span>
-    </button>
-  </div>
+            <section data-panel="cliente">
+                <div id="summary-cliente" class="facturacion-summary"></div>
+                <div class="facturacion-card">
+                    <div class="facturacion-filters">
+                        <div class="facturacion-field">
+                            <label>Buscar</label>
+                            <input type="text" placeholder="Guía, cliente o destinatario" data-panel-filter="cliente" data-filter-field="q">
+                        </div>
+                        <div class="facturacion-field">
+                            <label>Estado</label>
+                            <select data-panel-filter="cliente" data-filter-field="estado">
+                                <option value="">Todos</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="asignado">Asignado</option>
+                                <option value="en_transito">En tránsito</option>
+                                <option value="en_ruta">En ruta</option>
+                                <option value="entregado">Entregado</option>
+                                <option value="cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                        <div class="facturacion-field">
+                            <label>Desde</label>
+                            <input type="date" data-panel-filter="cliente" data-filter-field="desde">
+                        </div>
+                        <div class="facturacion-field">
+                            <label>Hasta</label>
+                            <input type="date" data-panel-filter="cliente" data-filter-field="hasta">
+                        </div>
+                        <div class="facturacion-actions">
+                            <button class="fact-btn secondary" type="button" data-reset-panel="cliente">Limpiar filtros</button>
+                        </div>
+                    </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       PANEL CLIENTES
-  ══════════════════════════════════════════════════════════════════════════ -->
-  <div class="panel active" id="panel-clientes">
+                    <div class="facturacion-table-wrap">
+                        <table class="facturacion-table">
+                            <thead>
+                                <tr>
+                                    <th>Número guía</th>
+                                    <th>Cliente</th>
+                                    <th>Destinatario</th>
+                                    <th>Paquetes por día</th>
+                                    <th>Valor envío</th>
+                                    <th>Agregado al recaudo</th>
+                                    <th>Valor recaudo</th>
+                                    <th>Recaudo real</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-cliente" data-loading>
+                                <tr><td colspan="10" class="loading-state">Cargando información...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="facturacion-footnote">Facturación hacia cliente. Aquí se refleja el valor del envío, si fue sumado al recaudo y el valor recaudado realmente.</div>
+                    <div class="facturacion-footnote" id="count-cliente">0 registros</div>
+                </div>
+            </section>
 
-    <!-- Filtros clientes -->
-    <div class="filters-bar">
-      <div class="filter-group">
-        <label>Buscar cliente / destinatario</label>
-        <input type="text" id="fClienteNombre" placeholder="Nombre…" oninput="FacturacionAdmin.applyFilters('clientes')">
-      </div>
-      <div class="filter-group">
-        <label>Desde</label>
-        <input type="date" id="fClienteDesde" onchange="FacturacionAdmin.applyFilters('clientes')">
-      </div>
-      <div class="filter-group">
-        <label>Hasta</label>
-        <input type="date" id="fClienteHasta" onchange="FacturacionAdmin.applyFilters('clientes')">
-      </div>
-      <div class="filter-actions">
-        <button class="btn btn-ghost" onclick="FacturacionAdmin.clearFilters('clientes')">↺ Limpiar</button>
-      </div>
-    </div>
+            <section data-panel="mensajero" class="panel-hidden">
+                <div id="summary-mensajero" class="facturacion-summary"></div>
+                <div class="facturacion-card">
+                    <div class="facturacion-filters">
+                        <div class="facturacion-field">
+                            <label>Buscar</label>
+                            <input type="text" placeholder="Guía, cliente o mensajero" data-panel-filter="mensajero" data-filter-field="q">
+                        </div>
+                        <div class="facturacion-field">
+                            <label>Estado</label>
+                            <select data-panel-filter="mensajero" data-filter-field="estado">
+                                <option value="">Todos</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="asignado">Asignado</option>
+                                <option value="en_transito">En tránsito</option>
+                                <option value="en_ruta">En ruta</option>
+                                <option value="entregado">Entregado</option>
+                                <option value="cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                        <div class="facturacion-field">
+                            <label>Desde</label>
+                            <input type="date" data-panel-filter="mensajero" data-filter-field="desde">
+                        </div>
+                        <div class="facturacion-field">
+                            <label>Hasta</label>
+                            <input type="date" data-panel-filter="mensajero" data-filter-field="hasta">
+                        </div>
+                        <div class="facturacion-actions">
+                            <button class="fact-btn secondary" type="button" data-reset-panel="mensajero">Limpiar filtros</button>
+                        </div>
+                    </div>
 
-    <!-- Tabla clientes -->
-    <div class="table-wrapper">
-      <div class="table-header-bar">
-        <div class="table-title">
-          📋 Envíos de clientes
-          <span class="table-count" id="countClientes">—</span>
-        </div>
-      </div>
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>Nº Guía</th>
-              <th>Destinatario</th>
-              <th>Recaudo</th>
-              <th>Recaudado</th>
-              <th>Costo envío</th>
-              <th>En recaudo</th>
-              <th>Fecha envío</th>
-              <th>Fecha entrega</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tbodyClientes">
-            <tr><td colspan="10"><div class="empty-state"><div class="empty-icon">⏳</div><p>Cargando…</p></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+                    <div class="facturacion-table-wrap">
+                        <table class="facturacion-table">
+                            <thead>
+                                <tr>
+                                    <th>Número guía</th>
+                                    <th>Mensajero</th>
+                                    <th>Cliente</th>
+                                    <th>Paquetes por día</th>
+                                    <th>Valor envío</th>
+                                    <th>Agregado al recaudo</th>
+                                    <th>Valor recaudo</th>
+                                    <th>Recaudo real</th>
+                                    <th>Estado</th>
+                                    <th>Pago mensajero</th>
+                                    <th>Configurar pago / mostrar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-mensajero" data-loading>
+                                <tr><td colspan="11" class="loading-state">Cargando información...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="facturacion-footnote">El valor a pagar al mensajero arranca en $7.000 y puede modificarse por paquete. El botón “Mostrar” habilita su visualización para el mensajero.</div>
+                    <div class="facturacion-footnote" id="count-mensajero">0 registros</div>
+                </div>
+            </section>
+        </section>
+    </main>
 
-  </div><!-- /panel-clientes -->
-
-
-  <!-- ══════════════════════════════════════════════════════════════════════
-       PANEL MENSAJEROS
-  ══════════════════════════════════════════════════════════════════════════ -->
-  <div class="panel" id="panel-mensajeros">
-
-    <!-- Sub-tabs -->
-    <div class="sub-tabs">
-      <button class="sub-tab active" data-sub="recolecciones" onclick="FacturacionAdmin.switchSub('recolecciones')">
-        📥 Recolecciones
-      </button>
-      <button class="sub-tab" data-sub="entregas" onclick="FacturacionAdmin.switchSub('entregas')">
-        📤 Entregas
-      </button>
-    </div>
-
-    <!-- ── SUB-PANEL RECOLECCIONES ── -->
-    <div class="sub-panel active" id="sub-recolecciones">
-
-      <div class="filters-bar">
-        <div class="filter-group">
-          <label>Buscar mensajero</label>
-          <input type="text" id="fRecolNombre" placeholder="Nombre del mensajero…" oninput="FacturacionAdmin.applyFilters('recolecciones')">
-        </div>
-        <div class="filter-group">
-          <label>Desde</label>
-          <input type="date" id="fRecolDesde" onchange="FacturacionAdmin.applyFilters('recolecciones')">
-        </div>
-        <div class="filter-group">
-          <label>Hasta</label>
-          <input type="date" id="fRecolHasta" onchange="FacturacionAdmin.applyFilters('recolecciones')">
-        </div>
-        <div class="filter-actions">
-          <button class="btn btn-ghost" onclick="FacturacionAdmin.clearFilters('recolecciones')">↺ Limpiar</button>
-        </div>
-      </div>
-
-      <div class="table-wrapper">
-        <div class="table-header-bar">
-          <div class="table-title">
-            📥 Recolecciones
-            <span class="table-count" id="countRecolecciones">—</span>
-          </div>
-        </div>
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Mensajero</th>
-                <th>Dirección de recogida</th>
-                <th>Cliente</th>
-                <th>Paquetes</th>
-                <th>Números de guía</th>
-                <th>Fecha asignación</th>
-                <th>Fecha recolección</th>
-              </tr>
-            </thead>
-            <tbody id="tbodyRecolecciones">
-              <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">⏳</div><p>Cargando…</p></div></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-    </div><!-- /sub-recolecciones -->
-
-    <!-- ── SUB-PANEL ENTREGAS ── -->
-    <div class="sub-panel" id="sub-entregas">
-
-      <div class="filters-bar">
-        <div class="filter-group">
-          <label>Buscar mensajero</label>
-          <input type="text" id="fEntregaNombre" placeholder="Nombre del mensajero…" oninput="FacturacionAdmin.applyFilters('entregas')">
-        </div>
-        <div class="filter-group">
-          <label>Desde</label>
-          <input type="date" id="fEntregaDesde" onchange="FacturacionAdmin.applyFilters('entregas')">
-        </div>
-        <div class="filter-group">
-          <label>Hasta</label>
-          <input type="date" id="fEntregaHasta" onchange="FacturacionAdmin.applyFilters('entregas')">
-        </div>
-        <div class="filter-actions">
-          <button class="btn btn-ghost" onclick="FacturacionAdmin.clearFilters('entregas')">↺ Limpiar</button>
-        </div>
-      </div>
-
-      <div class="table-wrapper">
-        <div class="table-header-bar">
-          <div class="table-title">
-            📤 Entregas
-            <span class="table-count" id="countEntregas">—</span>
-          </div>
-        </div>
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Mensajero</th>
-                <th>Nº Guía</th>
-                <th>Destinatario</th>
-                <th>Recaudo</th>
-                <th>Recaudado</th>
-                <th>Observaciones</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="tbodyEntregas">
-              <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">⏳</div><p>Cargando…</p></div></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-    </div><!-- /sub-entregas -->
-
-  </div><!-- /panel-mensajeros -->
-
-</main>
-
-
-<!-- ══ MODAL UNIVERSAL ═══════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-head" id="modalHead">
-      <h3 id="modalTitle">Detalle</h3>
-      <button class="modal-close" onclick="FacturacionAdmin.closeModal()">✕</button>
-    </div>
-    <div class="modal-body" id="modalBody"></div>
-    <div class="modal-foot" id="modalFoot"></div>
-  </div>
-</div>
-
-<!-- ══ TOASTS ═════════════════════════════════════════════════════════════ -->
-<div class="toast-container" id="toastContainer"></div>
-
-<!-- ══ SCRIPTS ════════════════════════════════════════════════════════════ -->
-<script src="../../public/js/facturacionAdmin.js"></script>
-
-<!-- Activar sub-panels correctamente en CSS -->
-<style>
-  .sub-panel { display: none; animation: fadeIn 0.25s ease; }
-  .sub-panel.active { display: block; }
-</style>
-
+    <script src="../../public/js/facturacionPanel.js"></script>
 </body>
 </html>

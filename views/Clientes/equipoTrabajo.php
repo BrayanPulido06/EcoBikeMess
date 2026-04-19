@@ -114,17 +114,11 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                         <label class="checkbox-label">
                             <input type="checkbox" name="perm_paquetes" checked> Crear Paquetes
                         </label>
-                        <label class="checkbox-label">
+                        <!--<label class="checkbox-label">
                             <input type="checkbox" name="perm_facturas"> Ver Facturas
-                        </label>
+                        </label> -->
                         <label class="checkbox-label">
-                            <input type="checkbox" name="perm_comprobantes" checked> Ver Comprobantes
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="perm_recolecciones" checked> Gestionar Recolecciones
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="perm_reportes"> Ver Reportes
+                            <input type="checkbox" name="perm_comprobantes" checked> Ver Pedidos
                         </label>
                         <label class="checkbox-label">
                             <input type="checkbox" name="perm_perfil"> Editar Perfil Tienda

@@ -1,24 +1,21 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
-requireApiAuth(['cliente', 'colaborador'], 'No autorizado');
+requireApiAuth(['mensajero'], 'No autorizado');
 require_once __DIR__ . '/../models/facturacionModels.php';
-require_once __DIR__ . '/../models/Colaborador.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
 try {
-    $colabHelper = new Colaborador();
-    $clienteId = $colabHelper->obtenerClienteId((int) $_SESSION['user_id']);
-
-    if (!$clienteId) {
-        throw new RuntimeException('No se pudo identificar el cliente asociado a la sesión.');
-    }
-
     $model = new FacturacionModels();
+    $mensajeroId = $model->obtenerMensajeroIdPorUsuario((int) $_SESSION['user_id']);
+
+    if ($mensajeroId === null) {
+        throw new RuntimeException('No se encontró el mensajero relacionado con la sesión.');
+    }
 
     echo json_encode([
         'success' => true,
-        'data' => $model->obtenerVistaCliente((int) $clienteId),
+        'data' => $model->obtenerVistaMensajero($mensajeroId),
     ]);
 } catch (Throwable $e) {
     http_response_code(400);
