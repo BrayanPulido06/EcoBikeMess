@@ -20,7 +20,7 @@
 
     function openInfoModal(modal) {
         if (!modal) return;
-        modal.hidden = false;
+        modal.style.display = 'flex';
         modal.classList.add('active');
         modal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
@@ -30,7 +30,7 @@
         if (!modal) return;
         modal.classList.remove('active');
         modal.setAttribute('aria-hidden', 'true');
-        modal.hidden = true;
+        modal.style.display = 'none';
         document.body.style.overflow = '';
     }
 

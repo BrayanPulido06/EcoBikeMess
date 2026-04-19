@@ -10,7 +10,7 @@
     </script>
     <title>Crear Cuenta - EcoBikeMess</title>
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
-    <link rel="stylesheet" href="../public/css/crearCuenta.css">
+    <link rel="stylesheet" href="../public/css/crearCuenta.css?v=20260418-3">
     <link rel="stylesheet" href="../public/css/responsive.css">
     <style>
         /* Estilos para ocultar el input de archivo nativo */
@@ -342,7 +342,7 @@
         </div>
     </div>
 
-    <div class="policy-modal" id="termsConditionsModal" aria-hidden="true" hidden>
+    <div class="policy-modal" id="termsConditionsModal" aria-hidden="true" style="display: none;">
         <div class="policy-modal-backdrop" data-close-terms-modal></div>
         <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="termsConditionsTitle">
             <button type="button" class="policy-modal-close" id="termsConditionsClose" aria-label="Cerrar modal">×</button>
@@ -365,7 +365,7 @@
         </div>
     </div>
 
-    <div class="policy-modal" id="privacyPolicyModal" aria-hidden="true" hidden>
+    <div class="policy-modal" id="privacyPolicyModal" aria-hidden="true" style="display: none;">
         <div class="policy-modal-backdrop" data-close-policy-modal></div>
         <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="privacyPolicyTitle">
             <button type="button" class="policy-modal-close" id="privacyPolicyClose" aria-label="Cerrar modal">×</button>
@@ -382,6 +382,6 @@
         </div>
     </div>
 
-    <script src="../public/js/crearCuenta.js?v=20260418-2"></script>
+    <script src="../public/js/crearCuenta.js?v=20260418-3"></script>
 </body>
 </html>
