@@ -310,7 +310,7 @@ body {
     margin-top: 1px;
 }
 
-.checkbox-text-links {
+.checkbox-text-inline {
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
@@ -331,11 +331,7 @@ body {
     font-weight: 500;
 }
 
-.link-button {
-    background: none;
-    border: none;
-    padding: 0;
-    font: inherit;
+.policy-link {
     cursor: pointer;
 }
 

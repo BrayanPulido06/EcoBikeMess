@@ -324,11 +324,11 @@
             <div class="form-group checkbox-group">
                 <div class="checkbox-label">
                     <input type="checkbox" id="terms" required>
-                    <label for="terms" class="checkbox-text">Acepto los</label>
-                    <span class="checkbox-text-links">
-                        <button type="button" class="link link-button" id="termsConditionsLink">términos y condiciones</button>
+                    <span class="checkbox-text-inline">
+                        <label for="terms" class="checkbox-text">Acepto los</label>
+                        <a href="javascript:void(0)" class="link policy-link" id="termsConditionsLink">términos y condiciones</a>
                         <span>y la</span>
-                        <button type="button" class="link link-button" id="privacyPolicyLink">política de privacidad</button>
+                        <a href="javascript:void(0)" class="link policy-link" id="privacyPolicyLink">política de privacidad</a>
                     </span>
                 </div>
             </div>
@@ -382,6 +382,6 @@
         </div>
     </div>
 
-    <script src="../public/js/crearCuenta.js"></script>
+    <script src="../public/js/crearCuenta.js?v=20260418-2"></script>
 </body>
 </html>
