@@ -326,9 +326,9 @@
                     <input type="checkbox" id="terms" required>
                     <label for="terms" class="checkbox-text">Acepto los</label>
                     <span class="checkbox-text-links">
-                        <a href="#" class="link" id="termsConditionsLink">términos y condiciones</a>
+                        <button type="button" class="link link-button" id="termsConditionsLink">términos y condiciones</button>
                         <span>y la</span>
-                        <a href="#" class="link" id="privacyPolicyLink">política de privacidad</a>
+                        <button type="button" class="link link-button" id="privacyPolicyLink">política de privacidad</button>
                     </span>
                 </div>
             </div>
