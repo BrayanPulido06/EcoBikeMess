@@ -322,10 +322,15 @@
             </div>
 
             <div class="form-group checkbox-group">
-                <label class="checkbox-label">
+                <div class="checkbox-label">
                     <input type="checkbox" id="terms" required>
-                    <span>Acepto los <a href="#" class="link" id="termsConditionsLink">términos y condiciones</a> y la <a href="#" class="link" id="privacyPolicyLink">política de privacidad</a></span>
-                </label>
+                    <label for="terms" class="checkbox-text">Acepto los</label>
+                    <span class="checkbox-text-links">
+                        <a href="#" class="link" id="termsConditionsLink">términos y condiciones</a>
+                        <span>y la</span>
+                        <a href="#" class="link" id="privacyPolicyLink">política de privacidad</a>
+                    </span>
+                </div>
             </div>
 
             <button type="submit" class="btn-submit">Crear Cuenta</button>

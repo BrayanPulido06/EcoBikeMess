@@ -302,8 +302,19 @@ body {
     display: flex;
     align-items: flex-start;
     gap: 0.8rem;
-    cursor: pointer;
     color: #5a6c7d;
+}
+
+.checkbox-text {
+    cursor: pointer;
+    margin-top: 1px;
+}
+
+.checkbox-text-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    line-height: 1.5;
 }
 
 .checkbox-label input[type="checkbox"] {

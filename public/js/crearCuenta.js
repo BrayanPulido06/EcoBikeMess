@@ -36,6 +36,7 @@
 
     termsConditionsLink?.addEventListener('click', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         openInfoModal(termsConditionsModal);
     });
 
@@ -49,6 +50,7 @@
 
     privacyPolicyLink?.addEventListener('click', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         openInfoModal(privacyPolicyModal);
     });
 
