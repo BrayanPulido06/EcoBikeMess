@@ -33,12 +33,12 @@
                 </a>
             </li>
 
-            <li class="nav-item">
+            <!--<li class="nav-item">
                 <a href="<?php echo htmlspecialchars(route_url('client.billing'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
                     <span class="nav-icon">💳</span>
                     <span class="nav-text">Facturación</span>
                 </a>
-            </li>
+            </li>-->
             
 
             <?php if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'colaborador'): ?>

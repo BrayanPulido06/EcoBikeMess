@@ -26,7 +26,7 @@ if ($nombreCompleto === '') {
                 <li><a href="<?php echo htmlspecialchars(route_url('messenger.pickups'), ENT_QUOTES, 'UTF-8'); ?>">Recolecciones</a></li>
                 <li><a href="<?php echo htmlspecialchars(route_url('messenger.packages'), ENT_QUOTES, 'UTF-8'); ?>">Mis Paquetes</a></li>
                 <li><a href="<?php echo htmlspecialchars(route_url('messenger.history'), ENT_QUOTES, 'UTF-8'); ?>">Historial</a></li>
-                <li><a href="<?php echo htmlspecialchars(route_url('messenger.billing'), ENT_QUOTES, 'UTF-8'); ?>">Facturación</a></li>
+                <!--<li><a href="<?php echo htmlspecialchars(route_url('messenger.billing'), ENT_QUOTES, 'UTF-8'); ?>">Facturación</a></li>-->
             </ul>
         </li>
 
