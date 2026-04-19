@@ -148,7 +148,7 @@ foreach ($chartDataRaw as $row) {
                             <div class="quick-icon">📦</div>
                             <h3>Enviar Paquete</h3>
                             <p>Crea un nuevo envío de forma rápida y sencilla</p>
-                            <a href="enviarPaquete.php" class="btn-primary">Nuevo Envío</a>
+                            <a href="<?php echo htmlspecialchars(route_url('client.send-package'), ENT_QUOTES, 'UTF-8'); ?>" class="btn-primary">Nuevo Envío</a>
                         </div>
                         <div class="quick-stats">
 
@@ -163,7 +163,7 @@ foreach ($chartDataRaw as $row) {
                 <div class="card">
                     <div class="card-header">
                         <h2>Últimos Envíos</h2>
-                        <a href="misPedidos.php" class="view-all-link">Ver todos →</a>
+                        <a href="<?php echo htmlspecialchars(route_url('client.orders'), ENT_QUOTES, 'UTF-8'); ?>" class="view-all-link">Ver todos →</a>
                     </div>
                     <div class="card-body no-padding">
                         <div class="table-container">

@@ -337,7 +337,7 @@
         </div>
     </div>
 
-    <div class="policy-modal" id="termsConditionsModal" aria-hidden="true">
+    <div class="policy-modal" id="termsConditionsModal" aria-hidden="true" hidden>
         <div class="policy-modal-backdrop" data-close-terms-modal></div>
         <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="termsConditionsTitle">
             <button type="button" class="policy-modal-close" id="termsConditionsClose" aria-label="Cerrar modal">×</button>
@@ -360,7 +360,7 @@
         </div>
     </div>
 
-    <div class="policy-modal" id="privacyPolicyModal" aria-hidden="true">
+    <div class="policy-modal" id="privacyPolicyModal" aria-hidden="true" hidden>
         <div class="policy-modal-backdrop" data-close-policy-modal></div>
         <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="privacyPolicyTitle">
             <button type="button" class="policy-modal-close" id="privacyPolicyClose" aria-label="Cerrar modal">×</button>
@@ -369,7 +369,7 @@
                 <h2 id="privacyPolicyTitle">Confidencialidad y Protección de Datos</h2>
             </div>
             <div class="policy-modal-body">
-                <p>"En <strong>ECOBIKEMESS</strong> garantizamos la confidencialidad y protección de la información personal de nuestros clientes. Los datos proporcionados serán utilizados exclusivamente para la gestión y ejecución de los servicios contratados, bajo estrictos estándares de seguridad. Nos comprometemos a no compartir, vender ni divulgar dicha información a terceros sin autorización, cumpliendo con la normativa vigente  la <strong>Ley 1581 de 2012</strong> en materia de protección de datos personales.</p>
+                <p>En <strong>ECOBIKEMESS</strong> garantizamos la confidencialidad y protección de la información personal de nuestros clientes. Los datos proporcionados serán utilizados exclusivamente para la gestión y ejecución de los servicios contratados, bajo estrictos estándares de seguridad. Nos comprometemos a no compartir, vender ni divulgar dicha información a terceros sin autorización, cumpliendo con la normativa vigente  la <strong>Ley 1581 de 2012</strong> en materia de protección de datos personales.</p>
             </div>
             <div class="policy-modal-actions">
                 <button type="button" class="policy-modal-btn" id="privacyPolicyAccept">Entendido</button>

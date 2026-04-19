@@ -73,9 +73,6 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
                             <input type="file" id="foto_perfil" name="foto_perfil" style="display: none;" accept="image/*">
                         </div>
                         <h1 class="profile-name" style="text-align: center; margin-top: 10px;"><?php echo htmlspecialchars(($usuario['nombres'] ?? '') . ' ' . ($usuario['apellidos'] ?? '')); ?></h1>
-                        <div class="profile-role" style="text-align: center; color: #64748b;">
-                            Mensajero <?php echo htmlspecialchars(ucfirst($mensajero['estado_aprobacion'] ?? 'Pendiente')); ?>
-                        </div>
                         <?php if (isset($_GET['mensaje'])): ?>
                             <div class="alert alert-success" style="margin-top: 15px; display: block; width: fit-content; margin-left: auto; margin-right: auto; padding: 10px 20px;"><?php echo htmlspecialchars($_GET['mensaje']); ?></div>
                         <?php endif; ?>

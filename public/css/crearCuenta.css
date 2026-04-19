@@ -334,8 +334,14 @@ body {
     z-index: 2000;
 }
 
-.policy-modal.active {
+.policy-modal.active,
+.policy-modal[aria-hidden="false"] {
     display: flex;
+}
+
+.policy-modal[hidden],
+.policy-modal[aria-hidden="true"] {
+    display: none !important;
 }
 
 .policy-modal-backdrop {
