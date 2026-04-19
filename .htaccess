@@ -28,6 +28,7 @@ RewriteRule ^views/mensajeros/misPedidosMensajero\.php$ mensajero/mis-pedidos [R
 RewriteRule ^views/mensajeros/misPaquetesMensajeros\.php$ mensajero/mis-paquetes [R=301,L,NE]
 RewriteRule ^views/mensajeros/historialMensajero\.php$ mensajero/historial [R=301,L,NE]
 RewriteRule ^views/mensajeros/recoleccionesMensajero\.php$ mensajero/recolecciones [R=301,L,NE]
+RewriteRule ^views/mensajeros/facturacionMensajero\.php$ mensajero/facturacion [R=301,L,NE]
 RewriteRule ^views/mensajeros/miPerfilMensajeros\.php$ mensajero/mi-perfil [R=301,L,NE]
 RewriteRule ^controller/logout\.php$ logout [R=301,L,NE]
 
@@ -61,6 +62,7 @@ RewriteRule ^mensajero/mis-pedidos/?$ views/mensajeros/misPedidosMensajero.php [
 RewriteRule ^mensajero/mis-paquetes/?$ views/mensajeros/misPaquetesMensajeros.php [L,QSA]
 RewriteRule ^mensajero/historial/?$ views/mensajeros/historialMensajero.php [L,QSA]
 RewriteRule ^mensajero/recolecciones/?$ views/mensajeros/recoleccionesMensajero.php [L,QSA]
+RewriteRule ^mensajero/facturacion/?$ views/mensajeros/facturacionMensajero.php [L,QSA]
 RewriteRule ^mensajero/mi-perfil/?$ views/mensajeros/miPerfilMensajeros.php [L,QSA]
 RewriteRule ^logout/?$ controller/logout.php [L,QSA]
 

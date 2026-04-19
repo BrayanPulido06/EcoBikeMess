@@ -16,9 +16,19 @@ requireWebAuth(['mensajero']);
     <link rel="stylesheet" href="../../public/css/facturacionPanel.css">
 </head>
 <body class="facturacion-page">
+    <header class="mobile-header">
+        <button class="menu-btn" id="menuBtn">
+            <span class="menu-icon">☰</span>
+        </button>
+        <div class="header-info">
+            <h1><img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:35px;height:35px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
+            <p class="user-name">Facturación del mensajero</p>
+        </div>
+    </header>
+
     <?php include '../layouts/mensajeroSidebar.php'; ?>
 
-    <main class="facturacion-shell">
+    <main class="main-content facturacion-shell">
         <section
             id="facturacionApp"
             data-mode="mensajero"

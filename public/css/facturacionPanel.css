@@ -32,6 +32,15 @@
     padding: 2rem;
 }
 
+.app-shell.facturacion-shell {
+    max-width: none;
+}
+
+.main-content.facturacion-shell {
+    max-width: 1400px;
+    padding-top: 90px;
+}
+
 .facturacion-top {
     display: flex;
     justify-content: space-between;
@@ -283,6 +292,10 @@
 @media (max-width: 768px) {
     .facturacion-shell {
         padding: 1rem;
+    }
+
+    .main-content.facturacion-shell {
+        padding-top: 80px;
     }
 
     .facturacion-top {

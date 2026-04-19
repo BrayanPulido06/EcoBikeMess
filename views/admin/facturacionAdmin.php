@@ -19,7 +19,7 @@ requireWebAuth(['admin', 'administrador']);
     <?php include '../layouts/adminNavbar.php'; ?>
     <?php include '../layouts/adminSidebar.php'; ?>
 
-    <main class="facturacion-shell">
+    <main class="facturacion-shell app-shell">
         <section
             id="facturacionApp"
             data-mode="admin"

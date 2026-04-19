@@ -20,7 +20,7 @@ requireWebAuth(['cliente', 'colaborador']);
     <?php include '../layouts/clienteNavbar.php'; ?>
     <?php include '../layouts/clienteSidebar.php'; ?>
 
-    <main class="facturacion-shell">
+    <main class="facturacion-shell app-shell">
         <section
             id="facturacionApp"
             data-mode="cliente"
