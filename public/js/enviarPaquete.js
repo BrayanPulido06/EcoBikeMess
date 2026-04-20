@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnDownloadPDF = document.getElementById('btnDownloadPDF');
     const formAction = form?.getAttribute('action') || '../../controller/enviarPaqueteController.php';
     const qrcodeContainer = document.getElementById('qrcode');
-    const isMensajeroMode = document.body.classList.contains('mensajero-send-package');
     let qrCodeStylingInstance = null; // Para la instancia del nuevo QR
     let baseRecaudo = 0; // Variable para almacenar el valor base del recaudo (sin envío)
 
@@ -429,12 +428,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const valorRecaudo = parseFloat(getStructuredValue(9, getValue('valor recaudo') || getValue('recaudo') || 0)) || 0;
             const tieneRecaudo = parseSiNo(getStructuredValue(8, getValue('tiene recaudo') || getValue('pago contra entrega'))) || valorRecaudo > 0;
 
-            const recargoDimensiones = isMensajeroMode ? 0 : (parseInt(dimensionesVal, 10) || 0);
-            const recargoMismoDia = isMensajeroMode ? 0 : (mismoDia ? 2000 : 0);
-            const recargoZona = isMensajeroMode ? 0 : (zonaPeriferica ? 4000 : 0);
-            const recargoCambios = isMensajeroMode ? 0 : (recogerCambios ? 5000 : 0);
-            const fijoContraentrega = isMensajeroMode ? 0 : 3000;
-            const extraRecaudo = (!isMensajeroMode && tieneRecaudo && valorRecaudo >= 300000)
+            const recargoDimensiones = parseInt(dimensionesVal, 10) || 0;
+            const recargoMismoDia = mismoDia ? 2000 : 0;
+            const recargoZona = zonaPeriferica ? 4000 : 0;
+            const recargoCambios = recogerCambios ? 5000 : 0;
+            const fijoContraentrega = 3000;
+            const extraRecaudo = (tieneRecaudo && valorRecaudo >= 300000)
                 ? Math.floor((valorRecaudo - 300000) / 100000) * 1000
                 : 0;
             const recargoRecaudo = tieneRecaudo ? (fijoContraentrega + Math.max(0, extraRecaudo)) : 0;
@@ -449,7 +448,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 remitente_nombre: getStructuredValue(0, getValue('remitente nombre') || getValue('datos remitente nombre') || getValue('nombre remitente')) || document.getElementById('remitente_nombre').value || (window.remitenteData?.nombre_completo),
                 remitente_telefono: getStructuredValue(1, getValue('remitente telefono') || getValue('telefono remitente')) || document.getElementById('remitente_telefono').value || (window.remitenteData?.telefono),
                 remitente_email: getStructuredValue(2, getValue('remitente email') || getValue('email de contacto') || getValue('correo remitente')) || document.getElementById('remitente_email').value || (window.remitenteData?.correo),
-                remitente_direccion: getStructuredValue(3, getValue('direccion de origen') || getValue('remitente direccion') || getValue('origen')) || document.getElementById('remitente_direccion')?.value || (window.remitenteData?.direccion),
+                remitente_direccion: getStructuredValue(3, getValue('direccion de origen') || getValue('remitente direccion') || getValue('origen')) || document.getElementById('remitente_direccion').value || (window.remitenteData?.direccion),
                 destinatario_nombre: getStructuredValue(4, getValue('nombre') || getValue('destinatario')),
                 destinatario_telefono: getStructuredValue(5, getValue('num destinatario') || getValue('telefono') || getValue('celular') || getValue('movil')),
                 destinatario_direccion: getStructuredValue(6, getValue('direccion') || getValue('destino')),
@@ -941,16 +940,16 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         }
 
         let costoBase = 8000;
-        let recargoMismoDia = isMensajeroMode ? 0 : ((mismoDiaCheckbox && mismoDiaCheckbox.checked) ? 2000 : 0);
-        let recargoZona = isMensajeroMode ? 0 : ((zonaPerifericaCheckbox && zonaPerifericaCheckbox.checked) ? 4000 : 0);
-        let recargoCambios = isMensajeroMode ? 0 : ((recogerCambiosCheckbox && recogerCambiosCheckbox.checked) ? 5000 : 0);
-        let recargoDimensiones = isMensajeroMode ? 0 : (parseInt(recargoDimensionesValue, 10) || 0);
+        let recargoMismoDia = (mismoDiaCheckbox && mismoDiaCheckbox.checked) ? 2000 : 0;
+        let recargoZona = (zonaPerifericaCheckbox && zonaPerifericaCheckbox.checked) ? 4000 : 0;
+        let recargoCambios = (recogerCambiosCheckbox && recogerCambiosCheckbox.checked) ? 5000 : 0;
+        let recargoDimensiones = parseInt(recargoDimensionesValue, 10) || 0;
         
         let recargoRecaudo = 0;
         if (tieneRecaudoCheckbox && tieneRecaudoCheckbox.checked) {
-            const fijoContraentrega = isMensajeroMode ? 0 : 3000;
+            const fijoContraentrega = 3000;
             const monto = Number(baseRecaudo || 0);
-            const extra = (!isMensajeroMode && monto >= 300000) ? Math.floor((monto - 300000) / 100000) * 1000 : 0;
+            const extra = monto >= 300000 ? Math.floor((monto - 300000) / 100000) * 1000 : 0;
             recargoRecaudo = fijoContraentrega + Math.max(0, extra);
         }
 
@@ -1136,7 +1135,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         const infoParaQR = `
 Guía: ${numeroGuia}
 Remitente: ${document.getElementById('remitente_nombre').value}
-Origen: ${document.getElementById('remitente_direccion')?.value || 'No aplica'}
+Origen: ${document.getElementById('remitente_direccion').value}
 Destinatario: ${document.getElementById('destinatario_nombre').value}
 Destino: ${document.getElementById('destinatario_direccion').value}
 Cambios por recoger: ${recogerCambios ? 'Sí' : 'No'}
