@@ -18,10 +18,25 @@ $resolverFotoPerfil = static function (?string $ruta): string {
         return $ruta;
     }
 
-    $rutaNormalizada = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, ltrim($ruta, '/\\'));
-    $rutaFisica = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . $rutaNormalizada;
+    $projectRoot = dirname(__DIR__, 2);
+    $candidatas = [];
 
-    if (!is_file($rutaFisica) || !is_readable($rutaFisica)) {
+    $rutaNormalizada = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, ltrim($ruta, '/\\'));
+    $candidatas[] = $projectRoot . DIRECTORY_SEPARATOR . $rutaNormalizada;
+
+    if (strpos($rutaNormalizada, 'uploads' . DIRECTORY_SEPARATOR) !== 0) {
+        $candidatas[] = $projectRoot . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'mensajeros' . DIRECTORY_SEPARATOR . basename($rutaNormalizada);
+    }
+
+    $rutaFisica = null;
+    foreach ($candidatas as $candidata) {
+        if (is_file($candidata) && is_readable($candidata)) {
+            $rutaFisica = $candidata;
+            break;
+        }
+    }
+
+    if ($rutaFisica === null) {
         return '../../public/img/default-avatar.png';
     }
 
