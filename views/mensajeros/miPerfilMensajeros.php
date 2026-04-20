@@ -177,7 +177,7 @@ $fotoMensajero = $resolverFotoPerfil($fotoMensajero);
                 <div class="profile-card">
                     <h3 class="form-section-title">Documentacion</h3>
                     <div class="form-grid">
-                        <div class="form-group">
+                        <div class="form-group featured-field">
                             <label>Tipo de Documento</label>
                             <select name="tipo_documento">
                                 <option value="cedula" <?php echo (($mensajero['tipo_documento'] ?? '') === 'cedula') ? 'selected' : ''; ?>>Cedula de Ciudadania</option>
@@ -189,7 +189,7 @@ $fotoMensajero = $resolverFotoPerfil($fotoMensajero);
                             <label>Numero de Documento</label>
                             <input type="text" name="numDocumento" value="<?php echo htmlspecialchars($mensajero['numDocumento'] ?? ''); ?>">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group featured-field">
                             <label>Tipo de Sangre</label>
                             <select name="tipo_sangre">
                                 <?php foreach (['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $tipo): ?>
@@ -201,20 +201,13 @@ $fotoMensajero = $resolverFotoPerfil($fotoMensajero);
                             <label>Direccion de Residencia</label>
                             <input type="text" name="direccion_residencia" value="<?php echo htmlspecialchars($mensajero['direccion_residencia'] ?? ''); ?>">
                         </div>
-                        <div class="form-group">
-                            <label>Hoja de Vida (PDF)</label>
-                            <?php if (!empty($mensajero['hoja_vida'])): ?>
-                                <a href="<?php echo htmlspecialchars($mensajero['hoja_vida']); ?>" target="_blank" style="display:block; margin-bottom:5px; color:#2563eb; font-size:0.9rem;">Ver Hoja de Vida Actual</a>
-                            <?php endif; ?>
-                            <input type="file" name="hoja_vida" accept=".pdf,.doc,.docx">
-                        </div>
                     </div>
                 </div>
 
                 <div class="profile-card">
                     <h3 class="form-section-title">Vehiculo</h3>
                     <div class="form-grid">
-                        <div class="form-group">
+                        <div class="form-group featured-field">
                             <label>Tipo de Transporte</label>
                             <select name="tipo_transporte">
                                 <option value="bicicleta" <?php echo (($mensajero['tipo_transporte'] ?? '') === 'bicicleta') ? 'selected' : ''; ?>>Bicicleta</option>
