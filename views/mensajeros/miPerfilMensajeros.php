@@ -21,7 +21,13 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
 
 $fotoMensajero = trim((string) ($mensajero['foto'] ?? ''));
 if ($fotoMensajero !== '' && !preg_match('#^https?://#i', $fotoMensajero)) {
-    $fotoMensajero = app_url(ltrim($fotoMensajero, '/'));
+    if (strpos($fotoMensajero, '/') === 0) {
+        $fotoMensajero = $fotoMensajero;
+    } elseif (strpos($fotoMensajero, 'uploads/') === 0) {
+        $fotoMensajero = '/' . ltrim($fotoMensajero, '/');
+    } else {
+        $fotoMensajero = app_url(ltrim($fotoMensajero, '/'));
+    }
 }
 
 if ($fotoMensajero === '') {
