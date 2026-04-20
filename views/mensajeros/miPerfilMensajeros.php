@@ -69,7 +69,16 @@ $resolverFotoPerfil = static function (?string $ruta): string {
 };
 
 $fotoMensajero = trim((string) ($mensajero['foto'] ?? ''));
-$fotoMensajero = $resolverFotoPerfil($fotoMensajero);
+$fotoMensajeroCache = $_SESSION['user_photo_resolved'] ?? '';
+if ($fotoMensajero !== '' && ($_SESSION['user_photo'] ?? '') === $fotoMensajero && is_string($fotoMensajeroCache) && $fotoMensajeroCache !== '') {
+    $fotoMensajero = $fotoMensajeroCache;
+} else {
+    $fotoMensajero = $resolverFotoPerfil($fotoMensajero);
+    if (!empty($mensajero['foto'])) {
+        $_SESSION['user_photo'] = $mensajero['foto'];
+        $_SESSION['user_photo_resolved'] = $fotoMensajero;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -80,7 +89,7 @@ $fotoMensajero = $resolverFotoPerfil($fotoMensajero);
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
-    <link rel="stylesheet" href="../../public/css/miPerfil.css">
+    <link rel="stylesheet" href="../../public/css/miPerfil.css?v=20260420-2">
     <link rel="stylesheet" href="../../public/css/responsive.css">
 </head>
 <body>
@@ -179,11 +188,14 @@ $fotoMensajero = $resolverFotoPerfil($fotoMensajero);
                     <div class="form-grid">
                         <div class="form-group featured-field">
                             <label>Tipo de Documento</label>
-                            <select name="tipo_documento">
-                                <option value="cedula" <?php echo (($mensajero['tipo_documento'] ?? '') === 'cedula') ? 'selected' : ''; ?>>Cedula de Ciudadania</option>
-                                <option value="cedula_extranjeria" <?php echo (($mensajero['tipo_documento'] ?? '') === 'cedula_extranjeria') ? 'selected' : ''; ?>>Cedula de Extranjeria</option>
-                                <option value="pasaporte" <?php echo (($mensajero['tipo_documento'] ?? '') === 'pasaporte') ? 'selected' : ''; ?>>Pasaporte</option>
-                            </select>
+                            <div class="select-shell">
+                                <span class="select-badge">ID</span>
+                                <select name="tipo_documento">
+                                    <option value="cedula" <?php echo (($mensajero['tipo_documento'] ?? '') === 'cedula') ? 'selected' : ''; ?>>Cedula de Ciudadania</option>
+                                    <option value="cedula_extranjeria" <?php echo (($mensajero['tipo_documento'] ?? '') === 'cedula_extranjeria') ? 'selected' : ''; ?>>Cedula de Extranjeria</option>
+                                    <option value="pasaporte" <?php echo (($mensajero['tipo_documento'] ?? '') === 'pasaporte') ? 'selected' : ''; ?>>Pasaporte</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Numero de Documento</label>
@@ -191,11 +203,14 @@ $fotoMensajero = $resolverFotoPerfil($fotoMensajero);
                         </div>
                         <div class="form-group featured-field">
                             <label>Tipo de Sangre</label>
-                            <select name="tipo_sangre">
-                                <?php foreach (['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $tipo): ?>
-                                    <option value="<?php echo $tipo; ?>" <?php echo (($mensajero['tipo_sangre'] ?? '') === $tipo) ? 'selected' : ''; ?>><?php echo $tipo; ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                            <div class="select-shell">
+                                <span class="select-badge">RH</span>
+                                <select name="tipo_sangre">
+                                    <?php foreach (['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $tipo): ?>
+                                        <option value="<?php echo $tipo; ?>" <?php echo (($mensajero['tipo_sangre'] ?? '') === $tipo) ? 'selected' : ''; ?>><?php echo $tipo; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Direccion de Residencia</label>
@@ -209,11 +224,14 @@ $fotoMensajero = $resolverFotoPerfil($fotoMensajero);
                     <div class="form-grid">
                         <div class="form-group featured-field">
                             <label>Tipo de Transporte</label>
-                            <select name="tipo_transporte">
-                                <option value="bicicleta" <?php echo (($mensajero['tipo_transporte'] ?? '') === 'bicicleta') ? 'selected' : ''; ?>>Bicicleta</option>
-                                <option value="moto" <?php echo (($mensajero['tipo_transporte'] ?? '') === 'moto') ? 'selected' : ''; ?>>Moto</option>
-                                <option value="vehiculo" <?php echo (($mensajero['tipo_transporte'] ?? '') === 'vehiculo') ? 'selected' : ''; ?>>Vehiculo</option>
-                            </select>
+                            <div class="select-shell">
+                                <span class="select-badge">MOV</span>
+                                <select name="tipo_transporte">
+                                    <option value="bicicleta" <?php echo (($mensajero['tipo_transporte'] ?? '') === 'bicicleta') ? 'selected' : ''; ?>>Bicicleta</option>
+                                    <option value="moto" <?php echo (($mensajero['tipo_transporte'] ?? '') === 'moto') ? 'selected' : ''; ?>>Moto</option>
+                                    <option value="vehiculo" <?php echo (($mensajero['tipo_transporte'] ?? '') === 'vehiculo') ? 'selected' : ''; ?>>Vehiculo</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Placa (Si aplica)</label>

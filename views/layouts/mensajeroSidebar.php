@@ -57,7 +57,9 @@ $resolverFotoPerfil = static function (?string $ruta): string {
     return 'data:' . $mime . ';base64,' . base64_encode($contenido);
 };
 
-$fotoSidebar = trim((string) ($_SESSION['user_photo'] ?? ''));
+$fotoSidebarOriginal = trim((string) ($_SESSION['user_photo'] ?? ''));
+$fotoSidebarCache = $_SESSION['user_photo_resolved'] ?? '';
+$fotoSidebar = $fotoSidebarOriginal;
 
 if ($fotoSidebar === '') {
     require_once '../../models/conexionGlobal.php';
@@ -69,6 +71,7 @@ if ($fotoSidebar === '') {
             $fotoSidebar = trim((string) ($stmtFoto->fetchColumn() ?: ''));
             if ($fotoSidebar !== '') {
                 $_SESSION['user_photo'] = $fotoSidebar;
+                $fotoSidebarOriginal = $fotoSidebar;
             }
         }
     } catch (Throwable $e) {
@@ -76,7 +79,14 @@ if ($fotoSidebar === '') {
     }
 }
 
-$fotoSidebar = $resolverFotoPerfil($fotoSidebar);
+if ($fotoSidebar !== '' && $fotoSidebar === $fotoSidebarOriginal && is_string($fotoSidebarCache) && $fotoSidebarCache !== '') {
+    $fotoSidebar = $fotoSidebarCache;
+} else {
+    $fotoSidebar = $resolverFotoPerfil($fotoSidebar);
+    if ($fotoSidebarOriginal !== '') {
+        $_SESSION['user_photo_resolved'] = $fotoSidebar;
+    }
+}
 ?>
 <nav class="side-menu" id="sideMenu">
     <div class="menu-header">
