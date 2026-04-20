@@ -28,10 +28,10 @@ if ($fotoSidebar === '') {
 }
 
 if ($fotoSidebar !== '' && !preg_match('#^https?://#i', $fotoSidebar)) {
-    if (strpos($fotoSidebar, '/') === 0) {
-        $fotoSidebar = $fotoSidebar;
+    if (strpos($fotoSidebar, '/uploads/') === 0) {
+        $fotoSidebar = '../..' . $fotoSidebar;
     } elseif (strpos($fotoSidebar, 'uploads/') === 0) {
-        $fotoSidebar = '/' . ltrim($fotoSidebar, '/');
+        $fotoSidebar = '../../' . ltrim($fotoSidebar, '/');
     } else {
         $fotoSidebar = app_url(ltrim($fotoSidebar, '/'));
     }
