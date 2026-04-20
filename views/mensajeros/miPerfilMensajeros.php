@@ -118,6 +118,7 @@ $fotoMensajero = $resolverFotoPerfil($fotoMensajero);
                         <div class="avatar-container" style="position: relative; width: 100px; margin: 0 auto;">
                             <img src="<?php echo htmlspecialchars($fotoMensajero, ENT_QUOTES, 'UTF-8'); ?>"
                                  alt="Avatar" class="profile-avatar-large"
+                                 id="previewFotoPerfilMensajero"
                                  onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%228%22 r=%224%22 fill=%22%235cb85c%22/%3E%3Cpath d=%22M12 14c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z%22 fill=%22%235cb85c%22/%3E%3C/svg%3E'"
                                  style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                             <label for="foto_perfil" style="position: absolute; bottom: 0; right: 0; background: #2563eb; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
@@ -259,5 +260,34 @@ $fotoMensajero = $resolverFotoPerfil($fotoMensajero);
     </main>
 
     <script src="../../public/js/mensajeroLayout.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const fotoInput = document.getElementById('foto_perfil');
+            const fotoPreview = document.getElementById('previewFotoPerfilMensajero');
+
+            if (!fotoInput || !fotoPreview) {
+                return;
+            }
+
+            fotoInput.addEventListener('change', function (event) {
+                const file = event.target.files && event.target.files[0];
+                if (!file) {
+                    return;
+                }
+
+                if (!file.type.startsWith('image/')) {
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (loadEvent) {
+                    if (loadEvent.target && typeof loadEvent.target.result === 'string') {
+                        fotoPreview.src = loadEvent.target.result;
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
 </body>
 </html>

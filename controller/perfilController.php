@@ -68,6 +68,35 @@ function guardarArchivoPerfil(array $file, string $subfolder, array $allowedExte
     return '/uploads/' . $subfolder . '/' . $filename;
 }
 
+function eliminarArchivoPerfilAnterior(?string $storedPath): void
+{
+    $storedPath = trim((string) $storedPath);
+    if ($storedPath === '') {
+        return;
+    }
+
+    if (preg_match('#^https?://#i', $storedPath) || str_starts_with($storedPath, 'data:')) {
+        return;
+    }
+
+    $normalized = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, ltrim($storedPath, '/\\'));
+    $projectRoot = dirname(__DIR__);
+    $candidates = [
+        $projectRoot . DIRECTORY_SEPARATOR . $normalized,
+    ];
+
+    if (strpos($normalized, 'uploads' . DIRECTORY_SEPARATOR) !== 0) {
+        $candidates[] = $projectRoot . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'mensajeros' . DIRECTORY_SEPARATOR . basename($normalized);
+    }
+
+    foreach ($candidates as $filePath) {
+        if (is_file($filePath) && is_writable($filePath)) {
+            @unlink($filePath);
+            return;
+        }
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['action'])) {
     $role = $_SESSION['user_role'] ?? 'cliente';
     redirectPerfil($role);
@@ -128,6 +157,10 @@ try {
             ':uid' => $user_id
         ]);
     } elseif ($role === 'mensajero') {
+        $stmtFotoActual = $conn->prepare("SELECT foto FROM mensajeros WHERE usuario_id = :uid LIMIT 1");
+        $stmtFotoActual->execute([':uid' => $user_id]);
+        $fotoAnteriorMensajero = trim((string) ($stmtFotoActual->fetchColumn() ?: ''));
+
         $updateFields = [
             'tipo_documento' => trim((string) ($_POST['tipo_documento'] ?? '')),
             'numDocumento' => trim((string) ($_POST['numDocumento'] ?? '')),
@@ -172,6 +205,10 @@ try {
             $sqlMensajero = "UPDATE mensajeros SET " . implode(', ', $assignments) . " WHERE usuario_id = :uid";
             $stmtMensajero = $conn->prepare($sqlMensajero);
             $stmtMensajero->execute($params);
+        }
+
+        if (!empty($updateFields['foto'] ?? '')) {
+            eliminarArchivoPerfilAnterior($fotoAnteriorMensajero);
         }
     }
 
