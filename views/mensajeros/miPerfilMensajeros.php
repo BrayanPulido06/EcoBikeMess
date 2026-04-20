@@ -79,6 +79,18 @@ if ($fotoMensajero !== '' && ($_SESSION['user_photo'] ?? '') === $fotoMensajero 
         $_SESSION['user_photo_resolved'] = $fotoMensajero;
     }
 }
+
+$opcionesDocumento = [
+    'cedula' => 'Cedula de Ciudadania',
+    'cedula_extranjeria' => 'Cedula de Extranjeria',
+    'pasaporte' => 'Pasaporte',
+];
+$opcionesSangre = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+$opcionesTransporte = [
+    'bicicleta' => 'Bicicleta',
+    'moto' => 'Moto',
+    'vehiculo' => 'Vehiculo',
+];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -190,11 +202,21 @@ if ($fotoMensajero !== '' && ($_SESSION['user_photo'] ?? '') === $fotoMensajero 
                             <label>Tipo de Documento</label>
                             <div class="select-shell">
                                 <span class="select-badge">ID</span>
-                                <select name="tipo_documento">
-                                    <option value="cedula" <?php echo (($mensajero['tipo_documento'] ?? '') === 'cedula') ? 'selected' : ''; ?>>Cedula de Ciudadania</option>
-                                    <option value="cedula_extranjeria" <?php echo (($mensajero['tipo_documento'] ?? '') === 'cedula_extranjeria') ? 'selected' : ''; ?>>Cedula de Extranjeria</option>
-                                    <option value="pasaporte" <?php echo (($mensajero['tipo_documento'] ?? '') === 'pasaporte') ? 'selected' : ''; ?>>Pasaporte</option>
-                                </select>
+                                <div class="custom-select" data-select-wrapper>
+                                    <select name="tipo_documento" class="native-select">
+                                        <?php foreach ($opcionesDocumento as $valor => $label): ?>
+                                            <option value="<?php echo htmlspecialchars($valor); ?>" <?php echo (($mensajero['tipo_documento'] ?? '') === $valor) ? 'selected' : ''; ?>><?php echo htmlspecialchars($label); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button type="button" class="custom-select-trigger" data-select-trigger>
+                                        <span data-select-value><?php echo htmlspecialchars($opcionesDocumento[$mensajero['tipo_documento'] ?? 'cedula'] ?? 'Cedula de Ciudadania'); ?></span>
+                                    </button>
+                                    <div class="custom-select-menu" data-select-menu>
+                                        <?php foreach ($opcionesDocumento as $valor => $label): ?>
+                                            <button type="button" class="custom-select-option<?php echo (($mensajero['tipo_documento'] ?? '') === $valor) ? ' active' : ''; ?>" data-select-option data-value="<?php echo htmlspecialchars($valor); ?>"><?php echo htmlspecialchars($label); ?></button>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="form-group">
@@ -205,11 +227,21 @@ if ($fotoMensajero !== '' && ($_SESSION['user_photo'] ?? '') === $fotoMensajero 
                             <label>Tipo de Sangre</label>
                             <div class="select-shell">
                                 <span class="select-badge">RH</span>
-                                <select name="tipo_sangre">
-                                    <?php foreach (['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $tipo): ?>
-                                        <option value="<?php echo $tipo; ?>" <?php echo (($mensajero['tipo_sangre'] ?? '') === $tipo) ? 'selected' : ''; ?>><?php echo $tipo; ?></option>
-                                    <?php endforeach; ?>
-                                </select>
+                                <div class="custom-select" data-select-wrapper>
+                                    <select name="tipo_sangre" class="native-select">
+                                        <?php foreach ($opcionesSangre as $tipo): ?>
+                                            <option value="<?php echo htmlspecialchars($tipo); ?>" <?php echo (($mensajero['tipo_sangre'] ?? '') === $tipo) ? 'selected' : ''; ?>><?php echo htmlspecialchars($tipo); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button type="button" class="custom-select-trigger" data-select-trigger>
+                                        <span data-select-value><?php echo htmlspecialchars($mensajero['tipo_sangre'] ?? 'O+'); ?></span>
+                                    </button>
+                                    <div class="custom-select-menu" data-select-menu>
+                                        <?php foreach ($opcionesSangre as $tipo): ?>
+                                            <button type="button" class="custom-select-option<?php echo (($mensajero['tipo_sangre'] ?? '') === $tipo) ? ' active' : ''; ?>" data-select-option data-value="<?php echo htmlspecialchars($tipo); ?>"><?php echo htmlspecialchars($tipo); ?></button>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="form-group">
@@ -226,11 +258,21 @@ if ($fotoMensajero !== '' && ($_SESSION['user_photo'] ?? '') === $fotoMensajero 
                             <label>Tipo de Transporte</label>
                             <div class="select-shell">
                                 <span class="select-badge">MOV</span>
-                                <select name="tipo_transporte">
-                                    <option value="bicicleta" <?php echo (($mensajero['tipo_transporte'] ?? '') === 'bicicleta') ? 'selected' : ''; ?>>Bicicleta</option>
-                                    <option value="moto" <?php echo (($mensajero['tipo_transporte'] ?? '') === 'moto') ? 'selected' : ''; ?>>Moto</option>
-                                    <option value="vehiculo" <?php echo (($mensajero['tipo_transporte'] ?? '') === 'vehiculo') ? 'selected' : ''; ?>>Vehiculo</option>
-                                </select>
+                                <div class="custom-select" data-select-wrapper>
+                                    <select name="tipo_transporte" class="native-select">
+                                        <?php foreach ($opcionesTransporte as $valor => $label): ?>
+                                            <option value="<?php echo htmlspecialchars($valor); ?>" <?php echo (($mensajero['tipo_transporte'] ?? '') === $valor) ? 'selected' : ''; ?>><?php echo htmlspecialchars($label); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button type="button" class="custom-select-trigger" data-select-trigger>
+                                        <span data-select-value><?php echo htmlspecialchars($opcionesTransporte[$mensajero['tipo_transporte'] ?? 'bicicleta'] ?? 'Bicicleta'); ?></span>
+                                    </button>
+                                    <div class="custom-select-menu" data-select-menu>
+                                        <?php foreach ($opcionesTransporte as $valor => $label): ?>
+                                            <button type="button" class="custom-select-option<?php echo (($mensajero['tipo_transporte'] ?? '') === $valor) ? ' active' : ''; ?>" data-select-option data-value="<?php echo htmlspecialchars($valor); ?>"><?php echo htmlspecialchars($label); ?></button>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="form-group">
@@ -297,6 +339,54 @@ if ($fotoMensajero !== '' && ($_SESSION['user_photo'] ?? '') === $fotoMensajero 
                     }
                 };
                 reader.readAsDataURL(file);
+            });
+
+            document.querySelectorAll('[data-select-wrapper]').forEach(function (wrapper) {
+                const nativeSelect = wrapper.querySelector('.native-select');
+                const trigger = wrapper.querySelector('[data-select-trigger]');
+                const menu = wrapper.querySelector('[data-select-menu]');
+                const valueLabel = wrapper.querySelector('[data-select-value]');
+                const options = wrapper.querySelectorAll('[data-select-option]');
+
+                if (!nativeSelect || !trigger || !menu || !valueLabel) {
+                    return;
+                }
+
+                const closeAll = function () {
+                    document.querySelectorAll('[data-select-wrapper].open').forEach(function (opened) {
+                        if (opened !== wrapper) {
+                            opened.classList.remove('open');
+                        }
+                    });
+                };
+
+                trigger.addEventListener('click', function () {
+                    const willOpen = !wrapper.classList.contains('open');
+                    closeAll();
+                    wrapper.classList.toggle('open', willOpen);
+                });
+
+                options.forEach(function (option) {
+                    option.addEventListener('click', function () {
+                        const newValue = option.getAttribute('data-value') || '';
+                        nativeSelect.value = newValue;
+                        valueLabel.textContent = option.textContent || '';
+                        options.forEach(function (item) {
+                            item.classList.remove('active');
+                        });
+                        option.classList.add('active');
+                        wrapper.classList.remove('open');
+                        nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    });
+                });
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!event.target.closest('[data-select-wrapper]')) {
+                    document.querySelectorAll('[data-select-wrapper].open').forEach(function (opened) {
+                        opened.classList.remove('open');
+                    });
+                }
             });
         });
     </script>
