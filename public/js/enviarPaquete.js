@@ -735,15 +735,10 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         };
 
         styleRange(1, 8, 1, 3, 'FFFFF2CC', true);
-        styleRange(10, 10, 1, 4, 'FFE8B7E6', true);
-        styleRange(10, 10, 5, 8, 'FFBFE5F3', true);
-        styleRange(10, 10, 9, 15, 'FFF8CBAD', true);
-        styleRange(11, 11, 1, 4, 'FFDFF0D0', true);
-        styleRange(11, 11, 5, 8, 'FFE5F5CC', true);
-        styleRange(11, 11, 9, 15, 'FFFCE4D6', true);
-        styleRange(12, 12, 1, 15, 'FFFFFFFF', false);
+        styleRange(10, 10, 1, 15, 'FFD9EAF7', true);
+        styleRange(11, 11, 1, 15, 'FFDFF0D0', true);
 
-        for (let row = 1; row <= 12; row++) {
+        for (let row = 1; row <= 11; row++) {
             sheet.getRow(row).height = row === 10 ? 24 : 20;
         }
 
@@ -817,8 +812,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                         [7, "Igual o mayor a 50 x 50 cm", "Notificar"],
                         [],
                         ["Datos Remitente", "", "", "", "Datos Destinatario", "", "", "", "Información Del Paquete", "", "", "", "", "", ""],
-                        ["Nombre Completo", "Telefono", "Email de contacto", "Direccion de Origen", "Nombre Completo", "Telefono", "Direccion de Destino", "Observaciones y/o Descripciones", "Pago Contra Entrega (si/no)", "Valor recaudo", "Dimensiones del paquete", "Entrega Mismo Dia (si/no)", "Zona Periférica (si/no)", "Recoger Cambios (si/no)", "Sumar envio al recaudo (si/no)"],
-                        ["Ej: Pepito Perez", "1234567890", "pepito@gmail.com", "Carrera 5 #33-22", "Maria Perez", "1234567890", "Calle 4 #23-10 Este", "Ninguna", "si", 100000, 3, "no", "no", "si", "si"]
+                        ["Nombre Completo", "Telefono", "Email de contacto", "Direccion de Origen", "Nombre Completo", "Telefono", "Direccion de Destino", "Observaciones y/o Descripciones", "Pago Contra Entrega (si/no)", "Valor recaudo", "Dimensiones del paquete", "Entrega Mismo Dia (si/no)", "Zona Periférica (si/no)", "Recoger Cambios (si/no)", "Sumar envio al recaudo (si/no)"]
                     ]);
                     sheet['!cols'] = [
                         { wch: 18 }, { wch: 26 }, { wch: 16 }, { wch: 22 },
@@ -855,13 +849,8 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                         }
                     };
                     paintRange(0, 7, 0, 2, 'FFF2CC', true);
-                    paintRange(9, 9, 0, 3, 'E8B7E6', true);
-                    paintRange(9, 9, 4, 7, 'BFE5F3', true);
-                    paintRange(9, 9, 8, 14, 'F8CBAD', true);
-                    paintRange(10, 10, 0, 3, 'DFF0D0', true);
-                    paintRange(10, 10, 4, 7, 'E5F5CC', true);
-                    paintRange(10, 10, 8, 14, 'FCE4D6', true);
-                    paintRange(11, 11, 0, 14, 'FFFFFF', false);
+                    paintRange(9, 9, 0, 14, 'D9EAF7', true);
+                    paintRange(10, 10, 0, 14, 'DFF0D0', true);
                     return sheet;
                 })();
                 const wb = XLSX.utils.book_new();
