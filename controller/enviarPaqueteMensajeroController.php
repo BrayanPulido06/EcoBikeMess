@@ -19,7 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $datos['cliente_id'] = $envioModel->obtenerOCrearClienteOperativo($usuario_id, $_SESSION);
         $datos['creado_por'] = $usuario_id;
         $datos['descripcion_contenido'] = trim((string) ($_POST['descripcion_contenido'] ?? ''));
-        $datos['remitente_direccion'] = trim((string) ($_POST['remitente_direccion'] ?? ''));
 
         $datos['tiene_recaudo'] = isset($_POST['tiene_recaudo']) ? 1 : 0;
         $datos['tiene_cambios'] = isset($_POST['recoger_cambios']) ? 1 : 0;

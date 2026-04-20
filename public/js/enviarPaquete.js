@@ -243,7 +243,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const campos = {
                 'remitente_nombre': data.nombre_completo,
                 'remitente_telefono': data.telefono,
-                'remitente_email': data.correo
+                'remitente_email': data.correo,
+                'remitente_direccion': data.direccion
             };
 
             // Llenar campos y limpiar errores visuales

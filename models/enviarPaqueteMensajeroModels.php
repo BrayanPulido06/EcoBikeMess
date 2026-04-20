@@ -129,7 +129,7 @@ class EnvioMensajeroModel
                 ':remitente_nombre' => $datos['remitente_nombre'],
                 ':remitente_telefono' => $datos['remitente_telefono'],
                 ':remitente_email' => $datos['remitente_email'],
-                ':remitente_direccion' => $datos['remitente_direccion'] ?? '',
+                ':remitente_direccion' => $datos['remitente_direccion'],
                 ':destinatario_nombre' => $datos['destinatario_nombre'],
                 ':destinatario_telefono' => $datos['destinatario_telefono'],
                 ':destinatario_direccion' => $datos['destinatario_direccion'],
