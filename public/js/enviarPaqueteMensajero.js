@@ -3,12 +3,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const COSTO_FIJO = 8000;
     const form = document.getElementById('envioForm');
+    const btnNext = document.getElementById('btnNext');
     const valorRecaudoInput = document.getElementById('valor_recaudo');
     const valorRecaudoHidden = document.getElementById('valor_recaudo_hidden');
     const costoTotalHidden = document.getElementById('costoTotalHidden');
     const tieneRecaudo = document.getElementById('tiene_recaudo');
     const containerSumarEnvio = document.getElementById('container_sumar_envio');
     const previewTotalRecaudo = document.getElementById('preview_total_recaudo');
+    const qrcodeContainer = document.getElementById('qrcode');
+    let qrFallbackInstance = null;
 
     const headerTitle = document.querySelector('.envio-mensajero-header h1');
     if (headerTitle) {
@@ -42,6 +45,53 @@ document.addEventListener('DOMContentLoaded', function () {
         if (radioNo) {
             radioNo.checked = true;
         }
+    };
+
+    const forzarCostoFijoEnResumen = () => {
+        const costoTotal = document.getElementById('costoTotal');
+        const costoBase = document.getElementById('costoBase');
+
+        if (costoBase && costoBase.textContent !== '$8.000') {
+            costoBase.textContent = '$8.000';
+        }
+        if (costoTotal && costoTotal.textContent !== '$8.000') {
+            costoTotal.textContent = '$8.000';
+        }
+        if (costoTotalHidden && costoTotalHidden.value !== String(COSTO_FIJO)) {
+            costoTotalHidden.value = String(COSTO_FIJO);
+        }
+    };
+
+    const generarQRFallback = () => {
+        if (!qrcodeContainer || typeof window.QRCodeStyling !== 'function') return;
+        if (qrcodeContainer.querySelector('canvas, svg')) return;
+
+        const numeroGuia = document.getElementById('numeroGuia')?.textContent?.trim();
+        if (!numeroGuia) return;
+
+        qrcodeContainer.innerHTML = '';
+        qrFallbackInstance = new window.QRCodeStyling({
+            width: 220,
+            height: 220,
+            data: numeroGuia,
+            dotsOptions: {
+                color: '#000000',
+                type: 'square'
+            },
+            backgroundOptions: {
+                color: '#ffffff'
+            },
+            qrOptions: {
+                errorCorrectionLevel: 'M'
+            }
+        });
+        qrFallbackInstance.append(qrcodeContainer);
+    };
+
+    const programarVerificacionQR = () => {
+        [100, 250, 500].forEach((delay) => {
+            window.setTimeout(generarQRFallback, delay);
+        });
     };
 
     const aplicarCostoFijo = () => {
@@ -89,10 +139,14 @@ document.addEventListener('DOMContentLoaded', function () {
             previewTotalRecaudo.style.display = 'block';
             previewTotalRecaudo.innerHTML = `Total a cobrar al destinatario: <span style="font-size: 1.2em;">$${recaudoFinal.toLocaleString('es-CO')}</span>`;
         }
+
+        forzarCostoFijoEnResumen();
     };
 
     const programarAplicacion = () => {
-        window.setTimeout(aplicarCostoFijo, 0);
+        [0, 80, 180, 320].forEach((delay) => {
+            window.setTimeout(aplicarCostoFijo, delay);
+        });
     };
 
     [
@@ -115,12 +169,39 @@ document.addEventListener('DOMContentLoaded', function () {
         radio.addEventListener('click', programarAplicacion);
     });
 
-    const btnNext = document.getElementById('btnNext');
     if (btnNext) {
         btnNext.addEventListener('click', () => {
-            window.setTimeout(aplicarCostoFijo, 0);
+            programarAplicacion();
+            programarVerificacionQR();
         });
     }
 
+    const costoTotal = document.getElementById('costoTotal');
+    if (costoTotal) {
+        const observerCosto = new MutationObserver(() => {
+            forzarCostoFijoEnResumen();
+        });
+        observerCosto.observe(costoTotal, { childList: true, subtree: true, characterData: true });
+    }
+
+    const numeroGuia = document.getElementById('numeroGuia');
+    if (numeroGuia) {
+        const observerGuia = new MutationObserver(() => {
+            programarVerificacionQR();
+        });
+        observerGuia.observe(numeroGuia, { childList: true, subtree: true, characterData: true });
+    }
+
+    if (qrcodeContainer) {
+        const observerQR = new MutationObserver(() => {
+            if (!qrcodeContainer.querySelector('canvas, svg')) {
+                programarVerificacionQR();
+            }
+        });
+        observerQR.observe(qrcodeContainer, { childList: true, subtree: true });
+    }
+
     aplicarCostoFijo();
+    programarAplicacion();
+    programarVerificacionQR();
 });
