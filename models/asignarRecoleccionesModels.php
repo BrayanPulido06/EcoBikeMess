@@ -82,7 +82,8 @@ class AsignarRecoleccionesModel {
                 LEFT JOIN mensajeros m_rec ON p.mensajero_recoleccion_id = m_rec.id
                 LEFT JOIN usuarios u_mens_rec ON m_rec.usuario_id = u_mens_rec.id
                 LEFT JOIN recolecciones r ON p.recoleccion_id = r.id
-                WHERE p.estado IN ('pendiente', 'asignado', 'en_transito', 'en_ruta', 'entregado')";
+                WHERE p.estado IN ('pendiente', 'asignado', 'en_transito', 'en_ruta', 'entregado')
+                  AND COALESCE(TRIM(p.direccion_origen), '') <> ''";
         
         $params = [];
 

@@ -375,11 +375,6 @@ $remitente_data = [
                                 <input type="email" id="remitente_email" name="remitente_email" required>
                                 <span class="error-message"></span>
                             </div>
-                            <div class="form-group">
-                                <label for="remitente_direccion">Direccion de Origen Completa *</label>
-                                <textarea id="remitente_direccion" name="remitente_direccion" rows="3" placeholder="Ej: Calle 123 #45-67, Apto 301, Barrio Centro" required></textarea>
-                                <span class="error-message"></span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -443,11 +438,11 @@ $remitente_data = [
                                 <select id="dimensiones_paquete" name="dimensiones_paquete" required>
                                     <option value="">Seleccionar tamano...</option>
                                     <option value="0">Menor o igual a 20 x 20 cm</option>
-                                    <option value="2000">Entre 21x21 y 30x30 cm (+$2.000)</option>
-                                    <option value="4000">Entre 31x31 y 35x35 cm (+$4.000)</option>
-                                    <option value="7000">Entre 36x36 y 40x40 cm (+$7.000)</option>
-                                    <option value="10000">Entre 41x41 y 45x45 cm (+$10.000)</option>
-                                    <option value="12000">Entre 46x46 y 49x49 cm (+$12.000)</option>
+                                    <option value="2000">Entre 21x21 y 30x30 cm</option>
+                                    <option value="4000">Entre 31x31 y 35x35 cm</option>
+                                    <option value="7000">Entre 36x36 y 40x40 cm</option>
+                                    <option value="10000">Entre 41x41 y 45x45 cm</option>
+                                    <option value="12000">Entre 46x46 y 49x49 cm</option>
                                     <option value="notificar">Igual o mayor a 50 x 50 cm (Notificar)</option>
                                 </select>
                                 <span class="error-message"></span>
@@ -456,19 +451,19 @@ $remitente_data = [
                                 <div class="form-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="envio_mismo_dia" name="envio_mismo_dia">
-                                        <span>Entrega el mismo dia? (+$2.000)</span>
+                                        <span>Entrega el mismo dia?</span>
                                     </label>
                                 </div>
                                 <div class="form-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="zona_periferica" name="zona_periferica">
-                                        <span>Destino Soacha, Usme, C. Bolivar o San Cristobal sur (+$4.000)</span>
+                                        <span>Destino Soacha, Usme, C. Bolivar o San Cristobal sur</span>
                                     </label>
                                 </div>
                                 <div class="form-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="recoger_cambios" name="recoger_cambios">
-                                        <span>Hay cambios por recoger? (+$5.000)</span>
+                                        <span>Hay cambios por recoger?</span>
                                     </label>
                                 </div>
                             </div>
@@ -478,37 +473,17 @@ $remitente_data = [
                     <!-- Calculo de costo -->
                     <div class="card cost-card">
                         <div class="card-header">
-                            <h2>Calculo del Costo</h2>
+                            <h2>Costo de Envio</h2>
                         </div>
                         <div class="card-body">
                             <div class="cost-breakdown">
                                 <div class="cost-item">
-                                    <span>Costo base por zona:</span>
+                                    <span>Costo de envio:</span>
                                     <span id="costoBase">$8.000</span>
-                                </div>
-                                <div class="cost-item">
-                                    <span>Recargo por dimensiones:</span>
-                                    <span id="recargoDimensiones">$0</span>
-                                </div>
-                                <div class="cost-item">
-                                    <span>Entrega mismo dia:</span>
-                                    <span id="recargoMismoDia">$0</span>
-                                </div>
-                                <div class="cost-item">
-                                    <span>Zonas de dificil acceso:</span>
-                                    <span id="recargoZona">$0</span>
-                                </div>
-                                <div class="cost-item">
-                                    <span>Cambios por recoger:</span>
-                                    <span id="recargoCambios">$0</span>
-                                </div>
-                                <div class="cost-item">
-                                    <span>Recaudo (si aplica):</span>
-                                    <span id="valorRecaudoDisplay">$0</span>
                                 </div>
                                 <div class="cost-divider"></div>
                                 <div class="cost-item total">
-                                    <span>Total a pagar:</span>
+                                    <span>Total:</span>
                                     <span id="costoTotal">$8.000</span>
                                 </div>
                                 
@@ -552,25 +527,11 @@ $remitente_data = [
                     <div class="card confirmation-card">
                         <div class="card-header">
                             <h2>Confirmar Envio</h2>
-                            <button type="button" class="btn-secondary" id="btnDownloadPDF">
-                                Descargar Guia (PDF)
-                            </button>
                         </div>
                         <div class="card-body">
                             <div id="rotuloPreview" style="background: white; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333;">
                                 <div class="rotulo-scale">
                                     <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 6px;">
-                                        <tr>
-                                            <td colspan="2">
-                                                <div style="display: flex; align-items: center; gap: 100px; justify-content: center; text-align: center;">
-                                                    <img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:100px;height:100px;">
-                                                    <div>
-                                                        <div style="font-size: 26px; font-weight: 800; color: #5cb85c; line-height: 1;">EcoBikeMess</div>
-                                                        <div style="margin-top: 3px; font-size: 15px; font-weight: 700; color: #28a745;">Contactanos: 317509298</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
                                         <tr>
                                             <td colspan="2" style="padding-top: 4px;">
                                                 <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUIA: <span id="numeroGuia" style="font-size: 19px; font-weight: 800; color: #1f2a37;">EBM-2024-XXXXX</span></div>
