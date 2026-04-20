@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const previewTotalRecaudo = document.getElementById('preview_total_recaudo');
     const qrcodeContainer = document.getElementById('qrcode');
     let qrFallbackInstance = null;
+    let costoFijoInterval = null;
 
     const headerTitle = document.querySelector('.envio-mensajero-header h1');
     if (headerTitle) {
@@ -63,29 +64,46 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const generarQRFallback = () => {
-        if (!qrcodeContainer || typeof window.QRCodeStyling !== 'function') return;
-        if (qrcodeContainer.querySelector('canvas, svg')) return;
-
+        if (!qrcodeContainer) return;
         const numeroGuia = document.getElementById('numeroGuia')?.textContent?.trim();
         if (!numeroGuia) return;
 
         qrcodeContainer.innerHTML = '';
-        qrFallbackInstance = new window.QRCodeStyling({
-            width: 220,
-            height: 220,
-            data: numeroGuia,
-            dotsOptions: {
-                color: '#000000',
-                type: 'square'
-            },
-            backgroundOptions: {
-                color: '#ffffff'
-            },
-            qrOptions: {
-                errorCorrectionLevel: 'M'
-            }
-        });
-        qrFallbackInstance.append(qrcodeContainer);
+        if (typeof window.QRCodeStyling === 'function') {
+            qrFallbackInstance = new window.QRCodeStyling({
+                width: 220,
+                height: 220,
+                data: numeroGuia,
+                dotsOptions: {
+                    color: '#000000',
+                    type: 'square'
+                },
+                backgroundOptions: {
+                    color: '#ffffff'
+                },
+                qrOptions: {
+                    errorCorrectionLevel: 'M'
+                }
+            });
+            qrFallbackInstance.append(qrcodeContainer);
+        }
+
+        window.setTimeout(() => {
+            if (qrcodeContainer.querySelector('canvas, svg, img')) return;
+            const qrImg = document.createElement('img');
+            qrImg.alt = 'QR de la guía';
+            qrImg.width = 220;
+            qrImg.height = 220;
+            qrImg.style.width = '220px';
+            qrImg.style.height = '220px';
+            qrImg.style.display = 'block';
+            qrImg.style.border = '1px solid #ddd';
+            qrImg.style.borderRadius = '4px';
+            qrImg.style.padding = '4px';
+            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(numeroGuia)}`;
+            qrcodeContainer.innerHTML = '';
+            qrcodeContainer.appendChild(qrImg);
+        }, 200);
     };
 
     const programarVerificacionQR = () => {
@@ -194,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (qrcodeContainer) {
         const observerQR = new MutationObserver(() => {
-            if (!qrcodeContainer.querySelector('canvas, svg')) {
+            if (!qrcodeContainer.querySelector('canvas, svg, img')) {
                 programarVerificacionQR();
             }
         });
@@ -204,4 +222,17 @@ document.addEventListener('DOMContentLoaded', function () {
     aplicarCostoFijo();
     programarAplicacion();
     programarVerificacionQR();
+
+    costoFijoInterval = window.setInterval(() => {
+        aplicarCostoFijo();
+        if (qrcodeContainer && !qrcodeContainer.querySelector('canvas, svg, img')) {
+            generarQRFallback();
+        }
+    }, 150);
+
+    window.addEventListener('beforeunload', () => {
+        if (costoFijoInterval) {
+            window.clearInterval(costoFijoInterval);
+        }
+    });
 });

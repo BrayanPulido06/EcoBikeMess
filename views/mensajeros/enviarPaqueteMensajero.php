@@ -306,11 +306,6 @@ $remitente_data = [
                     <h1>Crear Nuevo Envío</h1>
                     <p>Registra un paquete desde la operación de mensajería y genera su guía.</p>
                 </div>
-                <div class="header-right">
-                    <a href="<?php echo htmlspecialchars(route_url('messenger.packages'), ENT_QUOTES, 'UTF-8'); ?>" class="btn-secondary">
-                        Ver Mis Paquetes
-                    </a>
-                </div>
             </div>
 
             <!-- Indicador de Pasos -->
