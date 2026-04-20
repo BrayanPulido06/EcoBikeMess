@@ -210,6 +210,9 @@ try {
     $_SESSION['user_name'] = $nombres;
     $_SESSION['user_lastname'] = $apellidos;
     $_SESSION['user_phone'] = $telefono;
+    if ($role === 'mensajero' && isset($updateFields['foto']) && $updateFields['foto'] !== '') {
+        $_SESSION['user_photo'] = $updateFields['foto'];
+    }
 
     redirectPerfil($role, '?mensaje=' . urlencode('Perfil actualizado correctamente'));
 } catch (Exception $e) {

@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../../models/conexionGlobal.php';
+require_once __DIR__ . '/../../includes/paths.php';
 
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajero') {
     header('Location: ../login.php?error=Debes iniciar sesion.');
@@ -17,6 +18,15 @@ $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 $stmtM = $conn->prepare("SELECT * FROM mensajeros WHERE usuario_id = :id");
 $stmtM->execute([':id' => $user_id]);
 $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
+
+$fotoMensajero = trim((string) ($mensajero['foto'] ?? ''));
+if ($fotoMensajero !== '' && !preg_match('#^https?://#i', $fotoMensajero)) {
+    $fotoMensajero = app_url(ltrim($fotoMensajero, '/'));
+}
+
+if ($fotoMensajero === '') {
+    $fotoMensajero = '../../public/img/default-avatar.png';
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -63,7 +73,7 @@ $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
                     <div class="profile-bg"></div>
                     <div class="profile-header-content">
                         <div class="avatar-container" style="position: relative; width: 100px; margin: 0 auto;">
-                            <img src="<?php echo !empty($mensajero['foto']) ? htmlspecialchars($mensajero['foto']) : '../../public/img/default-avatar.png'; ?>"
+                            <img src="<?php echo htmlspecialchars($fotoMensajero, ENT_QUOTES, 'UTF-8'); ?>"
                                  alt="Avatar" class="profile-avatar-large"
                                  onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%228%22 r=%224%22 fill=%22%235cb85c%22/%3E%3Cpath d=%22M12 14c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z%22 fill=%22%235cb85c%22/%3E%3C/svg%3E'"
                                  style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
