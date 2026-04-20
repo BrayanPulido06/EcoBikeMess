@@ -8,6 +8,40 @@ if ($nombreCompleto === '') {
     $nombreCompleto = 'Mensajero';
 }
 
+$resolverFotoPerfil = static function (?string $ruta): string {
+    $ruta = trim((string) $ruta);
+    if ($ruta === '') {
+        return '../../public/img/default-avatar.png';
+    }
+
+    if (preg_match('#^https?://#i', $ruta) || str_starts_with($ruta, 'data:image/')) {
+        return $ruta;
+    }
+
+    $rutaNormalizada = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, ltrim($ruta, '/\\'));
+    $rutaFisica = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . $rutaNormalizada;
+
+    if (!is_file($rutaFisica) || !is_readable($rutaFisica)) {
+        return '../../public/img/default-avatar.png';
+    }
+
+    $extension = strtolower(pathinfo($rutaFisica, PATHINFO_EXTENSION));
+    $mime = match ($extension) {
+        'jpg', 'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'webp' => 'image/webp',
+        'gif' => 'image/gif',
+        default => 'application/octet-stream',
+    };
+
+    $contenido = @file_get_contents($rutaFisica);
+    if ($contenido === false) {
+        return '../../public/img/default-avatar.png';
+    }
+
+    return 'data:' . $mime . ';base64,' . base64_encode($contenido);
+};
+
 $fotoSidebar = trim((string) ($_SESSION['user_photo'] ?? ''));
 
 if ($fotoSidebar === '') {
@@ -27,19 +61,7 @@ if ($fotoSidebar === '') {
     }
 }
 
-if ($fotoSidebar !== '' && !preg_match('#^https?://#i', $fotoSidebar)) {
-    if (strpos($fotoSidebar, '/uploads/') === 0) {
-        $fotoSidebar = '../..' . $fotoSidebar;
-    } elseif (strpos($fotoSidebar, 'uploads/') === 0) {
-        $fotoSidebar = '../../' . ltrim($fotoSidebar, '/');
-    } else {
-        $fotoSidebar = app_url(ltrim($fotoSidebar, '/'));
-    }
-}
-
-if ($fotoSidebar === '') {
-    $fotoSidebar = '../../public/img/default-avatar.png';
-}
+$fotoSidebar = $resolverFotoPerfil($fotoSidebar);
 ?>
 <nav class="side-menu" id="sideMenu">
     <div class="menu-header">

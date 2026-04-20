@@ -19,20 +19,42 @@ $stmtM = $conn->prepare("SELECT * FROM mensajeros WHERE usuario_id = :id");
 $stmtM->execute([':id' => $user_id]);
 $mensajero = $stmtM->fetch(PDO::FETCH_ASSOC);
 
-$fotoMensajero = trim((string) ($mensajero['foto'] ?? ''));
-if ($fotoMensajero !== '' && !preg_match('#^https?://#i', $fotoMensajero)) {
-    if (strpos($fotoMensajero, '/uploads/') === 0) {
-        $fotoMensajero = '../..' . $fotoMensajero;
-    } elseif (strpos($fotoMensajero, 'uploads/') === 0) {
-        $fotoMensajero = '../../' . ltrim($fotoMensajero, '/');
-    } else {
-        $fotoMensajero = app_url(ltrim($fotoMensajero, '/'));
+$resolverFotoPerfil = static function (?string $ruta): string {
+    $ruta = trim((string) $ruta);
+    if ($ruta === '') {
+        return '../../public/img/default-avatar.png';
     }
-}
 
-if ($fotoMensajero === '') {
-    $fotoMensajero = '../../public/img/default-avatar.png';
-}
+    if (preg_match('#^https?://#i', $ruta) || str_starts_with($ruta, 'data:image/')) {
+        return $ruta;
+    }
+
+    $rutaNormalizada = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, ltrim($ruta, '/\\'));
+    $rutaFisica = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . $rutaNormalizada;
+
+    if (!is_file($rutaFisica) || !is_readable($rutaFisica)) {
+        return '../../public/img/default-avatar.png';
+    }
+
+    $extension = strtolower(pathinfo($rutaFisica, PATHINFO_EXTENSION));
+    $mime = match ($extension) {
+        'jpg', 'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'webp' => 'image/webp',
+        'gif' => 'image/gif',
+        default => 'application/octet-stream',
+    };
+
+    $contenido = @file_get_contents($rutaFisica);
+    if ($contenido === false) {
+        return '../../public/img/default-avatar.png';
+    }
+
+    return 'data:' . $mime . ';base64,' . base64_encode($contenido);
+};
+
+$fotoMensajero = trim((string) ($mensajero['foto'] ?? ''));
+$fotoMensajero = $resolverFotoPerfil($fotoMensajero);
 ?>
 <!DOCTYPE html>
 <html lang="es">
