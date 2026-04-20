@@ -89,7 +89,7 @@ $opcionesSangre = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 $opcionesTransporte = [
     'bicicleta' => 'Bicicleta',
     'moto' => 'Moto',
-    'vehiculo' => 'Vehiculo',
+    'vehiculo' => 'Carro',
 ];
 ?>
 <!DOCTYPE html>
