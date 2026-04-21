@@ -1,8 +1,7 @@
 <?php
-require_once __DIR__ . '/../../includes/paths.php';
 session_start();
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajero') {
-    header('Location: ' . route_url('login', ['error' => 'Debes iniciar sesión.']));
+    header('Location: ../login.php?error=Debes iniciar sesión.');
     exit;
 }
 ?>

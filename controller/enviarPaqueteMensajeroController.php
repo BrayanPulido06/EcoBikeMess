@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 ensureSessionStarted();
-requireWebAuth(['mensajero']);
+requireWebAuth(['mensajero'], '../views/login.php?error=Debes iniciar sesion.');
 
 require_once '../models/enviarPaqueteMensajeroModels.php';
 

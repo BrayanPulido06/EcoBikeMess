@@ -1,8 +1,7 @@
 <?php
-require_once __DIR__ . '/../../includes/paths.php';
 session_start();
 if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['cliente', 'colaborador'], true)) {
-    header('Location: ' . route_url('login', ['error' => 'Debes iniciar sesión.']));
+    header("Location: ../login.php?error=Debes iniciar sesiÃƒÆ’Ã‚Â³n.");
     exit();
 }
 ?>

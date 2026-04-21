@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['action'])) {
     redirectPerfil($role);
 }
 
-requireWebAuth();
+requireWebAuth(null, '../views/login.php?error=Debes iniciar sesión.');
 
 $role = $_SESSION['user_role'] ?? 'cliente';
 $allowedActions = ['update_profile', 'update_profile_mensajero'];
