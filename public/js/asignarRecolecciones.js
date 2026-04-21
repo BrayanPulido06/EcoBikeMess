@@ -1,53 +1,20 @@
 // public/js/asignarRecolecciones.js
 let recolecciones = [];
-let todosLosMensajeros = [];
+let todosLosMensajeros = []; // Almacenar mensajeros globalmente
 
+// Inicialización
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     loadInitialData();
     cargarMensajerosEnModal();
 });
 
-function escapeHtml(value) {
-    return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-function renderAccionesRecoleccion(rec) {
-    const ids = escapeHtml(rec.ids);
-    const direccion = escapeHtml(rec.direccion_origen);
-    const cliente = escapeHtml(rec.cliente_nombre);
-    const esPendiente = rec.estado === 'pendiente';
-
-    if (['entregado', 'completada', 'cancelado'].includes(rec.estado)) {
-        return `
-            <div class="actions">
-                <button class="btn btn-sm btn-info btn-ver-detalles" title="Ver Paquetes" data-ids="${ids}">Ver</button>
-            </div>
-        `;
-    }
-
-    return `
-        <div class="actions">
-            <button class="btn btn-sm btn-info btn-ver-detalles" title="Ver Paquetes" data-ids="${ids}">Ver</button>
-            <button class="btn btn-sm ${esPendiente ? 'btn-warning' : 'btn-secondary'} btn-asignar-recoleccion" title="${esPendiente ? 'Asignar Recoleccion' : 'Reasignar'}" data-ids="${ids}" data-direccion="${direccion}" data-cliente="${cliente}">${esPendiente ? 'Asignar' : 'Reasignar'}</button>
-            <button class="btn btn-sm btn-danger btn-cancelar-recoleccion" title="Cancelar" data-ids="${ids}">Cancelar</button>
-        </div>
-    `;
-}
-
+// Configurar event listeners
 function setupEventListeners() {
+    // Filtros
     document.getElementById('busqueda').addEventListener('input', applyFilters);
-
-    const tablaBody = document.getElementById('tablaRecoleccionesBody');
-    if (tablaBody) {
-        tablaBody.addEventListener('click', manejarClickTabla);
-    }
-
+    
+    // Modal Asignación Rápida
     const btnCerrarAsignar = document.getElementById('btnCerrarAsignar');
     if (btnCerrarAsignar) {
         btnCerrarAsignar.addEventListener('click', function() {
@@ -55,60 +22,26 @@ function setupEventListeners() {
         });
     }
 
+    // Formulario de Asignación
     const formAsignar = document.getElementById('formAsignarRapido');
     if (formAsignar) {
         formAsignar.addEventListener('submit', handleAsignarSubmit);
     }
 
+    // Filtro de mensajeros en el modal
     const inputBuscarMensajero = document.getElementById('buscarMensajeroInput');
     if (inputBuscarMensajero) {
         inputBuscarMensajero.addEventListener('input', filtrarListaMensajeros);
     }
 
-    const listaMensajeros = document.getElementById('listaMensajeros');
-    if (listaMensajeros) {
-        listaMensajeros.addEventListener('click', manejarClickMensajeros);
-    }
-
+    // Botón Reportes (Opcional)
     const btnReportes = document.getElementById('btnReportes');
     if (btnReportes) {
         btnReportes.addEventListener('click', () => alert('Funcionalidad de reportes en desarrollo'));
     }
 }
 
-function manejarClickTabla(event) {
-    const btnDetalles = event.target.closest('.btn-ver-detalles');
-    if (btnDetalles) {
-        verDetallesPaquetes(btnDetalles.dataset.ids || '');
-        return;
-    }
-
-    const btnAsignar = event.target.closest('.btn-asignar-recoleccion');
-    if (btnAsignar) {
-        asignarRecoleccion(
-            btnAsignar.dataset.ids || '',
-            btnAsignar.dataset.direccion || '',
-            btnAsignar.dataset.cliente || ''
-        );
-        return;
-    }
-
-    const btnCancelar = event.target.closest('.btn-cancelar-recoleccion');
-    if (btnCancelar) {
-        cancelarRecoleccion(btnCancelar.dataset.ids || '');
-    }
-}
-
-function manejarClickMensajeros(event) {
-    const item = event.target.closest('.mensajero-item[data-id]');
-    if (!item) return;
-
-    seleccionarMensajero(
-        item.dataset.id,
-        item.dataset.nombre || ''
-    );
-}
-
+// Cargar datos reales desde el servidor
 async function loadInitialData() {
     try {
         const response = await fetch('../../controller/asignarRecoleccionesController.php?action=listar');
@@ -126,6 +59,7 @@ async function loadInitialData() {
     }
 }
 
+// Cargar lista de mensajeros para el select del modal
 async function cargarMensajerosEnModal() {
     try {
         const response = await fetch('../../controller/asignarRecoleccionesController.php?action=get_data_init');
@@ -139,10 +73,11 @@ async function cargarMensajerosEnModal() {
     }
 }
 
+// Renderizar tabla de recolecciones
 function renderRecolecciones() {
     const tbody = document.getElementById('tablaRecoleccionesBody');
     const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-
+    
     if (!recolecciones || recolecciones.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -151,7 +86,7 @@ function renderRecolecciones() {
         `;
         return;
     }
-
+    
     tbody.innerHTML = recolecciones.map(rec => `
         <tr class="prioridad-${rec.color_prioridad || 'verde'}">
             <td>${rec.direccion_origen}</td>
@@ -169,11 +104,23 @@ function renderRecolecciones() {
             </td>
             <td><small>${rec.guias ? rec.guias.substring(0, 50) + (rec.guias.length > 50 ? '...' : '') : ''}</small></td>
             <td>${new Date(rec.fecha_creacion).toLocaleString()}</td>
-            <td>${renderAccionesRecoleccion(rec)}</td>
+            <td>
+                <div class="actions">
+                    <button class="btn btn-sm btn-info" title="Ver Paquetes" onclick="verDetallesPaquetes('${rec.ids}')">👁️</button>
+                    ${!['entregado', 'completada', 'cancelado'].includes(rec.estado) ? `
+                        ${rec.estado === 'pendiente' ? 
+                            `<button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('${rec.ids}', '${rec.direccion_origen.replace(/'/g, "\\'")}', '${rec.cliente_nombre.replace(/'/g, "\\'")}')">🚴</button>` : 
+                            `<button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('${rec.ids}', '${rec.direccion_origen.replace(/'/g, "\\'")}', '${rec.cliente_nombre.replace(/'/g, "\\'")}')">🔄</button>`
+                        }
+                        <button class="btn btn-sm btn-danger" title="Cancelar" onclick="cancelarRecoleccion('${rec.ids}')">🗑️</button>
+                    ` : ''}
+                </div>
+            </td>
         </tr>
     `).join('');
 }
 
+// Actualizar estadísticas
 function updateStats(stats) {
     if (stats) {
         document.getElementById('totalRecolecciones').textContent = stats.total || 0;
@@ -182,20 +129,26 @@ function updateStats(stats) {
     }
 }
 
+// Aplicar filtros
 function applyFilters() {
     const busqueda = document.getElementById('busqueda').value.toLowerCase();
-
+    
     const filtered = recolecciones.filter(rec => {
-        return !busqueda ||
+        return !busqueda || 
             rec.cliente_nombre.toLowerCase().includes(busqueda) ||
             rec.direccion_origen.toLowerCase().includes(busqueda);
     });
-
+    
+    // Renderizar filtrados
+    const temp = recolecciones;
     const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+    
+    // Hack temporal para usar la misma función de renderizado
     const tbody = document.getElementById('tablaRecoleccionesBody');
     if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">No se encontraron resultados.</td></tr>`;
     } else {
+        // Renderizar manualmente los filtrados (con la lógica corregida)
         tbody.innerHTML = filtered.map(rec => `
             <tr class="prioridad-${rec.color_prioridad || 'verde'}">
                 <td>${rec.direccion_origen}</td>
@@ -213,7 +166,18 @@ function applyFilters() {
                 </td>
                 <td><small>${rec.guias ? rec.guias.substring(0, 50) + (rec.guias.length > 50 ? '...' : '') : ''}</small></td>
                 <td>${new Date(rec.fecha_creacion).toLocaleString()}</td>
-                <td>${renderAccionesRecoleccion(rec)}</td>
+                <td>
+                    <div class="actions">
+                        <button class="btn btn-sm btn-info" title="Ver Paquetes" onclick="verDetallesPaquetes('${rec.ids}')">👁️</button>
+                        ${!['entregado', 'completada', 'cancelado'].includes(rec.estado) ? `
+                            ${rec.estado === 'pendiente' ? 
+                                `<button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('${rec.ids}', '${rec.direccion_origen.replace(/'/g, "\\'")}', '${rec.cliente_nombre.replace(/'/g, "\\'")}')"><img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="Asignar" style="width:16px;height:16px;vertical-align:middle;"></button>` : 
+                                `<button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('${rec.ids}', '${rec.direccion_origen.replace(/'/g, "\\'")}', '${rec.cliente_nombre.replace(/'/g, "\\'")}')">🔄</button>`
+                            }
+                            <button class="btn btn-sm btn-danger" title="Cancelar" onclick="cancelarRecoleccion('${rec.ids}')">🗑️</button>
+                        ` : ''}
+                    </div>
+                </td>
             </tr>
         `).join('');
     }
@@ -222,16 +186,18 @@ function applyFilters() {
 window.verDetallesPaquetes = async function(ids) {
     const modal = document.getElementById('modalDetalles');
     const container = document.getElementById('detallesRecoleccionBody');
-
+    
     if (modal && container) {
         modal.style.display = 'flex';
         container.innerHTML = '<p style="text-align:center; padding: 2rem;">Cargando detalles de la base de datos...</p>';
 
         try {
+            // 1. Obtener detalles de los paquetes
             const responsePaquetes = await fetch(`../../controller/asignarRecoleccionesController.php?action=detalles&ids=${ids}`);
             const resultPaquetes = await responsePaquetes.json();
 
             let recoleccionData = null;
+            // 2. Si hay paquetes, obtener detalles de la recolección asociada
             if (resultPaquetes.success && resultPaquetes.data.length > 0) {
                 const primerPaqueteId = resultPaquetes.data[0].id;
                 const responseRecoleccion = await fetch(`../../controller/asignarRecoleccionesController.php?action=detalles_recoleccion&paquete_id=${primerPaqueteId}`);
@@ -241,11 +207,13 @@ window.verDetallesPaquetes = async function(ids) {
                 }
             }
 
+            // 3. Renderizar el HTML del modal
             if (resultPaquetes.success && resultPaquetes.data.length > 0) {
                 const primerPaquete = resultPaquetes.data[0];
                 const clienteNombre = primerPaquete.nombre_emprendimiento || (primerPaquete.cli_nombres + ' ' + primerPaquete.cli_apellidos);
-
-                let recoleccionInfoHtml = '<p>No se encontraron detalles de la recoleccion en la tabla `recolecciones`.</p>';
+                
+                // HTML para la información de la recolección
+                let recoleccionInfoHtml = '<p>No se encontraron detalles de la recolección en la tabla `recolecciones`.</p>';
                 if (recoleccionData) {
                     recoleccionInfoHtml = `
                         <div class="detalle-grid">
@@ -259,6 +227,7 @@ window.verDetallesPaquetes = async function(ids) {
                     `;
                 }
 
+                // HTML para las fotos
                 let fotosHtml = '<p>No hay fotos adjuntas.</p>';
                 if (recoleccionData && recoleccionData.foto_recoleccion) {
                     let fotos = [];
@@ -274,31 +243,32 @@ window.verDetallesPaquetes = async function(ids) {
                         fotosHtml = '<div class="fotos-grid" style="display:flex; gap:10px; flex-wrap:wrap;">';
                         fotos.forEach(fotoUrl => {
                             if (fotoUrl) {
-                                const fullUrl = `../../${fotoUrl}`;
-                                fotosHtml += `<a href="${fullUrl}" target="_blank"><img src="${fullUrl}" alt="Foto de recoleccion" style="width:100px; height:100px; object-fit:cover; border-radius:5px;"></a>`;
+                                const fullUrl = `../../${fotoUrl}`; // Asume que la ruta es desde la raíz del proyecto
+                                fotosHtml += `<a href="${fullUrl}" target="_blank"><img src="${fullUrl}" alt="Foto de recolección" style="width:100px; height:100px; object-fit:cover; border-radius:5px;"></a>`;
                             }
                         });
                         fotosHtml += '</div>';
                     }
                 }
 
-                const html = `
+                // HTML final
+                let html = `
                     <div class="detalle-section">
-                        <h3 style="margin-bottom: 15px;">Informacion General</h3>
+                        <h3 style="margin-bottom: 15px;">ℹ️ Información General</h3>
                         <div class="detalle-grid">
                             <div class="detalle-item"><div class="detalle-label">Cliente</div><div class="detalle-value">${clienteNombre}</div></div>
-                            <div class="detalle-item"><div class="detalle-label">Direccion</div><div class="detalle-value">${primerPaquete.direccion_origen}</div></div>
-                            <div class="detalle-item"><div class="detalle-label">Telefono</div><div class="detalle-value">${primerPaquete.cli_telefono || 'N/A'}</div></div>
+                            <div class="detalle-item"><div class="detalle-label">Dirección</div><div class="detalle-value">${primerPaquete.direccion_origen}</div></div>
+                            <div class="detalle-item"><div class="detalle-label">Teléfono</div><div class="detalle-value">${primerPaquete.cli_telefono || 'N/A'}</div></div>
                         </div>
                     </div>
-                    <div class="detalle-section"><h3 style="margin-top: 20px;">Detalles de la Recoleccion</h3>${recoleccionInfoHtml}</div>
-                    <div class="detalle-section"><h3 style="margin-top: 20px;">Fotos de Evidencia</h3>${fotosHtml}</div>
+                    <div class="detalle-section"><h3 style="margin-top: 20px;">📝 Detalles de la Recolección</h3>${recoleccionInfoHtml}</div>
+                    <div class="detalle-section"><h3 style="margin-top: 20px;">📸 Fotos de Evidencia</h3>${fotosHtml}</div>
                     <div class="detalle-section">
-                        <h3 style="margin-top: 20px;">Paquetes Incluidos (${resultPaquetes.data.length})</h3>
+                        <h3 style="margin-top: 20px;">📦 Paquetes Incluidos (${resultPaquetes.data.length})</h3>
                         <div style="max-height: 200px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px;">
                             <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
                                 <thead style="background: #f8f9fa; position: sticky; top: 0;">
-                                    <tr><th style="padding: 8px; text-align: left;">Guia</th><th style="padding: 8px; text-align: left;">Destinatario</th><th style="padding: 8px; text-align: left;">Descripcion</th></tr>
+                                    <tr><th style="padding: 8px; text-align: left;">Guía</th><th style="padding: 8px; text-align: left;">Destinatario</th><th style="padding: 8px; text-align: left;">Descripción</th></tr>
                                 </thead>
                                 <tbody>
                                     ${resultPaquetes.data.map(p => `
@@ -322,27 +292,32 @@ window.verDetallesPaquetes = async function(ids) {
             container.innerHTML = '<p class="text-danger text-center">Error al cargar detalles.</p>';
         }
     }
-};
+}
 
+
+// Abrir modal de asignación y preparar lista
 window.asignarRecoleccion = function(ids, direccion, cliente) {
     const modal = document.getElementById('modalAsignarRapido');
     if (modal) {
+        // Poblar información de la recolección
         const infoContainer = document.getElementById('infoRecoleccionAsignar');
         if (infoContainer) {
             if (direccion && cliente) {
                 infoContainer.innerHTML = `
-                    <p style="margin:0; font-size: 0.9em; color: #6c757d;">Asignando recoleccion para:</p>
+                    <p style="margin:0; font-size: 0.9em; color: #6c757d;">Asignando recolección para:</p>
                     <p style="margin:2px 0 0; font-weight: 600;"><strong>Cliente:</strong> ${cliente}</p>
-                    <p style="margin:2px 0 0; font-weight: 600;"><strong>Direccion:</strong> ${direccion}</p>`;
+                    <p style="margin:2px 0 0; font-weight: 600;"><strong>Dirección:</strong> ${direccion}</p>`;
             } else {
-                infoContainer.innerHTML = '<p>Informacion de recoleccion no disponible.</p>';
+                infoContainer.innerHTML = '<p>Información de recolección no disponible.</p>';
             }
         }
 
+        // Resetear formulario
         document.getElementById('idsPaquetesHidden').value = ids;
         document.getElementById('mensajeroIdHidden').value = '';
         document.getElementById('buscarMensajeroInput').value = '';
-
+        
+        // Renderizar lista completa (o recargar si está vacía)
         if (todosLosMensajeros.length === 0) {
             cargarMensajerosEnModal().then(() => {
                 renderizarListaMensajeros(todosLosMensajeros);
@@ -350,12 +325,14 @@ window.asignarRecoleccion = function(ids, direccion, cliente) {
         } else {
             renderizarListaMensajeros(todosLosMensajeros);
         }
-
+        
+        // Limpiar selección visual previa
         document.querySelectorAll('.mensajero-item').forEach(el => el.classList.remove('selected'));
         modal.style.display = 'flex';
     }
-};
+}
 
+// Renderizar lista de mensajeros (estilo paquetesAdmin)
 function renderizarListaMensajeros(lista) {
     const contenedor = document.getElementById('listaMensajeros');
     if (!contenedor) return;
@@ -369,8 +346,9 @@ function renderizarListaMensajeros(lista) {
     lista.forEach(m => {
         const tareas = m.tareas_activas || 0;
         const estadoColor = (m.estado === 'activo' || m.estado === 'en_ruta') ? 'green' : 'gray';
+        const safeName = m.nombre.replace(/'/g, "\\'"); // Escapar comillas simples para el onclick
         html += `
-            <div class="mensajero-item" data-id="${m.id}" data-nombre="${escapeHtml(m.nombre)}">
+            <div class="mensajero-item" onclick="seleccionarMensajero(${m.id}, '${safeName}')" data-id="${m.id}">
                 <div style="font-weight:bold;">${m.nombre}</div>
                 <div style="font-size:0.85em; color:#666;">
                     <span style="color:${estadoColor}">● ${m.estado}</span> | Tareas activas: ${tareas}
@@ -381,28 +359,31 @@ function renderizarListaMensajeros(lista) {
     contenedor.innerHTML = html;
 }
 
+// Filtrar mensajeros al escribir
 function filtrarListaMensajeros(e) {
     const texto = e.target.value.toLowerCase();
-    const filtrados = todosLosMensajeros.filter(m =>
+    const filtrados = todosLosMensajeros.filter(m => 
         m.nombre.toLowerCase().includes(texto)
     );
     renderizarListaMensajeros(filtrados);
 }
 
+// Seleccionar un mensajero de la lista
 window.seleccionarMensajero = function(id, nombre) {
     document.getElementById('mensajeroIdHidden').value = id;
     document.getElementById('buscarMensajeroInput').value = nombre;
-
+    
     document.querySelectorAll('.mensajero-item').forEach(el => el.classList.remove('selected'));
     const item = document.querySelector(`.mensajero-item[data-id="${id}"]`);
     if (item) {
         item.classList.add('selected');
     }
-};
+}
 
+// Manejar envío de asignación
 async function handleAsignarSubmit(e) {
     e.preventDefault();
-
+    
     const formData = new FormData(e.target);
     formData.append('action', 'asignar');
 
@@ -421,18 +402,19 @@ async function handleAsignarSubmit(e) {
         if (data.success) {
             alert('Mensajero asignado correctamente');
             document.getElementById('modalAsignarRapido').style.display = 'none';
-            loadInitialData();
+            loadInitialData(); // Recargar tabla
         } else {
             alert('Error: ' + data.message);
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Ocurrio un error al procesar la solicitud');
+        alert('Ocurrió un error al procesar la solicitud');
     }
 }
 
+// Cancelar (Eliminar de la vista) recolección
 window.cancelarRecoleccion = async function(ids) {
-    if (!confirm('Estas seguro de eliminar esta recoleccion de la vista? Los paquetes pasaran a estado "cancelado" pero no se borraran de la base de datos.')) {
+    if (!confirm('¿Estás seguro de eliminar esta recolección de la vista? Los paquetes pasarán a estado "cancelado" pero no se borrarán de la base de datos.')) {
         return;
     }
 
@@ -448,12 +430,12 @@ window.cancelarRecoleccion = async function(ids) {
         const data = await response.json();
 
         if (data.success) {
-            loadInitialData();
+            loadInitialData(); // Recargar tabla
         } else {
             alert('Error: ' + data.message);
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Ocurrio un error al procesar la solicitud');
+        alert('Ocurrió un error al procesar la solicitud');
     }
-};
+}

@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnNueva = document.getElementById('btnNuevaFactura');
     if (btnNueva) btnNueva.style.display = 'none'; 
 
-    // --- INICIALIZACIÃƒâ€œN ---
+    // --- INICIALIZACIÓN ---
     cargarEstadisticas();
     listarFacturas();
     setupModalClosers();
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
     Object.values(inputs).forEach(input => {
         if (input) input.addEventListener('change', () => {
             listarFacturas();
-            cargarEstadisticas(); // Recargar estadÃƒÂ­sticas al filtrar
+            cargarEstadisticas(); // Recargar estadísticas al filtrar
         });
     });
 
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (elFavor) elFavor.textContent = formatCurrency(s.saldo_favor || 0);
                 }
             })
-            .catch(err => console.error('Error cargando estadÃƒÂ­sticas:', err));
+            .catch(err => console.error('Error cargando estadísticas:', err));
     }
 
     function listarFacturas() {
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(err => {
                 console.error(err);
-                if (tableBody) tableBody.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Error de conexiÃƒÂ³n con el servidor</td></tr>';
+                if (tableBody) tableBody.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Error de conexión con el servidor</td></tr>';
             });
     }
 
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const fechaIngresoFormateada = formatDateTimeEs(f.fecha_creacion);
             const fechaEntregaFormateada = formatDateTimeEs(f.fecha_entrega);
             const valorEnvio = formatCurrency(f.costo_envio);
-            const agregadoRecaudo = String(f.envio_destinatario).toLowerCase() === 'si' ? 'SÃƒÂ­' : 'No';
+            const agregadoRecaudo = String(f.envio_destinatario).toLowerCase() === 'si' ? 'Sí' : 'No';
 
             html += `
                 <tr>
@@ -160,9 +160,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${fechaEntregaFormateada}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn btn-sm btn-warning" onclick="cargarRotulo(${f.id})" title="Ver RÃƒÂ³tulo">Ã°Å¸ÂÂ·Ã¯Â¸Â RÃƒÂ³tulo</button>
-                            <button class="btn btn-sm btn-info" onclick="verDetalle(${f.id})" title="Ver Detalle">Ã°Å¸â€˜ÂÃ¯Â¸Â</button>
-                            ${f.estado !== 'entregado' && f.estado !== 'cancelado' ? `<button class="btn btn-sm btn-danger" onclick="cancelarPedido(${f.id}, '${f.numero_guia}')" title="Cancelar Pedido">Ã°Å¸â€”â€˜Ã¯Â¸Â</button>` : ''}
+                            <button class="btn btn-sm btn-warning" onclick="cargarRotulo(${f.id})" title="Ver Rótulo">🏷️ Rótulo</button>
+                            <button class="btn btn-sm btn-info" onclick="verDetalle(${f.id})" title="Ver Detalle">👁️</button>
+                            ${f.estado !== 'entregado' && f.estado !== 'cancelado' ? `<button class="btn btn-sm btn-danger" onclick="cancelarPedido(${f.id}, '${f.numero_guia}')" title="Cancelar Pedido">🗑️</button>` : ''}
                         </div>
                     </td>
                 </tr>
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('totalResults').textContent = data.length;
     }
 
-    // FunciÃƒÂ³n global para ver detalle
+    // Función global para ver detalle
     window.verDetalle = function(id) {
         const modal = document.getElementById('modalDetalles');
         const container = document.getElementById('detallesFactura');
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="invoice-header" style="border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
                                 <div style="display:flex; justify-content:space-between;">
                                     <div>
-                                        <h3 style="margin:0; color:#2c3e50;">GuÃƒÂ­a ${info.numero_guia}</h3>
+                                        <h3 style="margin:0; color:#2c3e50;">Guía ${info.numero_guia}</h3>
                                         <p style="margin:5px 0; color:#7f8c8d;">Estado: <strong>${info.estado.toUpperCase()}</strong></p>
                                     </div>
                                     <div class="text-right">
@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <td style="padding:8px;">${info.destinatario_nombre}</td>
                                     </tr>
                                     <tr>
-                                        <td style="padding:8px;"><strong>DirecciÃƒÂ³n:</strong></td>
+                                        <td style="padding:8px;"><strong>Dirección:</strong></td>
                                         <td style="padding:8px;">${info.direccion_destino}</td>
                                     </tr>
                                     <tr>
@@ -227,10 +227,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                             ${info.estado === 'entregado' && info.infoEntrega ? `
                                 <div class="detalle-section" style="margin-top: 20px;">
-                                    <h3>Ã¢Å“â€¦ Detalles de Entrega</h3>
+                                    <h3>✅ Detalles de Entrega</h3>
                                     <div class="detalle-grid">
                                         <div class="detalle-item">
-                                            <div class="detalle-label">RecibiÃƒÂ³</div>
+                                            <div class="detalle-label">Recibió</div>
                                             <div class="detalle-value">${info.infoEntrega.nombreRecibe || 'N/A'}</div>
                                         </div>
                                         <div class="detalle-item">
@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
 
                                 <div class="detalle-section" style="margin-top: 20px;">
-                                    <h3>Ã°Å¸â€œÂ¸ Evidencia FotogrÃƒÂ¡fica</h3>
+                                    <h3>📸 Evidencia Fotográfica</h3>
                                     <div class="fotos-evidencia-container" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
                                         ${info.infoEntrega.fotoPrincipal ? `
                                             <a href="../../${info.infoEntrega.fotoPrincipal}" class="js-image-lightbox" data-lightbox-src="../../${info.infoEntrega.fotoPrincipal}" data-lightbox-alt="Foto Principal" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
@@ -278,21 +278,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
                             ${info.estado === 'cancelado' ? `
                                 <div class="detalle-section" style="margin-top: 20px; background-color: #fff5f5; border: 1px solid #f5c2c7;">
-                                    <h3 style="color: #b02a37;">Ã¢ÂÅ’ Detalles de CancelaciÃƒÂ³n</h3>
+                                    <h3 style="color: #b02a37;">❌ Detalles de Cancelación</h3>
                                     <div class="detalle-grid">
                                         <div class="detalle-item">
                                             <div class="detalle-label">Motivo</div>
-                                            <div class="detalle-value">${info.infoCancelacion ? (info.infoCancelacion.motivo || 'Sin informaciÃƒÂ³n.') : 'Sin informaciÃƒÂ³n.'}</div>
+                                            <div class="detalle-value">${info.infoCancelacion ? (info.infoCancelacion.motivo || 'Sin información.') : 'Sin información.'}</div>
                                         </div>
                                         <div class="detalle-item">
                                             <div class="detalle-label">Fecha</div>
-                                            <div class="detalle-value">${info.infoCancelacion ? formatDateTimeEs(info.infoCancelacion.fecha) : 'Sin informaciÃƒÂ³n.'}</div>
+                                            <div class="detalle-value">${info.infoCancelacion ? formatDateTimeEs(info.infoCancelacion.fecha) : 'Sin información.'}</div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="detalle-section" style="margin-top: 20px;">
-                                    <h3>Ã°Å¸â€œÂ¸ Evidencia FotogrÃƒÂ¡fica</h3>
+                                    <h3>📸 Evidencia Fotográfica</h3>
                                     <div class="fotos-evidencia-container" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
                                         ${info.infoCancelacion && info.infoCancelacion.foto ? `
                                             <a href="../../${info.infoCancelacion.foto}" class="js-image-lightbox" data-lightbox-src="../../${info.infoCancelacion.foto}" data-lightbox-alt="Foto Evidencia" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
@@ -310,12 +310,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // FunciÃƒÂ³n para cargar datos y abrir el rÃƒÂ³tulo
+    // Función para cargar datos y abrir el rótulo
     window.cargarRotulo = function(id) {
-        // Feedback visual en el botÃƒÂ³n
+        // Feedback visual en el botón
         const btn = event.currentTarget;
         const originalContent = btn.innerHTML;
-        btn.innerHTML = 'Ã¢Å’â€º';
+        btn.innerHTML = '⌛';
         btn.disabled = true;
 
         fetch(`../../controller/misPedidosController.php?action=detalle&id=${id}`)
@@ -338,11 +338,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         destinatario_telefono: info.destinatario_telefono || '',
                         destinatario_observaciones: info.instrucciones_entrega || 'Sin observaciones',
                         contenido: info.descripcion_contenido || '',
-                        cambios: info.recoger_cambios ? 'SÃƒÂ­' : 'No',
+                        cambios: info.recoger_cambios ? 'Sí' : 'No',
                         costo_envio: info.costo_envio,
                         recaudo: info.recaudo_esperado || 0
                     };
-                    // Llamar a la funciÃƒÂ³n del PHP
+                    // Llamar a la función del PHP
                     if (typeof window.verRotulo === 'function') window.verRotulo(datos);
                 } else {
                     alert('No se pudieron cargar los datos: ' + response.error);
@@ -359,10 +359,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val);
     }
 
-    // FunciÃƒÂ³n global para cancelar pedido
+    // Función global para cancelar pedido
     window.cancelarPedido = function(id, guia) {
         if (!id) return;
-        const mensaje = `Ã‚Â¿EstÃƒÂ¡s seguro de cancelar el paquete ${guia}? Esta acciÃƒÂ³n no se puede deshacer.`;
+        const mensaje = `¿Estás seguro de cancelar el paquete ${guia}? Esta acción no se puede deshacer.`;
         if (!confirm(mensaje)) return;
 
         fetch(`../../controller/misPedidosController.php?action=cancelar`, {
@@ -382,7 +382,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(err => {
                 console.error(err);
-                alert('Error de conexiÃƒÂ³n al cancelar el pedido');
+                alert('Error de conexión al cancelar el pedido');
             });
     }
 
@@ -404,7 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function exportarExcel() {
-        alert('Funcionalidad de exportaciÃƒÂ³n en desarrollo.');
+        alert('Funcionalidad de exportación en desarrollo.');
     }
 
     function formatMoney(val) {
@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </tr>
                         <tr>
                             <td colspan="2" style="padding-top: 4px;">
-                                <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUÃƒÂA: <span style="font-size: 19px; font-weight: 800; color: #1f2a37;">${datos.guia}</span></div>
+                                <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUÍA: <span style="font-size: 19px; font-weight: 800; color: #1f2a37;">${datos.guia}</span></div>
                             </td>
                         </tr>
                     </table>
@@ -437,15 +437,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     <table style="width: 100%; margin-top: 4px; font-size: 12px;">
                         <tr>
                             <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
-                                <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">Ã°Å¸â€œÂ¥ Destinatario</h3>
-                                <p style="margin: 2px 0; line-height: 1.05;"><strong>DirecciÃƒÂ³n:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_direccion || ''}</span></p>
+                                <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
+                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Dirección:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_direccion || ''}</span></p>
                                 <p style="margin: 2px 0; line-height: 1.05;"><strong>Nombre:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_nombre || ''}</span></p>
-                                <p style="margin: 2px 0; line-height: 1.05;"><strong>TelÃƒÂ©fono:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_telefono || ''}</span></p>
+                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Teléfono:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_telefono || ''}</span></p>
                                 <p style="margin: 2px 0; line-height: 1.05;"><strong>Observaciones:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_observaciones || 'Sin observaciones'}</span></p>
                             </td>
                             <td style="width: 4%;"></td>
                             <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
-                                <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">Ã°Å¸â€œÂ¤ Remitente</h3>
+                                <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
                                 <p style="margin: 2px 0; line-height: 1.05;"><strong>Tienda:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.tienda_nombre || datos.remitente_nombre || 'Tienda'}</span></p>
                             </td>
                         </tr>
@@ -455,11 +455,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         <tr>
                             <td style="width: 60%; vertical-align: top; font-size: 12px;">
                                 <div style="border: 1px solid #eee; padding: 6px; border-radius: 8px;">
-                                    <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">Ã°Å¸â€œÂ¦ Detalles del Paquete</h3>
+                                    <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
                                     <p style="margin: 2px 0; line-height: 1.05;"><strong>Cambios por recoger:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.cambios || 'No'}</span></p>
                                 </div>
                                 <div style="margin-top: 6px;">
-                                    <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800;">Ã°Å¸â€™Â° Total a Cobrar</h3>
+                                    <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800;">💰 Total a Cobrar</h3>
                                     <p style="margin: 2px 0; font-size: 26px; font-weight: 800; color: #28a745; line-height: 1.1;">${formatMoney(datos.recaudo)}</p>
                                 </div>
                             </td>
@@ -483,7 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const qrContainer = temp.querySelector('#rotulo_qr_code');
         const totalTexto = formatMoney(datos.recaudo);
-        const qrData = `GuÃƒÂ­a: ${datos.guia}\nRemitente: ${datos.tienda_nombre || datos.remitente_nombre}\nDestinatario: ${datos.destinatario_nombre}\nDirecciÃƒÂ³n: ${datos.destinatario_direccion}\nTotal a Cobrar: ${totalTexto}`;
+        const qrData = `Guía: ${datos.guia}\nRemitente: ${datos.tienda_nombre || datos.remitente_nombre}\nDestinatario: ${datos.destinatario_nombre}\nDirección: ${datos.destinatario_direccion}\nTotal a Cobrar: ${totalTexto}`;
         const qrCode = new QRCodeStyling({
             width: 260,
             height: 260,
@@ -528,7 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     destinatario_telefono: info.destinatario_telefono || '',
                     destinatario_observaciones: info.instrucciones_entrega || 'Sin observaciones',
                     contenido: info.descripcion_contenido || '',
-                    cambios: info.recoger_cambios ? 'SÃƒÂ­' : 'No',
+                    cambios: info.recoger_cambios ? 'Sí' : 'No',
                     recaudo: info.recaudo_esperado || 0
                 };
                 const canvas = await renderRotuloToCanvas(datos);
@@ -537,12 +537,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 pdf.addImage(imgData, 'PNG', 0, 0, 100, 100);
                 first = false;
             } catch (err) {
-                console.error('Error generando guÃƒÂ­a:', err);
+                console.error('Error generando guía:', err);
             }
         }
 
         if (first) {
-            alert('No se pudieron generar las guÃƒÂ­as.');
+            alert('No se pudieron generar las guías.');
             return;
         }
         const fecha = new Date().toISOString().slice(0, 10);
@@ -554,7 +554,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const res = await fetch(`../../controller/misPedidosController.php?action=detalle&id=${id}`);
             const response = await res.json();
             if (!response.success) {
-                alert('No se pudo cargar la guÃƒÂ­a.');
+                alert('No se pudo cargar la guía.');
                 return;
             }
             const info = response.data.info;
@@ -567,7 +567,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 destinatario_telefono: info.destinatario_telefono || '',
                 destinatario_observaciones: info.instrucciones_entrega || 'Sin observaciones',
                 contenido: info.descripcion_contenido || '',
-                cambios: info.recoger_cambios ? 'SÃƒÂ­' : 'No',
+                cambios: info.recoger_cambios ? 'Sí' : 'No',
                 recaudo: info.recaudo_esperado || 0
             };
             const canvas = await renderRotuloToCanvas(datos);
@@ -578,7 +578,7 @@ document.addEventListener('DOMContentLoaded', function() {
             pdf.save(`Guia_${datos.guia}.pdf`);
         } catch (err) {
             console.error(err);
-            alert('Error al generar la guÃƒÂ­a.');
+            alert('Error al generar la guía.');
         }
     };
 });

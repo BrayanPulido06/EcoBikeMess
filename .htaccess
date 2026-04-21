@@ -1,3 +1,7 @@
+# Forzar UTF-8
+AddDefaultCharset UTF-8
+AddCharset UTF-8 .php .html .css .js .json
+
 # Forzar HTTPS en Hostinger
 RewriteEngine On
 RewriteCond %{HTTPS} off

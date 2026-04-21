@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../includes/paths.php';
 session_start();
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajero') {
-    header('Location: ../login.php?error=Debes iniciar sesiÃƒÂ³n.');
+    header('Location: ../login.php?error=Debes iniciar sesión.');
     exit;
 }
 ?>
@@ -19,12 +19,12 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#059669">
-    <title>Mis Paquetes - Sistema de MensajerÃ­a</title>
+    <title>Mis Paquetes - Sistema de Mensajería</title>
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest-paquetes.json">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>ðŸ“¦</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>EB</text></svg>">
     
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
     <link rel="stylesheet" href="../../public/css/misPaquetesMensajeros.css?v=20260411-1">
@@ -37,13 +37,13 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             overflow-x: hidden !important;
             height: auto !important;
             min-height: 100vh !important;
-            /* Crucial: permite el scroll tÃ¡ctil nativo con un dedo */
+            /* Crucial: permite el scroll táctil nativo con un dedo */
             touch-action: auto !important;
             -webkit-overflow-scrolling: touch !important;
             overscroll-behavior-y: auto !important;
         }
 
-        /* Forzar al contenedor principal a ser elÃ¡stico */
+        /* Forzar al contenedor principal a ser elástico */
         .main-content {
             position: relative !important; /* Evita que fixed o absolute bloqueen el flujo */
             overflow: visible !important;
@@ -68,8 +68,8 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             left: 0;
             width: 100vw !important;
             height: 100vh !important;
-            background-color: #f4f7f6 !important; /* Fondo sÃ³lido para que no se vea la lista atrÃ¡s */
-            z-index: 5000 !important; /* Por encima de headers y menÃºs */
+            background-color: #f4f7f6 !important; /* Fondo sólido para que no se vea la lista atrás */
+            z-index: 5000 !important; /* Por encima de headers y menús */
             overflow-y: auto !important; /* Permite scroll si el formulario es largo */
             -webkit-overflow-scrolling: touch !important;
             touch-action: pan-y !important;
@@ -83,10 +83,10 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     </style>
 </head>
 <body>
-    <!-- Header MÃ³vil (DiseÃ±o Unificado) -->
+    <!-- Header Móvil (Diseño Unificado) -->
     <header class="mobile-header">
         <button class="menu-btn" id="menuBtn">
-            <span class="menu-icon">â˜°</span>
+            <span class="menu-icon">&#9776;</span>
         </button>
         <div class="header-info">
             <h1><img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:35px;height:35px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
@@ -114,9 +114,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 <span id="contadorEntregados" class="contador-badge entregado">0</span>
             </div>
             <div class="header-actions" style="display: flex; gap: 10px;">
-                <button id="btnActualizar" class="btn-icon" title="Actualizar" style="background: #f8fdf9; color: #2d3e50; width: 40px; height: 40px; border-radius: 10px; border: 1px solid #e8f5f1;">
-                    ðŸ”„
-                </button>
+                <button id="btnActualizar" class="btn-icon" title="Actualizar" style="background: #f8fdf9; color: #2d3e50; width: 40px; height: 40px; border-radius: 10px; border: 1px solid #e8f5f1;">Actualizar</button>
             </div>
         </div>
 
@@ -127,15 +125,15 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
         </div>
 
         <div id="listaPaquetes" class="lista-paquetes">
-            <!-- Los paquetes se cargarÃ¡n dinÃ¡micamente aquÃ­ -->
+            <!-- Los paquetes se cargarán dinámicamente aquí -->
         </div>
     </main>
 
     <!-- Vista Detalle de Paquete -->
     <div id="vistaDetalle" class="vista-detalle oculto">
         <div class="detalle-header">
-            <button id="btnVolverDetalle" class="btn-volver">â† Volver</button>
-            <h2 id="detalleGuia">GuÃ­a #</h2>
+            <button id="btnVolverDetalle" class="btn-volver">Volver</button>
+            <h2 id="detalleGuia">Guía #</h2>
         </div>
 
         <div class="detalle-contenido">
@@ -146,9 +144,9 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 </div>
             </section>
 
-            <!-- InformaciÃ³n del Destinatario -->
+            <!-- Información del Destinatario -->
             <section class="seccion-detalle">
-                <h3>ðŸ‘¤ Destinatario</h3>
+                <h3>Destinatario</h3>
                 <div class="info-item">
                     <span class="info-label">Pedido a nombre de:</span>
                     <span id="detalleRemitente" class="info-valor"></span>
@@ -158,28 +156,28 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                     <span id="detalleNombreDestinatario" class="info-valor"></span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">TelÃ©fono:</span>
+                    <span class="info-label">Teléfono:</span>
                     <div class="telefono-container">
                         <span id="detalleTelefono" class="info-valor"></span>
                         <button id="btnLlamarDetalle" class="btn-llamar-mini">
-                            ðŸ“ž Llamar
+                            Llamar
                         </button>
                     </div>
                 </div>
             </section>
 
-            <!-- DirecciÃ³n de Entrega -->
+            <!-- Dirección de Entrega -->
             <section class="seccion-detalle">
-                <h3>ðŸ“ DirecciÃ³n de Entrega</h3>
+                <h3>Dirección de Entrega</h3>
                 <p id="detalleDireccion" class="direccion-completa"></p>
                 <button id="btnNavegar" class="btn-primario btn-full">
-                    ðŸ—ºï¸ Navegar a DirecciÃ³n
+                    Navegar a Dirección
                 </button>
             </section>
 
-            <!-- InformaciÃ³n del Paquete -->
+            <!-- Información del Paquete -->
             <section class="seccion-detalle">
-                <h3>ðŸ“¦ InformaciÃ³n del Paquete</h3>
+                <h3>Información del Paquete</h3>
                 <div class="info-item">
                     <span class="info-label">Instrucciones de Entrega:</span>
                     <span id="detalleContenido" class="info-valor"></span>
@@ -194,18 +192,18 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 </div>
             </section>
 
-            <!-- BotÃ³n de Entrega -->
+            <!-- Botón de Entrega -->
             <div id="btnEntregarContainer" class="accion-entrega-container">
                 <button id="btnEntregar" class="btn-entregar">
-                    âœ“ Entregar Paquete
+                    Entregar Paquete
                 </button>
             </div>
 
-            <!-- InformaciÃ³n de Entrega (si ya fue entregado) -->
+            <!-- Información de Entrega (si ya fue entregado) -->
             <section id="infoEntregaRealizada" class="seccion-detalle oculto">
-                <h3>âœ… InformaciÃ³n de Entrega</h3>
+                <h3>Información de Entrega</h3>
                 <div class="info-item">
-                    <span class="info-label">RecibiÃ³:</span>
+                    <span class="info-label">Recibió:</span>
                     <span id="entregaRecibio"></span>
                 </div>
                 <div class="info-item">
@@ -231,9 +229,9 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <!-- Vista Formulario de Entrega -->
     <div id="vistaFormularioEntrega" class="vista-formulario oculto">
         <div class="formulario-header">
-            <button type="button" id="btnVolverEntrega" class="btn-volver formulario-volver">â† Volver</button>
-            <h2>âœ“ Entregar Paquete</h2>
-            <p id="formGuia">GuÃ­a #</p>
+            <button type="button" id="btnVolverEntrega" class="btn-volver formulario-volver">Volver</button>
+            <h2>Entregar Paquete</h2>
+            <p id="formGuia">Guía #</p>
         </div>
 
         <form id="formEntrega" class="formulario-entrega">
@@ -266,9 +264,9 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                        class="oculto" placeholder="Especificar...">
             </div>
 
-            <!-- NÃºmero de CÃ©dula o Placa -->
+            <!-- Número de Cédula o Placa -->
             <div class="form-group">
-                <label for="documento" class="obligatorio">NÃºmero de CÃ©dula o Placa</label>
+                <label for="documento" class="obligatorio">Número de Cédula o Placa</label>
                 <input type="text" id="documento" name="documento" 
                        placeholder="CC, CE, Placa, etc." required>
             </div>
@@ -292,12 +290,12 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
 
             <div class="form-group">
                 <div class="confirmacion-linea">
-                    <label class="campo-toggle-label sin-margen" for="recibioCambios">Â¿RecibiÃ³ cambios?</label>
+                    <label class="campo-toggle-label sin-margen" for="recibioCambios">¿Recibió cambios?</label>
                     <label class="switch-si-no">
                         <input type="checkbox" id="recibioCambios" name="recibioCambios">
                         <span class="switch-pill">
                             <span class="switch-opcion switch-no">No</span>
-                            <span class="switch-opcion switch-si">SÃ­</span>
+                            <span class="switch-opcion switch-si">Sí</span>
                         </span>
                     </label>
                 </div>
@@ -307,7 +305,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             <div class="form-group">
                 <label for="observacionesEntrega">Observaciones</label>
                 <textarea id="observacionesEntrega" name="observacionesEntrega" rows="3"
-                          placeholder="Ej: Entregado en recepciÃ³n, cliente no estaba..."></textarea>
+                          placeholder="Ej: Entregado en recepción, cliente no estaba..."></textarea>
             </div>
 
             <!-- Fotos -->
@@ -316,7 +314,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 <div class="fotos-container">
                     <input type="file" id="inputFotoEntrega" accept="image/*" capture="environment" style="display: none;">
                     <button type="button" id="btnTomarFotoEntrega" class="btn-foto">
-                        ðŸ“· Tomar Foto de la Entrega
+                        Tomar Foto de la Entrega
                     </button>
                     <div id="previsualizacionFotoEntrega" class="previsualizacion-fotos"></div>
                 </div>
@@ -327,16 +325,16 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 <div class="fotos-container">
                     <input type="file" id="inputFotoEntregaAdicional" accept="image/*" capture="environment" style="display: none;">
                     <button type="button" id="btnTomarFotoEntregaAdicional" class="btn-foto btn-foto-secundaria">
-                        ðŸ“· Tomar Foto Adicional
+                        Tomar Foto Adicional
                     </button>
                     <div id="previsualizacionFotoEntregaAdicional" class="previsualizacion-fotos"></div>
                 </div>
             </div>
 
-            <!-- Botones de AcciÃ³n -->
+            <!-- Botones de Acción -->
             <div class="form-acciones">
                 <button type="submit" class="btn-exito btn-grande">
-                    âœ“ Confirmar Entrega
+                    Confirmar Entrega
                 </button>
             </div>
         </form>
@@ -345,28 +343,28 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <!-- Vista Formulario de Novedad -->
     <div id="vistaFormularioNovedad" class="vista-formulario oculto">
         <div class="formulario-header">
-            <button type="button" id="btnVolverNovedad" class="btn-volver formulario-volver">â† Volver</button>
+            <button type="button" id="btnVolverNovedad" class="btn-volver formulario-volver">Volver</button>
             <h2 id="novedadTitulo">Novedad de Entrega</h2>
-            <p id="novedadGuia">GuÃ­a #</p>
+            <p id="novedadGuia">Guía #</p>
         </div>
 
         <form id="formNovedad" class="formulario-entrega">
             <div class="form-group">
-                <label for="descripcionNovedad" class="obligatorio">DescripciÃ³n</label>
+                <label for="descripcionNovedad" class="obligatorio">Descripción</label>
                 <textarea id="descripcionNovedad" name="descripcionNovedad" rows="4"
-                          placeholder="Describe por quÃ© se aplaza o cancela la entrega..." required></textarea>
+                          placeholder="Describe por qué se aplaza o cancela la entrega..." required></textarea>
             </div>
 
             <div class="form-group">
-                <label class="obligatorio">Evidencia FotogrÃ¡fica</label>
+                <label class="obligatorio">Evidencia Fotográfica</label>
                 <div class="fotos-container">
                     <input type="file" id="inputFotoNovedad" accept="image/*" capture="environment" style="display: none;">
                     <button type="button" id="btnTomarFotoNovedad" class="btn-foto">
-                        ðŸ“· Tomar Foto de Evidencia
+                        Tomar Foto de Evidencia
                     </button>
                     <div id="previsualizacionFotoNovedad" class="previsualizacion-fotos"></div>
                 </div>
-                <small class="ayuda-texto">ðŸ“¸ Obligatorio: una foto como evidencia</small>
+                <small class="ayuda-texto">Obligatorio: una foto como evidencia</small>
             </div>
 
             <div class="form-group">
@@ -374,7 +372,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 <div class="fotos-container">
                     <input type="file" id="inputFotoNovedadAdicional" accept="image/*" capture="environment" style="display: none;">
                     <button type="button" id="btnTomarFotoNovedadAdicional" class="btn-foto btn-foto-secundaria">
-                        ðŸ“· Tomar Foto Adicional
+                        Tomar Foto Adicional
                     </button>
                     <div id="previsualizacionFotoNovedadAdicional" class="previsualizacion-fotos"></div>
                 </div>
@@ -383,7 +381,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
 
             <div class="info-automatica">
                 <div class="info-auto-item">
-                    <span>ðŸ• Fecha/Hora:</span>
+                    <span>Fecha/Hora:</span>
                     <span id="infoFechaNovedad">--</span>
                 </div>
             </div>
@@ -396,11 +394,11 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
         </form>
     </div>
 
-    <!-- Modal de ConfirmaciÃ³n -->
+    <!-- Modal de Confirmación -->
     <div id="modalConfirmacion" class="modal oculto">
         <div class="modal-contenido modal-exito">
-            <div class="modal-icono exito">âœ“</div>
-            <h2>Â¡Entrega Completada!</h2>
+            <div class="modal-icono exito">OK</div>
+            <h2>¡Entrega Completada!</h2>
             <div id="resumenEntrega" class="resumen-entrega"></div>
             <button id="btnCerrarConfirmacion" class="btn-primario btn-grande">
                 Continuar con Entregas
@@ -410,7 +408,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
 
     <div id="modalDecision" class="modal oculto">
         <div class="modal-contenido">
-            <h2 id="modalDecisionTitulo">Confirmar acciÃ³n</h2>
+            <h2 id="modalDecisionTitulo">Confirmar acción</h2>
             <p id="modalDecisionMensaje" class="modal-mensaje"></p>
             <div class="form-acciones">
                 <button type="button" id="btnDecisionCancelar" class="btn-secundario">Cancelar</button>
