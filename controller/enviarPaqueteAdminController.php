@@ -1,6 +1,6 @@
 ﻿<?php
 require_once __DIR__ . '/../includes/auth.php';
-requireWebAuth(['administrador', 'admin'], '../views/login.php?error=Debes iniciar sesión.');
+requireWebAuth(['administrador', 'admin']);
 
 require_once '../models/enviarPaqueteModels.php';
 

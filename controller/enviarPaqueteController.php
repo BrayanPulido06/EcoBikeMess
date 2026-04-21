@@ -1,6 +1,6 @@
 ﻿<?php
 require_once __DIR__ . '/../includes/auth.php';
-requireWebAuth(['cliente', 'colaborador'], '../views/login.php?error=Debes iniciar sesión.');
+requireWebAuth(['cliente', 'colaborador']);
 
 require_once '../models/inicioClienteModel.php';
 require_once '../models/enviarPaqueteModels.php';
