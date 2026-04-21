@@ -1,9 +1,9 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../../includes/paths.php';
 session_start();
 
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajero') {
-    redirect_route('login', ['error' => 'Debes iniciar sesión.']);
+    redirect_route('login', ['error' => 'Debes iniciar sesi?n.']);
 }
 
 require_once '../../models/conexionGlobal.php';
@@ -82,7 +82,7 @@ $remitente_data = [
         .qr-code-container small {
             font-size: 0.8rem; color: #777;
         }
-        /* RÃ³tulo 10x10 cm (igual a paquetesAdmin) */
+        /* R?tulo 10x10 cm (igual a paquetesAdmin) */
         #rotuloPreview {
             width: 100mm;
             height: 100mm;
@@ -129,7 +129,7 @@ $remitente_data = [
         #rotuloPreview .rotulo-scale .rotulo-text-lg.bold {
             font-weight: 700;
         }
-        /* Asegurar que el QR del rÃ³tulo no se encoja por estilos globales */
+        /* Asegurar que el QR del r?tulo no se encoja por estilos globales */
         #rotuloPreview #qrcode {
             width: 220px !important;
             height: 220px !important;
@@ -241,7 +241,7 @@ $remitente_data = [
         .status-success { color: #28a745; font-weight: bold; }
         .status-error { color: #dc3545; font-weight: bold; }
         
-        /* Estilos para tarjetas de selecciÃ³n de recaudo */
+        /* Estilos para tarjetas de selecci?n de recaudo */
         .radio-card {
             border: 2px solid #e0e0e0;
             border-radius: 8px;
@@ -263,11 +263,11 @@ $remitente_data = [
 <body>
     <header class="mobile-header">
         <button class="menu-btn" id="menuBtn">
-            <span class="menu-icon">☰</span>
+            <span class="menu-icon">?</span>
         </button>
         <div class="header-info">
             <h1><img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:35px;height:35px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
-            <p class="user-name">Crear envío como mensajero</p>
+            <p class="user-name">Crear env?o como mensajero</p>
         </div>
     </header>
 
@@ -277,11 +277,11 @@ $remitente_data = [
         <div class="session-status">
             <div class="status-indicator online">
                 <span class="status-dot"></span>
-                <span class="status-text">Modo creación activo</span>
+                <span class="status-text">Modo creaci?n activo</span>
             </div>
             <div class="session-time">
-                <span class="time-icon">📦</span>
-                <span>Nuevo envío</span>
+                <span class="time-icon">??</span>
+                <span>Nuevo env?o</span>
             </div>
         </div>
         <!-- Content -->
@@ -303,8 +303,8 @@ $remitente_data = [
 
             <div class="page-header envio-mensajero-header">
                 <div class="header-left">
-                    <h1>Crear Nuevo Envío</h1>
-                    <p>Registra un paquete desde la operación de mensajería y genera su guía.</p>
+                    <h1>Crear Nuevo Env?o</h1>
+                    <p>Registra un paquete desde la operaci?n de mensajer?a y genera su gu?a.</p>
                 </div>
                 <div class="header-right">
                     <a href="<?php echo htmlspecialchars(route_url('messenger.packages'), ENT_QUOTES, 'UTF-8'); ?>" class="btn-secondary">

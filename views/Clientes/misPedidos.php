@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['cliente', 'colaborador'], true)) {
-    header("Location: ../login.php?error=Debes iniciar sesiÃƒÆ’Ã‚Â³n.");
+    header("Location: ../login.php?error=Debes iniciar sesiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n.");
     exit();
 }
 ?>
@@ -61,7 +61,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
         .badge-secondary { background-color: #6c757d; }
         .badge-dark { background-color: #343a40; }
 
-        /* Estilos para el RÃƒÂ³tulo (Copiados de misPedidos/enviarPaquete) */
+        /* Estilos para el RÃƒÆ’Ã‚Â³tulo (Copiados de misPedidos/enviarPaquete) */
         .rotulo-card { background: #fff; border: 2px solid #333; border-radius: 8px; padding: 20px; max-width: 450px; margin: 0 auto; font-family: Arial, sans-serif; color: #000; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .rotulo-header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
         .rotulo-brand .brand-name { font-size: 1.4rem; font-weight: bold; color: #28a745; display: block; }
@@ -86,7 +86,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
         .footer-info span { display: block; font-size: 0.9rem; margin-bottom: 3px; }
         .footer-note { font-size: 0.8rem; font-style: italic; max-width: 60%; text-align: right; color: #666; }
 
-        /* RÃƒÂ³tulo 10x10 cm */
+        /* RÃƒÆ’Ã‚Â³tulo 10x10 cm */
         #rotuloPreview {
             width: 100mm;
             height: 100mm;
@@ -127,11 +127,11 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
         #rotuloPreview .rotulo-scale p,
         #rotuloPreview .rotulo-scale span,
         #rotuloPreview .rotulo-scale strong { font-size: 14px !important; }
-        /* Forzar negrita en tÃƒÂ­tulos y etiquetas */
+        /* Forzar negrita en tÃƒÆ’Ã‚Â­tulos y etiquetas */
         #rotuloPreview .rotulo-scale h3 { font-weight: 800 !important; }
         #rotuloPreview .rotulo-scale strong { font-weight: 800 !important; }
         #rotuloPreview .rotulo-scale p strong { font-weight: 800 !important; }
-        /* Total a cobrar (estilo compacto como rÃƒÂ³tulo final) */
+        /* Total a cobrar (estilo compacto como rÃƒÆ’Ã‚Â³tulo final) */
         #rotuloPreview .rotulo-scale .rotulo-total {
             margin: 2px 0;
             font-size: 26px !important;
@@ -167,14 +167,14 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
         <header class="page-header">
             <div>
                 <h1>Mis pedidos</h1>
-                <p>Gestiona y consulta todos tus envÃƒÂ­os</p>
+                <p>Gestiona y consulta todos tus envÃƒÆ’Ã‚Â­os</p>
             </div>
             <div class="header-actions">
                 <button class="btn btn-secondary" id="btnExportarExcel">
-                    Ã°Å¸â€œÅ  Exportar Excel
+                    ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â  Exportar Excel
                 </button>
                 <button class="btn btn-secondary" id="btnExportarGuias">
-                    Ã°Å¸Â§Â¾ Descargar GuÃƒÂ­as
+                    ÃƒÂ°Ã…Â¸Ã‚Â§Ã‚Â¾ Descargar GuÃƒÆ’Ã‚Â­as
                 </button>
                 <button class="btn btn-primary" id="btnNuevaFactura">
                     + Nueva Factura
@@ -182,30 +182,30 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
             </div>
         </header>
 
-        <!-- Resumen de EstadÃƒÂ­sticas -->
+        <!-- Resumen de EstadÃƒÆ’Ã‚Â­sticas -->
         <div class="stats-quick">
             <div class="stat-card" style="border-left: 5px solid #e74c3c;">
-                <div class="stat-icon" style="background-color: rgba(231, 76, 60, 0.1); color: #e74c3c;">Ã°Å¸â€™Â¸</div>
+                <div class="stat-icon" style="background-color: rgba(231, 76, 60, 0.1); color: #e74c3c;">ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¸</div>
                 <div class="stat-info">
                     <span class="stat-label">Saldo a Pagar</span>
                     <span class="stat-value" id="statSaldoPagar" style="color: #e74c3c;">$0</span>
-                    <small style="color: #666; font-size: 0.8em;">(EnvÃƒÂ­os > Recaudos)</small>
+                    <small style="color: #666; font-size: 0.8em;">(EnvÃƒÆ’Ã‚Â­os > Recaudos)</small>
                 </div>
             </div>
             <div class="stat-card" style="border-left: 5px solid #2ecc71;">
-                <div class="stat-icon" style="background-color: rgba(46, 204, 113, 0.1); color: #2ecc71;">Ã°Å¸â€™Â°</div>
+                <div class="stat-icon" style="background-color: rgba(46, 204, 113, 0.1); color: #2ecc71;">ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â°</div>
                 <div class="stat-info">
                     <span class="stat-label">Saldo a Favor</span>
                     <span class="stat-value" id="statSaldoFavor" style="color: #2ecc71;">$0</span>
-                    <small style="color: #666; font-size: 0.8em;">(Recaudos > EnvÃƒÂ­os)</small>
+                    <small style="color: #666; font-size: 0.8em;">(Recaudos > EnvÃƒÆ’Ã‚Â­os)</small>
                 </div>
             </div>
         </div>
 
-        <!-- Filtros y BÃƒÂºsqueda -->
+        <!-- Filtros y BÃƒÆ’Ã‚Âºsqueda -->
         <div class="filters-section">
             <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Ã°Å¸â€Â Buscar por nÃƒÂºmero guia, destinatario..." class="search-input">
+                <input type="text" id="searchInput" placeholder="ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Buscar por nÃƒÆ’Ã‚Âºmero guia, destinatario..." class="search-input">
             </div>
             
             <div class="filters-grid">
@@ -219,7 +219,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                 </div>
                 <div class="form-group align-end">
                     <button class="btn btn-secondary btn-block" id="btnLimpiarFiltros">
-                        Ã°Å¸â€â€ž Limpiar Filtros
+                        ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ Limpiar Filtros
                     </button>
                 </div>
             </div>
@@ -239,12 +239,12 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                     <thead>
                         <tr>
                             <th><input type="checkbox" id="selectAll"></th>
-                            <th>GuÃƒÂ­a</th>
+                            <th>GuÃƒÆ’Ã‚Â­a</th>
                             <th>Fecha Ingreso</th>
                             <th>Destinatario</th>
-                            <th>DirecciÃƒÂ³n</th>
-                            <th>Valor EnvÃƒÂ­o</th>
-                            <th>EnvÃƒÂ­o agregado<br>al recaudo</th>
+                            <th>DirecciÃƒÆ’Ã‚Â³n</th>
+                            <th>Valor EnvÃƒÆ’Ã‚Â­o</th>
+                            <th>EnvÃƒÆ’Ã‚Â­o agregado<br>al recaudo</th>
                             <th>Recaudo</th>
                             <th>Estado</th>
                             <th>Fecha Entrega</th>
@@ -252,12 +252,12 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                         </tr>
                     </thead>
                     <tbody id="tablaFacturasBody">
-                        <!-- Se llena dinÃƒÂ¡micamente -->
+                        <!-- Se llena dinÃƒÆ’Ã‚Â¡micamente -->
                     </tbody>
                 </table>
             </div>
 
-            <!-- PaginaciÃƒÂ³n -->
+            <!-- PaginaciÃƒÆ’Ã‚Â³n -->
             <div class="pagination-container">
                 <div class="pagination-size">
                     <label>Mostrar:</label>
@@ -267,10 +267,10 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                         <option value="50">50</option>
                         <option value="100">100</option>
                     </select>
-                    <span>por pÃƒÂ¡gina</span>
+                    <span>por pÃƒÆ’Ã‚Â¡gina</span>
                 </div>
                 <div class="pagination-controls" id="paginationControls">
-                    <!-- Se genera dinÃƒÂ¡micamente -->
+                    <!-- Se genera dinÃƒÆ’Ã‚Â¡micamente -->
                 </div>
             </div>
         </div>
@@ -284,7 +284,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                 </div>
                 <div class="modal-body">
                     <div id="detallesFactura">
-                        <!-- Se llena dinÃƒÂ¡micamente -->
+                        <!-- Se llena dinÃƒÆ’Ã‚Â¡micamente -->
                     </div>
                 </div>
             </div>
@@ -301,11 +301,11 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                     <form id="formEditarFactura">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>NÃ‚Â° de Factura *</label>
+                                <label>NÃƒâ€šÃ‚Â° de Factura *</label>
                                 <input type="text" id="editNumero" readonly class="form-control">
                             </div>
                             <div class="form-group">
-                                <label>Fecha de EmisiÃƒÂ³n *</label>
+                                <label>Fecha de EmisiÃƒÆ’Ã‚Â³n *</label>
                                 <input type="date" id="editFechaEmision" class="form-control" required>
                             </div>
                             <div class="form-group">
@@ -319,7 +319,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                                 </select>
                             </div>
                             <div class="form-group full-width">
-                                <label>DescripciÃƒÂ³n *</label>
+                                <label>DescripciÃƒÆ’Ã‚Â³n *</label>
                                 <textarea id="editDescripcion" class="form-control" rows="2" required></textarea>
                             </div>
                             <div class="form-group">
@@ -368,7 +368,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                     <form id="formNuevaFactura">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>Fecha de EmisiÃƒÂ³n *</label>
+                                <label>Fecha de EmisiÃƒÆ’Ã‚Â³n *</label>
                                 <input type="date" id="nuevaFechaEmision" class="form-control" required>
                             </div>
                             <div class="form-group">
@@ -382,8 +382,8 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                                 </select>
                             </div>
                             <div class="form-group full-width">
-                                <label>DescripciÃƒÂ³n *</label>
-                                <textarea id="nuevaDescripcion" class="form-control" rows="2" required placeholder="Ej: Servicios de mensajerÃƒÂ­a mes de febrero 2026"></textarea>
+                                <label>DescripciÃƒÆ’Ã‚Â³n *</label>
+                                <textarea id="nuevaDescripcion" class="form-control" rows="2" required placeholder="Ej: Servicios de mensajerÃƒÆ’Ã‚Â­a mes de febrero 2026"></textarea>
                             </div>
                             <div class="form-group">
                                 <label>Subtotal *</label>
@@ -418,15 +418,15 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
             </div>
         </div>
 
-        <!-- Modal RÃƒÂ³tulo (GuÃƒÂ­a) -->
+        <!-- Modal RÃƒÆ’Ã‚Â³tulo (GuÃƒÆ’Ã‚Â­a) -->
         <div class="modal" id="rotuloModal">
             <div class="modal-content" style="max-width: 800px; padding: 20px;">
                 <div class="modal-header" style="border: none; padding-bottom: 0;">
-                    <h2>Ã°Å¸ÂÂ·Ã¯Â¸Â RÃƒÂ³tulo de EnvÃƒÂ­o</h2>
+                    <h2>ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â·ÃƒÂ¯Ã‚Â¸Ã‚Â RÃƒÆ’Ã‚Â³tulo de EnvÃƒÆ’Ã‚Â­o</h2>
                     <button class="btn-close" id="closeRotuloModal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <!-- Estructura idÃƒÂ©ntica a enviarPaquete.php -->
+                    <!-- Estructura idÃƒÆ’Ã‚Â©ntica a enviarPaquete.php -->
                     <div id="rotuloPreview" style="background: white; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333;">
                         <div class="rotulo-scale">
                             <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 6px;">
@@ -443,7 +443,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                                 </tr>
                                 <tr>
                                     <td colspan="2" style="padding-top: 4px;">
-                                        <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUÃƒÂA: <span id="rotulo_guia_num" style="font-size: 19px; font-weight: 800; color: #1f2a37;">EBM-XXXXXX</span></div>
+                                        <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUÃƒÆ’Ã‚ÂA: <span id="rotulo_guia_num" style="font-size: 19px; font-weight: 800; color: #1f2a37;">EBM-XXXXXX</span></div>
                                     </td>
                                 </tr>
                             </table>
@@ -452,9 +452,9 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                                 <tr>
                                     <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
                                         <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;"> Destinatario</h3>
-                                        <p><strong>DirecciÃƒÂ³n:</strong> <span id="rotulo_dir_destinatario" class="rotulo-text-lg bold"></span></p>
+                                        <p><strong>DirecciÃƒÆ’Ã‚Â³n:</strong> <span id="rotulo_dir_destinatario" class="rotulo-text-lg bold"></span></p>
                                         <p><strong>Nombre:</strong> <span id="rotulo_destinatario" class="rotulo-text-lg bold"></span></p>
-                                        <p><strong>TelÃƒÂ©fono:</strong> <span id="rotulo_tel_destinatario" class="rotulo-text-lg bold"></span></p>
+                                        <p><strong>TelÃƒÆ’Ã‚Â©fono:</strong> <span id="rotulo_tel_destinatario" class="rotulo-text-lg bold"></span></p>
                                         <p><strong>Observaciones:</strong> <span id="rotulo_observaciones" class="rotulo-text-lg bold"></span></p>
                                     </td>
                                     <td style="width: 4%;"></td>
@@ -477,7 +477,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                                             <div style="margin-top: 6px;">
                                                 <h3 style="margin: 0 0 6px; font-size: 15px;"> Total a Cobrar</h3>
                                                 <div id="rotulo_financiero">
-                                                    <!-- Se llena dinÃƒÂ¡micamente -->
+                                                    <!-- Se llena dinÃƒÆ’Ã‚Â¡micamente -->
                                                 </div>
                                             </div>
                                         </div>
@@ -497,13 +497,13 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
 
     </div>
 
-    <!-- Enlace al script JS reciÃƒÂ©n creado -->
+    <!-- Enlace al script JS reciÃƒÆ’Ã‚Â©n creado -->
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/misPedidos.js"></script>
     
-    <!-- Script para manejar el RÃƒÂ³tulo -->
+    <!-- Script para manejar el RÃƒÆ’Ã‚Â³tulo -->
     <script>
-        // FunciÃƒÂ³n global para abrir el rÃƒÂ³tulo
+        // FunciÃƒÆ’Ã‚Â³n global para abrir el rÃƒÆ’Ã‚Â³tulo
         window.verRotulo = function(datos) {
             const modal = document.getElementById('rotuloModal');
             if(!modal) return;

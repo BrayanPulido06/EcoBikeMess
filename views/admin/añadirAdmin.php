@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' && ($_SESSION['user_role'] ?? '') !== 'administrador')) {
-    header("Location: ../login.php?error=Debes iniciar sesiÃ³n.");
+    header("Location: ../login.php?error=Debes iniciar sesiÃƒÂ³n.");
     exit();
 }
 ?>
@@ -10,11 +10,11 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Usuarios - Sistema de Mensajería</title>
+    <title>GestiÃ³n de Usuarios - Sistema de MensajerÃ­a</title>
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
-    <link rel="stylesheet" href="../../public/css/añadirAdmin.css">
+    <link rel="stylesheet" href="../../public/css/aÃ±adirAdmin.css">
     <link rel="stylesheet" href="../../public/css/responsive.css">
 </head>
 <body>
@@ -25,27 +25,27 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         <!-- Header -->
         <header class="page-header">
             <div>
-                <h1>👥 Gestión de Usuarios</h1>
+                <h1>ðŸ‘¥ GestiÃ³n de Usuarios</h1>
                 <p>Administradores y Mensajeros del Sistema</p>
             </div>
             <div class="header-actions">
-                <span class="user-badge">Sesión: <strong id="currentUserDisplay"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Usuario'); ?></strong></span>
+                <span class="user-badge">SesiÃ³n: <strong id="currentUserDisplay"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Usuario'); ?></strong></span>
             </div>
         </header>
 
         <!-- Tabs Navigation -->
         <div class="tabs-container">
             <button class="tab-btn active" data-tab="administradores">
-                👔 Administradores
+                ðŸ‘” Administradores
             </button>
             <button class="tab-btn" data-tab="mensajeros">
-                🚴 Mensajeros
+                ðŸš´ Mensajeros
             </button>
             <button class="tab-btn" data-tab="clientes">
-                🏢 Clientes
+                ðŸ¢ Clientes
             </button>
             <button class="tab-btn" data-tab="logs">
-                📊 Logs de Actividad
+                ðŸ“Š Logs de Actividad
             </button>
         </div>
 
@@ -57,31 +57,31 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 </button>
             </div>
 
-            <!-- Estadísticas de Administradores -->
+            <!-- EstadÃ­sticas de Administradores -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-icon">👥</div>
+                    <div class="stat-icon">ðŸ‘¥</div>
                     <div class="stat-info">
                         <span class="stat-label">Total Administradores</span>
                         <span class="stat-value" id="totalAdmins">0</span>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">✅</div>
+                    <div class="stat-icon">âœ…</div>
                     <div class="stat-info">
                         <span class="stat-label">Activos</span>
                         <span class="stat-value" id="adminsActivos">0</span>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">🔒</div>
+                    <div class="stat-icon">ðŸ”’</div>
                     <div class="stat-info">
                         <span class="stat-label">Inactivos</span>
                         <span class="stat-value" id="adminsInactivos">0</span>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">🌟</div>
+                    <div class="stat-icon">ðŸŒŸ</div>
                     <div class="stat-info">
                         <span class="stat-label">Super Admins</span>
                         <span class="stat-value" id="superAdmins">0</span>
@@ -94,7 +94,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 <div class="table-header">
                     <h2>Administradores del Sistema</h2>
                     <div class="search-box">
-                        <input type="text" id="searchAdmin" placeholder="🔍 Buscar administrador...">
+                        <input type="text" id="searchAdmin" placeholder="ðŸ” Buscar administrador...">
                     </div>
                 </div>
 
@@ -107,13 +107,13 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                 <th>Email</th>
                                 <th>Rol</th>
                                 <th>Estado</th>
-                                <th>Fecha Creación</th>
-                                <th>Último Acceso</th>
+                                <th>Fecha CreaciÃ³n</th>
+                                <th>Ãšltimo Acceso</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tablaAdminsBody">
-                            <!-- Se llena dinámicamente -->
+                            <!-- Se llena dinÃ¡micamente -->
                         </tbody>
                     </table>
                 </div>
@@ -124,14 +124,14 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         <div class="tab-content" id="tab-mensajeros">
             <div class="section-actions">
                 <button class="btn btn-secondary" id="btnSolicitudesPendientes">
-                    📋 Solicitudes Pendientes (<span id="countSolicitudes">0</span>)
+                    ðŸ“‹ Solicitudes Pendientes (<span id="countSolicitudes">0</span>)
                 </button>
                 <button class="btn btn-info" id="btnReporteMensajeros">
-                    📊 Reporte de Productividad
+                    ðŸ“Š Reporte de Productividad
                 </button>
             </div>
 
-            <!-- Estadísticas de Mensajeros -->
+            <!-- EstadÃ­sticas de Mensajeros -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon"><img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:22px;height:22px;"></div>
@@ -141,21 +141,21 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">🟢</div>
+                    <div class="stat-icon">ðŸŸ¢</div>
                     <div class="stat-info">
                         <span class="stat-label">En Ruta</span>
                         <span class="stat-value" id="mensajerosEnRuta">0</span>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">📦</div>
+                    <div class="stat-icon">ðŸ“¦</div>
                     <div class="stat-info">
                         <span class="stat-label">Paquetes Asignados Hoy</span>
                         <span class="stat-value" id="paquetesAsignadosHoy">0</span>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">✅</div>
+                    <div class="stat-icon">âœ…</div>
                     <div class="stat-info">
                         <span class="stat-label">Entregas Completadas Hoy</span>
                         <span class="stat-value" id="entregasHoy">0</span>
@@ -172,7 +172,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                     <option value="inactivo">Inactivos</option>
                     <option value="descanso">En Descanso</option>
                 </select>
-                <input type="text" id="searchMensajero" placeholder="🔍 Buscar mensajero..." class="form-control">
+                <input type="text" id="searchMensajero" placeholder="ðŸ” Buscar mensajero..." class="form-control">
             </div>
 
             <!-- Tabla de Mensajeros -->
@@ -187,9 +187,9 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                             <tr>
                                 <th>ID</th>
                                 <th>Nombre</th>
-                                <th>Teléfono</th>
+                                <th>TelÃ©fono</th>
                                 <th>Estado</th>
-                                <th>Ubicación Actual</th>
+                                <th>UbicaciÃ³n Actual</th>
                                 <th>Paquetes Asignados</th>
                                 <th>Entregas Hoy</th>
                                 <th>Rendimiento</th>
@@ -197,7 +197,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                             </tr>
                         </thead>
                         <tbody id="tablaMensajerosBody">
-                            <!-- Se llena dinámicamente -->
+                            <!-- Se llena dinÃ¡micamente -->
                         </tbody>
                     </table>
                 </div>
@@ -208,28 +208,28 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         <div class="tab-content" id="tab-clientes">
             <div class="section-actions">
                 <button class="btn btn-info" id="btnReporteClientes">
-                    📊 Reporte de Clientes
+                    ðŸ“Š Reporte de Clientes
                 </button>
             </div>
 
-            <!-- Estadísticas de Clientes -->
+            <!-- EstadÃ­sticas de Clientes -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-icon">🏢</div>
+                    <div class="stat-icon">ðŸ¢</div>
                     <div class="stat-info">
                         <span class="stat-label">Total Clientes</span>
                         <span class="stat-value" id="totalClientes">0</span>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">✅</div>
+                    <div class="stat-icon">âœ…</div>
                     <div class="stat-info">
                         <span class="stat-label">Activos</span>
                         <span class="stat-value" id="clientesActivos">0</span>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">📅</div>
+                    <div class="stat-icon">ðŸ“…</div>
                     <div class="stat-info">
                         <span class="stat-label">Nuevos este mes</span>
                         <span class="stat-value" id="clientesNuevos">0</span>
@@ -242,7 +242,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 <div class="table-header">
                     <h2>Clientes Registrados</h2>
                     <div class="search-box">
-                        <input type="text" id="searchCliente" placeholder="🔍 Buscar cliente...">
+                        <input type="text" id="searchCliente" placeholder="ðŸ” Buscar cliente...">
                     </div>
                 </div>
 
@@ -253,15 +253,15 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                 <th>ID</th>
                                 <th>Emprendimiento</th>
                                 <th>Contacto</th>
-                                <th>Teléfono</th>
-                                <th>Dirección</th>
+                                <th>TelÃ©fono</th>
+                                <th>DirecciÃ³n</th>
                                 <th>Estado</th>
                                 <th>Fecha Registro</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tablaClientesBody">
-                            <!-- Se llena dinámicamente -->
+                            <!-- Se llena dinÃ¡micamente -->
                         </tbody>
                     </table>
                 </div>
@@ -286,7 +286,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             </div>
 
             <div class="logs-container" id="logsContainer">
-                <!-- Se llena dinámicamente -->
+                <!-- Se llena dinÃ¡micamente -->
             </div>
         </div>
 
@@ -302,13 +302,13 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                         <input type="hidden" id="adminId">
                         
                         <div class="form-section">
-                            <h3>Información Personal</h3>
+                            <h3>InformaciÃ³n Personal</h3>
                             <div class="form-grid">
                                 <div class="form-group full-width">
                                     <label>Foto de Perfil</label>
                                     <div class="photo-upload">
                                         <div class="photo-preview" id="photoPreview">
-                                            <span>📷</span>
+                                            <span>ðŸ“·</span>
                                         </div>
                                         <input type="file" id="adminFoto" accept="image/*">
                                     </div>
@@ -320,19 +320,19 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                 </div>
 
                                 <div class="form-group">
-                                    <label>Correo Electrónico *</label>
+                                    <label>Correo ElectrÃ³nico *</label>
                                     <input type="email" id="adminEmail" class="form-control" required>
                                 </div>
 
                                 <div class="form-group">
-                                    <label>Teléfono *</label>
+                                    <label>TelÃ©fono *</label>
                                     <input type="tel" id="adminTelefono" class="form-control" required>
                                 </div>
 
                                 <div class="form-group" id="passwordGroup">
-                                    <label>Contraseña Temporal *</label>
+                                    <label>ContraseÃ±a Temporal *</label>
                                     <input type="password" id="adminPassword" class="form-control">
-                                    <small>El usuario deberá cambiarla en su primer acceso</small>
+                                    <small>El usuario deberÃ¡ cambiarla en su primer acceso</small>
                                 </div>
                             </div>
                         </div>
@@ -361,7 +361,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                             </div>
 
                             <div class="permisos-section" id="permisosSection">
-                                <h4>Permisos Específicos</h4>
+                                <h4>Permisos EspecÃ­ficos</h4>
                                 <div class="permisos-grid">
                                     <label class="checkbox-label">
                                         <input type="checkbox" name="permiso" value="crear_paquetes"> Crear Paquetes
@@ -385,7 +385,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                         <input type="checkbox" name="permiso" value="gestionar_mensajeros"> Gestionar Mensajeros
                                     </label>
                                     <label class="checkbox-label">
-                                        <input type="checkbox" name="permiso" value="facturacion"> Facturación
+                                        <input type="checkbox" name="permiso" value="facturacion"> FacturaciÃ³n
                                     </label>
                                 </div>
                             </div>
@@ -409,7 +409,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 </div>
                 <div class="modal-body">
                     <div id="detallesMensajero">
-                        <!-- Se llena dinámicamente -->
+                        <!-- Se llena dinÃ¡micamente -->
                     </div>
                 </div>
             </div>
@@ -424,22 +424,22 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 </div>
                 <div class="modal-body">
                     <div id="solicitudesList">
-                        <!-- Se llena dinámicamente -->
+                        <!-- Se llena dinÃ¡micamente -->
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Modal: Resetear Contraseña -->
+        <!-- Modal: Resetear ContraseÃ±a -->
         <div class="modal" id="modalResetPassword">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Resetear Contraseña</h2>
+                    <h2>Resetear ContraseÃ±a</h2>
                     <button class="btn-close" id="btnCerrarModalReset">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <p>¿Está seguro de que desea resetear la contraseña de <strong id="resetUserName"></strong>?</p>
-                    <p>Se generará una contraseña temporal y se enviará por correo electrónico.</p>
+                    <p>Â¿EstÃ¡ seguro de que desea resetear la contraseÃ±a de <strong id="resetUserName"></strong>?</p>
+                    <p>Se generarÃ¡ una contraseÃ±a temporal y se enviarÃ¡ por correo electrÃ³nico.</p>
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary" id="btnCancelarReset">Cancelar</button>
                         <button type="button" class="btn btn-primary" id="btnConfirmarReset">Confirmar Reset</button>
@@ -450,7 +450,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
 
     </div>
 
-    <!-- Inyectar datos de sesión para JS -->
+    <!-- Inyectar datos de sesiÃ³n para JS -->
     <script>
         window.serverUser = {
             id: <?php echo $_SESSION['user_id'] ?? 0; ?>,
@@ -458,6 +458,6 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             nombre: '<?php echo $_SESSION['user_name'] ?? 'Usuario'; ?>'
         };
     </script>
-    <script src="../../public/js/añadirAdmin.js"></script>
+    <script src="../../public/js/aÃ±adirAdmin.js"></script>
 </body>
 </html>
