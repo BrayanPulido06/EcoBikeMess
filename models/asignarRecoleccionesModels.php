@@ -8,7 +8,6 @@ class AsignarRecoleccionesModel {
         $this->conn = conexionDB();
     }
 
-    // Obtener lista de clientes para el select
     public function getClientes() {
         $sql = "SELECT c.id, u.nombres, u.apellidos, c.nombre_emprendimiento 
                 FROM clientes c 
@@ -24,9 +23,7 @@ class AsignarRecoleccionesModel {
         return $clientes;
     }
 
-    // Obtener mensajeros activos para asignar
     public function getMensajeros() {
-        // Consultamos usuarios con rol 'mensajero' y sus tareas activas
         $sql = "SELECT m.id, CONCAT(u.nombres, ' ', u.apellidos) as nombre, u.estado,
                        (SELECT COUNT(*) FROM paquetes p WHERE p.mensajero_id = m.id AND p.estado IN ('asignado', 'en_transito', 'en_ruta')) as tareas_activas
                 FROM usuarios u 
@@ -35,7 +32,7 @@ class AsignarRecoleccionesModel {
                 ORDER BY u.nombres ASC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
-        
+
         $mensajeros = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $mensajeros[] = [
@@ -48,9 +45,7 @@ class AsignarRecoleccionesModel {
         return $mensajeros;
     }
 
-    // Listar recolecciones con filtros
     public function listarRecolecciones($filtros) {
-        // Consultamos la tabla paquetes agrupando por dirección de origen
         $sql = "SELECT 
                     p.direccion_origen,
                     p.estado as estado_paquete,
@@ -84,7 +79,7 @@ class AsignarRecoleccionesModel {
                 LEFT JOIN recolecciones r ON p.recoleccion_id = r.id
                 WHERE p.estado IN ('pendiente', 'asignado', 'en_transito', 'en_ruta', 'entregado')
                   AND COALESCE(TRIM(p.direccion_origen), '') <> ''";
-        
+
         $params = [];
 
         if (!empty($filtros['busqueda'])) {
@@ -92,7 +87,6 @@ class AsignarRecoleccionesModel {
             $params[':search'] = '%' . $filtros['busqueda'] . '%';
         }
 
-        // Agrupar por dirección, estado, mensajero, fecha y franja horaria (antes/después 1 PM)
         $sql .= " GROUP BY p.direccion_origen, 
                            IFNULL(p.recoleccion_id, p.estado), 
                            p.mensajero_id,
@@ -103,60 +97,84 @@ class AsignarRecoleccionesModel {
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
-        
+
         $result = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $cliente = !empty($row['nombre_emprendimiento']) ? $row['nombre_emprendimiento'] : ($row['cli_nombres'] . ' ' . $row['cli_apellidos']);
-            
-            // Añadimos el nombre del cliente formateado al array de datos
+
             $row['cliente_nombre'] = $cliente;
             $row['mensajero_nombre'] = $row['mensajero_nombre'] ? $row['mensajero_nombre'] : 'Sin asignar';
-            
-            // Si tiene un estado de recolección real (ej: completada), usamos ese. Si no, usamos el del paquete.
+
             if (!empty($row['estado_recoleccion'])) {
                 $row['estado'] = $row['estado_recoleccion'];
             } else {
                 $row['estado'] = $row['estado_paquete'];
             }
-            
+
             $result[] = $row;
         }
         return $result;
     }
 
-    // Nueva función: Asignar mensajero a un grupo de paquetes
     public function asignarMensajeroPaquetes($ids, $mensajeroId, $creadoPor) {
-        // Convertimos la lista de IDs "1,2,3" en un array seguro para SQL si fuera necesario,
-        // pero FIND_IN_SET o IN() con parámetros es mejor. Aquí usaremos IN con string directo validado.
-        
-        // Validar que ids sean solo números y comas para evitar inyección
-        if (!preg_match('/^[0-9,]+$/', $ids)) return false;
-        
+        if (!preg_match('/^[0-9,]+$/', $ids)) {
+            throw new Exception('IDs de paquetes inválidos.');
+        }
+
         try {
             $this->conn->beginTransaction();
 
-            // 1. Obtener datos clave de los paquetes (Cliente, Dirección, Contacto) para crear la recolección
-            // Usamos LIMIT 1 porque asumimos que los paquetes agrupados pertenecen al mismo origen
-            $sqlInfo = "SELECT p.cliente_id, p.direccion_origen, c.nombre_emprendimiento, u.nombres, u.apellidos, u.telefono 
-                        FROM paquetes p 
+            $sqlInfo = "SELECT p.cliente_id, p.direccion_origen, c.nombre_emprendimiento, u.nombres, u.apellidos, u.telefono
+                        FROM paquetes p
                         LEFT JOIN clientes c ON p.cliente_id = c.id
                         LEFT JOIN usuarios u ON c.usuario_id = u.id
-                        WHERE p.id IN ($ids) LIMIT 1";
+                        WHERE p.id IN ($ids)
+                        LIMIT 1";
             $stmtInfo = $this->conn->query($sqlInfo);
             $info = $stmtInfo->fetch(PDO::FETCH_ASSOC);
 
-            if ($info) {
-                // Generar número de orden único
-                $numeroOrden = 'REC-' . date('ymd') . '-' . rand(1000, 9999);
-                $contacto = !empty($info['nombre_emprendimiento']) ? $info['nombre_emprendimiento'] : ($info['nombres'] . ' ' . $info['apellidos']);
-                $cantidad = count(explode(',', $ids));
+            if (!$info) {
+                throw new Exception('No se encontraron paquetes para asignar.');
+            }
 
-                // 2. Insertar en la tabla 'recolecciones'
-                $sqlInsert = "INSERT INTO recolecciones 
+            $sqlRecoleccionExistente = "SELECT recoleccion_id
+                                        FROM paquetes
+                                        WHERE id IN ($ids)
+                                          AND recoleccion_id IS NOT NULL
+                                        LIMIT 1";
+            $stmtRecoleccionExistente = $this->conn->query($sqlRecoleccionExistente);
+            $recoleccionExistenteId = $stmtRecoleccionExistente->fetchColumn();
+
+            $numeroOrden = 'REC-' . date('ymd') . '-' . rand(1000, 9999);
+            $contacto = !empty($info['nombre_emprendimiento']) ? $info['nombre_emprendimiento'] : ($info['nombres'] . ' ' . $info['apellidos']);
+            $cantidad = count(array_filter(explode(',', $ids)));
+
+            if ($recoleccionExistenteId) {
+                $sqlActualizar = "UPDATE recolecciones
+                                  SET mensajero_id = :mensajero,
+                                      direccion_recoleccion = :direccion,
+                                      nombre_contacto = :contacto,
+                                      telefono_contacto = :telefono,
+                                      cantidad_estimada = :cantidad,
+                                      estado = 'asignada',
+                                      fecha_asignacion = NOW()
+                                  WHERE id = :recoleccion_id";
+                $stmtActualizar = $this->conn->prepare($sqlActualizar);
+                $stmtActualizar->execute([
+                    ':mensajero' => $mensajeroId,
+                    ':direccion' => $info['direccion_origen'],
+                    ':contacto' => $contacto,
+                    ':telefono' => $info['telefono'],
+                    ':cantidad' => $cantidad,
+                    ':recoleccion_id' => $recoleccionExistenteId
+                ]);
+
+                $recoleccionId = $recoleccionExistenteId;
+            } else {
+                $sqlInsert = "INSERT INTO recolecciones
                               (numero_orden, cliente_id, mensajero_id, direccion_recoleccion, nombre_contacto, telefono_contacto, cantidad_estimada, estado, fecha_asignacion, creada_por)
-                              VALUES 
+                              VALUES
                               (:orden, :cliente, :mensajero, :direccion, :contacto, :telefono, :cantidad, 'asignada', NOW(), :creada_por)";
-                
                 $stmtInsert = $this->conn->prepare($sqlInsert);
                 $stmtInsert->execute([
                     ':orden' => $numeroOrden,
@@ -168,27 +186,31 @@ class AsignarRecoleccionesModel {
                     ':cantidad' => $cantidad,
                     ':creada_por' => $creadoPor
                 ]);
-                
-                $recoleccionId = $this->conn->lastInsertId();
 
-                // 3. Actualizar paquetes vinculándolos a esta recolección
-                // Nota: Asegúrate de haber ejecutado el ALTER TABLE para agregar recoleccion_id
-                $sql = "UPDATE paquetes SET mensajero_recoleccion_id = :mensajero_id, recoleccion_id = :recoleccion_id, estado = 'asignado' WHERE id IN ($ids)";
-                $stmt = $this->conn->prepare($sql);
-                $stmt->execute([':mensajero_id' => $mensajeroId, ':recoleccion_id' => $recoleccionId]);
+                $recoleccionId = $this->conn->lastInsertId();
             }
+
+            $sql = "UPDATE paquetes
+                    SET mensajero_recoleccion_id = :mensajero_id,
+                        recoleccion_id = :recoleccion_id,
+                        estado = 'asignado'
+                    WHERE id IN ($ids)";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([
+                ':mensajero_id' => $mensajeroId,
+                ':recoleccion_id' => $recoleccionId
+            ]);
 
             return $this->conn->commit();
         } catch (Exception $e) {
-            $this->conn->rollBack();
-            // Re-lanzamos la excepción para que el controlador pueda capturar el mensaje de error específico.
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
             throw $e;
         }
     }
 
-    // Nueva función: Obtener detalles completos de los paquetes por IDs
     public function obtenerDetallesPaquetes($ids) {
-        // Validar que ids sean solo números y comas para seguridad
         if (!preg_match('/^[0-9,]+$/', $ids)) return [];
 
         $sql = "SELECT p.*, 
@@ -198,22 +220,19 @@ class AsignarRecoleccionesModel {
                 LEFT JOIN clientes c ON p.cliente_id = c.id
                 LEFT JOIN usuarios u ON c.usuario_id = u.id
                 WHERE p.id IN ($ids)";
-        
+
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Nueva función: Cancelar (soft delete) un grupo de paquetes
     public function cancelarPaquetes($ids) {
-        // Validar que ids sean solo números y comas para seguridad
         if (!preg_match('/^[0-9,]+$/', $ids)) return false;
         $sql = "UPDATE paquetes SET estado = 'cancelado' WHERE id IN ($ids)";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute();
     }
 
-    // Obtener detalles de una recolección asociada a un paquete
     public function getRecoleccionPorPaquete($paqueteId) {
         $sql = "SELECT r.* 
                 FROM recolecciones r
