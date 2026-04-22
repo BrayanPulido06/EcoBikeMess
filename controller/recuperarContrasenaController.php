@@ -1,4 +1,9 @@
 <?php
+// Configuración para que la sesión dure 30 días
+$sessionLifetime = 2592000; 
+ini_set('session.gc_maxlifetime', $sessionLifetime);
+session_set_cookie_params($sessionLifetime, "/");
+
 session_start();
 require_once '../models/conexionGlobal.php';
 require_once __DIR__ . '/../includes/paths.php';

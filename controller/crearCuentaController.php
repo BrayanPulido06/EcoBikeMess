@@ -8,7 +8,14 @@
 // error_reporting(E_ALL);
 
 ob_start(); 
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    // Configuración para que la sesión dure 30 días
+    $sessionLifetime = 2592000; 
+    ini_set('session.gc_maxlifetime', $sessionLifetime);
+    session_set_cookie_params($sessionLifetime, "/");
+    
+    session_start();
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {

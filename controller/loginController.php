@@ -1,5 +1,11 @@
 <?php
 ob_start(); // Inicia el búfer de salida para evitar errores de 'headers already sent'
+
+// Configuración para que la sesión dure 30 días (2592000 segundos)
+$sessionLifetime = 2592000; 
+ini_set('session.gc_maxlifetime', $sessionLifetime);
+session_set_cookie_params($sessionLifetime, "/");
+
 session_start();
 
 // Incluye tu archivo de conexión a la base de datos
@@ -50,8 +56,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Lógica de "Recordarme" para email y contraseña
             if (isset($_POST['remember_me'])) {
                 // Guardar el correo y la contraseña en cookies por 30 días
-                setcookie('remember_email', $correo, time() + (86400 * 30), "/"); 
-                setcookie('remember_password', $password, time() + (86400 * 30), "/"); // ¡Advertencia de seguridad!
+                setcookie('remember_email', $correo, time() + $sessionLifetime, "/"); 
+                // setcookie('remember_password', $password, time() + $sessionLifetime, "/"); // Eliminado por seguridad
             } else {
                 // Si no se marca, borrar las cookies si existen
                 if (isset($_COOKIE['remember_email'])) {
