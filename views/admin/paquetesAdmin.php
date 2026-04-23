@@ -111,22 +111,24 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             text-align: center;
         }
         #rotuloPreview .rotulo-scale .rotulo-bottom-layout {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
+            position: relative;
             width: 100%;
             margin-top: 4px;
             padding-top: 0;
+            padding-right: 206px;
+            min-height: 196px;
         }
         #rotuloPreview .rotulo-scale .rotulo-bottom-main {
-            flex: 1 1 auto;
-            min-width: 0;
+            width: 100%;
             font-size: 12px;
         }
         #rotuloPreview .rotulo-scale .rotulo-bottom-qr {
-            flex: 0 0 196px;
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 196px;
             display: flex;
-            justify-content: flex-end;
+            justify-content: center;
         }
         #rotuloPreview .rotulo-scale .rotulo-qr-panel {
             display: flex;
@@ -136,7 +138,6 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             min-width: 196px;
             height: 196px;
             padding: 4px;
-            margin-top: -2mm;
             background: #fff;
             border: 1px solid #e5e7eb;
             border-radius: 10px;
@@ -187,6 +188,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         #rotuloPreview .rotulo-scale .rotulo-card p {
             margin: 2px 0;
             line-height: 1.05;
+            overflow-wrap: anywhere;
         }
         #rotuloPreview .rotulo-scale .rotulo-card h3 {
             margin: 0 0 6px;
@@ -198,6 +200,11 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         }
         #rotuloPreview .rotulo-scale .rotulo-text-lg.bold {
             font-weight: 700;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-card,
+        #rotuloPreview .rotulo-scale .guia-left-col,
+        #rotuloPreview .rotulo-scale .rotulo-bottom-main {
+            overflow: hidden;
         }
     </style>
 </head>
@@ -524,17 +531,23 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/paquetesAdmin.js"></script>
     <script>
+        const truncarRotulo = (value, max) => {
+            const text = String(value || '').replace(/\s+/g, ' ').trim();
+            if (!text) return '';
+            return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+        };
+
         window.verRotulo = function(datos) {
             const modal = document.getElementById('rotuloModal');
             if (!modal) return;
 
-            document.getElementById('rotulo_guia_num').textContent = datos.guia || 'N/A';
-            document.getElementById('rotulo_remitente').textContent = datos.tienda_nombre || datos.remitente_nombre || 'Tienda';
-            document.getElementById('rotulo_destinatario').textContent = datos.destinatario_nombre || 'Cliente';
-            document.getElementById('rotulo_dir_destinatario').textContent = datos.destinatario_direccion || '';
-            document.getElementById('rotulo_tel_destinatario').textContent = datos.destinatario_telefono || '';
-            document.getElementById('rotulo_observaciones').textContent = datos.destinatario_observaciones || 'Sin observaciones';
-            document.getElementById('rotulo_cambios').textContent = datos.cambios || 'No';
+            document.getElementById('rotulo_guia_num').textContent = truncarRotulo(datos.guia || 'N/A', 26);
+            document.getElementById('rotulo_remitente').textContent = truncarRotulo(datos.tienda_nombre || datos.remitente_nombre || 'Tienda', 34);
+            document.getElementById('rotulo_destinatario').textContent = truncarRotulo(datos.destinatario_nombre || 'Cliente', 30);
+            document.getElementById('rotulo_dir_destinatario').textContent = truncarRotulo(datos.destinatario_direccion || '', 82);
+            document.getElementById('rotulo_tel_destinatario').textContent = truncarRotulo(datos.destinatario_telefono || '', 18);
+            document.getElementById('rotulo_observaciones').textContent = truncarRotulo(datos.destinatario_observaciones || 'Sin observaciones', 52);
+            document.getElementById('rotulo_cambios').textContent = truncarRotulo(datos.cambios || 'No', 24);
 
             const formatMoney = (val) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val);
             const totalCobrar = datos.recaudo > 0 ? Number(datos.recaudo) : 0;
