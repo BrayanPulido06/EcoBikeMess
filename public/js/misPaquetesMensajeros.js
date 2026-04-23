@@ -609,7 +609,12 @@ function abrirFormularioEntrega(id) {
 // ============================================
 function abrirSelectorImagen(inputId) {
     const input = document.getElementById(inputId);
-    if (input) input.click();
+    if (!input) return;
+    if (typeof input.showPicker === 'function') {
+        input.showPicker();
+        return;
+    }
+    input.click();
 }
 
 function manejarCambioImagen(event, callback) {
@@ -624,16 +629,8 @@ function abrirModalFoto(contexto) {
     contextoFotoModal = contexto;
     const modal = document.getElementById('modalFotoOpciones');
     const titulo = document.getElementById('modalFotoTitulo');
-    const btnCamara = document.getElementById('btnModalTomarFoto');
-    const btnGaleria = document.getElementById('btnModalGaleria');
     if (titulo) {
         titulo.textContent = contexto === 'adicional' ? 'Foto adicional' : 'Foto de la entrega';
-    }
-    if (btnCamara) {
-        btnCamara.setAttribute('for', resolverInputFoto('camera'));
-    }
-    if (btnGaleria) {
-        btnGaleria.setAttribute('for', resolverInputFoto('gallery'));
     }
     if (modal) modal.classList.remove('oculto');
 }
@@ -660,11 +657,15 @@ document.getElementById('btnFotoEntregaAdicionalOpciones')?.addEventListener('cl
 });
 
 document.getElementById('btnModalTomarFoto')?.addEventListener('click', function() {
-    setTimeout(cerrarModalFoto, 120);
+    const inputId = resolverInputFoto('camera');
+    cerrarModalFoto();
+    setTimeout(() => abrirSelectorImagen(inputId), 80);
 });
 
 document.getElementById('btnModalGaleria')?.addEventListener('click', function() {
-    setTimeout(cerrarModalFoto, 120);
+    const inputId = resolverInputFoto('gallery');
+    cerrarModalFoto();
+    setTimeout(() => abrirSelectorImagen(inputId), 80);
 });
 
 document.getElementById('btnModalFotoCancelar')?.addEventListener('click', function() {

@@ -27,7 +27,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>EB</text></svg>">
     
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
-    <link rel="stylesheet" href="../../public/css/misPaquetesMensajeros.css?v=20260411-1">
+    <link rel="stylesheet" href="../../public/css/misPaquetesMensajeros.css?v=20260422-2">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <style>
@@ -312,8 +312,8 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             <div class="form-group">
                 <label class="obligatorio">Foto de la Entrega</label>
                 <div class="fotos-container">
-                    <input type="file" id="inputFotoEntrega" class="input-file-mobile" accept="image/*" capture="environment">
-                    <input type="file" id="inputFotoEntregaGaleria" class="input-file-mobile" accept="image/*">
+                    <input type="file" id="inputFotoEntrega" class="input-file-mobile" accept="image/*" capture="environment" hidden>
+                    <input type="file" id="inputFotoEntregaGaleria" class="input-file-mobile" accept="image/*" hidden>
                     <div class="foto-acciones-grid oculto">
                         <label for="inputFotoEntrega" id="btnTomarFotoEntrega" class="btn-foto">
                             Tomar Foto de la Entrega
@@ -332,8 +332,8 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             <div class="form-group">
                 <label>Foto adicional</label>
                 <div class="fotos-container">
-                    <input type="file" id="inputFotoEntregaAdicional" class="input-file-mobile" accept="image/*" capture="environment">
-                    <input type="file" id="inputFotoEntregaAdicionalGaleria" class="input-file-mobile" accept="image/*">
+                    <input type="file" id="inputFotoEntregaAdicional" class="input-file-mobile" accept="image/*" capture="environment" hidden>
+                    <input type="file" id="inputFotoEntregaAdicionalGaleria" class="input-file-mobile" accept="image/*" hidden>
                     <div class="foto-acciones-grid oculto">
                         <label for="inputFotoEntregaAdicional" id="btnTomarFotoEntregaAdicional" class="btn-foto btn-foto-secundaria">
                             Tomar Foto Adicional
@@ -452,8 +452,8 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             <h2 id="modalFotoTitulo">Seleccionar foto</h2>
             <p class="modal-mensaje">Elige si quieres tomar una foto o seleccionarla desde la galeria.</p>
             <div class="modal-foto-botones">
-                <label id="btnModalTomarFoto" class="btn-primario btn-full">Tomar foto</label>
-                <label id="btnModalGaleria" class="btn-secundario btn-full">Seleccionar desde galeria</label>
+                <button type="button" id="btnModalTomarFoto" class="btn-primario btn-full">Tomar foto</button>
+                <button type="button" id="btnModalGaleria" class="btn-secundario btn-full">Seleccionar desde galeria</button>
                 <button type="button" id="btnModalFotoCancelar" class="btn-secundario btn-full">Cancelar</button>
             </div>
         </div>
@@ -465,9 +465,9 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
         <p id="loadingTexto">Procesando...</p>
     </div>
 
-    <script src="../../public/js/mensajeroLayout.js?v=20260411-1"></script>
+    <script src="../../public/js/mensajeroLayout.js?v=20260422-2"></script>
     <script src="../../public/js/uiToast.js"></script>
-    <script src="../../public/js/misPaquetesMensajeros.js?v=20260411-1"></script>
+    <script src="../../public/js/misPaquetesMensajeros.js?v=20260422-2"></script>
 
     <script>
         // Garantizar que todos los botones "Volver" regresen a la lista principal
