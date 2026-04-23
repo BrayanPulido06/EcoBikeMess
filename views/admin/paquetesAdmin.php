@@ -123,24 +123,19 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             min-height: 0;
         }
         #rotuloPreview .rotulo-scale .rotulo-bottom-layout {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
             width: 100%;
             margin-top: 0;
             padding-top: 0;
         }
         #rotuloPreview .rotulo-scale .rotulo-bottom-main {
-            width: 100%;
-            font-size: 12px;
-        }
-        #rotuloPreview .rotulo-scale .rotulo-detalles-layout {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-        }
-        #rotuloPreview .rotulo-scale .rotulo-detalles-info {
             flex: 1 1 auto;
             min-width: 0;
+            font-size: 12px;
         }
-        #rotuloPreview .rotulo-scale .rotulo-detalles-qr {
+        #rotuloPreview .rotulo-scale .rotulo-bottom-qr {
             flex: 0 0 132px;
             display: flex;
             justify-content: flex-end;
@@ -516,22 +511,18 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                     <div class="guia-left-col">
                                         <div class="guia-divider-h"></div>
                                         <div class="rotulo-card" style="border: 1px solid #eee; padding: 4px; border-radius: 8px;">
-                                            <div class="rotulo-detalles-layout">
-                                                <div class="rotulo-detalles-info">
-                                                    <h3 style="margin: 0 0 4px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 3px;">Detalles del Paquete</h3>
-                                                    <p><strong>Cambios por recoger:</strong> <span id="rotulo_cambios" class="rotulo-text-lg"></span></p>
-                                                </div>
-                                                <div class="rotulo-detalles-qr">
-                                                    <div class="rotulo-qr-panel">
-                                                        <div id="rotulo_qr_code" class="rotulo-qr-slot"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <h3 style="margin: 0 0 4px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 3px;">Detalles del Paquete</h3>
+                                            <p><strong>Cambios por recoger:</strong> <span id="rotulo_cambios" class="rotulo-text-lg"></span></p>
                                         </div>
                                         <div style="margin-top: 4px;">
                                             <h3 style="margin: 0 0 4px; font-size: 15px;">Total a Cobrar</h3>
                                             <div id="rotulo_financiero"></div>
                                         </div>
+                                    </div>
+                                </div>
+                                <div class="rotulo-bottom-qr">
+                                    <div class="rotulo-qr-panel">
+                                        <div id="rotulo_qr_code" class="rotulo-qr-slot"></div>
                                     </div>
                                 </div>
                             </div>
