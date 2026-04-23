@@ -134,6 +134,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             flex: 1 1 auto;
             min-width: 0;
             font-size: 12px;
+            max-width: calc(100% - 140px);
         }
         #rotuloPreview .rotulo-scale .rotulo-bottom-qr {
             flex: 0 0 132px;
@@ -218,6 +219,9 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         #rotuloPreview .rotulo-scale .guia-left-col,
         #rotuloPreview .rotulo-scale .rotulo-bottom-main {
             overflow: hidden;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-bottom-main .rotulo-card {
+            width: 100%;
         }
     </style>
 </head>
