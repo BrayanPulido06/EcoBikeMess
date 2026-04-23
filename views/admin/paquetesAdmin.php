@@ -110,15 +110,39 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             padding-left: 6px;
             text-align: center;
         }
-        #rotuloPreview .rotulo-scale .rotulo-qr-slot {
+        #rotuloPreview .rotulo-scale .rotulo-bottom-layout {
+            width: 100%;
+            margin-top: 4px;
+            padding-top: 0;
+            table-layout: fixed;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-bottom-layout td {
+            vertical-align: top;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-qr-panel {
             display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 228px;
+            min-width: 228px;
+            height: 228px;
+            padding: 4px;
+            margin-top: -4mm;
+            margin-right: 2mm;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-qr-slot {
+            display: flex;
             align-items: flex-start;
             justify-content: center;
             width: 220px;
             height: 220px;
-            margin-top: -4mm;
-            margin-right: 2mm;
-            overflow: visible;
+            flex: 0 0 220px;
+            overflow: hidden;
         }
         #rotuloPreview .rotulo-scale .rotulo-qr-slot canvas {
             width: 220px !important;
@@ -454,7 +478,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                 </tr>
                             </table>
 
-                            <table style="width: 100%; margin-top: 4px; padding-top: 0;">
+                            <table class="rotulo-bottom-layout">
                                 <tr>
                                     <td style="width: 60%; vertical-align: top; font-size: 12px;">
                                         <div class="guia-left-col">
@@ -471,7 +495,9 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                     </td>
                                     <td style="width: 40%; text-align: right; vertical-align: top;">
                                         <div class="guia-right-col">
-                                            <div id="rotulo_qr_code" class="rotulo-qr-slot"></div>
+                                            <div class="rotulo-qr-panel">
+                                                <div id="rotulo_qr_code" class="rotulo-qr-slot"></div>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
