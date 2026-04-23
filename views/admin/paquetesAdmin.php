@@ -110,34 +110,48 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             padding-left: 6px;
             text-align: center;
         }
+        #rotuloPreview .rotulo-scale .rotulo-top-grid {
+            width: 100%;
+            margin-top: 2px;
+            font-size: 12px;
+            table-layout: fixed;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-remitente-card {
+            height: 100%;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-remitente-body {
+            display: flex;
+            flex-direction: column;
+            min-height: 210px;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-remitente-info {
+            min-height: 42px;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-remitente-qr {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin-top: 8px;
+            padding-top: 4px;
+            border-top: 1px solid #f0f0f0;
+        }
         #rotuloPreview .rotulo-scale .rotulo-bottom-layout {
-            position: relative;
             width: 100%;
             margin-top: 4px;
             padding-top: 0;
-            padding-right: 206px;
-            min-height: 196px;
         }
         #rotuloPreview .rotulo-scale .rotulo-bottom-main {
             width: 100%;
             font-size: 12px;
         }
-        #rotuloPreview .rotulo-scale .rotulo-bottom-qr {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 196px;
-            display: flex;
-            justify-content: center;
-        }
         #rotuloPreview .rotulo-scale .rotulo-qr-panel {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 196px;
-            min-width: 196px;
-            height: 196px;
-            padding: 4px;
+            width: 166px;
+            min-width: 166px;
+            height: 166px;
+            padding: 3px;
             background: #fff;
             border: 1px solid #e5e7eb;
             border-radius: 10px;
@@ -148,16 +162,16 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             display: flex;
             align-items: flex-start;
             justify-content: center;
-            width: 188px;
-            height: 188px;
-            flex: 0 0 188px;
+            width: 160px;
+            height: 160px;
+            flex: 0 0 160px;
             overflow: hidden;
         }
         #rotuloPreview .rotulo-scale .rotulo-qr-slot canvas {
-            width: 188px !important;
-            height: 188px !important;
-            max-width: 188px !important;
-            max-height: 188px !important;
+            width: 160px !important;
+            height: 160px !important;
+            max-width: 160px !important;
+            max-height: 160px !important;
         }
         #rotuloPreview .rotulo-scale {
             transform: scale(0.72);
@@ -475,7 +489,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                 </tr>
                             </table>
 
-                            <table style="width: 100%; margin-top: 2px; font-size: 12px;">
+                            <table class="rotulo-top-grid">
                                 <tr>
                                     <td style="width: 4%;"></td>
                                     <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
@@ -485,9 +499,18 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                         <p><strong>Teléfono:</strong> <span id="rotulo_tel_destinatario" class="rotulo-text-lg bold"></span></p>
                                         <p><strong>Observaciones:</strong> <span id="rotulo_observaciones" class="rotulo-text-lg bold"></span></p>
                                     </td>
-                                    <td class="rotulo-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
+                                    <td class="rotulo-card rotulo-remitente-card" style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
                                         <h3 style="margin: 0 0 8px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Remitente</h3>
-                                        <p><strong>Tienda:</strong> <span id="rotulo_remitente" class="rotulo-text-lg bold"></span></p>
+                                        <div class="rotulo-remitente-body">
+                                            <div class="rotulo-remitente-info">
+                                                <p><strong>Tienda:</strong> <span id="rotulo_remitente" class="rotulo-text-lg bold"></span></p>
+                                            </div>
+                                            <div class="rotulo-remitente-qr">
+                                                <div class="rotulo-qr-panel">
+                                                    <div id="rotulo_qr_code" class="rotulo-qr-slot"></div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </td>
                                     
                                 </tr>
@@ -504,13 +527,6 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                         <div style="margin-top: 6px;">
                                             <h3 style="margin: 0 0 6px; font-size: 15px;">Total a Cobrar</h3>
                                             <div id="rotulo_financiero"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="rotulo-bottom-qr">
-                                    <div class="guia-right-col">
-                                        <div class="rotulo-qr-panel">
-                                            <div id="rotulo_qr_code" class="rotulo-qr-slot"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -558,8 +574,8 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             qrContainer.innerHTML = '';
             const qrData = datos.guia;
             const qrCode = new QRCodeStyling({
-                width: 188,
-                height: 188,
+                width: 160,
+                height: 160,
                 type: "canvas",
                 data: qrData,
                 dotsOptions: { color: "#000", type: "square" },
