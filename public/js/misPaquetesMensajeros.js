@@ -619,22 +619,6 @@ function manejarCambioImagen(event, callback) {
     event.target.value = '';
 }
 
-document.getElementById('btnTomarFotoEntrega')?.addEventListener('click', function() {
-    abrirSelectorImagen('inputFotoEntrega');
-});
-
-document.getElementById('btnTomarFotoEntregaAdicional')?.addEventListener('click', function() {
-    abrirSelectorImagen('inputFotoEntregaAdicional');
-});
-
-document.getElementById('btnSubirFotoEntrega')?.addEventListener('click', function() {
-    abrirSelectorImagen('inputFotoEntregaGaleria');
-});
-
-document.getElementById('btnSubirFotoEntregaAdicional')?.addEventListener('click', function() {
-    abrirSelectorImagen('inputFotoEntregaAdicionalGaleria');
-});
-
 document.getElementById('inputFotoEntrega')?.addEventListener('change', function(e) {
     manejarCambioImagen(e, archivo => procesarFotoEntrega(archivo, 'principal'));
 });

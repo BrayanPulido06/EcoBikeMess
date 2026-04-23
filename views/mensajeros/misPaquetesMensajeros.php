@@ -312,15 +312,15 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             <div class="form-group">
                 <label class="obligatorio">Foto de la Entrega</label>
                 <div class="fotos-container">
-                    <input type="file" id="inputFotoEntrega" accept="image/*" capture="environment" style="display: none;">
-                    <input type="file" id="inputFotoEntregaGaleria" accept="image/*" style="display: none;">
+                    <input type="file" id="inputFotoEntrega" class="input-file-mobile" accept="image/*" capture="environment">
+                    <input type="file" id="inputFotoEntregaGaleria" class="input-file-mobile" accept="image/*">
                     <div class="foto-acciones-grid">
-                        <button type="button" id="btnTomarFotoEntrega" class="btn-foto">
+                        <label for="inputFotoEntrega" id="btnTomarFotoEntrega" class="btn-foto">
                             Tomar Foto de la Entrega
-                        </button>
-                        <button type="button" id="btnSubirFotoEntrega" class="btn-foto btn-foto-secundaria">
+                        </label>
+                        <label for="inputFotoEntregaGaleria" id="btnSubirFotoEntrega" class="btn-foto btn-foto-secundaria">
                             Subir desde la GalerÃ­a
-                        </button>
+                        </label>
                     </div>
                     <div id="previsualizacionFotoEntrega" class="previsualizacion-fotos"></div>
                 </div>
@@ -329,15 +329,15 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             <div class="form-group">
                 <label>Foto adicional</label>
                 <div class="fotos-container">
-                    <input type="file" id="inputFotoEntregaAdicional" accept="image/*" capture="environment" style="display: none;">
-                    <input type="file" id="inputFotoEntregaAdicionalGaleria" accept="image/*" style="display: none;">
+                    <input type="file" id="inputFotoEntregaAdicional" class="input-file-mobile" accept="image/*" capture="environment">
+                    <input type="file" id="inputFotoEntregaAdicionalGaleria" class="input-file-mobile" accept="image/*">
                     <div class="foto-acciones-grid">
-                        <button type="button" id="btnTomarFotoEntregaAdicional" class="btn-foto btn-foto-secundaria">
+                        <label for="inputFotoEntregaAdicional" id="btnTomarFotoEntregaAdicional" class="btn-foto btn-foto-secundaria">
                             Tomar Foto Adicional
-                        </button>
-                        <button type="button" id="btnSubirFotoEntregaAdicional" class="btn-foto btn-foto-secundaria btn-foto-galeria">
+                        </label>
+                        <label for="inputFotoEntregaAdicionalGaleria" id="btnSubirFotoEntregaAdicional" class="btn-foto btn-foto-secundaria btn-foto-galeria">
                             Subir Adicional
-                        </button>
+                        </label>
                     </div>
                     <div id="previsualizacionFotoEntregaAdicional" class="previsualizacion-fotos"></div>
                 </div>
