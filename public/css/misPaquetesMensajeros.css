@@ -675,6 +675,7 @@ input, select, textarea, button {
     background: var(--color-blanco);
     border-radius: var(--radio-xl);
     padding: 1.5rem;
+    padding-bottom: calc(7rem + var(--safe-area-bottom));
     box-shadow: var(--sombra-sm);
 }
 
@@ -832,6 +833,12 @@ select {
     gap: 1rem;
 }
 
+.foto-acciones-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
 .btn-foto {
     background: var(--color-primario);
     color: var(--color-blanco);
@@ -859,8 +866,17 @@ select {
     color: #0f172a;
 }
 
+.btn-foto-galeria {
+    background: #dbeafe;
+    color: #1e3a8a;
+}
+
 .btn-foto-secundaria:active {
     background: #cbd5e1;
+}
+
+.btn-foto-galeria:active {
+    background: #bfdbfe;
 }
 
 .previsualizacion-fotos {
@@ -1003,6 +1019,7 @@ select {
     gap: 1rem;
     margin-top: 2rem;
     justify-content: center;
+    padding-bottom: calc(1.5rem + var(--safe-area-bottom));
 }
 
 .form-acciones button {
@@ -1225,9 +1242,15 @@ select {
         grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
     }
+
+    .foto-acciones-grid {
+        grid-template-columns: 1fr;
+    }
     
     .form-acciones {
         flex-direction: column;
+        margin-top: 2.5rem;
+        padding-bottom: calc(5.5rem + var(--safe-area-bottom));
     }
 
     .confirmacion-linea {

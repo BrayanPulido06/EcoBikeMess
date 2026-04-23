@@ -313,9 +313,15 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 <label class="obligatorio">Foto de la Entrega</label>
                 <div class="fotos-container">
                     <input type="file" id="inputFotoEntrega" accept="image/*" capture="environment" style="display: none;">
-                    <button type="button" id="btnTomarFotoEntrega" class="btn-foto">
-                        Tomar Foto de la Entrega
-                    </button>
+                    <input type="file" id="inputFotoEntregaGaleria" accept="image/*" style="display: none;">
+                    <div class="foto-acciones-grid">
+                        <button type="button" id="btnTomarFotoEntrega" class="btn-foto">
+                            Tomar Foto de la Entrega
+                        </button>
+                        <button type="button" id="btnSubirFotoEntrega" class="btn-foto btn-foto-secundaria">
+                            Subir desde la GalerÃ­a
+                        </button>
+                    </div>
                     <div id="previsualizacionFotoEntrega" class="previsualizacion-fotos"></div>
                 </div>
             </div>
@@ -324,9 +330,15 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 <label>Foto adicional</label>
                 <div class="fotos-container">
                     <input type="file" id="inputFotoEntregaAdicional" accept="image/*" capture="environment" style="display: none;">
-                    <button type="button" id="btnTomarFotoEntregaAdicional" class="btn-foto btn-foto-secundaria">
-                        Tomar Foto Adicional
-                    </button>
+                    <input type="file" id="inputFotoEntregaAdicionalGaleria" accept="image/*" style="display: none;">
+                    <div class="foto-acciones-grid">
+                        <button type="button" id="btnTomarFotoEntregaAdicional" class="btn-foto btn-foto-secundaria">
+                            Tomar Foto Adicional
+                        </button>
+                        <button type="button" id="btnSubirFotoEntregaAdicional" class="btn-foto btn-foto-secundaria btn-foto-galeria">
+                            Subir Adicional
+                        </button>
+                    </div>
                     <div id="previsualizacionFotoEntregaAdicional" class="previsualizacion-fotos"></div>
                 </div>
             </div>
@@ -359,9 +371,15 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 <label class="obligatorio">Evidencia Fotográfica</label>
                 <div class="fotos-container">
                     <input type="file" id="inputFotoNovedad" accept="image/*" capture="environment" style="display: none;">
-                    <button type="button" id="btnTomarFotoNovedad" class="btn-foto">
-                        Tomar Foto de Evidencia
-                    </button>
+                    <input type="file" id="inputFotoNovedadGaleria" accept="image/*" style="display: none;">
+                    <div class="foto-acciones-grid">
+                        <button type="button" id="btnTomarFotoNovedad" class="btn-foto">
+                            Tomar Foto de Evidencia
+                        </button>
+                        <button type="button" id="btnSubirFotoNovedad" class="btn-foto btn-foto-secundaria">
+                            Subir desde la GalerÃ­a
+                        </button>
+                    </div>
                     <div id="previsualizacionFotoNovedad" class="previsualizacion-fotos"></div>
                 </div>
                 <small class="ayuda-texto">Obligatorio: una foto como evidencia</small>
@@ -371,9 +389,15 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 <label>Foto adicional (opcional)</label>
                 <div class="fotos-container">
                     <input type="file" id="inputFotoNovedadAdicional" accept="image/*" capture="environment" style="display: none;">
-                    <button type="button" id="btnTomarFotoNovedadAdicional" class="btn-foto btn-foto-secundaria">
-                        Tomar Foto Adicional
-                    </button>
+                    <input type="file" id="inputFotoNovedadAdicionalGaleria" accept="image/*" style="display: none;">
+                    <div class="foto-acciones-grid">
+                        <button type="button" id="btnTomarFotoNovedadAdicional" class="btn-foto btn-foto-secundaria">
+                            Tomar Foto Adicional
+                        </button>
+                        <button type="button" id="btnSubirFotoNovedadAdicional" class="btn-foto btn-foto-secundaria btn-foto-galeria">
+                            Subir Adicional
+                        </button>
+                    </div>
                     <div id="previsualizacionFotoNovedadAdicional" class="previsualizacion-fotos"></div>
                 </div>
                 <small class="ayuda-texto">Opcional: agrega una segunda foto</small>

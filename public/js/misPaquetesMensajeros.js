@@ -606,28 +606,49 @@ function abrirFormularioEntrega(id) {
 // ============================================
 // MANEJO DE FOTOS
 // ============================================
+function abrirSelectorImagen(inputId) {
+    const input = document.getElementById(inputId);
+    if (input) input.click();
+}
+
+function manejarCambioImagen(event, callback) {
+    const archivo = event.target.files?.[0];
+    if (archivo && archivo.type.startsWith('image/')) {
+        callback(archivo);
+    }
+    event.target.value = '';
+}
+
 document.getElementById('btnTomarFotoEntrega')?.addEventListener('click', function() {
-    document.getElementById('inputFotoEntrega').click();
+    abrirSelectorImagen('inputFotoEntrega');
 });
 
 document.getElementById('btnTomarFotoEntregaAdicional')?.addEventListener('click', function() {
-    document.getElementById('inputFotoEntregaAdicional').click();
+    abrirSelectorImagen('inputFotoEntregaAdicional');
+});
+
+document.getElementById('btnSubirFotoEntrega')?.addEventListener('click', function() {
+    abrirSelectorImagen('inputFotoEntregaGaleria');
+});
+
+document.getElementById('btnSubirFotoEntregaAdicional')?.addEventListener('click', function() {
+    abrirSelectorImagen('inputFotoEntregaAdicionalGaleria');
 });
 
 document.getElementById('inputFotoEntrega')?.addEventListener('change', function(e) {
-    const archivo = e.target.files?.[0];
-    if (archivo && archivo.type.startsWith('image/')) {
-        procesarFotoEntrega(archivo, 'principal');
-    }
-    e.target.value = '';
+    manejarCambioImagen(e, archivo => procesarFotoEntrega(archivo, 'principal'));
 });
 
 document.getElementById('inputFotoEntregaAdicional')?.addEventListener('change', function(e) {
-    const archivo = e.target.files?.[0];
-    if (archivo && archivo.type.startsWith('image/')) {
-        procesarFotoEntrega(archivo, 'adicional');
-    }
-    e.target.value = '';
+    manejarCambioImagen(e, archivo => procesarFotoEntrega(archivo, 'adicional'));
+});
+
+document.getElementById('inputFotoEntregaGaleria')?.addEventListener('change', function(e) {
+    manejarCambioImagen(e, archivo => procesarFotoEntrega(archivo, 'principal'));
+});
+
+document.getElementById('inputFotoEntregaAdicionalGaleria')?.addEventListener('change', function(e) {
+    manejarCambioImagen(e, archivo => procesarFotoEntrega(archivo, 'adicional'));
 });
 
 function procesarFotoEntrega(archivo, tipo = 'principal') {
@@ -903,25 +924,35 @@ function abrirFormularioNovedad(id, tipo) {
 }
 
 document.getElementById('btnTomarFotoNovedad')?.addEventListener('click', function() {
-    document.getElementById('inputFotoNovedad').click();
+    abrirSelectorImagen('inputFotoNovedad');
+});
+
+document.getElementById('btnSubirFotoNovedad')?.addEventListener('click', function() {
+    abrirSelectorImagen('inputFotoNovedadGaleria');
 });
 
 document.getElementById('inputFotoNovedad')?.addEventListener('change', function(e) {
-    const archivo = e.target.files?.[0];
-    if (!archivo || !archivo.type.startsWith('image/')) return;
-    procesarFotoNovedad(archivo, false);
-    e.target.value = '';
+    manejarCambioImagen(e, archivo => procesarFotoNovedad(archivo, false));
+});
+
+document.getElementById('inputFotoNovedadGaleria')?.addEventListener('change', function(e) {
+    manejarCambioImagen(e, archivo => procesarFotoNovedad(archivo, false));
 });
 
 document.getElementById('btnTomarFotoNovedadAdicional')?.addEventListener('click', function() {
-    document.getElementById('inputFotoNovedadAdicional').click();
+    abrirSelectorImagen('inputFotoNovedadAdicional');
+});
+
+document.getElementById('btnSubirFotoNovedadAdicional')?.addEventListener('click', function() {
+    abrirSelectorImagen('inputFotoNovedadAdicionalGaleria');
 });
 
 document.getElementById('inputFotoNovedadAdicional')?.addEventListener('change', function(e) {
-    const archivo = e.target.files?.[0];
-    if (!archivo || !archivo.type.startsWith('image/')) return;
-    procesarFotoNovedad(archivo, true);
-    e.target.value = '';
+    manejarCambioImagen(e, archivo => procesarFotoNovedad(archivo, true));
+});
+
+document.getElementById('inputFotoNovedadAdicionalGaleria')?.addEventListener('change', function(e) {
+    manejarCambioImagen(e, archivo => procesarFotoNovedad(archivo, true));
 });
 
 function procesarFotoNovedad(archivo, esAdicional) {
