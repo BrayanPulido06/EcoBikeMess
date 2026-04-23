@@ -452,8 +452,8 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             <h2 id="modalFotoTitulo">Seleccionar foto</h2>
             <p class="modal-mensaje">Elige si quieres tomar una foto o seleccionarla desde la galeria.</p>
             <div class="modal-foto-botones">
-                <button type="button" id="btnModalTomarFoto" class="btn-primario btn-full">Tomar foto</button>
-                <button type="button" id="btnModalGaleria" class="btn-secundario btn-full">Seleccionar desde galeria</button>
+                <label id="btnModalTomarFoto" class="btn-primario btn-full">Tomar foto</label>
+                <label id="btnModalGaleria" class="btn-secundario btn-full">Seleccionar desde galeria</label>
                 <button type="button" id="btnModalFotoCancelar" class="btn-secundario btn-full">Cancelar</button>
             </div>
         </div>

@@ -624,8 +624,16 @@ function abrirModalFoto(contexto) {
     contextoFotoModal = contexto;
     const modal = document.getElementById('modalFotoOpciones');
     const titulo = document.getElementById('modalFotoTitulo');
+    const btnCamara = document.getElementById('btnModalTomarFoto');
+    const btnGaleria = document.getElementById('btnModalGaleria');
     if (titulo) {
         titulo.textContent = contexto === 'adicional' ? 'Foto adicional' : 'Foto de la entrega';
+    }
+    if (btnCamara) {
+        btnCamara.setAttribute('for', resolverInputFoto('camera'));
+    }
+    if (btnGaleria) {
+        btnGaleria.setAttribute('for', resolverInputFoto('gallery'));
     }
     if (modal) modal.classList.remove('oculto');
 }
@@ -652,15 +660,11 @@ document.getElementById('btnFotoEntregaAdicionalOpciones')?.addEventListener('cl
 });
 
 document.getElementById('btnModalTomarFoto')?.addEventListener('click', function() {
-    const inputId = resolverInputFoto('camera');
-    cerrarModalFoto();
-    abrirSelectorImagen(inputId);
+    setTimeout(cerrarModalFoto, 120);
 });
 
 document.getElementById('btnModalGaleria')?.addEventListener('click', function() {
-    const inputId = resolverInputFoto('gallery');
-    cerrarModalFoto();
-    abrirSelectorImagen(inputId);
+    setTimeout(cerrarModalFoto, 120);
 });
 
 document.getElementById('btnModalFotoCancelar')?.addEventListener('click', function() {

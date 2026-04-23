@@ -834,15 +834,7 @@ select {
 }
 
 .input-file-mobile {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+    display: none !important;
 }
 
 .foto-acciones-grid {
@@ -859,6 +851,10 @@ select {
     display: grid;
     gap: 0.75rem;
     margin-top: 1.25rem;
+}
+
+.modal-foto-botones label {
+    width: 100%;
 }
 
 .btn-foto {
