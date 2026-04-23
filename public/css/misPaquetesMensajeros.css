@@ -851,6 +851,16 @@ select {
     gap: 0.75rem;
 }
 
+.modal-foto-opciones {
+    text-align: center;
+}
+
+.modal-foto-botones {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
 .btn-foto {
     background: var(--color-primario);
     color: var(--color-blanco);
@@ -1257,6 +1267,10 @@ select {
 
     .foto-acciones-grid {
         grid-template-columns: 1fr;
+    }
+
+    .modal-foto-botones {
+        gap: 0.85rem;
     }
     
     .form-acciones {

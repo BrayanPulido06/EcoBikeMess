@@ -314,7 +314,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 <div class="fotos-container">
                     <input type="file" id="inputFotoEntrega" class="input-file-mobile" accept="image/*" capture="environment">
                     <input type="file" id="inputFotoEntregaGaleria" class="input-file-mobile" accept="image/*">
-                    <div class="foto-acciones-grid">
+                    <div class="foto-acciones-grid oculto">
                         <label for="inputFotoEntrega" id="btnTomarFotoEntrega" class="btn-foto">
                             Tomar Foto de la Entrega
                         </label>
@@ -322,6 +322,9 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                             Subir desde la GalerÃ­a
                         </label>
                     </div>
+                    <button type="button" id="btnFotoEntregaOpciones" class="btn-foto">
+                        Tomar Foto de la Entrega
+                    </button>
                     <div id="previsualizacionFotoEntrega" class="previsualizacion-fotos"></div>
                 </div>
             </div>
@@ -331,7 +334,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 <div class="fotos-container">
                     <input type="file" id="inputFotoEntregaAdicional" class="input-file-mobile" accept="image/*" capture="environment">
                     <input type="file" id="inputFotoEntregaAdicionalGaleria" class="input-file-mobile" accept="image/*">
-                    <div class="foto-acciones-grid">
+                    <div class="foto-acciones-grid oculto">
                         <label for="inputFotoEntregaAdicional" id="btnTomarFotoEntregaAdicional" class="btn-foto btn-foto-secundaria">
                             Tomar Foto Adicional
                         </label>
@@ -339,6 +342,9 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                             Subir Adicional
                         </label>
                     </div>
+                    <button type="button" id="btnFotoEntregaAdicionalOpciones" class="btn-foto btn-foto-secundaria">
+                        Tomar Foto Adicional
+                    </button>
                     <div id="previsualizacionFotoEntregaAdicional" class="previsualizacion-fotos"></div>
                 </div>
             </div>
@@ -437,6 +443,18 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             <div class="form-acciones">
                 <button type="button" id="btnDecisionCancelar" class="btn-secundario">Cancelar</button>
                 <button type="button" id="btnDecisionAceptar" class="btn-primario">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalFotoOpciones" class="modal oculto">
+        <div class="modal-contenido modal-foto-opciones">
+            <h2 id="modalFotoTitulo">Seleccionar foto</h2>
+            <p class="modal-mensaje">Elige si quieres tomar una foto o seleccionarla desde la galeria.</p>
+            <div class="modal-foto-botones">
+                <button type="button" id="btnModalTomarFoto" class="btn-primario btn-full">Tomar foto</button>
+                <button type="button" id="btnModalGaleria" class="btn-secundario btn-full">Seleccionar desde galeria</button>
+                <button type="button" id="btnModalFotoCancelar" class="btn-secundario btn-full">Cancelar</button>
             </div>
         </div>
     </div>

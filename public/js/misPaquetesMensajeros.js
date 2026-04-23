@@ -15,6 +15,7 @@ const API_MIS_PAQUETES = '../../controller/misPaquetesMensajerosController.php';
 let deepLinkProcesado = false;
 const STORAGE_SCANNED_QR_KEY = 'ecobikemess_mensajero_scanned_qr_v1';
 let qrEscaneadosMap = new Map();
+let contextoFotoModal = null;
 
 // ============================================
 // FUNCIONES DE FEEDBACK TÁCTIL
@@ -618,6 +619,59 @@ function manejarCambioImagen(event, callback) {
     }
     event.target.value = '';
 }
+
+function abrirModalFoto(contexto) {
+    contextoFotoModal = contexto;
+    const modal = document.getElementById('modalFotoOpciones');
+    const titulo = document.getElementById('modalFotoTitulo');
+    if (titulo) {
+        titulo.textContent = contexto === 'adicional' ? 'Foto adicional' : 'Foto de la entrega';
+    }
+    if (modal) modal.classList.remove('oculto');
+}
+
+function cerrarModalFoto() {
+    contextoFotoModal = null;
+    const modal = document.getElementById('modalFotoOpciones');
+    if (modal) modal.classList.add('oculto');
+}
+
+function resolverInputFoto(origen) {
+    if (contextoFotoModal === 'adicional') {
+        return origen === 'camera' ? 'inputFotoEntregaAdicional' : 'inputFotoEntregaAdicionalGaleria';
+    }
+    return origen === 'camera' ? 'inputFotoEntrega' : 'inputFotoEntregaGaleria';
+}
+
+document.getElementById('btnFotoEntregaOpciones')?.addEventListener('click', function() {
+    abrirModalFoto('principal');
+});
+
+document.getElementById('btnFotoEntregaAdicionalOpciones')?.addEventListener('click', function() {
+    abrirModalFoto('adicional');
+});
+
+document.getElementById('btnModalTomarFoto')?.addEventListener('click', function() {
+    const inputId = resolverInputFoto('camera');
+    cerrarModalFoto();
+    abrirSelectorImagen(inputId);
+});
+
+document.getElementById('btnModalGaleria')?.addEventListener('click', function() {
+    const inputId = resolverInputFoto('gallery');
+    cerrarModalFoto();
+    abrirSelectorImagen(inputId);
+});
+
+document.getElementById('btnModalFotoCancelar')?.addEventListener('click', function() {
+    cerrarModalFoto();
+});
+
+document.getElementById('modalFotoOpciones')?.addEventListener('click', function(e) {
+    if (e.target.id === 'modalFotoOpciones') {
+        cerrarModalFoto();
+    }
+});
 
 document.getElementById('inputFotoEntrega')?.addEventListener('change', function(e) {
     manejarCambioImagen(e, archivo => procesarFotoEntrega(archivo, 'principal'));
