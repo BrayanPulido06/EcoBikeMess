@@ -108,6 +108,23 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         }
         .guia-right-col {
             padding-left: 6px;
+            text-align: center;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-qr-slot {
+            display: inline-flex;
+            align-items: flex-start;
+            justify-content: center;
+            width: 220px;
+            height: 220px;
+            margin-top: -4mm;
+            margin-right: 2mm;
+            overflow: visible;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-qr-slot canvas {
+            width: 220px !important;
+            height: 220px !important;
+            max-width: 220px !important;
+            max-height: 220px !important;
         }
         #rotuloPreview .rotulo-scale {
             transform: scale(0.72);
@@ -454,7 +471,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                     </td>
                                     <td style="width: 40%; text-align: right; vertical-align: top;">
                                         <div class="guia-right-col">
-                                            <div id="rotulo_qr_code" style="display: inline-block; width: 220px; height: 220px; margin-right: 6mm; margin-top: -9mm;"></div>
+                                            <div id="rotulo_qr_code" class="rotulo-qr-slot"></div>
                                         </div>
                                     </td>
                                 </tr>
@@ -496,8 +513,8 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             qrContainer.innerHTML = '';
             const qrData = datos.guia;
             const qrCode = new QRCodeStyling({
-                width: 260,
-                height: 260,
+                width: 220,
+                height: 220,
                 type: "canvas",
                 data: qrData,
                 dotsOptions: { color: "#000", type: "square" },
