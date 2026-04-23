@@ -125,7 +125,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         #rotuloPreview .rotulo-scale .rotulo-bottom-layout {
             display: flex;
             align-items: flex-start;
-            gap: 8px;
+            gap: 0;
             width: 100%;
             margin-top: 0;
             padding-top: 0;
@@ -139,9 +139,10 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         #rotuloPreview .rotulo-scale .rotulo-bottom-qr {
             flex: 0 0 132px;
             display: flex;
-            justify-content: flex-end;
+            justify-content: flex-start;
             align-items: flex-start;
             padding-top: 0;
+            margin-left: -4px;
         }
         #rotuloPreview .rotulo-scale .rotulo-qr-panel {
             display: flex;
