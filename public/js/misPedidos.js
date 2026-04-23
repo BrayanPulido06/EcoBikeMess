@@ -464,7 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             </td>
                             <td style="width: 40%; text-align: right; vertical-align: top;">
-                                <div id="rotulo_qr_code" style="display: inline-block; width: 220px; height: 220px; margin-right: 6mm; margin-top: -7mm;"></div>
+                                <div id="rotulo_qr_code" style="display:inline-flex;width:132px;height:132px;padding:2px;border:1px solid #e5e7eb;border-radius:10px;margin-right:6mm;margin-top:-2mm;background:#fff;align-items:center;justify-content:center;"></div>
                             </td>
                         </tr>
                     </table>
@@ -485,8 +485,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const totalTexto = formatMoney(datos.recaudo);
         const qrData = `Guía: ${datos.guia}\nRemitente: ${datos.tienda_nombre || datos.remitente_nombre}\nDestinatario: ${datos.destinatario_nombre}\nDirección: ${datos.destinatario_direccion}\nTotal a Cobrar: ${totalTexto}`;
         const qrCode = new QRCodeStyling({
-            width: 260,
-            height: 260,
+            width: 128,
+            height: 128,
             type: "canvas",
             data: datos.guia,
             dotsOptions: { color: "#000", type: "square" },

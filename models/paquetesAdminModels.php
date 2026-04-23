@@ -132,6 +132,7 @@ class PaquetesAdminModel {
             $sqlInfo = "SELECT p.numero_guia, 
                                p.id as paquete_id,
                                p.fecha_creacion,
+                               c.nombre_emprendimiento as tienda_nombre,
                                COALESCE(NULLIF(p.remitente_nombre, ''), NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos)) as remitente,
                                p.remitente_nombre as remitente_editable,
                                p.destinatario_nombre, 

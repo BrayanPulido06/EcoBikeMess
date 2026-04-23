@@ -596,7 +596,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Llenar datos del rótulo
         document.getElementById('rotulo_guia_num').textContent = pedido.guia;
-        document.getElementById('rotulo_remitente').textContent = pedido.remitente.nombre;
+        document.getElementById('rotulo_remitente').textContent = pedido.remitente.nombre_tienda || pedido.remitente.tienda_nombre || pedido.remitente.nombre;
 
         document.getElementById('rotulo_destinatario').textContent = pedido.destinatario.nombre;
         document.getElementById('rotulo_dir_destinatario').textContent = pedido.destinatario.direccion;
@@ -617,8 +617,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const qrData = pedido.guia;
 
         const qrCode = new QRCodeStyling({
-            width: 260,
-            height: 260,
+            width: 128,
+            height: 128,
             type: "canvas",
             data: qrData,
             dotsOptions: { color: "#000", type: "square" },

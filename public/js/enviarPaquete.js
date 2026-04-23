@@ -584,8 +584,8 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
             `.trim();
 
             const qrCode = new QRCodeStyling({
-                width: 300,
-                height: 300,
+                width: 128,
+                height: 128,
                 data: numeroGuia,
                 dotsOptions: { color: "#000000", type: "square" },
                 backgroundOptions: { color: "#ffffff" },
@@ -1137,8 +1137,8 @@ ${qrFinanciero}
         
         // Crear nueva instancia de QR con logo
         qrCodeStylingInstance = new QRCodeStyling({
-            width: 260,
-            height: 260,
+            width: 128,
+            height: 128,
             data: numeroGuia,
             // image: "../../public/img/logo_qr.png", // Desactivado para asegurar que el QR funcione. Actívalo cuando tengas el logo.
             dotsOptions: {
@@ -1254,7 +1254,7 @@ ${qrFinanciero}
                                         </div>
                                     </td>
                                     <td style="width: 40%; text-align: right; vertical-align: top;">
-                                        <img src="${qrImageDataUrl}" style="width: 220px; height: 220px; border: 1px solid #ddd; border-radius: 4px; padding: 4px; margin-right: 6mm; margin-top: -7mm;">
+                                        <img src="${qrImageDataUrl}" style="width:132px;height:132px;border:1px solid #e5e7eb;border-radius:10px;padding:2px;margin-right:6mm;margin-top:-2mm;background:#fff;">
                                     </td>
                                 </tr>
                             </table>

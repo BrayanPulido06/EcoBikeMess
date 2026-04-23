@@ -96,12 +96,12 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
             overflow: hidden;
         }
         .guia-divider-h {
-            border-top: 2px solid #28a745;
-            margin: 4px 0 6px;
+            border-top: 1px solid #28a745;
+            margin: 0 0 4px;
         }
         .guia-left-col {
             position: relative;
-            padding-right: 6px;
+            padding-right: 2px;
         }
         .guia-left-col::after {
             content: '';
@@ -112,8 +112,58 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
             width: 0;
             border-right: 2px solid #28a745;
         }
-        .guia-right-col {
-            padding-left: 6px;
+        .guia-right-col { padding-left: 6px; text-align: center; }
+        #rotuloPreview .rotulo-scale .rotulo-bottom-layout {
+            display: flex;
+            align-items: flex-start;
+            gap: 0;
+            width: 100%;
+            margin-top: 0;
+            padding-top: 0;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-bottom-main {
+            flex: 1 1 auto;
+            min-width: 0;
+            font-size: 12px;
+            max-width: calc(100% - 140px);
+        }
+        #rotuloPreview .rotulo-scale .rotulo-bottom-qr {
+            flex: 0 0 132px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding-top: 0;
+            margin-left: -12mm;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-qr-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 132px;
+            min-width: 132px;
+            height: 132px;
+            padding: 2px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            box-sizing: border-box;
+            overflow: hidden;
+            margin-top: -6px;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-qr-slot {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            width: 128px;
+            height: 128px;
+            flex: 0 0 128px;
+            overflow: hidden;
+        }
+        #rotuloPreview .rotulo-scale .rotulo-qr-slot canvas {
+            width: 128px !important;
+            height: 128px !important;
+            max-width: 128px !important;
+            max-height: 128px !important;
         }
         #rotuloPreview .rotulo-scale {
             transform: scale(0.72);
@@ -484,7 +534,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                                     </td>
                                     <td style="width: 40%; text-align: right; vertical-align: top;">
                                         <div class="guia-right-col">
-                                            <div id="rotulo_qr_code" style="display: inline-block; width: 220px; height: 220px; margin-right: 6mm; margin-top: -9mm;"></div>
+                                            <div id="rotulo_qr_code" style="display: inline-flex; width: 132px; height: 132px; padding:2px; border:1px solid #e5e7eb; border-radius:10px; margin-right: 6mm; margin-top: -2mm; background:#fff; align-items:center; justify-content:center;"></div>
                                         </div>
                                     </td>
                                 </tr>
@@ -535,7 +585,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
             
             const qrData = datos.guia;
 
-            const qrCode = new QRCodeStyling({ width: 260, height: 260, type: "canvas", data: qrData, dotsOptions: { color: "#000", type: "square" }, backgroundOptions: { color: "#fff" }, qrOptions: { errorCorrectionLevel: 'M' } });
+            const qrCode = new QRCodeStyling({ width: 128, height: 128, type: "canvas", data: qrData, dotsOptions: { color: "#000", type: "square" }, backgroundOptions: { color: "#fff" }, qrOptions: { errorCorrectionLevel: 'M' } });
             qrCode.append(qrContainer);
 
             modal.style.display = 'flex';

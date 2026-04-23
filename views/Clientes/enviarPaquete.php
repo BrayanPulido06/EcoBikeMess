@@ -77,11 +77,11 @@ $remitente_data = [
             text-align: center;
         }
         #qrcode {
-            width: 220px !important;
-            height: 220px !important;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            width: 132px !important;
+            height: 132px !important;
+            padding: 2px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
             margin-bottom: 5px;
         }
         #qrcode canvas {
@@ -140,11 +140,11 @@ $remitente_data = [
         }
         /* Asegurar que el QR del rótulo no se encoja por estilos globales */
         #rotuloPreview #qrcode {
-            width: 220px !important;
-            height: 220px !important;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            width: 132px !important;
+            height: 132px !important;
+            padding: 2px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
             margin: 0;
         }
         #rotuloPreview #qrcode canvas {
@@ -152,12 +152,12 @@ $remitente_data = [
             height: 100% !important;
         }
         .guia-divider-h {
-            border-top: 2px solid #28a745;
-            margin: 4px 0 6px;
+            border-top: 1px solid #28a745;
+            margin: 0 0 4px;
         }
         .guia-left-col {
             position: relative;
-            padding-right: 6px;
+            padding-right: 2px;
         }
         .guia-left-col::after {
             content: '';
@@ -600,7 +600,7 @@ $remitente_data = [
                                             </td>
                                             <td style="width: 40%; text-align: right; vertical-align: top;">
                                                 <div class="guia-right-col">
-                                                    <div id="qrcode" style="display: inline-block; width: 220px; height: 220px; margin-right: 6mm; margin-top: -9mm;"></div>
+                                                    <div id="qrcode" style="display:inline-flex;width:132px;height:132px;padding:2px;border:1px solid #e5e7eb;border-radius:10px;margin-right:6mm;margin-top:-2mm;background:#fff;align-items:center;justify-content:center;"></div>
                                                 </div>
                                             </td>
                                         </tr>
