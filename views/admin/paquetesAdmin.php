@@ -547,17 +547,26 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
     </div>
 
     <script src="../../public/js/imageLightbox.js"></script>
+    <script src="../../public/js/rotuloShared.js"></script>
     <script src="../../public/js/paquetesAdmin.js"></script>
     <script>
+        let currentRotuloData = null;
         const truncarRotulo = (value, max) => {
             const text = String(value || '').replace(/\s+/g, ' ').trim();
             if (!text) return '';
             return text.length > max ? `${text.slice(0, max - 1)}…` : text;
         };
 
-        window.verRotulo = function(datos) {
+        window.verRotulo = async function(datos) {
             const modal = document.getElementById('rotuloModal');
+            const preview = document.getElementById('rotuloPreview');
             if (!modal) return;
+            if (preview && window.RotuloEcoBike) {
+                currentRotuloData = datos;
+                await window.RotuloEcoBike.mountPreview(preview, datos);
+                modal.style.display = 'flex';
+                return;
+            }
 
             document.getElementById('rotulo_guia_num').textContent = truncarRotulo(datos.guia || 'N/A', 26);
             document.getElementById('rotulo_remitente').textContent = truncarRotulo(datos.tienda_nombre || datos.remitente_nombre || 'Tienda', 34);
@@ -591,6 +600,16 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
 
         document.getElementById('closeRotuloModal').onclick = () => document.getElementById('rotuloModal').style.display = 'none';
         document.getElementById('btnDownloadRotulo').onclick = async () => {
+            if (currentRotuloData && window.RotuloEcoBike) {
+                try {
+                    await window.RotuloEcoBike.downloadPdf(currentRotuloData, { filePrefix: 'Guia' });
+                    return;
+                } catch (error) {
+                    alert('Error al generar PDF');
+                    console.error(error);
+                    return;
+                }
+            }
             const element = document.getElementById('rotuloPreview');
             const guia = document.getElementById('rotulo_guia_num').textContent;
             try {

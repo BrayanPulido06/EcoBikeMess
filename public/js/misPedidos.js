@@ -412,94 +412,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function buildRotuloHtml(datos) {
-        return `
-            <div id="rotuloPreview" style="background: white; padding: 12px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333; width: 100mm; height: 100mm; box-sizing: border-box;">
-                <div style="transform: scale(0.72); transform-origin: top left; width: 139mm; height: 139mm;">
-                    <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 6px;">
-                        <tr>
-                            <td colspan="2">
-                                <div style="display: flex; align-items: center; gap: 10px; justify-content: center; text-align: center;">
-                                    <img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:100px;height:100px;">
-                                    <div>
-                                        <div style="font-size: 26px; font-weight: 800; color: #5cb85c; line-height: 1;">EcoBikeMess</div>
-                                        <div style="margin-top: 3px; font-size: 15px; font-weight: 700; color: #28a745;">Contactanos: 317509298</div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" style="padding-top: 4px;">
-                                <div style="font-size: 13px; font-weight: 800; color: #000000;">NUM GUÍA: <span style="font-size: 19px; font-weight: 800; color: #1f2a37;">${datos.guia}</span></div>
-                            </td>
-                        </tr>
-                    </table>
-
-                    <table style="width: 100%; margin-top: 4px; font-size: 12px;">
-                        <tr>
-                            <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
-                                <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📥 Destinatario</h3>
-                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Dirección:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_direccion || ''}</span></p>
-                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Nombre:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_nombre || ''}</span></p>
-                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Teléfono:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_telefono || ''}</span></p>
-                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Observaciones:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.destinatario_observaciones || 'Sin observaciones'}</span></p>
-                            </td>
-                            <td style="width: 4%;"></td>
-                            <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
-                                <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
-                                <p style="margin: 2px 0; line-height: 1.05;"><strong>Tienda:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.tienda_nombre || datos.remitente_nombre || 'Tienda'}</span></p>
-                            </td>
-                        </tr>
-                    </table>
-
-                    <table style="width: 100%; margin-top: 4px; padding-top: 0;">
-                        <tr>
-                            <td style="width: 60%; vertical-align: top; font-size: 12px;">
-                                <div style="border: 1px solid #eee; padding: 6px; border-radius: 8px;">
-                                    <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
-                                    <p style="margin: 2px 0; line-height: 1.05;"><strong>Cambios por recoger:</strong> <span style="font-size: 15px; font-weight: 700;">${datos.cambios || 'No'}</span></p>
-                                </div>
-                                <div style="margin-top: 6px;">
-                                    <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800;">💰 Total a Cobrar</h3>
-                                    <p style="margin: 2px 0; font-size: 26px; font-weight: 800; color: #28a745; line-height: 1.1;">${formatMoney(datos.recaudo)}</p>
-                                </div>
-                            </td>
-                            <td style="width: 40%; text-align: right; vertical-align: top;">
-                                <div id="rotulo_qr_code" style="display:inline-flex;width:132px;height:132px;padding:2px;border:1px solid #e5e7eb;border-radius:10px;margin-right:6mm;margin-top:-2mm;background:#fff;align-items:center;justify-content:center;"></div>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-        `;
+        return window.RotuloEcoBike ? `<div id="rotuloPreview"></div>` : '';
     }
 
     async function renderRotuloToCanvas(datos) {
-        const temp = document.createElement('div');
-        temp.style.position = 'absolute';
-        temp.style.left = '-9999px';
-        temp.style.top = '0';
-        temp.innerHTML = buildRotuloHtml(datos);
-        document.body.appendChild(temp);
-
-        const qrContainer = temp.querySelector('#rotulo_qr_code');
-        const totalTexto = formatMoney(datos.recaudo);
-        const qrData = `Guía: ${datos.guia}\nRemitente: ${datos.tienda_nombre || datos.remitente_nombre}\nDestinatario: ${datos.destinatario_nombre}\nDirección: ${datos.destinatario_direccion}\nTotal a Cobrar: ${totalTexto}`;
-        const qrCode = new QRCodeStyling({
-            width: 128,
-            height: 128,
-            type: "canvas",
-            data: datos.guia,
-            dotsOptions: { color: "#000", type: "square" },
-            backgroundOptions: { color: "#fff" },
-            qrOptions: { errorCorrectionLevel: 'M' }
-        });
-        qrCode.append(qrContainer);
-
-        await new Promise(r => setTimeout(r, 50));
-        const element = temp.querySelector('#rotuloPreview');
-        const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff' });
-        document.body.removeChild(temp);
-        return canvas;
+        if (!window.RotuloEcoBike) {
+            throw new Error('RotuloEcoBike no está disponible');
+        }
+        return window.RotuloEcoBike.renderToCanvas(datos);
     }
 
     async function descargarGuiasSeleccionadas() {

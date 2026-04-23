@@ -549,14 +549,23 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
 
     <!-- Enlace al script JS recién creado -->
     <script src="../../public/js/imageLightbox.js"></script>
+    <script src="../../public/js/rotuloShared.js"></script>
     <script src="../../public/js/misPedidos.js"></script>
     
     <!-- Script para manejar el Rótulo -->
     <script>
         // Función global para abrir el rótulo
-        window.verRotulo = function(datos) {
+        let currentRotuloData = null;
+        window.verRotulo = async function(datos) {
             const modal = document.getElementById('rotuloModal');
+            const preview = document.getElementById('rotuloPreview');
             if(!modal) return;
+            if (preview && window.RotuloEcoBike) {
+                currentRotuloData = datos;
+                await window.RotuloEcoBike.mountPreview(preview, datos);
+                modal.style.display = 'flex';
+                return;
+            }
 
             // Llenar datos
             document.getElementById('rotulo_guia_num').textContent = datos.guia || 'N/A';
@@ -595,6 +604,12 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
         document.getElementById('closeRotuloModal').onclick = () => document.getElementById('rotuloModal').style.display = 'none';
         const btnDownloadRotulo = document.getElementById('btnDownloadRotulo');
         if (btnDownloadRotulo) btnDownloadRotulo.onclick = async () => {
+            if (currentRotuloData && window.RotuloEcoBike) {
+                try {
+                    await window.RotuloEcoBike.downloadPdf(currentRotuloData, { filePrefix: 'Rotulo' });
+                    return;
+                } catch (error) { alert('Error al generar PDF'); console.error(error); return; }
+            }
             const element = document.getElementById('rotuloPreview');
             const guia = document.getElementById('rotulo_guia_num').textContent;
             try {

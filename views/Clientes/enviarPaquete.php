@@ -686,6 +686,7 @@ $remitente_data = [
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 
     <script src="../../public/js/imageLightbox.js"></script>
+    <script src="../../public/js/rotuloShared.js"></script>
     <script src="../../public/js/enviarPaquete.js?v=20260418-1"></script>
 </body>
 </html>

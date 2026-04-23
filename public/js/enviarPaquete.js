@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const formAction = form?.getAttribute('action') || '../../controller/enviarPaqueteController.php';
     const qrcodeContainer = document.getElementById('qrcode');
     let qrCodeStylingInstance = null; // Para la instancia del nuevo QR
+    let currentPreviewRotuloData = null;
     let baseRecaudo = 0; // Variable para almacenar el valor base del recaudo (sin envío)
 
     const getBaseRecaudoValue = () => {
@@ -569,6 +570,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const item = bulkData[index];
         if (!item) return;
 
+        if (window.RotuloEcoBike) {
+            try {
+                await window.RotuloEcoBike.downloadPdf({
+                    guia: numeroGuia,
+                    tienda_nombre: window.remitenteData?.nombre_tienda || item.remitente_nombre || 'Tienda',
+                    remitente_nombre: item.remitente_nombre || '',
+                    destinatario_nombre: item.destinatario_nombre || '',
+                    destinatario_direccion: item.destinatario_direccion || '',
+                    destinatario_telefono: item.destinatario_telefono || '',
+                    destinatario_observaciones: item.instrucciones_entrega || 'Sin observaciones',
+                    cambios: item.recoger_cambios ? 'Si' : 'No',
+                    recaudo: item.valor_recaudo > 0 ? item.valor_recaudo : 0
+                }, { filePrefix: 'Guia' });
+                return;
+            } catch (error) {
+                console.error("Error generando PDF masivo:", error);
+                alert("Error al generar el PDF.");
+                return;
+            }
+        }
+
         try {
             const { jsPDF } = window.jspdf;
             
@@ -1069,6 +1091,43 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
     }
 
     function populateConfirmation() {
+        if (window.RotuloEcoBike) {
+            const costoEnvioNum = parseFloat(document.getElementById('costoTotalHidden').value) || 0;
+            const baseRecaudoNum = getBaseRecaudoValue() || 0;
+            const sumarOption = document.querySelector('input[name="envio_destinatario"]:checked');
+            const sumar = sumarOption ? sumarOption.value : 'no';
+            const tieneRecaudo = document.getElementById('tiene_recaudo').checked;
+            const cobrarEnvio = sumar === 'si';
+            const totalCobrar = (tieneRecaudo || baseRecaudoNum > 0 || cobrarEnvio)
+                ? baseRecaudoNum + (cobrarEnvio ? costoEnvioNum : 0)
+                : 0;
+            const numeroGuia = generarNumeroGuia();
+
+            if (numeroGuiaHiddenInput) {
+                numeroGuiaHiddenInput.value = numeroGuia;
+            }
+
+            currentPreviewRotuloData = {
+                guia: numeroGuia,
+                tienda_nombre: window.remitenteData?.nombre_tienda || document.getElementById('remitente_nombre').value || 'Tienda',
+                remitente_nombre: document.getElementById('remitente_nombre').value || '',
+                destinatario_nombre: document.getElementById('destinatario_nombre').value || '',
+                destinatario_direccion: document.getElementById('destinatario_direccion').value || '',
+                destinatario_telefono: document.getElementById('destinatario_telefono').value || '',
+                destinatario_observaciones: document.getElementById('instrucciones_entrega').value || 'Sin observaciones',
+                cambios: document.getElementById('recoger_cambios').checked ? 'Si' : 'No',
+                recaudo: totalCobrar
+            };
+
+            const preview = document.getElementById('rotuloPreview');
+            if (preview) {
+                window.RotuloEcoBike.mountPreview(preview, currentPreviewRotuloData).catch(error => {
+                    console.error('No se pudo renderizar el rótulo compartido:', error);
+                });
+            }
+            return;
+        }
+
         // Usar el nombre de la tienda desde los datos cargados de la BD (window.remitenteData)
         document.getElementById('confirm_tienda_nombre').textContent = window.remitenteData?.nombre_tienda || 'Tienda';
 
@@ -1163,6 +1222,16 @@ ${qrFinanciero}
     // --- PDF DOWNLOAD ---
     if (btnDownloadPDF) {
         btnDownloadPDF.addEventListener('click', async () => {
+            if (currentPreviewRotuloData && window.RotuloEcoBike) {
+                try {
+                    await window.RotuloEcoBike.downloadPdf(currentPreviewRotuloData, { filePrefix: 'Guia' });
+                    return;
+                } catch (error) {
+                    console.error("Error al generar PDF:", error);
+                    alert("Ocurrió un error al intentar descargar el PDF. Revisa la consola para más detalles.");
+                    return;
+                }
+            }
             try {
                 const { jsPDF } = window.jspdf;
                 const numeroGuia = document.getElementById('numeroGuia').textContent;
