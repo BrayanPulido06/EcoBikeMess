@@ -91,11 +91,11 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         }
         .guia-divider-h {
             border-top: 2px solid #28a745;
-            margin: 4px 0 6px;
+            margin: 0 0 4px;
         }
         .guia-left-col {
             position: relative;
-            padding-right: 6px;
+            padding-right: 2px;
         }
         .guia-left-col::after {
             content: '';
@@ -142,7 +142,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             justify-content: flex-start;
             align-items: flex-start;
             padding-top: 0;
-            margin-left: -10mm;
+            margin-left: -12mm;
         }
         #rotuloPreview .rotulo-scale .rotulo-qr-panel {
             display: flex;
@@ -517,7 +517,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                 <div class="rotulo-bottom-main">
                                     <div class="guia-left-col">
                                         <div class="guia-divider-h"></div>
-                                        <div class="rotulo-card" style="border: 1px solid #eee; padding: 4px; border-radius: 8px;">
+                                        <div class="rotulo-card" style="border: 1px solid #eee; padding: 1px 2px; border-radius: 8px;">
                                             <h3 style="margin: 0 0 4px; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 3px;">Detalles del Paquete</h3>
                                             <p><strong>Cambios por recoger:</strong> <span id="rotulo_cambios" class="rotulo-text-lg"></span></p>
                                         </div>
