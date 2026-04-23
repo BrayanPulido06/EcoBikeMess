@@ -90,7 +90,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             overflow: hidden;
         }
         .guia-divider-h {
-            border-top: 2px solid #28a745;
+            border-top: 1px solid #28a745;
             margin: 0 0 4px;
         }
         .guia-left-col {
