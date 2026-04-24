@@ -1,6 +1,6 @@
 (function () {
     const DEFAULTS = {
-        contactPhone: '317509298',
+        contactPhone: '3123180619',
         logoSrc: '../../public/img/Logo_Circulo_Fondoblanco.png',
         filePrefix: 'Guia'
     };
