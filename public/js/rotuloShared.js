@@ -129,9 +129,9 @@
                             <h3 style="margin:0 0 6px;font-size:17px;font-weight:800;color:#30363d;">Detalles del Paquete</h3>
                             <p style="margin:1px 0;line-height:1.02;overflow-wrap:anywhere;"><strong style="font-size:14px;font-weight:800;">Cambios por recoger:</strong> <span style="font-size:14px;font-weight:700;">${escapeHtml(data.cambios)}</span></p>
                         </div>
-                        <div style="margin-top:6px;">
+                        <div style="margin-top:4px;">
                             <h3 style="margin:0 0 6px;font-size:17px;font-weight:800;color:#30363d;">Total a Cobrar</h3>
-                            <p style="margin:2px 0;font-size:40px;font-weight:900;color:#28a745;line-height:0.9;text-align:center;">${escapeHtml(formatMoney(data.recaudo))}</p>
+                            <p style="margin:0;font-size:58px;font-weight:900;color:#28a745;line-height:0.82;text-align:center;letter-spacing:0.5px;">${escapeHtml(formatMoney(data.recaudo))}</p>
                         </div>
                     </div>
                     <div style="flex:0 0 132px;display:flex;justify-content:flex-start;align-items:flex-start;padding-top:0;margin-left:-12mm;">
