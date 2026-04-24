@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function listarPaquetes() {
         // Mostrar indicador de carga
         if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="13" style="text-align:center;">Cargando datos...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="14" style="text-align:center;">Cargando datos...</td></tr>';
         }
 
         // Construir URL con los parámetros de los filtros
@@ -130,12 +130,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     renderizarTabla(response.data);
                 } else if (response.error) {
                     console.error('Error del servidor:', response.error);
-                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="13" class="text-danger text-center">Error: ${response.error}</td></tr>`;
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="14" class="text-danger text-center">Error: ${response.error}</td></tr>`;
                 }
             })
             .catch(error => {
                 console.error('Error en la petición:', error);
-                if (tableBody) tableBody.innerHTML = `<tr><td colspan="13" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
+                if (tableBody) tableBody.innerHTML = `<tr><td colspan="14" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
             });
     }
     window.listarPaquetes = listarPaquetes;
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!tableBody) return;
 
         if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="13" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="14" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
             return;
         }
 
@@ -210,6 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${p.guia}</td>
                     <td>${p.fechaIngreso}</td>
                     <td>${p.remitente || '<span class="text-muted">N/A</span>'}</td>
+                    <td>${p.nombre_persona || '<span class="text-muted">N/A</span>'}</td>
                     <td>${p.destinatario}</td>
                     <td>${p.direccion}</td>
                     <td>${mensajeroRecoleccion}</td>
@@ -257,6 +258,7 @@ document.addEventListener('DOMContentLoaded', function() {
             "Guía": p.guia,
             "Fecha": p.fechaIngreso,
             "Remitente": p.remitente,
+            "Nombre": p.nombre_persona,
             "Destinatario": p.destinatario,
             "Dirección": p.direccion,
             "Mensajero Recoge": p.mensajero_recoleccion || 'Sin asignar',

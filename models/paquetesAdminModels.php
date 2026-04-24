@@ -48,6 +48,7 @@ class PaquetesAdminModel {
                        p.numero_guia as guia, 
                        p.fecha_creacion as fechaIngreso,
                        COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos)) as remitente,
+                       CONCAT(uc.nombres, ' ', uc.apellidos) as nombre_persona,
                        p.destinatario_nombre as destinatario, 
                        p.destinatario_telefono as telefonoDestinatario,
                        p.direccion_destino as direccion, 

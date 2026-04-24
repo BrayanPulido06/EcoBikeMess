@@ -53,6 +53,7 @@
         return {
             guia: firstNonEmpty(raw.guia, raw.numero_guia, 'N/A'),
             tienda_nombre: tiendaNombre,
+            persona_nombre: firstNonEmpty(raw.persona_nombre, raw.nombre_persona, raw.remitente_nombre, ''),
             destinatario_nombre: firstNonEmpty(raw.destinatario_nombre, raw.nombre_destinatario, 'Cliente'),
             destinatario_direccion: firstNonEmpty(raw.destinatario_direccion, raw.direccion_destino, ''),
             destinatario_telefono: firstNonEmpty(raw.destinatario_telefono, raw.telefono_destinatario, ''),
@@ -124,14 +125,13 @@
 
                 <div style="display:flex;align-items:flex-start;width:100%;margin-top:4px;">
                     <div style="flex:1 1 auto;min-width:0;max-width:calc(100% - 140px);position:relative;padding-right:2px;">
-                        <div style="border-top:1px solid #28a745;margin:0 0 4px;"></div>
                         <div style="border:1px solid #ececec;padding:4px 6px;border-radius:8px;">
                             <h3 style="margin:0 0 6px;font-size:17px;font-weight:800;color:#30363d;">Detalles del Paquete</h3>
                             <p style="margin:1px 0;line-height:1.02;overflow-wrap:anywhere;"><strong style="font-size:14px;font-weight:800;">Cambios por recoger:</strong> <span style="font-size:14px;font-weight:700;">${escapeHtml(data.cambios)}</span></p>
                         </div>
                         <div style="margin-top:6px;">
                             <h3 style="margin:0 0 6px;font-size:17px;font-weight:800;color:#30363d;">Total a Cobrar</h3>
-                            <p style="margin:2px 0;font-size:30px;font-weight:800;color:#28a745;line-height:0.95;text-align:center;">${escapeHtml(formatMoney(data.recaudo))}</p>
+                            <p style="margin:2px 0;font-size:40px;font-weight:900;color:#28a745;line-height:0.9;text-align:center;">${escapeHtml(formatMoney(data.recaudo))}</p>
                         </div>
                     </div>
                     <div style="flex:0 0 132px;display:flex;justify-content:flex-start;align-items:flex-start;padding-top:0;margin-left:-12mm;">

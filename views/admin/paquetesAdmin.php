@@ -314,6 +314,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                             <th class="sortable" data-column="guia">N° Guía <span class="sort-icon">↕</span></th>
                             <th class="sortable" data-column="fecha">Fecha/Hora <span class="sort-icon">↕</span></th>
                             <th>Remitente</th>
+                            <th>Nombre</th>
                             <th>Destinatario</th>
                             <th>Dirección Entrega</th>
                             <th>Recolección</th>
