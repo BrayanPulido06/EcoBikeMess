@@ -432,7 +432,7 @@ async function handleAsignarSubmit(e) {
 }
 
 window.cancelarRecoleccion = async function(ids) {
-    if (!confirm('Estas seguro de eliminar esta recoleccion de la vista? Los paquetes pasaran a estado "cancelado" pero no se borraran de la base de datos.')) {
+    if (!confirm('Estas seguro de ocultar esta recoleccion de la vista? No se eliminara de la base de datos ni se cambiara su estado real.')) {
         return;
     }
 

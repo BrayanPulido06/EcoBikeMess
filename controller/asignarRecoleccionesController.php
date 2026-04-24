@@ -91,7 +91,7 @@ try {
         // Nuevo caso: Cancelar recolección (Eliminar de la vista)
         case 'cancelar':
             $ids = $_POST['ids_paquetes'];
-            if ($model->cancelarPaquetes($ids)) {
+            if ($model->ocultarRecoleccionDeVista($ids)) {
                 echo json_encode(['success' => true, 'message' => 'Recolección eliminada de la vista correctamente']);
             } else {
                 throw new Exception('Error al eliminar la recolección');

@@ -6,6 +6,33 @@ class AsignarRecoleccionesModel {
 
     public function __construct() {
         $this->conn = conexionDB();
+        $this->ensureVisibilityColumns();
+    }
+
+    private function columnExists(string $table, string $column): bool
+    {
+        try {
+            $stmt = $this->conn->prepare("SHOW COLUMNS FROM {$table} LIKE :col");
+            $stmt->execute([':col' => $column]);
+            return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    private function ensureVisibilityColumns(): void
+    {
+        try {
+            if (!$this->columnExists('paquetes', 'ocultar_recoleccion_admin')) {
+                $this->conn->exec("ALTER TABLE paquetes ADD COLUMN ocultar_recoleccion_admin TINYINT(1) NOT NULL DEFAULT 0");
+            }
+
+            if (!$this->columnExists('paquetes', 'fecha_ocultacion_recoleccion_admin')) {
+                $this->conn->exec("ALTER TABLE paquetes ADD COLUMN fecha_ocultacion_recoleccion_admin DATETIME NULL");
+            }
+        } catch (Throwable $e) {
+            // No bloquear la carga si la columna ya existe o falla el alter.
+        }
     }
 
     public function getClientes() {
@@ -78,7 +105,9 @@ class AsignarRecoleccionesModel {
                 LEFT JOIN usuarios u_mens_rec ON m_rec.usuario_id = u_mens_rec.id
                 LEFT JOIN recolecciones r ON p.recoleccion_id = r.id
                 WHERE p.estado IN ('pendiente', 'asignado', 'en_transito', 'en_ruta', 'entregado')
-                  AND COALESCE(TRIM(p.direccion_origen), '') <> ''";
+                  AND COALESCE(TRIM(p.direccion_origen), '') <> ''
+                  AND COALESCE(p.ocultar_recoleccion_admin, 0) = 0
+                  AND COALESCE(r.fecha_completada, r.fecha_asignacion, p.fecha_creacion) >= DATE_SUB(NOW(), INTERVAL 5 DAY)";
 
         $params = [];
 
@@ -226,9 +255,12 @@ class AsignarRecoleccionesModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function cancelarPaquetes($ids) {
+    public function ocultarRecoleccionDeVista($ids) {
         if (!preg_match('/^[0-9,]+$/', $ids)) return false;
-        $sql = "UPDATE paquetes SET estado = 'cancelado' WHERE id IN ($ids)";
+        $sql = "UPDATE paquetes
+                SET ocultar_recoleccion_admin = 1,
+                    fecha_ocultacion_recoleccion_admin = NOW()
+                WHERE id IN ($ids)";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute();
     }
