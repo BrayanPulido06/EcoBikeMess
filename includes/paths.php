@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/bootstrap.php';
+
 /**
  * URL base path where the project is mounted.
  * Local XAMPP example: "/ecobikemess"

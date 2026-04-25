@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/bootstrap.php';
 function ensureDir($dir)
 {
     if (!is_dir($dir)) {

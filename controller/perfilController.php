@@ -3,23 +3,22 @@ require_once __DIR__ . '/../includes/auth.php';
 ensureSessionStarted();
 require_once '../models/conexionGlobal.php';
 
-function perfilRedirectPath(string $role): string
+function perfilRedirectRoute(string $role): string
 {
     if ($role === 'mensajero') {
-        return '../views/mensajeros/miPerfilMensajeros.php';
+        return 'messenger.profile';
     }
 
     if ($role === 'administrador' || $role === 'admin') {
-        return '../views/layouts/miPerfilAdmin.php';
+        return 'admin.profile';
     }
 
-    return '../views/layouts/miPerfilCliente.php';
+    return 'client.profile';
 }
 
 function redirectPerfil(string $role, string $query = ''): void
 {
-    $path = perfilRedirectPath($role);
-    header('Location: ' . $path . $query);
+    header('Location: ' . route_url(perfilRedirectRoute($role)) . $query);
     exit();
 }
 
@@ -102,18 +101,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['action'])) {
     redirectPerfil($role);
 }
 
-requireWebAuth(null, '../views/login.php?error=Debes iniciar sesión.');
+requireWebAuth(null, route_url('login', ['error' => 'Debes iniciar sesion.']));
 
 $role = $_SESSION['user_role'] ?? 'cliente';
 $allowedActions = ['update_profile', 'update_profile_mensajero'];
 
 if (!in_array($_POST['action'], $allowedActions, true)) {
-    redirectPerfil($role, '?error=' . urlencode('Acción de perfil no válida.'));
+    redirectPerfil($role, '?error=' . urlencode('Accion de perfil no valida.'));
 }
 
 $user_id = (int) ($_SESSION['user_id'] ?? 0);
 if ($user_id <= 0) {
-    redirectPerfil($role, '?error=' . urlencode('No se pudo identificar el usuario de la sesión.'));
+    redirectPerfil($role, '?error=' . urlencode('No se pudo identificar el usuario de la sesion.'));
 }
 
 $conn = null;
@@ -127,7 +126,7 @@ try {
     $telefono = trim((string) ($_POST['telefono'] ?? ''));
 
     if ($nombres === '' || $apellidos === '' || $telefono === '') {
-        throw new Exception('Debes completar nombres, apellidos y teléfono.');
+        throw new Exception('Debes completar nombres, apellidos y telefono.');
     }
 
     $sqlUser = "UPDATE usuarios
@@ -218,15 +217,15 @@ try {
         $confirm_password = (string) ($_POST['confirm_password'] ?? '');
 
         if ($current_password === '') {
-            throw new Exception('Debe ingresar su contraseña actual para realizar el cambio.');
+            throw new Exception('Debe ingresar su contrasena actual para realizar el cambio.');
         }
 
         if ($new_password !== $confirm_password) {
-            throw new Exception('Las nuevas contraseñas no coinciden.');
+            throw new Exception('Las nuevas contrasenas no coinciden.');
         }
 
         if (mb_strlen($new_password) < 8) {
-            throw new Exception('La nueva contraseña debe tener al menos 8 caracteres.');
+            throw new Exception('La nueva contrasena debe tener al menos 8 caracteres.');
         }
 
         $stmtPass = $conn->prepare("SELECT password FROM usuarios WHERE id = :id");
@@ -234,7 +233,7 @@ try {
         $userPass = $stmtPass->fetch(PDO::FETCH_ASSOC);
 
         if (!$userPass || !(password_verify($current_password, $userPass['password']) || $current_password === $userPass['password'])) {
-            throw new Exception('La contraseña actual es incorrecta.');
+            throw new Exception('La contrasena actual es incorrecta.');
         }
 
         $newHash = password_hash($new_password, PASSWORD_DEFAULT);

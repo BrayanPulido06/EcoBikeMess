@@ -1,6 +1,6 @@
 ﻿<?php
 require_once __DIR__ . '/../includes/auth.php';
-requireWebAuth(['administrador', 'admin'], '../views/login.php?error=Debes iniciar sesión.');
+requireWebAuth(['administrador', 'admin'], route_url('login', ['error' => 'Debes iniciar sesion.']));
 
 require_once '../models/enviarPaqueteModels.php';
 
@@ -49,8 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode(['success' => true, 'guia' => $datos['numero_guia']]);
                 exit();
             }
-            header("Location: ../views/admin/digitarAdmin.php?msg=envio_creado&guia=" . urlencode($datos['numero_guia']));
-            exit();
+            redirect_route('admin.create-shipment', ['msg' => 'envio_creado', 'guia' => $datos['numero_guia']]);
         }
 
         throw new Exception('Error desconocido al intentar guardar el envío.');
@@ -60,11 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             exit();
         }
-        header("Location: ../views/admin/digitarAdmin.php?error=" . urlencode($e->getMessage()));
-        exit();
+        redirect_route('admin.create-shipment', ['error' => $e->getMessage()]);
     }
 }
 
-header('Location: ../views/admin/digitarAdmin.php');
-exit();
+redirect_route('admin.create-shipment');
 ?>

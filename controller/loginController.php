@@ -1,37 +1,30 @@
 <?php
-ob_start(); // Inicia el búfer de salida para evitar errores de 'headers already sent'
+require_once __DIR__ . '/../includes/paths.php';
 
-// Configuración para que la sesión dure 30 días (2592000 segundos)
-$sessionLifetime = 2592000; 
-ini_set('session.gc_maxlifetime', $sessionLifetime);
+ob_start();
+
+$sessionLifetime = 2592000;
+ini_set('session.gc_maxlifetime', (string) $sessionLifetime);
 session_set_cookie_params($sessionLifetime, "/");
 
 session_start();
 
-// Incluye tu archivo de conexión a la base de datos
-// Asegúrate de que la ruta sea correcta según tu estructura de carpetas
-require_once '../models/conexionGlobal.php'; 
+require_once '../models/conexionGlobal.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    
-    // 1. Recibir y limpiar datos del formulario
     $correo = filter_var(trim($_POST['correo']), FILTER_SANITIZE_EMAIL);
     $password = $_POST['password'];
 
-    // Validación básica
     if (empty($correo) || empty($password)) {
-        header("Location: ../views/login.php?error=Por favor complete todos los campos");
-        exit();
+        redirect_route('login', ['error' => 'Por favor complete todos los campos']);
     }
 
     try {
-        // 2. Instanciar conexión usando la función de conexionGlobal.php
         $conn = conexionDB();
         if (!$conn) {
             throw new Exception("Error al conectar con la base de datos.");
         }
-        
-        // 3. Consulta segura buscando por correo
+
         $sql = "SELECT id, nombres, apellidos, correo, telefono, password, tipo_usuario FROM usuarios WHERE correo = :correo LIMIT 1";
         $stmt = $conn->prepare($sql);
         $stmt->bindParam(":correo", $correo, PDO::PARAM_STR);
@@ -39,13 +32,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // 4. Verificar si el usuario existe y la contraseña coincide
-        // Se agrega validación ($password === $usuario['password']) para permitir contraseñas sin encriptar (texto plano) durante pruebas
         if ($usuario && (password_verify($password, $usuario['password']) || $password === $usuario['password'])) {
-            
-            // 5. Login Exitoso: Configurar Sesión
-            session_regenerate_id(true); // Previene fijación de sesión
-            
+            session_regenerate_id(true);
+
             $_SESSION['user_id'] = $usuario['id'];
             $_SESSION['user_name'] = $usuario['nombres'];
             $_SESSION['user_lastname'] = $usuario['apellidos'];
@@ -53,13 +42,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_phone'] = $usuario['telefono'];
             $_SESSION['user_role'] = $usuario['tipo_usuario'];
 
-            // Lógica de "Recordarme" para email y contraseña
             if (isset($_POST['remember_me'])) {
-                // Guardar el correo y la contraseña en cookies por 30 días
-                setcookie('remember_email', $correo, time() + $sessionLifetime, "/"); 
-                // setcookie('remember_password', $password, time() + $sessionLifetime, "/"); // Eliminado por seguridad
+                setcookie('remember_email', $correo, time() + $sessionLifetime, "/");
             } else {
-                // Si no se marca, borrar las cookies si existen
                 if (isset($_COOKIE['remember_email'])) {
                     setcookie('remember_email', '', time() - 3600, "/");
                 }
@@ -67,40 +52,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     setcookie('remember_password', '', time() - 3600, "/");
                 }
             }
-            
-            // Redireccionar según el rol del usuario
-            // Ajusta las rutas según donde tengas guardadas las vistas de cada rol
-            $rol = strtolower(trim($usuario['tipo_usuario'])); // Limpia espacios en blanco del rol
+
+            $rol = strtolower(trim($usuario['tipo_usuario']));
             switch ($rol) {
                 case 'admin':
                 case 'administrador':
-                    header("Location: ../views/admin/inicioAdmin.php");
+                    redirect_route('admin.dashboard');
                     break;
                 case 'mensajero':
-                    header("Location: ../views/mensajeros/inicioMensajero.php");
+                    redirect_route('messenger.dashboard');
                     break;
                 case 'cliente':
                 case 'colaborador':
-                    header("Location: ../views/Clientes/inicioCliente.php");
+                    redirect_route('client.dashboard');
+                    break;
+                default:
+                    redirect_route('login', ['error' => 'El rol del usuario no es valido.']);
                     break;
             }
-            exit();
-
         } else {
-            // Credenciales incorrectas
-            header("Location: ../views/login.php?error=Correo o contraseña incorrectos");
-            exit();
+            redirect_route('login', ['error' => 'Correo o contrasena incorrectos']);
         }
-
     } catch (Exception $e) {
-        // Error en la base de datos (No mostrar detalles técnicos al usuario final)
-        error_log("Error de conexión o SQL en Login: " . $e->getMessage()); 
-        header("Location: ../views/login.php?error=Error de conexión con el servidor. Intente más tarde.");
-        exit();
+        error_log("Error de conexion o SQL en Login: " . $e->getMessage());
+        redirect_route('login', ['error' => 'Error de conexion con el servidor. Intente mas tarde.']);
     }
 } else {
-    // Si intentan acceder al archivo directamente sin enviar formulario
-    header("Location: ../views/login.php");
-    exit();
+    redirect_route('login');
 }
 ?>

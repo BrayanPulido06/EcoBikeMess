@@ -1,33 +1,29 @@
 <?php
-// Configuración para que la sesión dure 30 días
-$sessionLifetime = 2592000; 
-ini_set('session.gc_maxlifetime', $sessionLifetime);
+$sessionLifetime = 2592000;
+ini_set('session.gc_maxlifetime', (string) $sessionLifetime);
 session_set_cookie_params($sessionLifetime, "/");
 
 session_start();
+
 require_once '../models/conexionGlobal.php';
 require_once __DIR__ . '/../includes/paths.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $conn = conexionDB();
-    
-    // --- ACCIÓN 1: SOLICITAR ENLACE (Viene de recuperarContraseña.php) ---
+
     if (isset($_POST['email'])) {
         $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
-        
+
         try {
-            // 1. Verificar si el correo existe
             $sql = "SELECT id, nombres FROM usuarios WHERE correo = :correo";
             $stmt = $conn->prepare($sql);
             $stmt->execute([':correo' => $email]);
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($usuario) {
-                // 2. Generar token único y fecha de expiración (1 hora)
                 $token = bin2hex(random_bytes(32));
                 $expiracion = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
-                // 3. Guardar token en la BD
                 $updateSql = "UPDATE usuarios SET token = :token, token_expiracion = :expiracion WHERE id = :id";
                 $updateStmt = $conn->prepare($updateSql);
                 $updateStmt->execute([
@@ -36,46 +32,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     ':id' => $usuario['id']
                 ]);
 
-                // 4. Generar enlace (En producción, aquí enviarías el correo con mail() o PHPMailer)
                 $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
                 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-                $link = $scheme . '://' . $host . app_url('views/cambioContraseña.php') . '?token=' . urlencode($token);
-                
-                // NOTA: Como estamos en local, redirigimos con el link visible en la URL para que puedas probarlo
-                // En producción, cambia esto por un mensaje genérico y envía el correo real.
-                header("Location: ../views/recuperarContraseña.php?mensaje=Enlace generado (Ver URL)&debug_link=" . urlencode($link));
-            } else {
-                // Por seguridad, no decimos si el correo existe o no, o decimos que "si existe, se envió"
-                header("Location: ../views/recuperarContraseña.php?mensaje=Si el correo está registrado, recibirás instrucciones.");
+                $link = $scheme . '://' . $host . route_url('reset-password', ['token' => $token]);
+
+                redirect_route('forgot-password', [
+                    'mensaje' => 'Enlace generado (Ver URL)',
+                    'debug_link' => $link,
+                ]);
             }
+
+            redirect_route('forgot-password', ['mensaje' => 'Si el correo esta registrado, recibiras instrucciones.']);
         } catch (Exception $e) {
-            error_log("Error recuperación: " . $e->getMessage());
-            header("Location: ../views/recuperarContraseña.php?mensaje=Ocurrió un error inesperado.");
+            error_log("Error recuperacion: " . $e->getMessage());
+            redirect_route('forgot-password', ['mensaje' => 'Ocurrio un error inesperado.']);
         }
-    }
-    
-    // --- ACCIÓN 2: CAMBIAR CONTRASEÑA (Viene de cambioContraseña.php) ---
-    elseif (isset($_POST['token']) && isset($_POST['password'])) {
-        $token = $_POST['token'];
-        $password = $_POST['password'];
-        $confirm_password = $_POST['confirm_password'];
+    } elseif (isset($_POST['token']) && isset($_POST['password'])) {
+        $token = (string) $_POST['token'];
+        $password = (string) $_POST['password'];
+        $confirm_password = (string) ($_POST['confirm_password'] ?? '');
 
         if ($password !== $confirm_password) {
-            header("Location: ../views/cambioContraseña.php?token=$token&error=Las contraseñas no coinciden");
-            exit();
+            redirect_route('reset-password', ['token' => $token, 'error' => 'Las contrasenas no coinciden']);
         }
 
         try {
-            // 1. Verificar token válido y no expirado
             $sql = "SELECT id FROM usuarios WHERE token = :token AND token_expiracion > NOW()";
             $stmt = $conn->prepare($sql);
             $stmt->execute([':token' => $token]);
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($usuario) {
-                // 2. Actualizar contraseña y borrar token
                 $newPasswordHash = password_hash($password, PASSWORD_DEFAULT);
-                
+
                 $updateSql = "UPDATE usuarios SET password = :password, token = NULL, token_expiracion = NULL WHERE id = :id";
                 $updateStmt = $conn->prepare($updateSql);
                 $updateStmt->execute([
@@ -83,15 +72,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     ':id' => $usuario['id']
                 ]);
 
-                header("Location: ../views/login.php?mensaje=Contraseña actualizada correctamente. Inicia sesión.");
-            } else {
-                header("Location: ../views/login.php?error=El enlace es inválido o ha expirado.");
+                redirect_route('login', ['mensaje' => 'Contrasena actualizada correctamente. Inicia sesion.']);
             }
+
+            redirect_route('login', ['error' => 'El enlace es invalido o ha expirado.']);
         } catch (Exception $e) {
-            header("Location: ../views/recovery.php?token=$token&error=Error al actualizar la contraseña");
+            redirect_route('reset-password', ['token' => $token, 'error' => 'Error al actualizar la contrasena']);
         }
     }
 } else {
-    header("Location: ../views/login.php");
+    redirect_route('login');
 }
 ?>

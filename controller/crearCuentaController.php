@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../includes/paths.php';
 /**
  * Error 500 Troubleshooting: 
  * Si el error persiste, descomenta las siguientes 3 líneas para ver el error real en pantalla:
@@ -129,8 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Intentar registrar
         if ($model->registrarUsuario($datos)) {
             if (ob_get_length()) ob_clean();
-            header("Location: ../views/login.php?mensaje=Cuenta creada exitosamente. Por favor inicia sesión.");
-            exit();
+            redirect_route('login', ['mensaje' => 'Cuenta creada exitosamente. Por favor inicia sesion.']);
         } else {
             throw new Exception("Error al guardar en la base de datos");
         }
@@ -141,11 +141,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Limpiar el búfer para que el error no impida la redirección
         if (ob_get_length()) ob_clean();
 
-        $errorMsg = urlencode($e->getMessage());
-        header("Location: ../views/crearCuenta.php?error=" . $errorMsg . "&tipo=" . ($_POST['tipo_usuario'] ?? 'cliente'));
+        header("Location: " . route_url('register', ['error' => $e->getMessage(), 'tipo' => $_POST['tipo_usuario'] ?? 'cliente']));
         exit("Error detectado: " . $e->getMessage()); 
     }
 } else {
-    header("Location: ../views/crearCuenta.php");
-    exit();
+    redirect_route('register');
 }

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 ensureSessionStarted();
-requireWebAuth(['mensajero'], '../views/login.php?error=Debes iniciar sesion.');
+requireWebAuth(['mensajero'], route_url('login', ['error' => 'Debes iniciar sesion.']));
 
 require_once '../models/enviarPaqueteMensajeroModels.php';
 
@@ -50,8 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit();
             }
 
-            header('Location: ../views/mensajeros/enviarPaqueteMensajero.php?msg=envio_creado&guia=' . urlencode((string) $datos['numero_guia']));
-            exit();
+            redirect_route('messenger.send-package', ['msg' => 'envio_creado', 'guia' => (string) $datos['numero_guia']]);
         }
 
         throw new Exception('Error desconocido al intentar guardar el envio del mensajero.');
@@ -62,10 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
 
-        header('Location: ../views/mensajeros/enviarPaqueteMensajero.php?error=' . urlencode($e->getMessage()));
-        exit();
+        redirect_route('messenger.send-package', ['error' => $e->getMessage()]);
     }
 }
 
-header('Location: ../views/mensajeros/enviarPaqueteMensajero.php');
-exit();
+redirect_route('messenger.send-package');
