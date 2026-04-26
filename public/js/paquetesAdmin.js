@@ -15,10 +15,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectAllCheckbox = document.getElementById('selectAll');
     const btnNuevoPaquete = document.getElementById('btnNuevoPaquete');
     const filtroClienteInput = document.getElementById('filtroClienteInput');
-    const filtroClienteHidden = document.getElementById('filtroCliente');
     const filtroClienteOpciones = document.getElementById('filtroClienteOpciones');
     const filtroMensajeroInput = document.getElementById('filtroMensajeroInput');
-    const filtroMensajeroHidden = document.getElementById('filtroMensajero');
     const filtroMensajeroOpciones = document.getElementById('filtroMensajeroOpciones');
     
     // Referencias a los filtros (Asegúrate de que los IDs en tu HTML coincidan)
@@ -26,9 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
         search: document.getElementById('searchInput'),        // Input tipo text (Corregido ID)
         fechaDesde: document.getElementById('filtroFechaDesde'), // Input date
         fechaHasta: document.getElementById('filtroFechaHasta'), // Input date
-        cliente: filtroClienteHidden,
+        cliente: filtroClienteInput,
         estado: document.getElementById('filtroEstado'),       // Select
-        mensajero: filtroMensajeroHidden
+        mensajero: filtroMensajeroInput
     };
 
     // Referencias a Modales
@@ -50,9 +48,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    const listarPaquetesDebounced = debounce(listarPaquetes, 250);
+    filtroClienteInput?.addEventListener('input', listarPaquetesDebounced);
+    filtroMensajeroInput?.addEventListener('input', listarPaquetesDebounced);
+
     configurarBuscadorFiltro({
         input: filtroClienteInput,
-        hiddenInput: filtroClienteHidden,
         optionsContainer: filtroClienteOpciones,
         getItems: () => todosLosClientes,
         emptyLabel: 'Todos los clientes',
@@ -61,7 +62,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     configurarBuscadorFiltro({
         input: filtroMensajeroInput,
-        hiddenInput: filtroMensajeroHidden,
         optionsContainer: filtroMensajeroOpciones,
         getItems: () => todosLosMensajeros,
         emptyLabel: 'Todos los mensajeros',
@@ -308,8 +308,16 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/>/g, '&gt;');
     }
 
-    function configurarBuscadorFiltro({ input, hiddenInput, optionsContainer, getItems, emptyLabel, onSelectionChange }) {
-        if (!input || !hiddenInput || !optionsContainer) return;
+    function debounce(fn, wait = 250) {
+        let timeoutId;
+        return (...args) => {
+            window.clearTimeout(timeoutId);
+            timeoutId = window.setTimeout(() => fn(...args), wait);
+        };
+    }
+
+    function configurarBuscadorFiltro({ input, optionsContainer, getItems, emptyLabel, onSelectionChange }) {
+        if (!input || !optionsContainer) return;
 
         const wrapper = input.closest('.search-select');
 
@@ -335,7 +343,6 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         const seleccionarOpcion = (value, label) => {
-            hiddenInput.value = value || '';
             input.value = value ? (label || '') : '';
             wrapper?.classList.remove('open');
             onSelectionChange?.();
@@ -344,7 +351,6 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('focus', () => renderOptions(input.value));
 
         input.addEventListener('input', () => {
-            hiddenInput.value = '';
             renderOptions(input.value);
         });
 
@@ -367,12 +373,9 @@ document.addEventListener('DOMContentLoaded', function() {
             window.setTimeout(() => {
                 const exacta = getItems().find(item => normalizarTexto(item.nombre) === normalizarTexto(input.value));
                 if (input.value.trim() === '') {
-                    hiddenInput.value = '';
-                } else if (exacta) {
-                    hiddenInput.value = String(exacta.id);
-                    input.value = exacta.nombre;
-                } else if (!hiddenInput.value) {
                     input.value = '';
+                } else if (exacta) {
+                    input.value = exacta.nombre;
                 }
                 wrapper?.classList.remove('open');
             }, 150);

@@ -412,7 +412,7 @@ tbody tr.selected-row:hover {
 }
 
 tbody tr.selected-row td {
-    background: transparent;
+    background: #dfe3e8 !important;
 }
 
 tbody tr.urgente {

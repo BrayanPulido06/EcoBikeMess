@@ -91,9 +91,9 @@ class PaquetesAdminModel {
             $sql .= " AND DATE(p.fecha_creacion) <= :fechaHasta";
             $params[':fechaHasta'] = $filters['fechaHasta'];
         }
-        if (!empty($filters['cliente_id'])) {
-            $sql .= " AND p.cliente_id = :cliente_id";
-            $params[':cliente_id'] = $filters['cliente_id'];
+        if (!empty($filters['cliente'])) {
+            $sql .= " AND COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos)) COLLATE utf8mb4_unicode_ci LIKE :cliente";
+            $params[':cliente'] = '%' . trim((string) $filters['cliente']) . '%';
         }
         if (!empty($filters['estado'])) {
             if ($filters['estado'] === 'sin_asignar') {
@@ -111,9 +111,12 @@ class PaquetesAdminModel {
         //    $sql .= " AND p.zona = :zona";
         //    $params[':zona'] = $filters['zona'];
         // }
-        if (!empty($filters['mensajero_id'])) {
-            $sql .= " AND p.mensajero_id = :mensajero_id";
-            $params[':mensajero_id'] = $filters['mensajero_id'];
+        if (!empty($filters['mensajero'])) {
+            $sql .= " AND (
+                        CONCAT(um.nombres, ' ', um.apellidos) COLLATE utf8mb4_unicode_ci LIKE :mensajero
+                        OR CONCAT(um_rec.nombres, ' ', um_rec.apellidos) COLLATE utf8mb4_unicode_ci LIKE :mensajero
+                     )";
+            $params[':mensajero'] = '%' . trim((string) $filters['mensajero']) . '%';
         }
         if (!empty($filters['tipo'])) {
             $sql .= " AND p.tipo_servicio = :tipo";
@@ -171,29 +174,26 @@ class PaquetesAdminModel {
             $stmtInfo->execute([':id' => $id]);
             $info = $stmtInfo->fetch(PDO::FETCH_ASSOC);
 
-            if ($info && $info['estado'] === 'entregado') {
+            if ($info) {
                 $sqlEntrega = "SELECT * FROM entregas WHERE paquete_id = :id";
                 $stmtEntrega = $this->conn->prepare($sqlEntrega);
                 $stmtEntrega->execute([':id' => $id]);
-                $entrega = $stmtEntrega->fetch(PDO::FETCH_ASSOC);
+                $entrega = $stmtEntrega->fetch(PDO::FETCH_ASSOC) ?: [];
 
-                if ($entrega) {
+                
                     $info['infoEntrega'] = [
                         'nombreRecibe' => $entrega['nombre_receptor'] ?? '',
                         'parentesco' => $entrega['parentesco_cargo'] ?? '',
                         'documento' => $entrega['documento_receptor'] ?? '',
-                        'recaudo' => $entrega['recaudo_real'] ?? 0,
+                        'recaudo' => isset($entrega['recaudo_real']) ? (float) $entrega['recaudo_real'] : 0,
                         'fecha' => $entrega['fecha_entrega'] ?? '',
                         'observaciones' => $entrega['observaciones'] ?? '',
                         'fotoPrincipal' => $entrega['foto_entrega'] ?? '',
                         'fotoAdicional' => $entrega['foto_adicional'] ?? ''
                     ];
-                }
             }
 
-            if ($info && $info['estado'] === 'cancelado') {
                 // infoCancelacion se rellenará desde el historial de novedades (más abajo)
-            }
         } catch (PDOException $e) {
             $error = "Error al obtener info: " . $e->getMessage();
         }

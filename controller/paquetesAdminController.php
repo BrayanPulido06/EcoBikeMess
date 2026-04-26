@@ -18,10 +18,10 @@ try {
                 'search' => $_REQUEST['search'] ?? '',
                 'fechaDesde' => $_REQUEST['fechaDesde'] ?? '',
                 'fechaHasta' => $_REQUEST['fechaHasta'] ?? '',
-                'cliente_id' => $_REQUEST['cliente'] ?? '',
+                'cliente' => $_REQUEST['cliente'] ?? '',
                 'estado' => $_REQUEST['estado'] ?? '',
                 'zona' => $_REQUEST['zona'] ?? '',
-                'mensajero_id' => $_REQUEST['mensajero'] ?? '',
+                'mensajero' => $_REQUEST['mensajero'] ?? '',
                 'tipo' => $_REQUEST['tipo'] ?? ''
             ];
             
