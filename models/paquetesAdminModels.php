@@ -21,7 +21,7 @@ class PaquetesAdminModel {
 
     public function getFilters() {
         // Obtener Clientes para el filtro
-        $sqlClientes = "SELECT c.id, 
+        $sqlClientes = "SELECT DISTINCT c.id, 
                                COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos)) as nombre
                         FROM clientes c
                         JOIN usuarios u ON c.usuario_id = u.id
@@ -60,6 +60,7 @@ class PaquetesAdminModel {
                        p.envio_destinatario as envio_destinatario,
                        p.costo_envio as costo_envio,
                        p.recaudo_esperado as recaudo_esperado,
+                       COALESCE(e.recaudo_real, 0) as recaudo_real,
                        p.tipo_servicio as tipo, 
                        p.instrucciones_entrega as observaciones,
                        CASE WHEN p.tipo_servicio = 'urgente' THEN 1 ELSE 0 END as urgente,
@@ -72,6 +73,7 @@ class PaquetesAdminModel {
                 LEFT JOIN mensajeros m_rec ON p.mensajero_recoleccion_id = m_rec.id
                 LEFT JOIN usuarios um_rec ON m_rec.usuario_id = um_rec.id
                 LEFT JOIN recolecciones r ON p.recoleccion_id = r.id
+                LEFT JOIN entregas e ON e.paquete_id = p.id
                 WHERE 1=1";
         
         $params = [];
@@ -94,8 +96,12 @@ class PaquetesAdminModel {
             $params[':cliente_id'] = $filters['cliente_id'];
         }
         if (!empty($filters['estado'])) {
-            $sql .= " AND p.estado = :estado";
-            $params[':estado'] = $filters['estado'];
+            if ($filters['estado'] === 'sin_asignar') {
+                $sql .= " AND (p.mensajero_id IS NULL OR p.mensajero_id = 0)";
+            } else {
+                $sql .= " AND p.estado = :estado";
+                $params[':estado'] = $filters['estado'];
+            }
         }
         if (empty($filters['estado'])) {
             $sql .= " AND p.estado <> 'cancelado'";

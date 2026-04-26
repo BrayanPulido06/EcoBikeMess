@@ -267,14 +267,17 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 </div>
                 <div class="form-group">
                     <label>Cliente</label>
-                    <select id="filtroCliente" class="form-control">
-                        <option value="">Todos los clientes</option>
-                    </select>
+                    <div class="search-select">
+                        <input type="text" id="filtroClienteInput" class="form-control" placeholder="Buscar cliente o remitente...">
+                        <input type="hidden" id="filtroCliente" value="">
+                        <div id="filtroClienteOpciones" class="search-select-options"></div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Estado</label>
                     <select id="filtroEstado" class="form-control">
                         <option value="">Todos los estados</option>
+                        <option value="sin_asignar">Sin asignar</option>
                         <option value="pendiente">Pendiente</option>
                         <option value="asignado">Asignado</option>
                         <option value="en_transito">En Tránsito</option>
@@ -285,9 +288,11 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 </div>
                 <div class="form-group">
                     <label>Mensajero</label>
-                    <select id="filtroMensajero" class="form-control">
-                        <option value="">Todos los mensajeros</option>
-                    </select>
+                    <div class="search-select">
+                        <input type="text" id="filtroMensajeroInput" class="form-control" placeholder="Buscar mensajero...">
+                        <input type="hidden" id="filtroMensajero" value="">
+                        <div id="filtroMensajeroOpciones" class="search-select-options"></div>
+                    </div>
                 </div>
                 <div class="form-group align-end">
                     <button class="btn btn-secondary btn-block" id="btnLimpiarFiltros">
@@ -322,6 +327,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                             <th>Entrega</th>
                             <th>Estado Entrega</th>
                             <th>Recaudo</th>
+                            <th>Recaudo Real</th>
                             <th>Valor Envío Agregado</th>
                             <th>Acciones</th>
                         </tr>

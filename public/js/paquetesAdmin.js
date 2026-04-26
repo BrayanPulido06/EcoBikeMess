@@ -1,5 +1,6 @@
 ﻿// Variable global para almacenar todos los mensajeros
 let todosLosMensajeros = [];
+let todosLosClientes = [];
 let currentData = []; // Almacenar datos actuales de la tabla para exportación
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -13,15 +14,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnExportarGuias = document.getElementById('btnExportarGuias');
     const selectAllCheckbox = document.getElementById('selectAll');
     const btnNuevoPaquete = document.getElementById('btnNuevoPaquete');
+    const filtroClienteInput = document.getElementById('filtroClienteInput');
+    const filtroClienteHidden = document.getElementById('filtroCliente');
+    const filtroClienteOpciones = document.getElementById('filtroClienteOpciones');
+    const filtroMensajeroInput = document.getElementById('filtroMensajeroInput');
+    const filtroMensajeroHidden = document.getElementById('filtroMensajero');
+    const filtroMensajeroOpciones = document.getElementById('filtroMensajeroOpciones');
     
     // Referencias a los filtros (Asegúrate de que los IDs en tu HTML coincidan)
     const inputs = {
         search: document.getElementById('searchInput'),        // Input tipo text (Corregido ID)
         fechaDesde: document.getElementById('filtroFechaDesde'), // Input date
         fechaHasta: document.getElementById('filtroFechaHasta'), // Input date
-        cliente: document.getElementById('filtroCliente'),     // Select
+        cliente: filtroClienteHidden,
         estado: document.getElementById('filtroEstado'),       // Select
-        mensajero: document.getElementById('filtroMensajero')  // Select
+        mensajero: filtroMensajeroHidden
     };
 
     // Referencias a Modales
@@ -43,12 +50,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    configurarBuscadorFiltro({
+        input: filtroClienteInput,
+        hiddenInput: filtroClienteHidden,
+        optionsContainer: filtroClienteOpciones,
+        getItems: () => todosLosClientes,
+        emptyLabel: 'Todos los clientes',
+        onSelectionChange: listarPaquetes
+    });
+
+    configurarBuscadorFiltro({
+        input: filtroMensajeroInput,
+        hiddenInput: filtroMensajeroHidden,
+        optionsContainer: filtroMensajeroOpciones,
+        getItems: () => todosLosMensajeros,
+        emptyLabel: 'Todos los mensajeros',
+        onSelectionChange: listarPaquetes
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-select')) {
+            document.querySelectorAll('.search-select.open').forEach(el => el.classList.remove('open'));
+        }
+    });
+
     // Botón Limpiar Filtros
     if (btnLimpiar) {
         btnLimpiar.addEventListener('click', function() {
             Object.values(inputs).forEach(input => {
                 if (input) input.value = '';
             });
+            if (filtroClienteInput) filtroClienteInput.value = '';
+            if (filtroMensajeroInput) filtroMensajeroInput.value = '';
             listarPaquetes();
         });
     }
@@ -92,11 +125,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (selectAllCheckbox) {
             selectAllCheckbox.addEventListener('change', function() {
                 const checkboxes = document.querySelectorAll('.paquete-checkbox');
-                checkboxes.forEach(cb => cb.checked = this.checked);
+                checkboxes.forEach(cb => {
+                    cb.checked = this.checked;
+                    actualizarFilaSeleccionada(cb);
+                });
             });
         }
         document.addEventListener('change', (e) => {
             if (e.target && e.target.classList.contains('paquete-checkbox')) {
+                actualizarFilaSeleccionada(e.target);
                 const all = document.querySelectorAll('.paquete-checkbox');
                 const checked = document.querySelectorAll('.paquete-checkbox:checked');
                 if (selectAllCheckbox) selectAllCheckbox.checked = all.length > 0 && all.length === checked.length;
@@ -109,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function listarPaquetes() {
         // Mostrar indicador de carga
         if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="14" style="text-align:center;">Cargando datos...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="15" style="text-align:center;">Cargando datos...</td></tr>';
         }
 
         // Construir URL con los parámetros de los filtros
@@ -130,12 +167,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     renderizarTabla(response.data);
                 } else if (response.error) {
                     console.error('Error del servidor:', response.error);
-                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="14" class="text-danger text-center">Error: ${response.error}</td></tr>`;
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="15" class="text-danger text-center">Error: ${response.error}</td></tr>`;
                 }
             })
             .catch(error => {
                 console.error('Error en la petición:', error);
-                if (tableBody) tableBody.innerHTML = `<tr><td colspan="14" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
+                if (tableBody) tableBody.innerHTML = `<tr><td colspan="15" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
             });
     }
     window.listarPaquetes = listarPaquetes;
@@ -145,7 +182,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!tableBody) return;
 
         if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="14" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="15" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+            }
             return;
         }
 
@@ -196,6 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Formatear valor a moneda
             const recaudoFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.recaudo_esperado || 0);
+            const recaudoRealFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.recaudo_real || 0);
             const valorEnvioFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.costo_envio || 0);
 
             const mensajeroEntrega = p.mensajero_entrega || '<span class="text-muted font-italic">Sin asignar</span>';
@@ -205,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 : `<span class="badge badge-secondary">No</span> ${valorEnvioFormateado}`;
 
             html += `
-                <tr>
+                <tr class="paquete-row">
                     <td><input type="checkbox" class="paquete-checkbox" value="${p.id}"></td>
                     <td>${p.guia}</td>
                     <td>${p.fechaIngreso}</td>
@@ -218,6 +259,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${mensajeroEntrega}</td>
                     <td><span class="badge badge-${badgeClass}">${p.estado.toUpperCase().replace('_', ' ')}</span></td>
                     <td>${recaudoFormateado}</td>
+                    <td>${recaudoRealFormateado}</td>
                     <td>${envioAgregado}</td>
                     <td>
                         <div class="action-buttons">
@@ -231,6 +273,116 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         tableBody.innerHTML = html;
+        sincronizarFilasSeleccionadas();
+    }
+
+    function actualizarFilaSeleccionada(checkbox) {
+        const fila = checkbox.closest('tr');
+        if (!fila) return;
+        fila.classList.toggle('selected-row', checkbox.checked);
+    }
+
+    function sincronizarFilasSeleccionadas() {
+        const checkboxes = document.querySelectorAll('.paquete-checkbox');
+        checkboxes.forEach(actualizarFilaSeleccionada);
+
+        if (selectAllCheckbox) {
+            const checked = document.querySelectorAll('.paquete-checkbox:checked');
+            selectAllCheckbox.checked = checkboxes.length > 0 && checkboxes.length === checked.length;
+        }
+    }
+
+    function normalizarTexto(texto) {
+        return String(texto || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+    }
+
+    function escaparAtributoHtml(valor) {
+        return String(valor || '')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    function configurarBuscadorFiltro({ input, hiddenInput, optionsContainer, getItems, emptyLabel, onSelectionChange }) {
+        if (!input || !hiddenInput || !optionsContainer) return;
+
+        const wrapper = input.closest('.search-select');
+
+        const renderOptions = (query = '') => {
+            const normalizedQuery = normalizarTexto(query);
+            const items = getItems();
+            const filtrados = normalizedQuery
+                ? items.filter(item => normalizarTexto(item.nombre).includes(normalizedQuery))
+                : items;
+
+            let html = `<div class="search-select-option" data-value="" data-label="${escaparAtributoHtml(emptyLabel)}">${emptyLabel}</div>`;
+
+            if (filtrados.length === 0) {
+                html += '<div class="search-select-empty">No se encontraron resultados</div>';
+            } else {
+                filtrados.forEach(item => {
+                    html += `<div class="search-select-option" data-value="${item.id}" data-label="${escaparAtributoHtml(item.nombre)}">${item.nombre}</div>`;
+                });
+            }
+
+            optionsContainer.innerHTML = html;
+            wrapper?.classList.add('open');
+        };
+
+        const seleccionarOpcion = (value, label) => {
+            hiddenInput.value = value || '';
+            input.value = value ? (label || '') : '';
+            wrapper?.classList.remove('open');
+            onSelectionChange?.();
+        };
+
+        input.addEventListener('focus', () => renderOptions(input.value));
+
+        input.addEventListener('input', () => {
+            hiddenInput.value = '';
+            renderOptions(input.value);
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                wrapper?.classList.remove('open');
+                return;
+            }
+
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const exacta = getItems().find(item => normalizarTexto(item.nombre) === normalizarTexto(input.value));
+                if (exacta) {
+                    seleccionarOpcion(String(exacta.id), exacta.nombre);
+                }
+            }
+        });
+
+        input.addEventListener('blur', () => {
+            window.setTimeout(() => {
+                const exacta = getItems().find(item => normalizarTexto(item.nombre) === normalizarTexto(input.value));
+                if (input.value.trim() === '') {
+                    hiddenInput.value = '';
+                } else if (exacta) {
+                    hiddenInput.value = String(exacta.id);
+                    input.value = exacta.nombre;
+                } else if (!hiddenInput.value) {
+                    input.value = '';
+                }
+                wrapper?.classList.remove('open');
+            }, 150);
+        });
+
+        optionsContainer.addEventListener('mousedown', (e) => {
+            const option = e.target.closest('.search-select-option');
+            if (!option) return;
+            seleccionarOpcion(option.dataset.value || '', option.dataset.label || '');
+        });
     }
 
     // --- FUNCIONES DE EXPORTACIÓN ---
@@ -266,6 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
             "Mensajero Entrega": p.mensajero_entrega || 'Sin asignar',
             "Estado Entrega": p.estado,
             "Recaudo": p.recaudo_esperado || 0,
+            "Recaudo Real": p.recaudo_real || 0,
             "Valor Envio": p.costo_envio || 0,
             "Envio Agregado": p.envio_destinatario || 'no'
         }));
@@ -349,31 +502,12 @@ function cargarFiltros() {
     fetch('../../controller/paquetesAdminController.php?action=filtros')
         .then(response => response.json())
         .then(data => {
-            // Llenar select de Clientes (si existe en el DOM)
-            const selectCliente = document.getElementById('filtroCliente');
-            if (selectCliente && data.clientes) {
-                let html = '<option value="">Todos los clientes</option>';
-                data.clientes.forEach(c => {
-                    html += `<option value="${c.id}">${c.nombre}</option>`;
-                });
-                selectCliente.innerHTML = html;
+            if (data.clientes) {
+                todosLosClientes = data.clientes;
             }
 
-            // Llenar select de Mensajeros
             if (data.mensajeros) {
-                todosLosMensajeros = data.mensajeros; // Guardar para uso en el modal
-                
-                let html = '<option value="">Todos los mensajeros</option>';
-                
-                data.mensajeros.forEach(m => {
-                    const texto = `${m.nombre} (${m.estado})`;
-                    html += `<option value="${m.id}">${texto}</option>`;
-                });
-                
-                const selectMensajero = document.getElementById('filtroMensajero');
-                if (selectMensajero) selectMensajero.innerHTML = html;
-                
-                // Renderizar lista inicial en el modal si está abierto
+                todosLosMensajeros = data.mensajeros;
                 renderizarListaMensajeros(todosLosMensajeros);
             }
         })
@@ -743,6 +877,10 @@ function verDetalle(id) {
                                     <div class="detalle-label">Fecha Entrega</div>
                                     <input class="form-control" type="datetime-local" name="entrega_fecha" value="${escapeHtml(toInputDateTime(info.infoEntrega.fecha || ''))}">
                                 </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Total recaudado</div>
+                                    <input class="form-control" type="number" name="entrega_recaudo_real" step="0.01" min="0" value="${escapeHtml(info.infoEntrega.recaudo || 0)}">
+                                </div>
                                 <div class="detalle-item" style="grid-column: span 2;">
                                     <div class="detalle-label">Observaciones de Entrega</div>
                                     <textarea class="form-control" name="entrega_observaciones" rows="2">${escapeHtml(info.infoEntrega.observaciones || '')}</textarea>
@@ -851,7 +989,7 @@ function verDetalle(id) {
                                 documento_receptor: formData.get('entrega_documento') || '',
                                 fecha_entrega: toDbDateTime(formData.get('entrega_fecha') || ''),
                                 observaciones: formData.get('entrega_observaciones') || '',
-                                recaudo_real: 0
+                                recaudo_real: parseFloat(formData.get('entrega_recaudo_real') || '0')
                             };
                         }
 
