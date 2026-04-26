@@ -12,13 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
         filters: {
             cliente: { q: '', estado: '', desde: '', hasta: '' },
             mensajero: { q: '', estado: '', desde: '', hasta: '' }
-        }
+        },
+        clienteGroups: [],
+        selectedClienteGroupKey: null
     };
 
     const money = (value) => new Intl.NumberFormat('es-CO', {
         style: 'currency',
         currency: 'COP',
-        minimumFractionDigits: 0
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
     }).format(Number(value || 0));
 
     const shortDate = (value) => {
@@ -27,11 +30,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('es-CO');
     };
 
+    const dateKeyFromValue = (value) => {
+        if (!value) return 'sin-fecha';
+        return String(value).slice(0, 10);
+    };
+
+    const normalizeText = (value) => String(value || '').trim().toLowerCase();
+
     const statusBadge = (status) => {
         const map = {
             pendiente: ['Pendiente', 'orange'],
             asignado: ['Asignado', 'teal'],
-            en_transito: ['En tránsito', 'teal'],
+            en_transito: ['En transito', 'teal'],
             en_ruta: ['En ruta', 'teal'],
             entregado: ['Entregado', 'green'],
             cancelado: ['Cancelado', 'red'],
@@ -41,14 +51,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return `<span class="badge ${item[1]}">${item[0]}</span>`;
     };
 
-    const boolBadge = (value, yesText = 'Sí', noText = 'No') =>
+    const boolBadge = (value, yesText = 'Si', noText = 'No') =>
         value
             ? `<span class="badge green">${yesText}</span>`
             : `<span class="badge red">${noText}</span>`;
 
+    const escapeHtml = (value) => String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
     const matchesFilter = (item, panel) => {
         const filter = state.filters[panel];
-        const text = (filter.q || '').trim().toLowerCase();
+        const text = normalizeText(filter.q);
         const haystack = [
             item.numero_guia,
             item.destinatario_nombre,
@@ -84,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const saldoLabel = panel === 'mensajero' ? 'Total a pagar' : 'Saldo actual';
         const saldoNote = panel === 'mensajero'
             ? 'Suma de valores configurados para el mensajero.'
-            : 'Recaudos reales menos costo de envíos.';
+            : 'Recaudos reales menos costo de envios.';
 
         el.innerHTML = `
             <div class="summary-card">
@@ -93,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="summary-note">${saldoNote}</div>
             </div>
             <div class="summary-card">
-                <span class="summary-label">Total valor envíos</span>
+                <span class="summary-label">Total valor envios</span>
                 <div class="summary-value">${money(summary.total_envios)}</div>
                 <div class="summary-note">Costo acumulado de los paquetes filtrables.</div>
             </div>
@@ -110,30 +127,113 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
+    const buildClienteGroups = (items) => {
+        const filtered = items.filter((item) => matchesFilter(item, 'cliente'));
+        const groupsMap = new Map();
+
+        filtered.forEach((item) => {
+            const dateKey = dateKeyFromValue(item.fecha_entrega || item.fecha_ingreso);
+            const clientKey = normalizeText(item.cliente_nombre || 'cliente');
+            const groupKey = `${dateKey}__${clientKey}`;
+
+            if (!groupsMap.has(groupKey)) {
+                groupsMap.set(groupKey, {
+                    key: groupKey,
+                    dateKey,
+                    fechaLabel: shortDate(item.fecha_entrega || item.fecha_ingreso),
+                    clienteNombre: item.cliente_nombre || 'Cliente',
+                    cantidadPaquetes: 0,
+                    totalServicio: 0,
+                    totalRecaudado: 0,
+                    abono: 0,
+                    saldo: 0,
+                    totalAcumulado: 0,
+                    packages: [],
+                    statuses: new Set()
+                });
+            }
+
+            const group = groupsMap.get(groupKey);
+            group.cantidadPaquetes += 1;
+            group.totalServicio += Number(item.valor_envio || 0);
+            group.totalRecaudado += Number(item.valor_recaudo || 0);
+            group.abono += Number(item.valor_recaudo_real || 0);
+            group.packages.push(item);
+            group.statuses.add(item.estado || 'pendiente');
+        });
+
+        const groups = Array.from(groupsMap.values())
+            .map((group) => {
+                const saldo = group.totalServicio - group.abono;
+                const hasPending = Array.from(group.statuses).some((status) => status !== 'entregado');
+                return {
+                    ...group,
+                    saldo,
+                    estado: saldo <= 0 && !hasPending ? 'pagado' : 'pendiente'
+                };
+            })
+            .sort((a, b) => {
+                if (a.dateKey === b.dateKey) {
+                    return a.clienteNombre.localeCompare(b.clienteNombre, 'es', { sensitivity: 'base' });
+                }
+                return a.dateKey.localeCompare(b.dateKey);
+            });
+
+        let runningTotal = 0;
+        groups.forEach((group) => {
+            runningTotal += group.saldo;
+            group.totalAcumulado = runningTotal;
+        });
+
+        return groups;
+    };
+
+    const clientGroupStatusBadge = (status) => {
+        if (status === 'pagado') {
+            return '<span class="status-chip paid">Pagado</span>';
+        }
+        return '<span class="status-chip pending">Pendiente</span>';
+    };
+
+    const amountCellClass = (value) => {
+        if (value <= 0) return 'is-paid';
+        return 'is-pending';
+    };
+
     const renderClienteTable = (items) => {
         const tbody = document.getElementById('table-body-cliente');
         if (!tbody) return;
 
-        const filtered = items.filter((item) => matchesFilter(item, 'cliente'));
-        document.getElementById('count-cliente').textContent = `${filtered.length} registros`;
+        const groups = buildClienteGroups(items);
+        state.clienteGroups = groups;
+        document.getElementById('count-cliente').textContent = `${groups.length} registros`;
 
-        if (!filtered.length) {
-            tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No hay registros con los filtros actuales.</td></tr>`;
+        if (!groups.length) {
+            tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No hay registros con los filtros actuales.</td></tr>';
             return;
         }
 
-        tbody.innerHTML = filtered.map((item) => `
+        tbody.innerHTML = groups.map((group) => `
             <tr>
-                <td class="mono">${item.numero_guia}</td>
-                <td>${item.cliente_nombre || 'Cliente'}</td>
-                <td>${item.destinatario_nombre}</td>
-                <td>${item.cantidad_paquetes_dia}</td>
-                <td>${money(item.valor_envio)}</td>
-                <td>${boolBadge(item.agregado_al_recaudo, 'Agregado', 'No agregado')}</td>
-                <td>${money(item.valor_recaudo)}</td>
-                <td>${money(item.valor_recaudo_real)}</td>
-                <td>${statusBadge(item.estado)}</td>
-                <td>${shortDate(item.fecha_entrega || item.fecha_ingreso)}</td>
+                <td>${group.fechaLabel}</td>
+                <td>${escapeHtml(group.clienteNombre)}</td>
+                <td>${group.cantidadPaquetes}</td>
+                <td>${money(group.totalServicio)}</td>
+                <td>${money(group.totalRecaudado)}</td>
+                <td>${money(group.abono)}</td>
+                <td>${clientGroupStatusBadge(group.estado)}</td>
+                <td class="amount-cell ${amountCellClass(group.saldo)}">${money(group.saldo)}</td>
+                <td class="amount-cell ${amountCellClass(group.totalAcumulado)}">${money(group.totalAcumulado)}</td>
+                <td>
+                    <button
+                        type="button"
+                        class="fact-btn tertiary detail-trigger"
+                        data-role="open-client-detail"
+                        data-group-key="${escapeHtml(group.key)}"
+                    >
+                        Ver paquetes
+                    </button>
+                </td>
             </tr>
         `).join('');
     };
@@ -146,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('count-mensajero').textContent = `${filtered.length} registros`;
 
         if (!filtered.length) {
-            tbody.innerHTML = `<tr><td colspan="11" class="empty-state">No hay registros con los filtros actuales.</td></tr>`;
+            tbody.innerHTML = '<tr><td colspan="11" class="empty-state">No hay registros con los filtros actuales.</td></tr>';
             return;
         }
 
@@ -168,9 +268,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return `
                 <tr>
-                    <td class="mono">${item.numero_guia}</td>
-                    <td>${item.mensajero_nombre}</td>
-                    <td>${item.cliente_nombre}</td>
+                    <td class="mono">${escapeHtml(item.numero_guia)}</td>
+                    <td>${escapeHtml(item.mensajero_nombre)}</td>
+                    <td>${escapeHtml(item.cliente_nombre)}</td>
                     <td>${item.cantidad_paquetes_dia}</td>
                     <td>${money(item.valor_envio)}</td>
                     <td>${boolBadge(item.agregado_al_recaudo, 'Agregado', 'No agregado')}</td>
@@ -198,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const setLoading = (message = 'Cargando información...') => {
+    const setLoading = (message = 'Cargando informacion...') => {
         const loaders = document.querySelectorAll('[data-loading]');
         loaders.forEach((el) => {
             const colspan = el.id === 'table-body-mensajero' ? 11 : 10;
@@ -212,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await response.json();
 
         if (!result.success) {
-            throw new Error(result.message || 'No fue posible cargar la facturación.');
+            throw new Error(result.message || 'No fue posible cargar la facturacion.');
         }
 
         state.rawData = result.data;
@@ -287,12 +387,107 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
     };
 
-    const bindAdminActions = () => {
-        if (mode !== 'admin') return;
+    const getClienteGroupByKey = (groupKey) => state.clienteGroups.find((group) => group.key === groupKey) || null;
 
+    const renderPackageCard = (item) => {
+        const saldo = Number(item.valor_envio || 0) - Number(item.valor_recaudo_real || 0);
+        return `
+            <article class="package-card">
+                <div class="package-card-head">
+                    <div>
+                        <h3>${escapeHtml(item.numero_guia)}</h3>
+                        <p>${escapeHtml(item.destinatario_nombre || 'Sin destinatario')}</p>
+                    </div>
+                    ${statusBadge(item.estado)}
+                </div>
+                <div class="package-card-grid">
+                    <div class="package-data">
+                        <span class="package-label">Direccion</span>
+                        <strong>${escapeHtml(item.direccion_destino || 'Sin direccion')}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Valor envio</span>
+                        <strong>${money(item.valor_envio)}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Valor recaudado</span>
+                        <strong>${money(item.valor_recaudo)}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Abono</span>
+                        <strong>${money(item.valor_recaudo_real)}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Saldo</span>
+                        <strong>${money(saldo)}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Fecha</span>
+                        <strong>${shortDate(item.fecha_entrega || item.fecha_ingreso)}</strong>
+                    </div>
+                    <div class="package-data package-full">
+                        <span class="package-label">Instrucciones</span>
+                        <strong>${escapeHtml(item.instrucciones_entrega || 'Sin instrucciones')}</strong>
+                    </div>
+                </div>
+            </article>
+        `;
+    };
+
+    const openClientDetailModal = (groupKey) => {
+        const group = getClienteGroupByKey(groupKey);
+        const modal = document.getElementById('facturacionDetailModal');
+        const title = document.getElementById('facturacionDetailTitle');
+        const subtitle = document.getElementById('facturacionDetailSubtitle');
+        const body = document.getElementById('facturacionDetailBody');
+
+        if (!group || !modal || !title || !subtitle || !body) {
+            return;
+        }
+
+        state.selectedClienteGroupKey = groupKey;
+        title.textContent = `${group.clienteNombre} - ${group.fechaLabel}`;
+        subtitle.textContent = `${group.cantidadPaquetes} paquete(s) | Servicio ${money(group.totalServicio)} | Abono ${money(group.abono)} | Saldo ${money(group.saldo)}`;
+
+        body.innerHTML = `
+            <div class="detail-summary-strip">
+                <div><span>Recaudado</span><strong>${money(group.totalRecaudado)}</strong></div>
+                <div><span>Estado</span><strong>${group.estado === 'pagado' ? 'Pagado' : 'Pendiente'}</strong></div>
+                <div><span>Total acumulado</span><strong>${money(group.totalAcumulado)}</strong></div>
+            </div>
+            <div class="package-list">
+                ${group.packages.map(renderPackageCard).join('')}
+            </div>
+        `;
+
+        modal.classList.remove('modal-hidden');
+        modal.setAttribute('aria-hidden', 'false');
+    };
+
+    const closeClientDetailModal = () => {
+        const modal = document.getElementById('facturacionDetailModal');
+        if (!modal) return;
+
+        modal.classList.add('modal-hidden');
+        modal.setAttribute('aria-hidden', 'true');
+        state.selectedClienteGroupKey = null;
+    };
+
+    const bindAdminActions = () => {
         document.addEventListener('click', async (event) => {
+            const detailButton = event.target.closest('[data-role="open-client-detail"]');
+            if (detailButton) {
+                openClientDetailModal(detailButton.dataset.groupKey);
+                return;
+            }
+
+            if (event.target.closest('[data-close-detail-modal]')) {
+                closeClientDetailModal();
+                return;
+            }
+
             const button = event.target.closest('[data-role="save-payment"]');
-            if (!button) {
+            if (!button || mode !== 'admin') {
                 return;
             }
 
@@ -317,7 +512,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert(error.message);
             }
         });
+
+        const modal = document.getElementById('facturacionDetailModal');
+        if (modal) {
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeClientDetailModal();
+                }
+            });
+        }
     };
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeClientDetailModal();
+        }
+    });
 
     bindFilters();
     bindTabs();

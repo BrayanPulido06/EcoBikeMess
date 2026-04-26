@@ -8,7 +8,7 @@ requireWebAuth(['admin', 'administrador']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facturación Admin - EcoBikeMess</title>
+    <title>Facturacion Admin - EcoBikeMess</title>
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
@@ -27,8 +27,8 @@ requireWebAuth(['admin', 'administrador']);
         >
             <div class="facturacion-top">
                 <div>
-                    <h1>Facturación administrativa</h1>
-                    <p>Consulta el saldo actual, la facturación hacia clientes y el valor a pagar a mensajeros.</p>
+                    <h1>Facturacion administrativa</h1>
+                    <p>Consulta el saldo actual, la facturacion hacia clientes y el valor a pagar a mensajeros.</p>
                 </div>
                 <div class="facturacion-role-badge">Administrador</div>
             </div>
@@ -44,7 +44,7 @@ requireWebAuth(['admin', 'administrador']);
                     <div class="facturacion-filters">
                         <div class="facturacion-field">
                             <label>Buscar</label>
-                            <input type="text" placeholder="Guía, cliente o destinatario" data-panel-filter="cliente" data-filter-field="q">
+                            <input type="text" placeholder="Guia, cliente o destinatario" data-panel-filter="cliente" data-filter-field="q">
                         </div>
                         <div class="facturacion-field">
                             <label>Estado</label>
@@ -52,7 +52,7 @@ requireWebAuth(['admin', 'administrador']);
                                 <option value="">Todos</option>
                                 <option value="pendiente">Pendiente</option>
                                 <option value="asignado">Asignado</option>
-                                <option value="en_transito">En tránsito</option>
+                                <option value="en_transito">En transito</option>
                                 <option value="en_ruta">En ruta</option>
                                 <option value="entregado">Entregado</option>
                                 <option value="cancelado">Cancelado</option>
@@ -72,27 +72,27 @@ requireWebAuth(['admin', 'administrador']);
                     </div>
 
                     <div class="facturacion-table-wrap">
-                        <table class="facturacion-table">
+                        <table class="facturacion-table facturacion-table-clientes">
                             <thead>
                                 <tr>
-                                    <th>Número guía</th>
-                                    <th>Cliente</th>
-                                    <th>Destinatario</th>
-                                    <th>Paquetes por día</th>
-                                    <th>Valor envío</th>
-                                    <th>Agregado al recaudo</th>
-                                    <th>Valor recaudo</th>
-                                    <th>Recaudo real</th>
-                                    <th>Estado</th>
                                     <th>Fecha</th>
+                                    <th>Clientes</th>
+                                    <th>Cantidad paquetes</th>
+                                    <th>Total servicio</th>
+                                    <th>Total recaudado</th>
+                                    <th>Abono</th>
+                                    <th>Estado</th>
+                                    <th>Saldo</th>
+                                    <th>Total</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="table-body-cliente" data-loading>
-                                <tr><td colspan="10" class="loading-state">Cargando información...</td></tr>
+                                <tr><td colspan="10" class="loading-state">Cargando informacion...</td></tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="facturacion-footnote">Facturación hacia cliente. Aquí se refleja el valor del envío, si fue sumado al recaudo y el valor recaudado realmente.</div>
+                    <div class="facturacion-footnote">Facturacion agrupada por fecha y cliente. En acciones puedes abrir el detalle de los paquetes incluidos en cada fila.</div>
                     <div class="facturacion-footnote" id="count-cliente">0 registros</div>
                 </div>
             </section>
@@ -103,7 +103,7 @@ requireWebAuth(['admin', 'administrador']);
                     <div class="facturacion-filters">
                         <div class="facturacion-field">
                             <label>Buscar</label>
-                            <input type="text" placeholder="Guía, cliente o mensajero" data-panel-filter="mensajero" data-filter-field="q">
+                            <input type="text" placeholder="Guia, cliente o mensajero" data-panel-filter="mensajero" data-filter-field="q">
                         </div>
                         <div class="facturacion-field">
                             <label>Estado</label>
@@ -111,7 +111,7 @@ requireWebAuth(['admin', 'administrador']);
                                 <option value="">Todos</option>
                                 <option value="pendiente">Pendiente</option>
                                 <option value="asignado">Asignado</option>
-                                <option value="en_transito">En tránsito</option>
+                                <option value="en_transito">En transito</option>
                                 <option value="en_ruta">En ruta</option>
                                 <option value="entregado">Entregado</option>
                                 <option value="cancelado">Cancelado</option>
@@ -134,11 +134,11 @@ requireWebAuth(['admin', 'administrador']);
                         <table class="facturacion-table">
                             <thead>
                                 <tr>
-                                    <th>Número guía</th>
+                                    <th>Numero guia</th>
                                     <th>Mensajero</th>
                                     <th>Cliente</th>
-                                    <th>Paquetes por día</th>
-                                    <th>Valor envío</th>
+                                    <th>Paquetes por dia</th>
+                                    <th>Valor envio</th>
                                     <th>Agregado al recaudo</th>
                                     <th>Valor recaudo</th>
                                     <th>Recaudo real</th>
@@ -148,16 +148,29 @@ requireWebAuth(['admin', 'administrador']);
                                 </tr>
                             </thead>
                             <tbody id="table-body-mensajero" data-loading>
-                                <tr><td colspan="11" class="loading-state">Cargando información...</td></tr>
+                                <tr><td colspan="11" class="loading-state">Cargando informacion...</td></tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="facturacion-footnote">El valor a pagar al mensajero arranca en $7.000 y puede modificarse por paquete. El botón “Mostrar” habilita su visualización para el mensajero.</div>
+                    <div class="facturacion-footnote">El valor a pagar al mensajero arranca en $7.000 y puede modificarse por paquete. El boton "Mostrar" habilita su visualizacion para el mensajero.</div>
                     <div class="facturacion-footnote" id="count-mensajero">0 registros</div>
                 </div>
             </section>
         </section>
     </main>
+
+    <div id="facturacionDetailModal" class="facturacion-modal-backdrop modal-hidden" aria-hidden="true">
+        <div class="facturacion-modal">
+            <div class="facturacion-modal-head">
+                <div>
+                    <h2 id="facturacionDetailTitle">Detalle de paquetes</h2>
+                    <p id="facturacionDetailSubtitle">Consulta la informacion del grupo seleccionado.</p>
+                </div>
+                <button type="button" class="facturacion-modal-close" data-close-detail-modal>&times;</button>
+            </div>
+            <div class="facturacion-modal-body" id="facturacionDetailBody"></div>
+        </div>
+    </div>
 
     <script src="../../public/js/facturacionPanel.js"></script>
 </body>

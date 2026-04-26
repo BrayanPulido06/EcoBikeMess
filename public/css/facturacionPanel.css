@@ -188,6 +188,12 @@
     border: 1px solid var(--fact-border);
 }
 
+.fact-btn.tertiary {
+    background: #f5fbf6;
+    color: var(--fact-primary);
+    border: 1px solid #cde8d4;
+}
+
 .facturacion-table-wrap {
     overflow-x: auto;
 }
@@ -216,6 +222,10 @@
 
 .facturacion-table tbody tr:hover {
     background: #fbfefb;
+}
+
+.facturacion-table-clientes td {
+    white-space: nowrap;
 }
 
 .mono {
@@ -252,6 +262,41 @@
     color: var(--fact-accent);
 }
 
+.status-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 110px;
+    padding: 0.45rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-chip.pending {
+    background: #fff200;
+    color: #5f5600;
+}
+
+.status-chip.paid {
+    background: #d8f3dc;
+    color: #1e6d2f;
+}
+
+.amount-cell {
+    font-weight: 700;
+}
+
+.amount-cell.is-pending {
+    background: #ff1a1a;
+    color: #fff;
+}
+
+.amount-cell.is-paid {
+    background: #55aa2a;
+    color: #fff;
+}
+
 .table-tools {
     display: flex;
     align-items: center;
@@ -274,6 +319,150 @@
 
 .panel-hidden {
     display: none;
+}
+
+.detail-trigger {
+    min-width: 112px;
+}
+
+.facturacion-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(14, 22, 18, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    z-index: 1200;
+}
+
+.facturacion-modal-backdrop.modal-hidden {
+    display: none;
+}
+
+.facturacion-modal {
+    width: min(980px, 100%);
+    max-height: 90vh;
+    overflow: auto;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(17, 24, 18, 0.2);
+}
+
+.facturacion-modal-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.4rem;
+    border-bottom: 1px solid var(--fact-border);
+    position: sticky;
+    top: 0;
+    background: #fff;
+}
+
+.facturacion-modal-head h2 {
+    margin: 0 0 0.3rem;
+    font-size: 1.2rem;
+}
+
+.facturacion-modal-head p {
+    margin: 0;
+    color: var(--fact-muted);
+    font-size: 0.9rem;
+}
+
+.facturacion-modal-close {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--fact-border);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--fact-text);
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
+.facturacion-modal-body {
+    padding: 1.4rem;
+}
+
+.detail-summary-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.detail-summary-strip div {
+    background: #f7faf7;
+    border: 1px solid var(--fact-border);
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+}
+
+.detail-summary-strip span {
+    display: block;
+    color: var(--fact-muted);
+    font-size: 0.82rem;
+    margin-bottom: 0.35rem;
+}
+
+.detail-summary-strip strong {
+    font-size: 1rem;
+}
+
+.package-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.package-card {
+    border: 1px solid var(--fact-border);
+    border-radius: 16px;
+    background: #fbfdfb;
+    padding: 1rem;
+}
+
+.package-card-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-bottom: 0.9rem;
+}
+
+.package-card-head h3 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+}
+
+.package-card-head p {
+    margin: 0;
+    color: var(--fact-muted);
+}
+
+.package-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+.package-data {
+    background: #fff;
+    border: 1px solid #e7efe9;
+    border-radius: 12px;
+    padding: 0.85rem 0.95rem;
+}
+
+.package-data.package-full {
+    grid-column: 1 / -1;
+}
+
+.package-label {
+    display: block;
+    color: var(--fact-muted);
+    font-size: 0.78rem;
+    margin-bottom: 0.3rem;
 }
 
 .empty-state,
@@ -312,5 +501,10 @@
 
     .fact-btn {
         width: 100%;
+    }
+
+    .detail-summary-strip,
+    .package-card-grid {
+        grid-template-columns: 1fr;
     }
 }
