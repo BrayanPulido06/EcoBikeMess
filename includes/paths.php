@@ -35,12 +35,7 @@ function app_url(string $path = ''): string
 {
     $base = app_base_path();
     $path = ltrim($path, '/');
-
-    if ($path === '') {
-        return $base !== '' ? $base : '/';
-    }
-
-    return ($base !== '' ? $base : '') . '/' . $path;
+    return $base . ($path !== '' ? '/' . $path : '');
 }
 
 function app_asset_url(string $path = ''): string
