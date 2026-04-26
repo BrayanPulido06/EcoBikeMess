@@ -37,6 +37,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const normalizeText = (value) => String(value || '').trim().toLowerCase();
 
+    const clientDisplayName = (item) => {
+        const contact = normalizeText(item.cliente_contacto) ? String(item.cliente_contacto).trim() : '';
+        const business = normalizeText(item.cliente_nombre) ? String(item.cliente_nombre).trim() : '';
+
+        if (contact && business && contact.toLowerCase() !== business.toLowerCase()) {
+            return `${contact} - ${business}`;
+        }
+
+        return contact || business || 'Cliente';
+    };
+
     const statusBadge = (status) => {
         const map = {
             pendiente: ['Pendiente', 'orange'],
@@ -132,16 +143,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const groupsMap = new Map();
 
         filtered.forEach((item) => {
-            const dateKey = dateKeyFromValue(item.fecha_entrega || item.fecha_ingreso);
-            const clientKey = normalizeText(item.cliente_nombre || 'cliente');
+            const dateKey = dateKeyFromValue(item.fecha_ingreso);
+            const displayName = clientDisplayName(item);
+            const clientKey = normalizeText(displayName || 'cliente');
             const groupKey = `${dateKey}__${clientKey}`;
 
             if (!groupsMap.has(groupKey)) {
                 groupsMap.set(groupKey, {
                     key: groupKey,
                     dateKey,
-                    fechaLabel: shortDate(item.fecha_entrega || item.fecha_ingreso),
-                    clienteNombre: item.cliente_nombre || 'Cliente',
+                    fechaLabel: shortDate(item.fecha_ingreso),
+                    clienteNombre: displayName,
                     cantidadPaquetes: 0,
                     totalServicio: 0,
                     totalRecaudado: 0,
@@ -423,7 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="package-data">
                         <span class="package-label">Fecha</span>
-                        <strong>${shortDate(item.fecha_entrega || item.fecha_ingreso)}</strong>
+                        <strong>${shortDate(item.fecha_ingreso)}</strong>
                     </div>
                     <div class="package-data package-full">
                         <span class="package-label">Instrucciones</span>
