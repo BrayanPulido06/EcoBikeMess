@@ -331,7 +331,6 @@ $recolecciones = $model->listarRecolecciones([]);
                 </div>
                 <div class="form-group">
                     <select id="filtroPrioridad">
-                        <option value="">Todas las prioridades</option>
                         <option value="urgente">Urgente</option>
                         <option value="normal">Normal</option>
                         <option value="programada">Programada</option>
