@@ -43,7 +43,6 @@ function renderAccionesRecoleccion(rec) {
 function setupEventListeners() {
     document.getElementById('busqueda').addEventListener('input', applyFilters);
     document.getElementById('filtroEstado').addEventListener('change', applyFilters);
-    document.getElementById('filtroPrioridad').addEventListener('change', applyFilters);
     document.getElementById('filtroFecha').addEventListener('change', applyFilters);
 
     const tablaBody = document.getElementById('tablaRecoleccionesBody');
@@ -168,7 +167,6 @@ function updateStats(stats) {
 function applyFilters() {
     const busqueda = document.getElementById('busqueda').value.toLowerCase();
     const estado = document.getElementById('filtroEstado').value;
-    const prioridad = document.getElementById('filtroPrioridad').value;
     const fecha = document.getElementById('filtroFecha').value;
 
     const filtered = recolecciones.filter(rec => {
@@ -178,10 +176,9 @@ function applyFilters() {
             (rec.mensajero_nombre || '').toLowerCase().includes(busqueda);
 
         const coincideEstado = !estado || getEstadoFiltro(rec.estado) === estado;
-        const coincidePrioridad = !prioridad || (rec.prioridad || '') === prioridad;
         const coincideFecha = !fecha || String(rec.fecha_creacion || '').slice(0, 10) === fecha;
 
-        return coincideBusqueda && coincideEstado && coincidePrioridad && coincideFecha;
+        return coincideBusqueda && coincideEstado && coincideFecha;
     });
 
     const tbody = document.getElementById('tablaRecoleccionesBody');
