@@ -143,7 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const groupsMap = new Map();
 
         filtered.forEach((item) => {
-            const dateKey = dateKeyFromValue(item.fecha_ingreso);
+            const baseDate = item.fecha_entrega || item.fecha_ingreso;
+            const dateKey = dateKeyFromValue(baseDate);
             const displayName = clientDisplayName(item);
             const clientKey = normalizeText(displayName || 'cliente');
             const groupKey = `${dateKey}__${clientKey}`;
@@ -152,14 +153,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 groupsMap.set(groupKey, {
                     key: groupKey,
                     dateKey,
-                    fechaLabel: shortDate(item.fecha_ingreso),
+                    fechaLabel: shortDate(baseDate),
                     clienteNombre: displayName,
-                    cantidadPaquetes: 0,
                     paquetesEntregados: 0,
                     totalServicio: 0,
                     totalRecaudado: 0,
                     abono: 0,
                     saldo: 0,
+                    balance: 0,
                     totalAcumulado: 0,
                     packages: [],
                     statuses: new Set()
@@ -167,12 +168,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const group = groupsMap.get(groupKey);
-            group.cantidadPaquetes += 1;
             if (item.estado === 'entregado') {
                 group.paquetesEntregados += 1;
                 group.totalServicio += Number(item.valor_envio || 0);
-                group.totalRecaudado += Number(item.valor_recaudo || 0);
-                group.abono += Number(item.valor_recaudo_real || 0);
+                group.totalRecaudado += Number(item.valor_recaudo_real || 0);
             }
             group.packages.push(item);
             group.statuses.add(item.estado || 'pendiente');
@@ -180,12 +179,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const groups = Array.from(groupsMap.values())
             .map((group) => {
-                const saldo = group.totalServicio - group.abono;
-                const hasPending = Array.from(group.statuses).some((status) => status !== 'entregado');
+                const abono = Math.min(group.totalRecaudado, group.totalServicio);
+                const balance = group.totalRecaudado - group.totalServicio;
+                const saldo = Math.abs(balance);
                 return {
                     ...group,
+                    abono,
+                    balance,
                     saldo,
-                    estado: saldo <= 0 && !hasPending ? 'pagado' : 'pendiente'
+                    estado: group.paquetesEntregados > 0 && balance >= 0 ? 'pagado' : 'pendiente'
                 };
             })
             .sort((a, b) => {
@@ -197,8 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let runningTotal = 0;
         groups.forEach((group) => {
-            runningTotal += group.saldo;
-            group.totalAcumulado = runningTotal;
+            runningTotal += group.balance;
+            group.totalAcumulado = Math.abs(runningTotal);
+            group.totalAcumuladoEstado = runningTotal >= 0 ? 'pagado' : 'pendiente';
         });
 
         return groups;
@@ -211,8 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return '<span class="status-chip pending">Pendiente</span>';
     };
 
-    const amountCellClass = (value) => {
-        if (value <= 0) return 'is-paid';
+    const amountCellClass = (status) => {
+        if (status === 'pagado') return 'is-paid';
         return 'is-pending';
     };
 
@@ -225,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('count-cliente').textContent = `${groups.length} registros`;
 
         if (!groups.length) {
-            tbody.innerHTML = '<tr><td colspan="11" class="empty-state">No hay registros con los filtros actuales.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No hay registros con los filtros actuales.</td></tr>';
             return;
         }
 
@@ -233,14 +236,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <tr>
                 <td>${group.fechaLabel}</td>
                 <td>${escapeHtml(group.clienteNombre)}</td>
-                <td>${group.cantidadPaquetes}</td>
                 <td>${group.paquetesEntregados}</td>
                 <td>${money(group.totalServicio)}</td>
                 <td>${money(group.totalRecaudado)}</td>
                 <td>${money(group.abono)}</td>
                 <td>${clientGroupStatusBadge(group.estado)}</td>
-                <td class="amount-cell ${amountCellClass(group.saldo)}">${money(group.saldo)}</td>
-                <td class="amount-cell ${amountCellClass(group.totalAcumulado)}">${money(group.totalAcumulado)}</td>
+                <td class="amount-cell ${amountCellClass(group.estado)}">${money(group.saldo)}</td>
+                <td class="amount-cell ${amountCellClass(group.totalAcumuladoEstado)}">${money(group.totalAcumulado)}</td>
                 <td>
                     <button
                         type="button"
@@ -318,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const setLoading = (message = 'Cargando informacion...') => {
         const loaders = document.querySelectorAll('[data-loading]');
         loaders.forEach((el) => {
-            const colspan = el.id === 'table-body-mensajero' ? 11 : 11;
+            const colspan = el.id === 'table-body-mensajero' ? 11 : 10;
             el.innerHTML = `<tr><td colspan="${colspan}" class="loading-state">${message}</td></tr>`;
         });
     };
@@ -407,7 +409,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const getClienteGroupByKey = (groupKey) => state.clienteGroups.find((group) => group.key === groupKey) || null;
 
     const renderPackageCard = (item) => {
-        const saldo = Number(item.valor_envio || 0) - Number(item.valor_recaudo_real || 0);
+        const recaudoReal = Number(item.valor_recaudo_real || 0);
+        const abono = Math.min(recaudoReal, Number(item.valor_envio || 0));
+        const saldo = Math.abs(recaudoReal - Number(item.valor_envio || 0));
         return `
             <article class="package-card">
                 <div class="package-card-head">
@@ -428,11 +432,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="package-data">
                         <span class="package-label">Valor recaudado</span>
-                        <strong>${money(item.valor_recaudo)}</strong>
+                        <strong>${money(recaudoReal)}</strong>
                     </div>
                     <div class="package-data">
                         <span class="package-label">Abono</span>
-                        <strong>${money(item.valor_recaudo_real)}</strong>
+                        <strong>${money(abono)}</strong>
                     </div>
                     <div class="package-data">
                         <span class="package-label">Saldo</span>
@@ -440,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="package-data">
                         <span class="package-label">Fecha</span>
-                        <strong>${shortDate(item.fecha_ingreso)}</strong>
+                        <strong>${shortDate(item.fecha_entrega || item.fecha_ingreso)}</strong>
                     </div>
                     <div class="package-data package-full">
                         <span class="package-label">Instrucciones</span>
@@ -464,12 +468,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         state.selectedClienteGroupKey = groupKey;
         title.textContent = `${group.clienteNombre} - ${group.fechaLabel}`;
-        subtitle.textContent = `${group.cantidadPaquetes} paquete(s) | ${group.paquetesEntregados} entregado(s) | Servicio ${money(group.totalServicio)} | Abono ${money(group.abono)} | Saldo ${money(group.saldo)}`;
+        subtitle.textContent = `${group.paquetesEntregados} entregado(s) | Servicio ${money(group.totalServicio)} | Recaudo ${money(group.totalRecaudado)} | Abono ${money(group.abono)} | Saldo ${money(group.saldo)}`;
 
         body.innerHTML = `
             <div class="detail-summary-strip">
                 <div><span>Entregados</span><strong>${group.paquetesEntregados}</strong></div>
                 <div><span>Recaudado</span><strong>${money(group.totalRecaudado)}</strong></div>
+                <div><span>Abono</span><strong>${money(group.abono)}</strong></div>
                 <div><span>Estado</span><strong>${group.estado === 'pagado' ? 'Pagado' : 'Pendiente'}</strong></div>
                 <div><span>Total acumulado</span><strong>${money(group.totalAcumulado)}</strong></div>
             </div>
@@ -552,7 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bindAdminActions();
     fetchData().catch((error) => {
         document.querySelectorAll('[data-loading]').forEach((el) => {
-            const colspan = el.id === 'table-body-mensajero' ? 11 : 11;
+            const colspan = el.id === 'table-body-mensajero' ? 11 : 10;
             el.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">${error.message}</td></tr>`;
         });
     });

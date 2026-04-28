@@ -77,7 +77,6 @@ requireWebAuth(['admin', 'administrador']);
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Clientes</th>
-                                    <th>Cantidad paquetes</th>
                                     <th>Paquetes entregados</th>
                                     <th>Total servicio</th>
                                     <th>Total recaudado</th>
@@ -89,7 +88,7 @@ requireWebAuth(['admin', 'administrador']);
                                 </tr>
                             </thead>
                             <tbody id="table-body-cliente" data-loading>
-                                <tr><td colspan="11" class="loading-state">Cargando informacion...</td></tr>
+                                <tr><td colspan="10" class="loading-state">Cargando informacion...</td></tr>
                             </tbody>
                         </table>
                     </div>
