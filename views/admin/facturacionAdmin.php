@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../../includes/paths.php';
 require_once __DIR__ . '/../../includes/auth.php';
 requireWebAuth(['admin', 'administrador']);
+$facturacionPanelCssVersion = @filemtime(__DIR__ . '/../../public/css/facturacionPanel.css') ?: time();
+$facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionPanel.js') ?: time();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -13,7 +15,7 @@ requireWebAuth(['admin', 'administrador']);
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/responsive.css">
-    <link rel="stylesheet" href="../../public/css/facturacionPanel.css">
+    <link rel="stylesheet" href="../../public/css/facturacionPanel.css?v=<?php echo $facturacionPanelCssVersion; ?>">
 </head>
 <body class="facturacion-page">
     <?php include '../layouts/adminNavbar.php'; ?>
@@ -172,6 +174,6 @@ requireWebAuth(['admin', 'administrador']);
         </div>
     </div>
 
-    <script src="../../public/js/facturacionPanel.js"></script>
+    <script src="../../public/js/facturacionPanel.js?v=<?php echo $facturacionPanelJsVersion; ?>"></script>
 </body>
 </html>
