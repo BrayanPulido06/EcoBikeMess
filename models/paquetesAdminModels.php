@@ -83,12 +83,15 @@ class PaquetesAdminModel {
             $sql .= " AND (p.numero_guia LIKE :search OR p.destinatario_nombre LIKE :search OR p.destinatario_telefono LIKE :search)";
             $params[':search'] = '%' . $filters['search'] . '%';
         }
+        $usarFechaEntrega = !empty($filters['estado']) && $filters['estado'] === 'entregado';
+        $campoFechaFiltro = $usarFechaEntrega ? 'e.fecha_entrega' : 'p.fecha_creacion';
+
         if (!empty($filters['fechaDesde'])) {
-            $sql .= " AND DATE(p.fecha_creacion) >= :fechaDesde";
+            $sql .= " AND DATE({$campoFechaFiltro}) >= :fechaDesde";
             $params[':fechaDesde'] = $filters['fechaDesde'];
         }
         if (!empty($filters['fechaHasta'])) {
-            $sql .= " AND DATE(p.fecha_creacion) <= :fechaHasta";
+            $sql .= " AND DATE({$campoFechaFiltro}) <= :fechaHasta";
             $params[':fechaHasta'] = $filters['fechaHasta'];
         }
         if (!empty($filters['cliente'])) {
