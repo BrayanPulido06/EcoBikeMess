@@ -294,11 +294,9 @@ class PaquetesAdminModel {
                     estado = :estado,
                     mensajero_id = :mensajero_id,
                     mensajero_recoleccion_id = :mensajero_recoleccion_id,
-                    fecha_creacion = :fecha_creacion
-                WHERE id = :id";
-        
-        $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([
+                    fecha_creacion = :fecha_creacion";
+
+        $params = [
             ':numero_guia' => $data['numero_guia'],
             ':remitente_nombre' => $data['remitente_nombre'],
             ':destinatario' => $data['destinatario_nombre'],
@@ -314,20 +312,52 @@ class PaquetesAdminModel {
             ':mensajero_recoleccion_id' => $data['mensajero_recoleccion_id'] ?: null,
             ':fecha_creacion' => $data['fecha_creacion'] ?: null,
             ':id' => $id
-        ]);
+        ];
+
+        if (!empty($data['fecha_entrega'])) {
+            $sql .= ",
+                    fecha_entrega = :fecha_entrega";
+            $params[':fecha_entrega'] = $data['fecha_entrega'];
+        }
+
+        $sql .= "
+                WHERE id = :id";
+        
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute($params);
     }
 
     public function updateEntregaInfo($paqueteId, $data) {
-        $sql = "UPDATE entregas SET
-                    nombre_receptor = :nombre_receptor,
-                    parentesco_cargo = :parentesco,
-                    documento_receptor = :documento,
-                    recaudo_real = :recaudo,
-                    fecha_entrega = :fecha_entrega,
-                    observaciones = :observaciones
-                WHERE paquete_id = :id";
+        $sql = "INSERT INTO entregas (
+                    paquete_id,
+                    mensajero_id,
+                    nombre_receptor,
+                    parentesco_cargo,
+                    documento_receptor,
+                    recaudo_real,
+                    fecha_entrega,
+                    observaciones
+                ) VALUES (
+                    :id,
+                    :mensajero_id,
+                    :nombre_receptor,
+                    :parentesco,
+                    :documento,
+                    :recaudo,
+                    :fecha_entrega,
+                    :observaciones
+                )
+                ON DUPLICATE KEY UPDATE
+                    mensajero_id = VALUES(mensajero_id),
+                    nombre_receptor = VALUES(nombre_receptor),
+                    parentesco_cargo = VALUES(parentesco_cargo),
+                    documento_receptor = VALUES(documento_receptor),
+                    recaudo_real = VALUES(recaudo_real),
+                    fecha_entrega = VALUES(fecha_entrega),
+                    observaciones = VALUES(observaciones)";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
+            ':mensajero_id' => $data['mensajero_id'] ?: null,
             ':nombre_receptor' => $data['nombre_receptor'],
             ':parentesco' => $data['parentesco_cargo'] ?: null,
             ':documento' => $data['documento_receptor'] ?: null,

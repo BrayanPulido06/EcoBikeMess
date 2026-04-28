@@ -63,6 +63,7 @@ function setupEventListeners() {
     document.getElementById('searchMensajero').addEventListener('input', filtrarMensajeros);
     document.getElementById('filtroEstadoMensajero').addEventListener('change', filtrarMensajeros);
     document.getElementById('btnCerrarModalMensajero').addEventListener('click', () => closeModal('modalMensajero'));
+    document.getElementById('btnCerrarModalCliente').addEventListener('click', () => closeModal('modalCliente'));
     document.getElementById('btnCerrarModalSolicitudes').addEventListener('click', () => closeModal('modalSolicitudes'));
 
     // Clientes
@@ -283,7 +284,7 @@ function renderClientes() {
             <td><span class="status-badge status-${c.estado}">${c.estado === 'activo' ? 'Activo' : 'Inactivo'}</span></td>
             <td>${formatDate(c.fechaRegistro)}</td>
             <td>
-                <button class="btn btn-sm btn-info" onclick="alert('Detalles de ${c.emprendimiento}')">👁️</button>
+                <button class="btn btn-sm btn-info" onclick="verDetallesCliente(${c.id})">👁️</button>
             </td>
         </tr>
     `).join('');
@@ -570,6 +571,60 @@ function verDetallesMensajero(id) {
     openModal('modalMensajero');
 }
 
+function verDetallesCliente(id) {
+    const cliente = clientes.find(c => c.id === id);
+    if (!cliente) return;
+
+    const html = `
+        <div class="mensajero-detail-section">
+            <h3>InformaciÃ³n del Cliente</h3>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label">ID Cliente</div>
+                    <div class="detail-value">C${String(cliente.id).padStart(3, '0')}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Emprendimiento</div>
+                    <div class="detail-value">${cliente.emprendimiento || 'No registrado'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Estado</div>
+                    <div class="detail-value"><span class="status-badge status-${cliente.estado}">${cliente.estado === 'activo' ? 'Activo' : 'Inactivo'}</span></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Fecha Registro</div>
+                    <div class="detail-value">${formatDate(cliente.fechaRegistro)}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mensajero-detail-section">
+            <h3>InformaciÃ³n de Contacto</h3>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Nombre de Contacto</div>
+                    <div class="detail-value">${cliente.nombreContacto || 'No registrado'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">TelÃ©fono</div>
+                    <div class="detail-value">${cliente.telefono || 'No registrado'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Correo</div>
+                    <div class="detail-value">${cliente.email || 'No registrado'}</div>
+                </div>
+                <div class="detail-item" style="grid-column: span 2;">
+                    <div class="detail-label">DirecciÃ³n</div>
+                    <div class="detail-value">${cliente.direccion || 'No registrada'}</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('detallesCliente').innerHTML = html;
+    openModal('modalCliente');
+}
+
 // Toggle estado mensajero
 async function toggleEstadoMensajero(id) {
     // Si isAdmin falla, intentamos validar contra los roles de BD directamente
@@ -836,3 +891,4 @@ function showNotification(message, type = 'info') {
     
     setTimeout(() => notification.remove(), 4000);
 }
+

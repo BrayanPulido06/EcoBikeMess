@@ -415,6 +415,20 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             </div>
         </div>
 
+        <div class="modal" id="modalCliente">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2>Detalles del Cliente</h2>
+                    <button class="btn-close" id="btnCerrarModalCliente">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="detallesCliente">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal: Solicitudes Pendientes -->
         <div class="modal" id="modalSolicitudes">
             <div class="modal-content modal-large">

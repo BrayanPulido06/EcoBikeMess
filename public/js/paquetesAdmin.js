@@ -252,6 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="action-buttons">
                             <button class="btn btn-sm btn-warning" onclick="cargarRotuloAdmin(${p.id})" title="Guía">🏷️ Guía</button>
                             <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})" title="Ver Detalle">👁️</button>
+                            ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-success" onclick="cerrarPaqueteAdmin(${p.id})" title="Cerrar paquete">✅ Cerrar</button>` : ''}
                             ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar">🚴 Asignar</button>` : ''}
                         </div>
                     </td>
@@ -554,7 +555,7 @@ function filtrarListaMensajeros(e) {
     renderizarListaMensajeros(filtrados);
 }
 
-function verDetalle(id) {
+function verDetalle(id, options = {}) {
     const modal = document.getElementById('modalDetalles');
     const container = document.getElementById('detallesPaquete');
     
@@ -964,6 +965,25 @@ function verDetalle(id) {
 
                 const form = document.getElementById('formEditarDetalles');
                 if (form) {
+                    if (options.modoCierre) {
+                        const estadoSelect = form.querySelector('select[name="estado"]');
+                        const fechaEntregaInput = form.querySelector('input[name="entrega_fecha"]');
+                        const receptorInput = form.querySelector('input[name="entrega_nombre_receptor"]');
+
+                        if (estadoSelect) {
+                            estadoSelect.value = 'entregado';
+                        }
+
+                        if (fechaEntregaInput && !fechaEntregaInput.value) {
+                            const now = new Date();
+                            const tzOffset = now.getTimezoneOffset() * 60000;
+                            fechaEntregaInput.value = new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
+                        }
+
+                        form.querySelector('.detalle-section[style*="#f8fff9"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        receptorInput?.focus();
+                    }
+
                     form.addEventListener('submit', async (e) => {
                         e.preventDefault();
                         const formData = new FormData(form);
@@ -1115,6 +1135,10 @@ function verDetalle(id) {
             });
     }
 }
+
+window.cerrarPaqueteAdmin = function(id) {
+    verDetalle(id, { modoCierre: true });
+};
 
 // Abrir modal de Guía (Rótulo) desde Admin
 function cargarRotuloAdmin(id) {

@@ -89,19 +89,45 @@ try {
                 'fecha_creacion' => trim((string) ($input['fecha_creacion'] ?? ''))
             ];
 
-            $res = $model->updatePaqueteAdmin($paqueteId, $payload);
+            $fechaEntregaSync = null;
 
             $actualizoEntrega = null;
             if (!empty($input['entrega']) && is_array($input['entrega'])) {
                 $entrega = $input['entrega'];
+                $fechaEntrega = trim((string) ($entrega['fecha_entrega'] ?? ''));
+                if ($payload['estado'] === 'entregado' && $fechaEntrega === '') {
+                    $fechaEntrega = date('Y-m-d H:i:s');
+                }
                 $payloadEntrega = [
                     'nombre_receptor' => trim((string) ($entrega['nombre_receptor'] ?? '')),
                     'parentesco_cargo' => trim((string) ($entrega['parentesco_cargo'] ?? '')),
                     'documento_receptor' => trim((string) ($entrega['documento_receptor'] ?? '')),
                     'recaudo_real' => (float) ($entrega['recaudo_real'] ?? 0),
-                    'fecha_entrega' => trim((string) ($entrega['fecha_entrega'] ?? '')),
-                    'observaciones' => trim((string) ($entrega['observaciones'] ?? ''))
+                    'fecha_entrega' => $fechaEntrega,
+                    'observaciones' => trim((string) ($entrega['observaciones'] ?? '')),
+                    'mensajero_id' => (int) ($input['mensajero_id'] ?? 0)
                 ];
+                if ($payload['estado'] === 'entregado') {
+                    $fechaEntregaSync = $fechaEntrega;
+                }
+                $payload['fecha_entrega'] = $fechaEntregaSync;
+            } elseif ($payload['estado'] === 'entregado') {
+                $fechaEntregaSync = date('Y-m-d H:i:s');
+                $payload['fecha_entrega'] = $fechaEntregaSync;
+                $payloadEntrega = [
+                    'nombre_receptor' => '',
+                    'parentesco_cargo' => '',
+                    'documento_receptor' => '',
+                    'recaudo_real' => 0,
+                    'fecha_entrega' => $fechaEntregaSync,
+                    'observaciones' => '',
+                    'mensajero_id' => (int) ($input['mensajero_id'] ?? 0)
+                ];
+            }
+
+            $res = $model->updatePaqueteAdmin($paqueteId, $payload);
+
+            if (!empty($payloadEntrega)) {
                 $actualizoEntrega = $model->updateEntregaInfo($paqueteId, $payloadEntrega);
             }
 
