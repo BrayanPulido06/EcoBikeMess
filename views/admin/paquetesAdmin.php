@@ -555,7 +555,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
 
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/rotuloShared.js"></script>
-    <script src="../../public/js/paquetesAdmin.js?v=20260423-2"></script>
+    <script src="../../public/js/paquetesAdmin.js?v=20260428-1"></script>
     <script>
         let currentRotuloData = null;
         const truncarRotulo = (value, max) => {
