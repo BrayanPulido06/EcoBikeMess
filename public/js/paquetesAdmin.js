@@ -248,7 +248,13 @@ document.addEventListener('DOMContentLoaded', function() {
             html += `
                 <tr class="paquete-row">
                     <td><input type="checkbox" class="paquete-checkbox" value="${p.id}"></td>
-                    <td>${p.guia}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-warning" onclick="cargarRotuloAdmin(${p.id})" title="Guía">🏷️ Guía</button>
+                            <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})" title="Ver Detalle">👁️</button>
+                            ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar">🚴 Asignar</button>` : ''}
+                        </div>
+                    </td>
                     <td>${p.fechaIngreso}</td>
                     <td>${p.remitente || '<span class="text-muted">N/A</span>'}</td>
                     <td>${p.nombre_persona || '<span class="text-muted">N/A</span>'}</td>
@@ -261,13 +267,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${recaudoFormateado}</td>
                     <td>${recaudoRealFormateado}</td>
                     <td>${envioAgregado}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn btn-sm btn-warning" onclick="cargarRotuloAdmin(${p.id})" title="Guía">🏷️ Guía</button>
-                            <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})" title="Ver Detalle">👁️</button>
-                            ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar">🚴 Asignar</button>` : ''}
-                        </div>
-                    </td>
+                    <td>${p.guia}</td>
                 </tr>
             `;
         });

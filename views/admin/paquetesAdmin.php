@@ -316,20 +316,20 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                     <thead>
                         <tr>
                             <th><input type="checkbox" id="selectAll"></th>
-                            <th class="sortable" data-column="guia">N° Guía <span class="sort-icon">↕</span></th>
+                            <th>Acciones</th>
                             <th class="sortable" data-column="fecha">Fecha/Hora <span class="sort-icon">↕</span></th>
                             <th>Remitente</th>
                             <th>Nombre</th>
                             <th>Destinatario</th>
                             <th>Dirección Entrega</th>
-                            <th>Recolección</th>
+                            <th>Mjs Recolección</th>
                             <th>Estado Recolección</th>
-                            <th>Entrega</th>
+                            <th>Mjs Entrega</th>
                             <th>Estado Entrega</th>
                             <th>Recaudo</th>
                             <th>Recaudo Real</th>
                             <th>Valor Envío Agregado</th>
-                            <th>Acciones</th>
+                            <th class="sortable" data-column="guia">N° Guía <span class="sort-icon">↕</span></th>
                         </tr>
                     </thead>
                     <tbody id="tablaPaquetesBody">
