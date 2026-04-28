@@ -324,10 +324,9 @@ $recolecciones = $model->listarRecolecciones([]);
                 <div class="form-group">
                     <select id="filtroEstado">
                         <option value="">Todos los estados</option>
-                        <option value="asignada">Asignada</option>
-                        <option value="en_curso">En Curso</option>
-                        <option value="completada">Completada</option>
-                        <option value="cancelada">Cancelada</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="en_transito">En tránsito</option>
+                        <option value="finalizado">Finalizado</option>
                     </select>
                 </div>
                 <div class="form-group">

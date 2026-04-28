@@ -42,6 +42,9 @@ function renderAccionesRecoleccion(rec) {
 
 function setupEventListeners() {
     document.getElementById('busqueda').addEventListener('input', applyFilters);
+    document.getElementById('filtroEstado').addEventListener('change', applyFilters);
+    document.getElementById('filtroPrioridad').addEventListener('change', applyFilters);
+    document.getElementById('filtroFecha').addEventListener('change', applyFilters);
 
     const tablaBody = document.getElementById('tablaRecoleccionesBody');
     if (tablaBody) {
@@ -141,37 +144,17 @@ async function cargarMensajerosEnModal() {
 
 function renderRecolecciones() {
     const tbody = document.getElementById('tablaRecoleccionesBody');
-    const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
     if (!recolecciones || recolecciones.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align: center; padding: 20px;">No hay recolecciones pendientes.</td>
+                <td colspan="8" style="text-align: center; padding: 20px;">No hay recolecciones pendientes.</td>
             </tr>
         `;
         return;
     }
 
-    tbody.innerHTML = recolecciones.map(rec => `
-        <tr class="prioridad-${rec.color_prioridad || 'verde'}">
-            <td>${rec.direccion_origen}</td>
-            <td>${rec.cliente_nombre}</td>
-            <td>${rec.mensajero_nombre}</td>
-            <td>
-                <span class="badge estado-${rec.estado}">
-                    ${(rec.estado === 'entregado' || rec.estado === 'completada') ? 'Finalizada' : capitalize(rec.estado.replace('_', ' '))}
-                </span>
-            </td>
-            <td>
-                <span class="badge badge-info" style="font-size: 1em; background-color: #17a2b8;">
-                    ${rec.cantidad} Paquetes
-                </span>
-            </td>
-            <td><small>${rec.guias ? rec.guias.substring(0, 50) + (rec.guias.length > 50 ? '...' : '') : ''}</small></td>
-            <td>${new Date(rec.fecha_creacion).toLocaleString()}</td>
-            <td>${renderAccionesRecoleccion(rec)}</td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = buildRows(recolecciones);
 }
 
 function updateStats(stats) {
@@ -184,39 +167,76 @@ function updateStats(stats) {
 
 function applyFilters() {
     const busqueda = document.getElementById('busqueda').value.toLowerCase();
+    const estado = document.getElementById('filtroEstado').value;
+    const prioridad = document.getElementById('filtroPrioridad').value;
+    const fecha = document.getElementById('filtroFecha').value;
 
     const filtered = recolecciones.filter(rec => {
-        return !busqueda ||
+        const coincideBusqueda = !busqueda ||
             rec.cliente_nombre.toLowerCase().includes(busqueda) ||
-            rec.direccion_origen.toLowerCase().includes(busqueda);
+            rec.direccion_origen.toLowerCase().includes(busqueda) ||
+            (rec.mensajero_nombre || '').toLowerCase().includes(busqueda);
+
+        const coincideEstado = !estado || getEstadoFiltro(rec.estado) === estado;
+        const coincidePrioridad = !prioridad || (rec.prioridad || '') === prioridad;
+        const coincideFecha = !fecha || String(rec.fecha_creacion || '').slice(0, 10) === fecha;
+
+        return coincideBusqueda && coincideEstado && coincidePrioridad && coincideFecha;
     });
 
-    const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
     const tbody = document.getElementById('tablaRecoleccionesBody');
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">No se encontraron resultados.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px;">No se encontraron resultados.</td></tr>`;
     } else {
-        tbody.innerHTML = filtered.map(rec => `
-            <tr class="prioridad-${rec.color_prioridad || 'verde'}">
-                <td>${rec.direccion_origen}</td>
-                <td>${rec.cliente_nombre}</td>
-                <td>${rec.mensajero_nombre}</td>
-                <td>
-                    <span class="badge estado-${rec.estado}">
-                        ${(rec.estado === 'entregado' || rec.estado === 'completada') ? 'Finalizada' : capitalize(rec.estado.replace('_', ' '))}
-                    </span>
-                </td>
-                <td>
-                    <span class="badge badge-info" style="font-size: 1em; background-color: #17a2b8;">
-                        ${rec.cantidad} Paquetes
-                    </span>
-                </td>
-                <td><small>${rec.guias ? rec.guias.substring(0, 50) + (rec.guias.length > 50 ? '...' : '') : ''}</small></td>
-                <td>${new Date(rec.fecha_creacion).toLocaleString()}</td>
-                <td>${renderAccionesRecoleccion(rec)}</td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = buildRows(filtered);
     }
+}
+
+function getEstadoFiltro(estado) {
+    if (estado === 'pendiente') {
+        return 'pendiente';
+    }
+    if (['asignado', 'asignada', 'en_transito', 'en_ruta', 'en_curso'].includes(estado)) {
+        return 'en_transito';
+    }
+    if (['entregado', 'completada', 'cancelado'].includes(estado)) {
+        return 'finalizado';
+    }
+    return estado || '';
+}
+
+function formatEstadoLabel(estado) {
+    if (estado === 'entregado' || estado === 'completada') {
+        return 'Finalizada';
+    }
+    return capitalize((estado || '').replace('_', ' '));
+}
+
+function capitalize(s) {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+}
+
+function buildRows(items) {
+    return items.map(rec => `
+        <tr class="prioridad-${rec.color_prioridad || 'verde'}">
+            <td>${rec.direccion_origen}</td>
+            <td>${rec.cliente_nombre}</td>
+            <td>${rec.mensajero_nombre}</td>
+            <td>
+                <span class="badge estado-${rec.estado}">
+                    ${formatEstadoLabel(rec.estado)}
+                </span>
+            </td>
+            <td>
+                <span class="badge badge-info" style="font-size: 1em; background-color: #17a2b8;">
+                    ${rec.cantidad} Paquetes
+                </span>
+            </td>
+            <td><small>${rec.guias ? rec.guias.substring(0, 50) + (rec.guias.length > 50 ? '...' : '') : ''}</small></td>
+            <td>${new Date(rec.fecha_creacion).toLocaleString()}</td>
+            <td>${renderAccionesRecoleccion(rec)}</td>
+        </tr>
+    `).join('');
 }
 
 window.verDetallesPaquetes = async function(ids) {
