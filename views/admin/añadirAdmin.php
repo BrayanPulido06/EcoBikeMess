@@ -499,8 +499,12 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 if (!modal || !container) return;
 
                 container.innerHTML = '<p style="text-align:center; padding:24px;">Cargando informacion del cliente...</p>';
-                modal.classList.add('active');
-                document.body.style.overflow = 'hidden';
+                if (typeof openModal === 'function') {
+                    openModal('modalCliente');
+                } else {
+                    modal.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
 
                 try {
                     const controllerUrl = (typeof getAdminControllerUrl === 'function')

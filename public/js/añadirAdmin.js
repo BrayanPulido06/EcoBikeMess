@@ -65,6 +65,22 @@ function setupEventListeners() {
     document.getElementById('btnCerrarModalMensajero').addEventListener('click', () => closeModal('modalMensajero'));
     document.getElementById('btnCerrarModalCliente').addEventListener('click', () => closeModal('modalCliente'));
     document.getElementById('btnCerrarModalSolicitudes').addEventListener('click', () => closeModal('modalSolicitudes'));
+    ['modalAdmin', 'modalMensajero', 'modalCliente', 'modalSolicitudes', 'modalResetPassword'].forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        modal?.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closeModal(modalId);
+            }
+        });
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key !== 'Escape') return;
+
+        document.querySelectorAll('.modal.active').forEach(modal => {
+            if (modal.id) closeModal(modal.id);
+        });
+    });
 
     // Clientes
     document.getElementById('searchCliente')?.addEventListener('input', filtrarClientes);
@@ -856,12 +872,20 @@ function formatRelativeTime(dateStr) {
 
 // Abrir modal
 function openModal(modalId) {
-    document.getElementById(modalId).classList.add('active');
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
 // Cerrar modal
 function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('active');
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.classList.remove('active');
+
+    const hayOtroModalAbierto = document.querySelector('.modal.active');
+    document.body.style.overflow = hayOtroModalAbierto ? 'hidden' : '';
 }
 
 // Mostrar notificación
