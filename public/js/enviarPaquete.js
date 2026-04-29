@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnDownloadPDF = document.getElementById('btnDownloadPDF');
     const formAction = form?.getAttribute('action') || '../../controller/enviarPaqueteController.php';
     const qrcodeContainer = document.getElementById('qrcode');
+    const destinatarioTelefonoInput = document.getElementById('destinatario_telefono');
+    const destinatarioFlexCheckbox = document.getElementById('destinatario_es_flex');
+    let destinatarioTelefonoPrevio = '';
     let qrCodeStylingInstance = null; // Para la instancia del nuevo QR
     let currentPreviewRotuloData = null;
     let baseRecaudo = 0; // Variable para almacenar el valor base del recaudo (sin envío)
@@ -119,6 +122,71 @@ document.addEventListener('DOMContentLoaded', function() {
             'notificar': '7. Igual o mayor a 50 x 50 cm'
         };
         return labels[normalized] || 'Sin definir';
+    };
+
+    const isFlexPhoneValue = (value) => String(value || '').trim().toLowerCase() === 'flex';
+
+    const isFlexModeEnabled = () => Boolean(destinatarioFlexCheckbox?.checked);
+
+    const updateDestinatarioTelefonoError = (message = '') => {
+        const formGroup = destinatarioTelefonoInput?.closest('.form-group');
+        const errorSpan = formGroup?.querySelector('.error-message');
+        if (!formGroup || !errorSpan) return;
+
+        if (message) {
+            formGroup.classList.add('error');
+            errorSpan.textContent = message;
+            return;
+        }
+
+        formGroup.classList.remove('error');
+        errorSpan.textContent = '';
+    };
+
+    const setDestinatarioFlexMode = (enabled) => {
+        if (!destinatarioTelefonoInput || !destinatarioFlexCheckbox) return;
+
+        if (enabled) {
+            const currentDigits = destinatarioTelefonoInput.value.replace(/\D/g, '').slice(0, 10);
+            if (currentDigits) {
+                destinatarioTelefonoPrevio = currentDigits;
+            }
+
+            destinatarioTelefonoInput.value = 'Flex';
+            destinatarioTelefonoInput.readOnly = true;
+            destinatarioTelefonoInput.setAttribute('inputmode', 'text');
+            destinatarioTelefonoInput.setAttribute('maxlength', '4');
+            destinatarioTelefonoInput.classList.add('telefono-flex-active');
+            updateDestinatarioTelefonoError('');
+            return;
+        }
+
+        const restoredValue = destinatarioTelefonoPrevio
+            ? destinatarioTelefonoPrevio.slice(0, 10)
+            : destinatarioTelefonoInput.value.replace(/\D/g, '').slice(0, 10);
+
+        destinatarioTelefonoInput.readOnly = false;
+        destinatarioTelefonoInput.setAttribute('inputmode', 'numeric');
+        destinatarioTelefonoInput.setAttribute('maxlength', '10');
+        destinatarioTelefonoInput.classList.remove('telefono-flex-active');
+        destinatarioTelefonoInput.value = restoredValue;
+    };
+
+    const syncDestinatarioFlexStateFromValue = () => {
+        if (!destinatarioTelefonoInput || !destinatarioFlexCheckbox) return;
+
+        if (isFlexPhoneValue(destinatarioTelefonoInput.value)) {
+            destinatarioFlexCheckbox.checked = true;
+            setDestinatarioFlexMode(true);
+            return;
+        }
+
+        if (isFlexModeEnabled()) {
+            setDestinatarioFlexMode(true);
+            return;
+        }
+
+        setDestinatarioFlexMode(false);
     };
 
     // --- NAVEGACIÓN ENTRE PASOS ---
@@ -1352,4 +1420,110 @@ ${qrFinanciero}
             }
         });
     }
+    validateStep = function(stepNumber) {
+        let isValid = true;
+        const currentStepFields = document.querySelector(`.form-step[data-step="${stepNumber}"]`);
+        const inputs = currentStepFields.querySelectorAll('input[required], textarea[required], select[required]');
+
+        inputs.forEach(input => {
+            if (input.offsetParent === null) return;
+
+            const formGroup = input.closest('.form-group');
+            const errorSpan = formGroup.querySelector('.error-message');
+
+            if (input.type === 'radio') {
+                const name = input.name;
+                const group = currentStepFields.querySelectorAll(`input[name="${name}"]`);
+                const isChecked = Array.from(group).some(r => r.checked);
+
+                if (!isChecked) {
+                    isValid = false;
+                    formGroup.classList.add('error');
+                    if (errorSpan) errorSpan.textContent = 'Debe seleccionar una opcion.';
+                } else {
+                    formGroup.classList.remove('error');
+                    if (errorSpan) errorSpan.textContent = '';
+                }
+                return;
+            }
+
+            if (input.id === 'destinatario_telefono') {
+                const value = input.value.trim();
+                const validPhone = isFlexModeEnabled()
+                    ? isFlexPhoneValue(value)
+                    : /^\d{10}$/.test(value);
+
+                if (!value) {
+                    isValid = false;
+                    formGroup.classList.add('error');
+                    if (errorSpan) errorSpan.textContent = 'Este campo es obligatorio.';
+                } else if (!validPhone) {
+                    isValid = false;
+                    formGroup.classList.add('error');
+                    if (errorSpan) {
+                        errorSpan.textContent = isFlexModeEnabled()
+                            ? 'Cuando el paquete es flex, el telefono debe quedar como Flex.'
+                            : 'Ingresa un numero de telefono de 10 digitos.';
+                    }
+                } else {
+                    formGroup.classList.remove('error');
+                    if (errorSpan) errorSpan.textContent = '';
+                }
+                return;
+            }
+
+            if (!input.value.trim()) {
+                isValid = false;
+                formGroup.classList.add('error');
+                if (errorSpan) errorSpan.textContent = 'Este campo es obligatorio.';
+            } else {
+                formGroup.classList.remove('error');
+                if (errorSpan) errorSpan.textContent = '';
+            }
+        });
+
+        return isValid;
+    };
+
+    if (destinatarioTelefonoInput) {
+        destinatarioTelefonoInput.addEventListener('input', () => {
+            if (isFlexPhoneValue(destinatarioTelefonoInput.value)) {
+                if (destinatarioFlexCheckbox) {
+                    destinatarioFlexCheckbox.checked = true;
+                }
+                setDestinatarioFlexMode(true);
+                return;
+            }
+
+            if (isFlexModeEnabled()) {
+                destinatarioTelefonoInput.value = 'Flex';
+                updateDestinatarioTelefonoError('');
+                return;
+            }
+
+            const cleanValue = destinatarioTelefonoInput.value.replace(/\D/g, '').slice(0, 10);
+            destinatarioTelefonoInput.value = cleanValue;
+            destinatarioTelefonoPrevio = cleanValue;
+
+            if (!cleanValue || cleanValue.length === 10) {
+                updateDestinatarioTelefonoError('');
+            } else {
+                updateDestinatarioTelefonoError('Ingresa un numero de telefono de 10 digitos.');
+            }
+        });
+
+        destinatarioTelefonoInput.addEventListener('paste', (event) => {
+            if (isFlexModeEnabled()) {
+                event.preventDefault();
+            }
+        });
+    }
+
+    if (destinatarioFlexCheckbox) {
+        destinatarioFlexCheckbox.addEventListener('change', () => {
+            setDestinatarioFlexMode(destinatarioFlexCheckbox.checked);
+        });
+    }
+
+    syncDestinatarioFlexStateFromValue();
 });

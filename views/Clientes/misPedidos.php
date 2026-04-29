@@ -224,7 +224,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                     Exportar Excel
                 </button>
                 <button class="btn btn-secondary" id="btnExportarGuias">
-                    ?? Descargar Guías
+                    Descargar Guías
                 </button>
                 <button class="btn btn-primary" id="btnNuevaFactura">
                     + Nueva Factura
