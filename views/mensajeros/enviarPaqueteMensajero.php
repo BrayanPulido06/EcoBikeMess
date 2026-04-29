@@ -240,6 +240,55 @@ $remitente_data = [
         .status-pending { color: #f0ad4e; font-weight: bold; }
         .status-success { color: #28a745; font-weight: bold; }
         .status-error { color: #dc3545; font-weight: bold; }
+        .flex-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid #d6e7d7;
+            background: #f8fcf8;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .flex-toggle:hover {
+            border-color: #9bc59e;
+            background: #f2faf2;
+        }
+        .flex-toggle input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .flex-toggle-box {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #8a9a8d;
+            border-radius: 4px;
+            background: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 800;
+            color: transparent;
+            transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+        .flex-toggle-text {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        .flex-toggle input:checked + .flex-toggle-box {
+            background: #9fe08d;
+            border-color: #9fe08d;
+            color: #1f2937;
+        }
+        .telefono-flex-active {
+            font-weight: 600;
+            color: #2c3e50;
+        }
         
         /* Estilos para tarjetas de selecci?n de recaudo */
         .radio-card {
@@ -399,7 +448,12 @@ $remitente_data = [
                                 </div>
                                 <div class="form-group">
                                     <label for="destinatario_telefono">Telefono *</label>
-                                    <input type="tel" id="destinatario_telefono" name="destinatario_telefono" placeholder="3001234567" required maxlength="10" pattern="\d{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                    <input type="text" id="destinatario_telefono" name="destinatario_telefono" placeholder="3001234567" required inputmode="numeric" autocomplete="off" maxlength="10">
+                                    <label class="flex-toggle" for="destinatario_es_flex">
+                                        <input type="checkbox" id="destinatario_es_flex" name="destinatario_es_flex" value="1">
+                                        <span class="flex-toggle-box">✓</span>
+                                        <span class="flex-toggle-text">El paquete es flex</span>
+                                    </label>
                                     <span class="error-message"></span>
                                 </div>
                             </div>
