@@ -448,7 +448,7 @@ $remitente_data = [
                                 </div>
                                 <div class="form-group">
                                     <label for="destinatario_telefono">Telefono *</label>
-                                    <input type="text" id="destinatario_telefono" name="destinatario_telefono" placeholder="3001234567" required inputmode="numeric" autocomplete="off" maxlength="10">
+                                    <input type="text" id="destinatario_telefono" name="destinatario_telefono" placeholder="3001234567" required inputmode="numeric" autocomplete="off" maxlength="10" pattern="(?:\d{10}|Flex)" title="Ingresa 10 numeros o activa Flex">
                                     <label class="flex-toggle" for="destinatario_es_flex">
                                         <input type="checkbox" id="destinatario_es_flex" name="destinatario_es_flex" value="1">
                                         <span class="flex-toggle-box">✓</span>

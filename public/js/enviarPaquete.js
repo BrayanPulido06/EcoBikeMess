@@ -143,11 +143,13 @@ document.addEventListener('DOMContentLoaded', function() {
         errorSpan.textContent = '';
     };
 
+    const sanitizeDestinatarioPhoneInput = (value) => String(value || '').replace(/\D/g, '').slice(0, 10);
+
     const setDestinatarioFlexMode = (enabled) => {
         if (!destinatarioTelefonoInput || !destinatarioFlexCheckbox) return;
 
         if (enabled) {
-            const currentDigits = destinatarioTelefonoInput.value.replace(/\D/g, '').slice(0, 10);
+            const currentDigits = sanitizeDestinatarioPhoneInput(destinatarioTelefonoInput.value);
             if (currentDigits) {
                 destinatarioTelefonoPrevio = currentDigits;
             }
@@ -156,6 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
             destinatarioTelefonoInput.readOnly = true;
             destinatarioTelefonoInput.setAttribute('inputmode', 'text');
             destinatarioTelefonoInput.setAttribute('maxlength', '4');
+            destinatarioTelefonoInput.setAttribute('aria-readonly', 'true');
             destinatarioTelefonoInput.classList.add('telefono-flex-active');
             updateDestinatarioTelefonoError('');
             return;
@@ -163,11 +166,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const restoredValue = destinatarioTelefonoPrevio
             ? destinatarioTelefonoPrevio.slice(0, 10)
-            : destinatarioTelefonoInput.value.replace(/\D/g, '').slice(0, 10);
+            : sanitizeDestinatarioPhoneInput(destinatarioTelefonoInput.value);
 
         destinatarioTelefonoInput.readOnly = false;
         destinatarioTelefonoInput.setAttribute('inputmode', 'numeric');
         destinatarioTelefonoInput.setAttribute('maxlength', '10');
+        destinatarioTelefonoInput.removeAttribute('aria-readonly');
         destinatarioTelefonoInput.classList.remove('telefono-flex-active');
         destinatarioTelefonoInput.value = restoredValue;
     };
@@ -1486,6 +1490,21 @@ ${qrFinanciero}
     };
 
     if (destinatarioTelefonoInput) {
+        destinatarioTelefonoInput.addEventListener('beforeinput', (event) => {
+            if (isFlexModeEnabled()) {
+                event.preventDefault();
+            }
+        });
+
+        destinatarioTelefonoInput.addEventListener('keydown', (event) => {
+            if (!isFlexModeEnabled()) return;
+
+            const allowedKeys = ['Tab', 'Shift', 'Control', 'Alt', 'Meta'];
+            if (!allowedKeys.includes(event.key)) {
+                event.preventDefault();
+            }
+        });
+
         destinatarioTelefonoInput.addEventListener('input', () => {
             if (isFlexPhoneValue(destinatarioTelefonoInput.value)) {
                 if (destinatarioFlexCheckbox) {
@@ -1501,7 +1520,7 @@ ${qrFinanciero}
                 return;
             }
 
-            const cleanValue = destinatarioTelefonoInput.value.replace(/\D/g, '').slice(0, 10);
+            const cleanValue = sanitizeDestinatarioPhoneInput(destinatarioTelefonoInput.value);
             destinatarioTelefonoInput.value = cleanValue;
             destinatarioTelefonoPrevio = cleanValue;
 
@@ -1515,7 +1534,22 @@ ${qrFinanciero}
         destinatarioTelefonoInput.addEventListener('paste', (event) => {
             if (isFlexModeEnabled()) {
                 event.preventDefault();
+                return;
             }
+
+            const pastedText = (event.clipboardData || window.clipboardData)?.getData('text') || '';
+            const cleanValue = sanitizeDestinatarioPhoneInput(pastedText);
+
+            if (pastedText !== cleanValue) {
+                event.preventDefault();
+                destinatarioTelefonoInput.value = cleanValue;
+                destinatarioTelefonoPrevio = cleanValue;
+                destinatarioTelefonoInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        });
+
+        destinatarioTelefonoInput.addEventListener('drop', (event) => {
+            event.preventDefault();
         });
     }
 
