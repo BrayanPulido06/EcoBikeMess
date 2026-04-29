@@ -346,6 +346,21 @@ CREATE INDEX idx_facturacion_cliente ON facturacion(cliente_id);
 CREATE INDEX idx_facturacion_mensajero ON facturacion(mensajero_id);
 CREATE INDEX idx_facturacion_visible ON facturacion(mostrar_al_mensajero);
 
+CREATE TABLE IF NOT EXISTS facturacion_abonos_cliente (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cliente_id INT NOT NULL,
+    fecha_grupo DATE NOT NULL,
+    monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    metodo_pago ENUM('efectivo', 'transferencia') NOT NULL,
+    observaciones TEXT,
+    registrado_por INT NULL,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+    FOREIGN KEY (registrado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_abonos_cliente_fecha ON facturacion_abonos_cliente(cliente_id, fecha_grupo);
+
 CREATE TABLE IF NOT EXISTS pagos (
     id INT PRIMARY KEY AUTO_INCREMENT,
     factura_id INT NOT NULL,

@@ -9,6 +9,7 @@ class FacturacionModels
     {
         $this->conn = conexionDB();
         $this->ensureFacturacionTable();
+        $this->ensureAbonosClienteTable();
         $this->syncFacturacionRows();
     }
 
@@ -52,6 +53,24 @@ class FacturacionModels
                          OR (f.mensajero_id IS NOT NULL AND p.mensajero_id IS NULL)
                          OR (f.mensajero_id <> p.mensajero_id)";
         $this->conn->exec($updateSql);
+    }
+
+    private function ensureAbonosClienteTable(): void
+    {
+        $sql = "CREATE TABLE IF NOT EXISTS facturacion_abonos_cliente (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    cliente_id INT NOT NULL,
+                    fecha_grupo DATE NOT NULL,
+                    monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    metodo_pago ENUM('efectivo', 'transferencia') NOT NULL,
+                    observaciones TEXT NULL,
+                    registrado_por INT NULL,
+                    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+                    FOREIGN KEY (registrado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+                    INDEX idx_abonos_cliente_fecha (cliente_id, fecha_grupo)
+                )";
+        $this->conn->exec($sql);
     }
 
     public function obtenerClienteIdPorUsuario(int $usuarioId): ?int
@@ -106,6 +125,70 @@ class FacturacionModels
             ':mostrar_al_mensajero' => $mostrarAlMensajero ? 1 : 0,
             ':paquete_id' => $paqueteId,
         ]);
+    }
+
+    public function registrarAbonoCliente(
+        int $clienteId,
+        string $fechaGrupo,
+        float $monto,
+        string $metodoPago,
+        ?string $observaciones,
+        ?int $registradoPor
+    ): bool {
+        $sql = "INSERT INTO facturacion_abonos_cliente (
+                    cliente_id, fecha_grupo, monto, metodo_pago, observaciones, registrado_por
+                ) VALUES (
+                    :cliente_id, :fecha_grupo, :monto, :metodo_pago, :observaciones, :registrado_por
+                )";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':cliente_id' => $clienteId,
+            ':fecha_grupo' => $fechaGrupo,
+            ':monto' => $monto,
+            ':metodo_pago' => $metodoPago,
+            ':observaciones' => $observaciones,
+            ':registrado_por' => $registradoPor,
+        ]);
+    }
+
+    private function obtenerAbonosCliente(?int $clienteId = null): array
+    {
+        $params = [];
+        $where = '';
+
+        if ($clienteId !== null) {
+            $where = 'WHERE a.cliente_id = :cliente_id';
+            $params[':cliente_id'] = $clienteId;
+        }
+
+        $sql = "SELECT
+                    a.id,
+                    a.cliente_id,
+                    a.fecha_grupo,
+                    a.monto,
+                    a.metodo_pago,
+                    a.observaciones,
+                    a.fecha_registro,
+                    CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, '')) AS registrado_por_nombre
+                FROM facturacion_abonos_cliente a
+                LEFT JOIN usuarios u ON u.id = a.registrado_por
+                {$where}
+                ORDER BY a.fecha_grupo DESC, a.fecha_registro DESC, a.id DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+
+        return array_map(function ($row) {
+            return [
+                'id' => (int) $row['id'],
+                'cliente_id' => (int) $row['cliente_id'],
+                'fecha_grupo' => $row['fecha_grupo'],
+                'monto' => (float) $row['monto'],
+                'metodo_pago' => $row['metodo_pago'],
+                'observaciones' => $row['observaciones'],
+                'fecha_registro' => $row['fecha_registro'],
+                'registrado_por_nombre' => trim((string) $row['registrado_por_nombre']),
+            ];
+        }, $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     private function obtenerResumenClientes(?int $clienteId = null): array
@@ -257,6 +340,7 @@ class FacturacionModels
         return [
             'summary' => $this->normalizarResumen($totales),
             'items' => $items,
+            'abonos' => $this->obtenerAbonosCliente($clienteId),
         ];
     }
 

@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
             mensajero: { q: '', estado: '', desde: '', hasta: '' }
         },
         clienteGroups: [],
-        selectedClienteGroupKey: null
+        selectedClienteGroupKey: null,
+        activeClientModalView: 'detail'
     };
 
     const money = (value) => new Intl.NumberFormat('es-CO', {
@@ -38,6 +39,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const normalizeText = (value) => String(value || '').trim().toLowerCase();
 
     const getRecaudoRealValue = (item) => Number(item?.valor_recaudo_real || 0);
+
+    const getClienteAbonos = () => {
+        const abonos = state.rawData?.cliente?.abonos;
+        return Array.isArray(abonos) ? abonos : [];
+    };
+
+    const getGroupAbonos = (clienteId, fechaGrupo) => getClienteAbonos()
+        .filter((abono) => Number(abono.cliente_id) === Number(clienteId) && String(abono.fecha_grupo) === String(fechaGrupo));
+
+    const getGroupAbonoTotal = (clienteId, fechaGrupo) => getGroupAbonos(clienteId, fechaGrupo)
+        .reduce((sum, abono) => sum + Number(abono.monto || 0), 0);
 
     const clientDisplayName = (item) => {
         const contact = normalizeText(item.cliente_contacto) ? String(item.cliente_contacto).trim() : '';
@@ -140,6 +152,19 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
+    const buildClienteSummaryFromGroups = (baseSummary, groups) => {
+        const totalsByClient = new Map();
+
+        groups.forEach((group) => {
+            totalsByClient.set(group.clientKey, Number(group.totalAcumulado || 0));
+        });
+
+        return {
+            ...baseSummary,
+            saldo_actual: Array.from(totalsByClient.values()).reduce((sum, value) => sum + value, 0)
+        };
+    };
+
     const buildClienteGroups = (items) => {
         const filtered = items.filter((item) => matchesFilter(item, 'cliente'));
         const groupsMap = new Map();
@@ -155,8 +180,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 groupsMap.set(groupKey, {
                     key: groupKey,
                     dateKey,
+                    clientKey,
                     fechaLabel: shortDate(baseDate),
                     clienteNombre: displayName,
+                    clienteId: Number(item.cliente_id || 0),
                     paquetesEntregados: 0,
                     totalServicio: 0,
                     totalRecaudado: 0,
@@ -181,15 +208,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const groups = Array.from(groupsMap.values())
             .map((group) => {
-                const abono = Math.min(group.totalRecaudado, group.totalServicio);
-                const balance = group.totalRecaudado - group.totalServicio;
-                const saldo = Math.abs(balance);
+                const abonos = getGroupAbonos(group.clienteId, group.dateKey);
+                const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
+                const saldo = Math.max(group.totalServicio - abono, 0);
                 return {
                     ...group,
+                    abonos,
                     abono,
-                    balance,
+                    balance: saldo,
                     saldo,
-                    estado: group.paquetesEntregados > 0 && balance >= 0 ? 'pagado' : 'pendiente'
+                    estado: saldo <= 0 ? 'pagado' : 'pendiente'
                 };
             })
             .sort((a, b) => {
@@ -199,11 +227,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 return b.dateKey.localeCompare(a.dateKey);
             });
 
-        let runningTotal = 0;
-        groups.forEach((group) => {
-            runningTotal += group.balance;
-            group.totalAcumulado = Math.abs(runningTotal);
-            group.totalAcumuladoEstado = runningTotal >= 0 ? 'pagado' : 'pendiente';
+        const runningTotalsByClient = new Map();
+        const groupsAsc = [...groups].sort((a, b) => {
+            if (a.clientKey === b.clientKey) {
+                if (a.dateKey === b.dateKey) return a.key.localeCompare(b.key, 'es', { sensitivity: 'base' });
+                return a.dateKey.localeCompare(b.dateKey);
+            }
+            return a.clientKey.localeCompare(b.clientKey, 'es', { sensitivity: 'base' });
+        });
+
+        groupsAsc.forEach((group) => {
+            const previous = Number(runningTotalsByClient.get(group.clientKey) || 0);
+            const current = Math.max(previous + Number(group.totalServicio || 0) - Number(group.abono || 0), 0);
+            runningTotalsByClient.set(group.clientKey, current);
+            group.totalAcumulado = current;
+            group.totalAcumuladoEstado = current <= 0 ? 'pagado' : 'pendiente';
+            group.estado = current <= 0 ? 'pagado' : 'pendiente';
         });
 
         return groups;
@@ -246,14 +285,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="amount-cell ${amountCellClass(group.estado)}">${money(group.saldo)}</td>
                 <td class="amount-cell ${amountCellClass(group.totalAcumuladoEstado)}">${money(group.totalAcumulado)}</td>
                 <td>
-                    <button
-                        type="button"
-                        class="fact-btn tertiary detail-trigger"
-                        data-role="open-client-detail"
-                        data-group-key="${escapeHtml(group.key)}"
-                    >
-                        Ver paquetes
-                    </button>
+                    <div class="table-tools">
+                        <button
+                            type="button"
+                            class="fact-btn tertiary detail-trigger"
+                            data-role="open-client-detail"
+                            data-group-key="${escapeHtml(group.key)}"
+                        >
+                            Ver paquetes
+                        </button>
+                        ${mode === 'admin' ? `
+                            <button
+                                type="button"
+                                class="fact-btn secondary detail-trigger"
+                                data-role="open-client-abono"
+                                data-group-key="${escapeHtml(group.key)}"
+                            >
+                                Registrar abono
+                            </button>
+                        ` : ''}
+                    </div>
                 </td>
             </tr>
         `).join('');
@@ -309,8 +360,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!state.rawData) return;
 
         if (state.rawData.cliente) {
-            renderSummary(state.rawData.cliente.summary, 'cliente');
             renderClienteTable(state.rawData.cliente.items);
+            renderSummary(buildClienteSummaryFromGroups(state.rawData.cliente.summary, state.clienteGroups), 'cliente');
         }
 
         if (state.rawData.mensajero) {
@@ -408,12 +459,38 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
     };
 
+    const saveClientAbono = async (form) => {
+        const formData = new FormData();
+        formData.append('action', 'registrar_abono_cliente');
+        formData.append('cliente_id', form.cliente_id.value);
+        formData.append('fecha_grupo', form.fecha_grupo.value);
+        formData.append('monto', form.monto.value);
+        formData.append('metodo_pago', form.metodo_pago.value);
+        formData.append('observaciones', form.observaciones.value || '');
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.message || 'No se pudo registrar el abono.');
+        }
+
+        state.rawData = result.data;
+        render();
+        if (state.selectedClienteGroupKey) {
+            openClientAbonoModal(state.selectedClienteGroupKey);
+        }
+    };
+
     const getClienteGroupByKey = (groupKey) => state.clienteGroups.find((group) => group.key === groupKey) || null;
 
     const renderPackageCard = (item) => {
         const recaudoReal = getRecaudoRealValue(item);
-        const abono = Math.min(recaudoReal, Number(item.valor_envio || 0));
-        const saldo = Math.abs(recaudoReal - Number(item.valor_envio || 0));
+        const saldo = Math.max(Number(item.valor_envio || 0), 0);
         return `
             <article class="package-card">
                 <div class="package-card-head">
@@ -437,10 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <strong>${money(recaudoReal)}</strong>
                     </div>
                     <div class="package-data">
-                        <span class="package-label">Abono</span>
-                        <strong>${money(abono)}</strong>
-                    </div>
-                    <div class="package-data">
                         <span class="package-label">Saldo</span>
                         <strong>${money(saldo)}</strong>
                     </div>
@@ -457,6 +530,43 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
+    const renderAbonoHistory = (group) => {
+        if (!group.abonos.length) {
+            return '<div class="empty-state">Aun no hay abonos registrados para este dia.</div>';
+        }
+
+        return `
+            <div class="package-list">
+                ${group.abonos.map((abono) => `
+                    <article class="package-card">
+                        <div class="package-card-grid">
+                            <div class="package-data">
+                                <span class="package-label">Monto</span>
+                                <strong>${money(abono.monto)}</strong>
+                            </div>
+                            <div class="package-data">
+                                <span class="package-label">Metodo</span>
+                                <strong>${escapeHtml(abono.metodo_pago)}</strong>
+                            </div>
+                            <div class="package-data">
+                                <span class="package-label">Fecha de registro</span>
+                                <strong>${shortDate(abono.fecha_registro)}</strong>
+                            </div>
+                            <div class="package-data">
+                                <span class="package-label">Registrado por</span>
+                                <strong>${escapeHtml(abono.registrado_por_nombre || 'Sistema')}</strong>
+                            </div>
+                            <div class="package-data package-full">
+                                <span class="package-label">Observaciones</span>
+                                <strong>${escapeHtml(abono.observaciones || 'Sin observaciones')}</strong>
+                            </div>
+                        </div>
+                    </article>
+                `).join('')}
+            </div>
+        `;
+    };
+
     const openClientDetailModal = (groupKey) => {
         const group = getClienteGroupByKey(groupKey);
         const modal = document.getElementById('facturacionDetailModal');
@@ -469,8 +579,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         state.selectedClienteGroupKey = groupKey;
+        state.activeClientModalView = 'detail';
         title.textContent = `${group.clienteNombre} - ${group.fechaLabel}`;
-        subtitle.textContent = `${group.paquetesEntregados} entregado(s) | Servicio ${money(group.totalServicio)} | Recaudo ${money(group.totalRecaudado)} | Abono ${money(group.abono)} | Saldo ${money(group.saldo)}`;
+        subtitle.textContent = `${group.paquetesEntregados} entregado(s) | Servicio ${money(group.totalServicio)} | Recaudo ${money(group.totalRecaudado)} | Abono ${money(group.abono)} | Saldo ${money(group.saldo)} | Total ${money(group.totalAcumulado)}`;
 
         body.innerHTML = `
             <div class="detail-summary-strip">
@@ -483,6 +594,63 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="package-list">
                 ${group.packages.map(renderPackageCard).join('')}
             </div>
+        `;
+
+        modal.classList.remove('modal-hidden');
+        modal.setAttribute('aria-hidden', 'false');
+    };
+
+    const openClientAbonoModal = (groupKey) => {
+        const group = getClienteGroupByKey(groupKey);
+        const modal = document.getElementById('facturacionDetailModal');
+        const title = document.getElementById('facturacionDetailTitle');
+        const subtitle = document.getElementById('facturacionDetailSubtitle');
+        const body = document.getElementById('facturacionDetailBody');
+
+        if (!group || !modal || !title || !subtitle || !body) {
+            return;
+        }
+
+        state.selectedClienteGroupKey = groupKey;
+        state.activeClientModalView = 'abono';
+        title.textContent = `Registrar abono - ${group.clienteNombre}`;
+        subtitle.textContent = `Fecha ${group.fechaLabel} | Servicio ${money(group.totalServicio)} | Abonado ${money(group.abono)} | Total pendiente ${money(group.totalAcumulado)}`;
+
+        body.innerHTML = `
+            <div class="detail-summary-strip">
+                <div><span>Total servicio</span><strong>${money(group.totalServicio)}</strong></div>
+                <div><span>Total recaudado</span><strong>${money(group.totalRecaudado)}</strong></div>
+                <div><span>Abonado</span><strong>${money(group.abono)}</strong></div>
+                <div><span>Saldo del dia</span><strong>${money(group.saldo)}</strong></div>
+                <div><span>Total acumulado</span><strong>${money(group.totalAcumulado)}</strong></div>
+            </div>
+            <form id="clienteAbonoForm" class="facturacion-abono-form">
+                <input type="hidden" name="cliente_id" value="${group.clienteId}">
+                <input type="hidden" name="fecha_grupo" value="${escapeHtml(group.dateKey)}">
+                <div class="facturacion-abono-grid">
+                    <label class="facturacion-field">
+                        <span>Monto del abono</span>
+                        <input type="number" name="monto" min="1" step="100" placeholder="100000" required>
+                    </label>
+                    <label class="facturacion-field">
+                        <span>Metodo de pago</span>
+                        <select name="metodo_pago" required>
+                            <option value="efectivo">Efectivo</option>
+                            <option value="transferencia">Transferencia</option>
+                        </select>
+                    </label>
+                    <label class="facturacion-field facturacion-field-full">
+                        <span>Observaciones</span>
+                        <textarea name="observaciones" rows="3" placeholder="Detalle del abono"></textarea>
+                    </label>
+                </div>
+                <div class="facturacion-abono-actions">
+                    <button type="submit" class="fact-btn primary" data-role="submit-client-abono">Guardar abono</button>
+                    <button type="button" class="fact-btn tertiary" data-role="open-client-detail" data-group-key="${escapeHtml(group.key)}">Ver paquetes entregados</button>
+                </div>
+            </form>
+            <div class="facturacion-footnote">Historial de abonos registrados para este cliente en esta fecha.</div>
+            ${renderAbonoHistory(group)}
         `;
 
         modal.classList.remove('modal-hidden');
@@ -503,6 +671,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const detailButton = event.target.closest('[data-role="open-client-detail"]');
             if (detailButton) {
                 openClientDetailModal(detailButton.dataset.groupKey);
+                return;
+            }
+
+            const abonoButton = event.target.closest('[data-role="open-client-abono"]');
+            if (abonoButton) {
+                openClientAbonoModal(abonoButton.dataset.groupKey);
                 return;
             }
 
@@ -535,6 +709,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     button.disabled = false;
                 }, 1200);
                 alert(error.message);
+            }
+        });
+
+        document.addEventListener('submit', async (event) => {
+            const form = event.target.closest('#clienteAbonoForm');
+            if (!form) return;
+
+            event.preventDefault();
+            const submitButton = form.querySelector('[data-role="submit-client-abono"]');
+            const originalText = submitButton ? submitButton.textContent : 'Guardar abono';
+            if (submitButton) {
+                submitButton.textContent = 'Guardando...';
+                submitButton.disabled = true;
+            }
+
+            try {
+                await saveClientAbono(form);
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                if (submitButton) {
+                    submitButton.textContent = originalText;
+                    submitButton.disabled = false;
+                }
             }
         });
 

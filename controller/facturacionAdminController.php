@@ -24,7 +24,7 @@ try {
         $mostrarAlMensajero = (int) ($_POST['mostrar_al_mensajero'] ?? 0) === 1;
 
         if ($paqueteId <= 0) {
-            throw new InvalidArgumentException('Paquete inválido.');
+            throw new InvalidArgumentException('Paquete invalido.');
         }
 
         if ($valorPago < 0) {
@@ -41,7 +41,48 @@ try {
         exit;
     }
 
-    throw new InvalidArgumentException('Acción no válida.');
+    if ($method === 'POST' && $action === 'registrar_abono_cliente') {
+        $clienteId = (int) ($_POST['cliente_id'] ?? 0);
+        $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+        $monto = (float) ($_POST['monto'] ?? 0);
+        $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
+        $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
+        $registradoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+
+        if ($clienteId <= 0) {
+            throw new InvalidArgumentException('Cliente invalido.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+            throw new InvalidArgumentException('La fecha del abono no es valida.');
+        }
+
+        if ($monto <= 0) {
+            throw new InvalidArgumentException('El abono debe ser mayor a cero.');
+        }
+
+        if (!in_array($metodoPago, ['efectivo', 'transferencia'], true)) {
+            throw new InvalidArgumentException('Metodo de pago invalido.');
+        }
+
+        $model->registrarAbonoCliente(
+            $clienteId,
+            $fechaGrupo,
+            $monto,
+            $metodoPago,
+            $observaciones !== '' ? $observaciones : null,
+            $registradoPor
+        );
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Abono registrado correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
+    throw new InvalidArgumentException('Accion no valida.');
 } catch (Throwable $e) {
     http_response_code(400);
     echo json_encode([
