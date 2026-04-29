@@ -893,3 +893,73 @@ function showNotification(message, type = 'info') {
     setTimeout(() => notification.remove(), 4000);
 }
 
+function getAdminControllerUrl() {
+    return '../../controller/a\u00f1adirAdminController.php';
+}
+
+function manejarClickTablaClientes(event) {
+    const button = event.target.closest('.btn-ver-cliente');
+    if (!button) return;
+
+    const clienteId = Number(button.dataset.clienteId || 0);
+    if (!clienteId) return;
+
+    verDetallesCliente(clienteId);
+}
+
+// Reemplazo defensivo para evitar errores de carga por nombres de archivo con "ñ"
+loadInitialData = async function() {
+    try {
+        const controllerUrl = getAdminControllerUrl();
+
+        const respAdmins = await fetch(`${controllerUrl}?action=listar_admins`);
+        const dataAdmins = await respAdmins.json();
+        if (dataAdmins.success) {
+            administradores = Array.isArray(dataAdmins.data) ? dataAdmins.data : [];
+            renderAdministradores();
+        } else {
+            administradores = [];
+            renderAdministradores();
+            console.error('Error admins:', dataAdmins.message);
+        }
+
+        const respMensajeros = await fetch(`${controllerUrl}?action=listar_mensajeros`);
+        const dataMensajeros = await respMensajeros.json();
+        if (dataMensajeros.success) {
+            mensajeros = Array.isArray(dataMensajeros.data) ? dataMensajeros.data : [];
+            renderMensajeros();
+        } else {
+            mensajeros = [];
+            renderMensajeros();
+            console.error('Error mensajeros:', dataMensajeros.message);
+        }
+
+        const respClientes = await fetch(`${controllerUrl}?action=listar_clientes`);
+        const dataClientes = await respClientes.json();
+        if (dataClientes.success) {
+            clientes = Array.isArray(dataClientes.data) ? dataClientes.data : [];
+            renderClientes();
+        } else {
+            clientes = [];
+            renderClientes();
+            console.error('Error clientes:', dataClientes.message);
+        }
+
+        logs = administradores.length > 0 ? generateMockLogs() : [];
+        solicitudesPendientes = generateMockSolicitudes();
+
+        actualizarEstadisticas();
+        cargarUsuariosEnFiltros();
+    } catch (error) {
+        console.error('Error al cargar datos:', error);
+        administradores = [];
+        mensajeros = [];
+        clientes = [];
+        renderAdministradores();
+        renderMensajeros();
+        renderClientes();
+        actualizarEstadisticas();
+        showNotification('Error al cargar los datos', 'error');
+    }
+};
+

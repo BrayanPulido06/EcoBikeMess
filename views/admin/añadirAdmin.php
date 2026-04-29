@@ -503,7 +503,10 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 document.body.style.overflow = 'hidden';
 
                 try {
-                    const response = await fetch(`../../controller/aÃ±adirAdminController.php?action=detalle_cliente&id=${encodeURIComponent(id)}`);
+                    const controllerUrl = (typeof getAdminControllerUrl === 'function')
+                        ? getAdminControllerUrl()
+                        : '../../controller/a\u00f1adirAdminController.php';
+                    const response = await fetch(`${controllerUrl}?action=detalle_cliente&id=${encodeURIComponent(id)}`);
                     const result = await response.json();
 
                     if (!result.success || !result.data) {
