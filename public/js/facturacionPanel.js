@@ -18,12 +18,19 @@ document.addEventListener('DOMContentLoaded', () => {
         activeClientModalView: 'detail'
     };
 
-    const money = (value) => new Intl.NumberFormat('es-CO', {
-        style: 'currency',
-        currency: 'COP',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-    }).format(Number(value || 0));
+    const formatCurrencyNumber = (value) => {
+        const amount = Math.round(Number(value || 0));
+        return Number.isFinite(amount)
+            ? amount.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+            : '0';
+    };
+
+    const money = (value) => `$ ${formatCurrencyNumber(value)}`;
+
+    const parseCurrencyInput = (value) => {
+        const digits = String(value || '').replace(/[^\d]/g, '');
+        return digits ? Number(digits) : 0;
+    };
 
     const shortDate = (value) => {
         if (!value) return 'Sin fecha';
@@ -486,6 +493,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const syncCurrencyInput = (input) => {
+        if (!input) return;
+
+        const hiddenInput = input.form ? input.form.querySelector('input[name="monto"]') : null;
+        const amount = parseCurrencyInput(input.value);
+
+        if (hiddenInput) {
+            hiddenInput.value = amount > 0 ? String(amount) : '';
+        }
+
+        input.value = amount > 0 ? money(amount) : '';
+    };
+
     const getClienteGroupByKey = (groupKey) => state.clienteGroups.find((group) => group.key === groupKey) || null;
 
     const renderPackageCard = (item) => {
@@ -630,7 +650,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="facturacion-abono-grid">
                     <label class="facturacion-field">
                         <span>Monto del abono</span>
-                        <input type="number" name="monto" min="1" step="100" placeholder="100000" required>
+                        <input type="hidden" name="monto" value="" required>
+                        <input type="text" name="monto_display" inputmode="numeric" autocomplete="off" placeholder="$ 100.000" required>
                     </label>
                     <label class="facturacion-field">
                         <span>Metodo de pago</span>
@@ -717,6 +738,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!form) return;
 
             event.preventDefault();
+            const amountDisplayInput = form.querySelector('input[name="monto_display"]');
+            if (amountDisplayInput) {
+                syncCurrencyInput(amountDisplayInput);
+            }
+
+            if (!form.monto.value || Number(form.monto.value) <= 0) {
+                alert('Ingresa un monto de abono valido.');
+                return;
+            }
+
             const submitButton = form.querySelector('[data-role="submit-client-abono"]');
             const originalText = submitButton ? submitButton.textContent : 'Guardar abono';
             if (submitButton) {
@@ -744,6 +775,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+
+        document.addEventListener('input', (event) => {
+            const input = event.target.closest('input[name="monto_display"]');
+            if (!input) return;
+
+            const hiddenInput = input.form ? input.form.querySelector('input[name="monto"]') : null;
+            const amount = parseCurrencyInput(input.value);
+
+            if (hiddenInput) {
+                hiddenInput.value = amount > 0 ? String(amount) : '';
+            }
+        });
+
+        document.addEventListener('blur', (event) => {
+            const input = event.target.closest('input[name="monto_display"]');
+            if (!input) return;
+            syncCurrencyInput(input);
+        }, true);
+
+        document.addEventListener('focus', (event) => {
+            const input = event.target.closest('input[name="monto_display"]');
+            if (!input) return;
+
+            const hiddenInput = input.form ? input.form.querySelector('input[name="monto"]') : null;
+            const amount = hiddenInput ? Number(hiddenInput.value || 0) : parseCurrencyInput(input.value);
+            input.value = amount > 0 ? String(amount) : '';
+        }, true);
     };
 
     document.addEventListener('keydown', (event) => {
