@@ -37,6 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const normalizeText = (value) => String(value || '').trim().toLowerCase();
 
+    const getRecaudoRealValue = (item) => Number(item?.valor_recaudo_real || 0);
+
     const clientDisplayName = (item) => {
         const contact = normalizeText(item.cliente_contacto) ? String(item.cliente_contacto).trim() : '';
         const business = normalizeText(item.cliente_nombre) ? String(item.cliente_nombre).trim() : '';
@@ -171,9 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item.estado === 'entregado') {
                 group.paquetesEntregados += 1;
                 group.totalServicio += Number(item.valor_envio || 0);
-                group.totalRecaudado += Number(item.valor_recaudo_real || 0);
+                group.totalRecaudado += getRecaudoRealValue(item);
+                group.packages.push(item);
             }
-            group.packages.push(item);
             group.statuses.add(item.estado || 'pendiente');
         });
 
@@ -409,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const getClienteGroupByKey = (groupKey) => state.clienteGroups.find((group) => group.key === groupKey) || null;
 
     const renderPackageCard = (item) => {
-        const recaudoReal = Number(item.valor_recaudo_real || 0);
+        const recaudoReal = getRecaudoRealValue(item);
         const abono = Math.min(recaudoReal, Number(item.valor_envio || 0));
         const saldo = Math.abs(recaudoReal - Number(item.valor_envio || 0));
         return `
