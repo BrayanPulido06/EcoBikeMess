@@ -473,5 +473,123 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         };
     </script>
     <script src="../../public/js/añadirAdmin.js"></script>
+    <script>
+        (function() {
+            function escapeHtml(value) {
+                return String(value ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function formatMoney(value) {
+                const number = Number(value || 0);
+                return new Intl.NumberFormat('es-CO', {
+                    style: 'currency',
+                    currency: 'COP',
+                    minimumFractionDigits: 0
+                }).format(number);
+            }
+
+            window.verDetallesCliente = async function(id) {
+                const modal = document.getElementById('modalCliente');
+                const container = document.getElementById('detallesCliente');
+                if (!modal || !container) return;
+
+                container.innerHTML = '<p style="text-align:center; padding:24px;">Cargando informacion del cliente...</p>';
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+
+                try {
+                    const response = await fetch(`../../controller/aÃ±adirAdminController.php?action=detalle_cliente&id=${encodeURIComponent(id)}`);
+                    const result = await response.json();
+
+                    if (!result.success || !result.data) {
+                        container.innerHTML = '<p style="text-align:center; padding:24px;">No fue posible cargar la informacion del cliente.</p>';
+                        return;
+                    }
+
+                    const cliente = result.data;
+                    const estado = String(cliente.estado || '').toLowerCase();
+                    const fecha = (typeof formatDate === 'function')
+                        ? formatDate(cliente.fechaRegistro)
+                        : (cliente.fechaRegistro || 'No registrada');
+
+                    container.innerHTML = `
+                        <div class="mensajero-detail-section">
+                            <h3>Informacion del Cliente</h3>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">ID Cliente</div>
+                                    <div class="detail-value">C${String(cliente.id).padStart(3, '0')}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Emprendimiento</div>
+                                    <div class="detail-value">${escapeHtml(cliente.emprendimiento || 'No registrado')}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Tipo de producto</div>
+                                    <div class="detail-value">${escapeHtml(cliente.tipoProducto || 'No registrado')}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Estado</div>
+                                    <div class="detail-value"><span class="status-badge status-${estado}">${estado === 'activo' ? 'Activo' : 'Inactivo'}</span></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Fecha de registro</div>
+                                    <div class="detail-value">${escapeHtml(fecha)}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mensajero-detail-section">
+                            <h3>Informacion de Contacto</h3>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">Nombre de contacto</div>
+                                    <div class="detail-value">${escapeHtml(cliente.nombreContacto || 'No registrado')}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Telefono</div>
+                                    <div class="detail-value">${escapeHtml(cliente.telefono || 'No registrado')}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Correo</div>
+                                    <div class="detail-value">${escapeHtml(cliente.email || 'No registrado')}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Instagram</div>
+                                    <div class="detail-value">${escapeHtml(cliente.instagram || 'No registrado')}</div>
+                                </div>
+                                <div class="detail-item" style="grid-column: span 2;">
+                                    <div class="detail-label">Direccion principal</div>
+                                    <div class="detail-value">${escapeHtml(cliente.direccion || 'No registrada')}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mensajero-detail-section">
+                            <h3>Informacion Comercial</h3>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">Saldo pendiente</div>
+                                    <div class="detail-value">${formatMoney(cliente.saldoPendiente)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Limite de credito</div>
+                                    <div class="detail-value">${formatMoney(cliente.limiteCredito)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('Error cargando detalle del cliente:', error);
+                    container.innerHTML = '<p style="text-align:center; padding:24px;">Ocurrio un error al cargar la informacion del cliente.</p>';
+                }
+            };
+        })();
+    </script>
 </body>
 </html>

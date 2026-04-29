@@ -157,6 +157,9 @@ class AñadirAdminModel {
         $sql = "SELECT c.id, c.nombre_emprendimiento as emprendimiento, 
                        CONCAT(u.nombres, ' ', u.apellidos) as nombreContacto,
                        u.telefono, u.correo as email, c.direccion_principal as direccion,
+                       c.tipo_producto as tipoProducto, c.instagram,
+                       c.saldo_pendiente as saldoPendiente,
+                       c.limite_credito as limiteCredito,
                        u.estado, c.fecha_registro as fechaRegistro
                 FROM clientes c
                 INNER JOIN usuarios u ON c.usuario_id = u.id
@@ -164,6 +167,28 @@ class AñadirAdminModel {
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getClienteById($id) {
+        $sql = "SELECT c.id, c.usuario_id,
+                       c.nombre_emprendimiento as emprendimiento,
+                       CONCAT(u.nombres, ' ', u.apellidos) as nombreContacto,
+                       u.nombres, u.apellidos,
+                       u.telefono, u.correo as email,
+                       c.direccion_principal as direccion,
+                       c.tipo_producto as tipoProducto,
+                       c.instagram,
+                       c.saldo_pendiente as saldoPendiente,
+                       c.limite_credito as limiteCredito,
+                       u.estado,
+                       c.fecha_registro as fechaRegistro
+                FROM clientes c
+                INNER JOIN usuarios u ON c.usuario_id = u.id
+                WHERE c.id = :id
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }
 ?>

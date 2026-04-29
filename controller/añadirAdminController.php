@@ -56,6 +56,20 @@ try {
             echo json_encode(['success' => true, 'data' => $data]);
             break;
 
+        case 'detalle_cliente':
+            $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+            if ($id <= 0) {
+                throw new Exception("ID de cliente invalido");
+            }
+
+            $cliente = $model->getClienteById($id);
+            if (!$cliente) {
+                throw new Exception("Cliente no encontrado");
+            }
+
+            echo json_encode(['success' => true, 'data' => $cliente]);
+            break;
+
         // --- ACCIONES ADMINISTRADOR ---
         case 'guardar_admin':
             $id = $_POST['id'] ?? null;

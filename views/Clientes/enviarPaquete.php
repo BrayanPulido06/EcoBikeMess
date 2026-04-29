@@ -332,7 +332,7 @@ $remitente_data = [
                 <div class="form-step active" data-step="1">
                     <div class="card">
                         <div class="card-header">
-                            <h2>📤 Datos del Remitente</h2>
+                            <h2>📤 Datos de Recolección</h2>
                             <div style="display: flex; gap: 10px; align-items: center;">
                                 <button type="button" class="btn-text" id="autoFillRemitente">
                                     Usar mis datos

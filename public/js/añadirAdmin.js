@@ -69,6 +69,7 @@ function setupEventListeners() {
     // Clientes
     document.getElementById('searchCliente')?.addEventListener('input', filtrarClientes);
     document.getElementById('btnReporteClientes')?.addEventListener('click', () => alert('Funcionalidad de reporte en desarrollo'));
+    document.getElementById('tablaClientesBody')?.addEventListener('click', manejarClickTablaClientes);
 
     // Reset Password
     document.getElementById('btnCerrarModalReset').addEventListener('click', () => closeModal('modalResetPassword'));
