@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedClienteGroupKey: null,
         activeClientModalView: 'detail'
     };
+    const hiddenClientGroupsStorageKey = 'facturacionAdminHiddenClientGroups';
 
     const formatCurrencyNumber = (value) => {
         const amount = Math.round(Number(value || 0));
@@ -46,6 +47,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const normalizeText = (value) => String(value || '').trim().toLowerCase();
 
     const getRecaudoRealValue = (item) => Number(item?.valor_recaudo_real || 0);
+
+    const getHiddenClientGroups = () => {
+        if (mode !== 'admin') {
+            return new Set();
+        }
+
+        try {
+            const saved = window.localStorage.getItem(hiddenClientGroupsStorageKey);
+            const parsed = saved ? JSON.parse(saved) : [];
+            return new Set(Array.isArray(parsed) ? parsed : []);
+        } catch (error) {
+            return new Set();
+        }
+    };
+
+    const saveHiddenClientGroups = (groups) => {
+        if (mode !== 'admin') {
+            return;
+        }
+
+        window.localStorage.setItem(hiddenClientGroupsStorageKey, JSON.stringify(Array.from(groups)));
+    };
+
+    const hideClientGroup = (groupKey) => {
+        if (!groupKey || mode !== 'admin') {
+            return;
+        }
+
+        const hiddenGroups = getHiddenClientGroups();
+        hiddenGroups.add(groupKey);
+        saveHiddenClientGroups(hiddenGroups);
+    };
 
     const getClienteAbonos = () => {
         const abonos = state.rawData?.cliente?.abonos;
@@ -213,6 +246,8 @@ document.addEventListener('DOMContentLoaded', () => {
             group.statuses.add(item.estado || 'pendiente');
         });
 
+        const hiddenGroups = getHiddenClientGroups();
+
         const groups = Array.from(groupsMap.values())
             .map((group) => {
                 const abonos = getGroupAbonos(group.clienteId, group.dateKey);
@@ -227,6 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     estado: saldo <= 0 ? 'pagado' : 'pendiente'
                 };
             })
+            .filter((group) => !hiddenGroups.has(group.key))
             .sort((a, b) => {
                 if (a.dateKey === b.dateKey) {
                     return a.clienteNombre.localeCompare(b.clienteNombre, 'es', { sensitivity: 'base' });
@@ -309,6 +345,16 @@ document.addEventListener('DOMContentLoaded', () => {
                                 data-group-key="${escapeHtml(group.key)}"
                             >
                                 Registrar abono
+                            </button>
+                            <button
+                                type="button"
+                                class="fact-btn danger detail-trigger"
+                                data-role="hide-client-group"
+                                data-group-key="${escapeHtml(group.key)}"
+                                data-client-name="${escapeHtml(group.clienteNombre)}"
+                                data-date-label="${escapeHtml(group.fechaLabel)}"
+                            >
+                                Eliminar del dia
                             </button>
                         ` : ''}
                     </div>
@@ -611,6 +657,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><span>Estado</span><strong>${group.estado === 'pagado' ? 'Pagado' : 'Pendiente'}</strong></div>
                 <div><span>Total acumulado</span><strong>${money(group.totalAcumulado)}</strong></div>
             </div>
+            ${mode === 'admin' ? `
+                <div class="facturacion-abono-actions">
+                    <button
+                        type="button"
+                        class="fact-btn danger"
+                        data-role="hide-client-group"
+                        data-group-key="${escapeHtml(group.key)}"
+                        data-client-name="${escapeHtml(group.clienteNombre)}"
+                        data-date-label="${escapeHtml(group.fechaLabel)}"
+                    >
+                        Eliminar esta cuenta del dia
+                    </button>
+                </div>
+            ` : ''}
             <div class="package-list">
                 ${group.packages.map(renderPackageCard).join('')}
             </div>
@@ -687,6 +747,25 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedClienteGroupKey = null;
     };
 
+    const handleHideClientGroup = (button) => {
+        const groupKey = button?.dataset.groupKey;
+        const clientName = button?.dataset.clientName || 'este cliente';
+        const dateLabel = button?.dataset.dateLabel || 'la fecha seleccionada';
+
+        if (!groupKey || mode !== 'admin') {
+            return;
+        }
+
+        const confirmed = window.confirm(`Se ocultara de la vista la cuenta de ${clientName} del ${dateLabel}. Esta accion no elimina nada de la base de datos. Deseas continuar?`);
+        if (!confirmed) {
+            return;
+        }
+
+        hideClientGroup(groupKey);
+        closeClientDetailModal();
+        render();
+    };
+
     const bindAdminActions = () => {
         document.addEventListener('click', async (event) => {
             const detailButton = event.target.closest('[data-role="open-client-detail"]');
@@ -698,6 +777,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const abonoButton = event.target.closest('[data-role="open-client-abono"]');
             if (abonoButton) {
                 openClientAbonoModal(abonoButton.dataset.groupKey);
+                return;
+            }
+
+            const hideButton = event.target.closest('[data-role="hide-client-group"]');
+            if (hideButton) {
+                handleHideClientGroup(hideButton);
                 return;
             }
 

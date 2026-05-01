@@ -194,6 +194,12 @@
     border: 1px solid #cde8d4;
 }
 
+.fact-btn.danger {
+    background: #fdecef;
+    color: var(--fact-danger);
+    border: 1px solid #f6c7d1;
+}
+
 .facturacion-table-wrap {
     overflow-x: auto;
 }
