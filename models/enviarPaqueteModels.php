@@ -6,6 +6,37 @@ class EnvioModel {
 
     public function __construct() {
         $this->conn = conexionDB();
+        $this->ensureAdditionalColumns();
+    }
+
+    private function columnExists(string $table, string $column): bool
+    {
+        try {
+            $stmt = $this->conn->prepare("SHOW COLUMNS FROM {$table} LIKE :column");
+            $stmt->execute([':column' => $column]);
+            return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    private function ensureAdditionalColumns(): void
+    {
+        $columns = [
+            'envio_mismo_dia' => "ALTER TABLE paquetes ADD COLUMN envio_mismo_dia TINYINT(1) NOT NULL DEFAULT 0 AFTER dimensiones",
+            'zona_periferica' => "ALTER TABLE paquetes ADD COLUMN zona_periferica TINYINT(1) NOT NULL DEFAULT 0 AFTER envio_mismo_dia",
+            'recoger_cambios' => "ALTER TABLE paquetes ADD COLUMN recoger_cambios TINYINT(1) NOT NULL DEFAULT 0 AFTER zona_periferica"
+        ];
+
+        foreach ($columns as $column => $sql) {
+            if (!$this->columnExists('paquetes', $column)) {
+                try {
+                    $this->conn->exec($sql);
+                } catch (Throwable $e) {
+                    // No bloqueamos el registro si la alteración falla.
+                }
+            }
+        }
     }
 
     // Verificar si el número de guía ya existe para evitar duplicados
@@ -39,6 +70,9 @@ class EnvioModel {
                         instrucciones_entrega,
                         descripcion_contenido, 
                         dimensiones,
+                        envio_mismo_dia,
+                        zona_periferica,
+                        recoger_cambios,
                         envio_destinatario,
                         tipo_servicio, 
                         recaudo_esperado, 
@@ -51,7 +85,7 @@ class EnvioModel {
                         :numero_guia,
                         :remitente_nombre, :remitente_telefono, :remitente_email, :remitente_direccion,
                         :destinatario_nombre, :destinatario_telefono, :destinatario_direccion, :instrucciones_entrega,
-                        :descripcion_contenido, :dimensiones, :envio_destinatario,
+                        :descripcion_contenido, :dimensiones, :envio_mismo_dia, :zona_periferica, :recoger_cambios, :envio_destinatario,
                         :tipo_servicio, :valor_recaudo, :costo_total, 'pendiente', NOW()
                     )";
         
@@ -71,6 +105,9 @@ class EnvioModel {
                 ':instrucciones_entrega' => $datos['instrucciones_entrega'],
                 ':descripcion_contenido' => trim((string) ($datos['descripcion_contenido'] ?? '')),
                 ':dimensiones' => $datos['dimensiones'] ?? null,
+                ':envio_mismo_dia' => !empty($datos['envio_mismo_dia']) ? 1 : 0,
+                ':zona_periferica' => !empty($datos['zona_periferica']) ? 1 : 0,
+                ':recoger_cambios' => !empty($datos['recoger_cambios']) ? 1 : 0,
                 ':envio_destinatario' => $datos['envio_destinatario'] ?? 'no',
                 ':tipo_servicio' => $tipo_servicio,
                 ':valor_recaudo' => $datos['valor_recaudo'],

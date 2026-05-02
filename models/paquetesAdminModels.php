@@ -142,6 +142,10 @@ class PaquetesAdminModel {
 
         // 1. Obtener información completa del paquete
         try {
+            $hasEnvioMismoDia = $this->columnExists('paquetes', 'envio_mismo_dia');
+            $hasZonaPeriferica = $this->columnExists('paquetes', 'zona_periferica');
+            $hasRecogerCambios = $this->columnExists('paquetes', 'recoger_cambios');
+
             $sqlInfo = "SELECT p.numero_guia, 
                                p.id as paquete_id,
                                p.fecha_creacion,
@@ -154,6 +158,9 @@ class PaquetesAdminModel {
                                p.direccion_destino, 
                                p.descripcion_contenido,
                                p.dimensiones,
+                               " . ($hasEnvioMismoDia ? "p.envio_mismo_dia" : "0") . " as envio_mismo_dia,
+                               " . ($hasZonaPeriferica ? "p.zona_periferica" : "0") . " as zona_periferica,
+                               " . ($hasRecogerCambios ? "p.recoger_cambios" : "0") . " as recoger_cambios,
                                p.envio_destinatario,
                                p.tipo_servicio as tipo_paquete,
                                p.costo_envio,

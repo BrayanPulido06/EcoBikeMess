@@ -789,6 +789,8 @@ function verDetalle(id, options = {}) {
                     `;
                 };
 
+                const yesNoLabel = (value) => (Number(value) === 1 || String(value).toLowerCase() === '1' ? 'Sí' : 'No');
+
                 let html = `
                     <form id="formEditarDetalles" data-paquete-id="${info.paquete_id}">
                         <div class="detalle-section">
@@ -857,6 +859,32 @@ function verDetalle(id, options = {}) {
                                 <div class="detalle-item" style="grid-column: span 2;">
                                     <div class="detalle-label">Instrucciones / Observaciones</div>
                                     <textarea class="form-control" name="instrucciones_entrega" rows="2">${escapeHtml(info.instrucciones_entrega || '')}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="detalle-section" style="margin-top: 20px;">
+                            <h3>➕ Adicionales</h3>
+                            <div class="detalle-grid">
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Dimensión escogida</div>
+                                    <div class="detalle-value">${escapeHtml(info.dimensiones || 'Sin registro')}</div>
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Entrega el mismo día</div>
+                                    <div class="detalle-value">${yesNoLabel(info.envio_mismo_dia)}</div>
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Entrega en otra zona</div>
+                                    <div class="detalle-value">${yesNoLabel(info.zona_periferica)}</div>
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Recoger cambios</div>
+                                    <div class="detalle-value">${yesNoLabel(info.recoger_cambios)}</div>
+                                </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Sumar envío al recaudo</div>
+                                    <div class="detalle-value">${String(info.envio_destinatario || '').toLowerCase() === 'si' ? 'Sí' : 'No'}</div>
                                 </div>
                             </div>
                         </div>
