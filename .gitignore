@@ -1,0 +1,5 @@
+.env
+.env.local
+/vendor/
+/node_modules/
+/uploads/tmp/
