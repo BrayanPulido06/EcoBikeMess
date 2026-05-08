@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function listarPaquetes() {
         // Mostrar indicador de carga
         if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="15" style="text-align:center;">Cargando datos...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="16" style="text-align:center;">Cargando datos...</td></tr>';
         }
 
         // Construir URL con los parámetros de los filtros
@@ -167,12 +167,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     renderizarTabla(response.data);
                 } else if (response.error) {
                     console.error('Error del servidor:', response.error);
-                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="15" class="text-danger text-center">Error: ${response.error}</td></tr>`;
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="16" class="text-danger text-center">Error: ${response.error}</td></tr>`;
                 }
             })
             .catch(error => {
                 console.error('Error en la petición:', error);
-                if (tableBody) tableBody.innerHTML = `<tr><td colspan="15" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
+                if (tableBody) tableBody.innerHTML = `<tr><td colspan="16" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
             });
     }
     window.listarPaquetes = listarPaquetes;
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!tableBody) return;
 
         if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="15" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="16" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
             if (selectAllCheckbox) {
                 selectAllCheckbox.checked = false;
             }
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
         currentData = data; // Guardar datos para exportación
 
         let html = '';
-        data.forEach(p => {
+        data.forEach((p, index) => {
             // Definir color del badge según estado
             let badgeClass = 'secondary'; // Gris por defecto
             
@@ -247,6 +247,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             html += `
                 <tr class="paquete-row">
+                    <td>${index + 1}</td>
                     <td><input type="checkbox" class="paquete-checkbox" value="${p.id}"></td>
                     <td>
                         <div class="action-buttons">

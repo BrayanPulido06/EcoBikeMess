@@ -315,6 +315,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 <table id="tablaPaquetes">
                     <thead>
                         <tr>
+                            <th>N°</th>
                             <th><input type="checkbox" id="selectAll"></th>
                             <th>Acciones</th>
                             <th class="sortable" data-column="fecha">Fecha/Hora <span class="sort-icon">↕</span></th>
