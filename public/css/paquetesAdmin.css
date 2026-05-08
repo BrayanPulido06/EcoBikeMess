@@ -342,6 +342,30 @@ table {
     white-space: nowrap;
 }
 
+#tablaPaquetes th:nth-child(1),
+#tablaPaquetes td:nth-child(1) {
+    width: 60px;
+    min-width: 60px;
+    text-align: center;
+}
+
+#tablaPaquetes th:nth-child(2),
+#tablaPaquetes td:nth-child(2) {
+    width: 52px;
+    min-width: 52px;
+    text-align: center;
+}
+
+#tablaPaquetes td.numero-paquete {
+    font-weight: 600;
+    color: #333;
+}
+
+#tablaPaquetes td.col-seleccion input,
+#tablaPaquetes th:nth-child(2) input {
+    display: inline-block;
+}
+
 #tablaPaquetes th:last-child,
 #tablaPaquetes td:last-child {
     min-width: 250px;

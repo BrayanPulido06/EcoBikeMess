@@ -247,8 +247,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             html += `
                 <tr class="paquete-row">
-                    <td>${index + 1}</td>
-                    <td><input type="checkbox" class="paquete-checkbox" value="${p.id}"></td>
+                    <td class="numero-paquete">${index + 1}</td>
+                    <td class="col-seleccion"><input type="checkbox" class="paquete-checkbox" value="${p.id}"></td>
                     <td>
                         <div class="action-buttons">
                             <button class="btn btn-sm btn-warning" onclick="cargarRotuloAdmin(${p.id})" title="Guía">🏷️ Guía</button>
