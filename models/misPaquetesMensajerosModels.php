@@ -10,6 +10,18 @@ class MisPaquetesMensajerosModels
         $this->conn = conexionDB();
         $this->asegurarTablaNovedades();
         $this->asegurarTablaCierresJornada();
+        $this->asegurarColumnasEntrega();
+    }
+
+    private function columnaExiste(string $table, string $column): bool
+    {
+        try {
+            $stmt = $this->conn->prepare("SHOW COLUMNS FROM {$table} LIKE :column");
+            $stmt->execute([':column' => $column]);
+            return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) {
+            return false;
+        }
     }
 
     private function asegurarTablaNovedades()
@@ -64,6 +76,17 @@ class MisPaquetesMensajerosModels
                     FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id) ON DELETE CASCADE
                 )";
         $this->conn->exec($sql);
+    }
+
+    private function asegurarColumnasEntrega()
+    {
+        if (!$this->columnaExiste('entregas', 'recibio_cambios')) {
+            try {
+                $this->conn->exec("ALTER TABLE entregas ADD COLUMN recibio_cambios TINYINT(1) NOT NULL DEFAULT 0 AFTER recaudo_real");
+            } catch (Throwable $e) {
+                // No bloquear la app si falla el ALTER por permisos/estado.
+            }
+        }
     }
 
     public function obtenerMensajeroPorUsuario($usuarioId)
@@ -184,11 +207,11 @@ class MisPaquetesMensajerosModels
 
             $sqlEntrega = "INSERT INTO entregas (
                                 paquete_id, mensajero_id, nombre_receptor, parentesco_cargo,
-                                documento_receptor, recaudo_real, coordenadas_entrega_lat,
+                                documento_receptor, recaudo_real, recibio_cambios, coordenadas_entrega_lat,
                                 coordenadas_entrega_lng, foto_entrega, foto_adicional, observaciones
                            ) VALUES (
                                 :paquete_id, :mensajero_id, :nombre_receptor, :parentesco_cargo,
-                                :documento_receptor, :recaudo_real, :lat, :lng, :foto_entrega,
+                                :documento_receptor, :recaudo_real, :recibio_cambios, :lat, :lng, :foto_entrega,
                                 :foto_adicional, :observaciones
                            )
                            ON DUPLICATE KEY UPDATE
@@ -196,6 +219,7 @@ class MisPaquetesMensajerosModels
                                 parentesco_cargo = VALUES(parentesco_cargo),
                                 documento_receptor = VALUES(documento_receptor),
                                 recaudo_real = VALUES(recaudo_real),
+                                recibio_cambios = VALUES(recibio_cambios),
                                 coordenadas_entrega_lat = VALUES(coordenadas_entrega_lat),
                                 coordenadas_entrega_lng = VALUES(coordenadas_entrega_lng),
                                 foto_entrega = VALUES(foto_entrega),
@@ -211,6 +235,7 @@ class MisPaquetesMensajerosModels
                 ':parentesco_cargo' => $payload['parentesco_cargo'] ?: null,
                 ':documento_receptor' => $payload['documento_receptor'] ?: null,
                 ':recaudo_real' => (float) $payload['recaudo_real'],
+                ':recibio_cambios' => !empty($payload['recibio_cambios']) ? 1 : 0,
                 ':lat' => $payload['lat'] !== null ? (float) $payload['lat'] : null,
                 ':lng' => $payload['lng'] !== null ? (float) $payload['lng'] : null,
                 ':foto_entrega' => $payload['foto_entrega'],

@@ -180,6 +180,7 @@ CREATE TABLE IF NOT EXISTS entregas (
     parentesco_cargo VARCHAR(100),
     documento_receptor VARCHAR(50),
     recaudo_real DECIMAL(10,2) DEFAULT 0.00,
+    recibio_cambios TINYINT(1) NOT NULL DEFAULT 0,
     coordenadas_entrega_lat DECIMAL(10, 8),
     coordenadas_entrega_lng DECIMAL(11, 8),
     fecha_entrega TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

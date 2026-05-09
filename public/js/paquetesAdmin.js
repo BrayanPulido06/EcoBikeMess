@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function listarPaquetes() {
         // Mostrar indicador de carga
         if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="16" style="text-align:center;">Cargando datos...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center;">Cargando datos...</td></tr>';
         }
 
         // Construir URL con los parámetros de los filtros
@@ -168,12 +168,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     renderizarTabla(response.data);
                 } else if (response.error) {
                     console.error('Error del servidor:', response.error);
-                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="16" class="text-danger text-center">Error: ${response.error}</td></tr>`;
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="17" class="text-danger text-center">Error: ${response.error}</td></tr>`;
                 }
             })
             .catch(error => {
                 console.error('Error en la petición:', error);
-                if (tableBody) tableBody.innerHTML = `<tr><td colspan="16" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
+                if (tableBody) tableBody.innerHTML = `<tr><td colspan="17" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
             });
     }
     window.listarPaquetes = listarPaquetes;
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!tableBody) return;
 
         if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="16" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
             if (selectAllCheckbox) {
                 selectAllCheckbox.checked = false;
             }
@@ -239,6 +239,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const recaudoFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.recaudo_esperado || 0);
             const recaudoRealFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.recaudo_real || 0);
             const valorEnvioFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.costo_envio || 0);
+            const cambiosRecogidos = Number(p.recibio_cambios) === 1
+                ? '<span class="badge badge-success">Sí</span>'
+                : '<span class="badge badge-secondary">No</span>';
 
             const mensajeroEntrega = p.mensajero_entrega || '<span class="text-muted font-italic">Sin asignar</span>';
             const mensajeroRecoleccion = p.mensajero_recoleccion || '<span class="text-muted font-italic">Sin asignar</span>';
@@ -269,6 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td><span class="badge badge-${badgeClass}">${p.estado.toUpperCase().replace('_', ' ')}</span></td>
                     <td>${recaudoFormateado}</td>
                     <td>${recaudoRealFormateado}</td>
+                    <td>${cambiosRecogidos}</td>
                     <td>${envioAgregado}</td>
                     <td>${p.guia}</td>
                 </tr>
@@ -425,6 +429,7 @@ document.addEventListener('DOMContentLoaded', function() {
             "Estado Entrega": p.estado,
             "Recaudo": p.recaudo_esperado || 0,
             "Recaudo Real": p.recaudo_real || 0,
+            "Cambios Recogidos": Number(p.recibio_cambios) === 1 ? 'Sí' : 'No',
             "Valor Envio": p.costo_envio || 0,
             "Envio Agregado": p.envio_destinatario || 'no'
         }));
@@ -915,6 +920,13 @@ function verDetalle(id, options = {}) {
                                     <div class="detalle-label">Total recaudado</div>
                                     <input class="form-control" type="number" name="entrega_recaudo_real" step="0.01" min="0" value="${escapeHtml(info.infoEntrega.recaudo || 0)}">
                                 </div>
+                                <div class="detalle-item">
+                                    <div class="detalle-label">Cambios recogidos</div>
+                                    <select class="form-control" name="entrega_recibio_cambios">
+                                        <option value="0" ${Number(info.infoEntrega.recibioCambios || 0) === 0 ? 'selected' : ''}>No</option>
+                                        <option value="1" ${Number(info.infoEntrega.recibioCambios || 0) === 1 ? 'selected' : ''}>Sí</option>
+                                    </select>
+                                </div>
                                 <div class="detalle-item" style="grid-column: span 2;">
                                     <div class="detalle-label">Observaciones de Entrega</div>
                                     <textarea class="form-control" name="entrega_observaciones" rows="2">${escapeHtml(info.infoEntrega.observaciones || '')}</textarea>
@@ -1042,7 +1054,8 @@ function verDetalle(id, options = {}) {
                                 documento_receptor: formData.get('entrega_documento') || '',
                                 fecha_entrega: toDbDateTime(formData.get('entrega_fecha') || ''),
                                 observaciones: formData.get('entrega_observaciones') || '',
-                                recaudo_real: parseFloat(formData.get('entrega_recaudo_real') || '0')
+                                recaudo_real: parseFloat(formData.get('entrega_recaudo_real') || '0'),
+                                recibio_cambios: parseInt(formData.get('entrega_recibio_cambios') || '0', 10) === 1 ? 1 : 0
                             };
                         }
 

@@ -337,6 +337,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                             <th>Estado Entrega</th>
                             <th>Recaudo</th>
                             <th>Recaudo Real</th>
+                            <th>Cambios</th>
                             <th>Valor Envío Agregado</th>
                             <th class="sortable" data-column="guia">N° Guía <span class="sort-icon">↕</span></th>
                         </tr>
@@ -564,7 +565,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
 
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/rotuloShared.js"></script>
-    <script src="../../public/js/paquetesAdmin.js?v=20260508-3"></script>
+    <script src="../../public/js/paquetesAdmin.js?v=20260508-4"></script>
     <script>
         let currentRotuloData = null;
         const truncarRotulo = (value, max) => {

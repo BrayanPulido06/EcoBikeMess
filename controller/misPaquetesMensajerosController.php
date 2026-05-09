@@ -63,6 +63,7 @@ try {
                 'parentesco_cargo' => trim($input['parentesco'] ?? ''),
                 'documento_receptor' => trim($input['documento'] ?? ''),
                 'recaudo_real' => (float) ($input['recaudo'] ?? 0),
+                'recibio_cambios' => !empty($input['recibioCambios']) ? 1 : 0,
                 'observaciones' => trim($input['observaciones'] ?? ''),
                 'lat' => isset($input['ubicacion']['lat']) ? (float) $input['ubicacion']['lat'] : null,
                 'lng' => isset($input['ubicacion']['lng']) ? (float) $input['ubicacion']['lng'] : null,

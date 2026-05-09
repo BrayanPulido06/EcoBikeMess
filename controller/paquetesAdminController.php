@@ -104,6 +104,7 @@ try {
                     'parentesco_cargo' => trim((string) ($entrega['parentesco_cargo'] ?? '')),
                     'documento_receptor' => trim((string) ($entrega['documento_receptor'] ?? '')),
                     'recaudo_real' => (float) ($entrega['recaudo_real'] ?? 0),
+                    'recibio_cambios' => (int) ($entrega['recibio_cambios'] ?? 0),
                     'fecha_entrega' => $fechaEntrega,
                     'observaciones' => trim((string) ($entrega['observaciones'] ?? '')),
                     'mensajero_id' => (int) ($input['mensajero_id'] ?? 0)
@@ -120,6 +121,7 @@ try {
                     'parentesco_cargo' => '',
                     'documento_receptor' => '',
                     'recaudo_real' => 0,
+                    'recibio_cambios' => 0,
                     'fecha_entrega' => $fechaEntregaSync,
                     'observaciones' => '',
                     'mensajero_id' => (int) ($input['mensajero_id'] ?? 0)

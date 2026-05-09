@@ -6,6 +6,7 @@ class PaquetesAdminModel {
 
     public function __construct() {
         $this->conn = conexionDB();
+        $this->ensureEntregaAdditionalColumns();
     }
 
     private function columnExists(string $table, string $column): bool
@@ -16,6 +17,23 @@ class PaquetesAdminModel {
             return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Throwable $e) {
             return false;
+        }
+    }
+
+    private function ensureEntregaAdditionalColumns(): void
+    {
+        $columns = [
+            'recibio_cambios' => "ALTER TABLE entregas ADD COLUMN recibio_cambios TINYINT(1) NOT NULL DEFAULT 0 AFTER recaudo_real"
+        ];
+
+        foreach ($columns as $column => $sql) {
+            if (!$this->columnExists('entregas', $column)) {
+                try {
+                    $this->conn->exec($sql);
+                } catch (Throwable $e) {
+                    // No bloqueamos la app si la alteración falla.
+                }
+            }
         }
     }
 
@@ -43,6 +61,8 @@ class PaquetesAdminModel {
     }
 
     public function getPaquetes($filters) {
+        $hasRecibioCambiosEntrega = $this->columnExists('entregas', 'recibio_cambios');
+
         // Consulta principal mapeando columnas de BD a lo que espera el JS
         $sql = "SELECT p.id, 
                        p.numero_guia as guia, 
@@ -61,6 +81,7 @@ class PaquetesAdminModel {
                        p.costo_envio as costo_envio,
                        p.recaudo_esperado as recaudo_esperado,
                        COALESCE(e.recaudo_real, 0) as recaudo_real,
+                       " . ($hasRecibioCambiosEntrega ? "COALESCE(e.recibio_cambios, 0)" : "0") . " as recibio_cambios,
                        p.tipo_servicio as tipo, 
                        p.instrucciones_entrega as observaciones,
                        CASE WHEN p.tipo_servicio = 'urgente' THEN 1 ELSE 0 END as urgente,
@@ -203,6 +224,7 @@ class PaquetesAdminModel {
                         'parentesco' => $entrega['parentesco_cargo'] ?? '',
                         'documento' => $entrega['documento_receptor'] ?? '',
                         'recaudo' => isset($entrega['recaudo_real']) ? (float) $entrega['recaudo_real'] : 0,
+                        'recibioCambios' => isset($entrega['recibio_cambios']) ? (int) $entrega['recibio_cambios'] : 0,
                         'fecha' => $entrega['fecha_entrega'] ?? '',
                         'observaciones' => $entrega['observaciones'] ?? '',
                         'fotoPrincipal' => $entrega['foto_entrega'] ?? '',
@@ -349,6 +371,7 @@ class PaquetesAdminModel {
                     parentesco_cargo,
                     documento_receptor,
                     recaudo_real,
+                    recibio_cambios,
                     fecha_entrega,
                     observaciones
                 ) VALUES (
@@ -358,6 +381,7 @@ class PaquetesAdminModel {
                     :parentesco,
                     :documento,
                     :recaudo,
+                    :recibio_cambios,
                     :fecha_entrega,
                     :observaciones
                 )
@@ -367,6 +391,7 @@ class PaquetesAdminModel {
                     parentesco_cargo = VALUES(parentesco_cargo),
                     documento_receptor = VALUES(documento_receptor),
                     recaudo_real = VALUES(recaudo_real),
+                    recibio_cambios = VALUES(recibio_cambios),
                     fecha_entrega = VALUES(fecha_entrega),
                     observaciones = VALUES(observaciones)";
         $stmt = $this->conn->prepare($sql);
@@ -376,6 +401,7 @@ class PaquetesAdminModel {
             ':parentesco' => $data['parentesco_cargo'] ?: null,
             ':documento' => $data['documento_receptor'] ?: null,
             ':recaudo' => $data['recaudo_real'],
+            ':recibio_cambios' => !empty($data['recibio_cambios']) ? 1 : 0,
             ':fecha_entrega' => $data['fecha_entrega'] ?: null,
             ':observaciones' => $data['observaciones'] ?: null,
             ':id' => $paqueteId
