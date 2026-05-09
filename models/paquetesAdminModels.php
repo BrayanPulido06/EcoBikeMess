@@ -64,6 +64,12 @@ class PaquetesAdminModel {
         $hasRecibioCambiosEntrega = $this->columnExists('entregas', 'recibio_cambios');
 
         // Consulta principal mapeando columnas de BD a lo que espera el JS
+        $fallbackCambiosExpr = "CASE
+            WHEN LOWER(COALESCE(e.observaciones, '')) LIKE '%recibio cambios: si%' THEN 1
+            WHEN LOWER(COALESCE(e.observaciones, '')) LIKE '%recibió cambios: sí%' THEN 1
+            ELSE 0
+        END";
+
         $sql = "SELECT p.id, 
                        p.numero_guia as guia, 
                        p.fecha_creacion as fechaIngreso,
@@ -81,7 +87,7 @@ class PaquetesAdminModel {
                        p.costo_envio as costo_envio,
                        p.recaudo_esperado as recaudo_esperado,
                        COALESCE(e.recaudo_real, 0) as recaudo_real,
-                       " . ($hasRecibioCambiosEntrega ? "COALESCE(e.recibio_cambios, 0)" : "0") . " as recibio_cambios,
+                       " . ($hasRecibioCambiosEntrega ? "CASE WHEN COALESCE(e.recibio_cambios, 0) = 1 THEN 1 ELSE {$fallbackCambiosExpr} END" : $fallbackCambiosExpr) . " as recibio_cambios,
                        p.tipo_servicio as tipo, 
                        p.instrucciones_entrega as observaciones,
                        CASE WHEN p.tipo_servicio = 'urgente' THEN 1 ELSE 0 END as urgente,
@@ -219,12 +225,23 @@ class PaquetesAdminModel {
                 $entrega = $stmtEntrega->fetch(PDO::FETCH_ASSOC) ?: [];
 
                 
+                    $recibioCambiosEntrega = 0;
+                    if (isset($entrega['recibio_cambios'])) {
+                        $recibioCambiosEntrega = (int) $entrega['recibio_cambios'] === 1 ? 1 : 0;
+                    }
+                    if ($recibioCambiosEntrega === 0) {
+                        $obsEntrega = strtolower((string) ($entrega['observaciones'] ?? ''));
+                        if (strpos($obsEntrega, 'recibio cambios: si') !== false || strpos($obsEntrega, 'recibió cambios: sí') !== false) {
+                            $recibioCambiosEntrega = 1;
+                        }
+                    }
+
                     $info['infoEntrega'] = [
                         'nombreRecibe' => $entrega['nombre_receptor'] ?? '',
                         'parentesco' => $entrega['parentesco_cargo'] ?? '',
                         'documento' => $entrega['documento_receptor'] ?? '',
                         'recaudo' => isset($entrega['recaudo_real']) ? (float) $entrega['recaudo_real'] : 0,
-                        'recibioCambios' => isset($entrega['recibio_cambios']) ? (int) $entrega['recibio_cambios'] : 0,
+                        'recibioCambios' => $recibioCambiosEntrega,
                         'fecha' => $entrega['fecha_entrega'] ?? '',
                         'observaciones' => $entrega['observaciones'] ?? '',
                         'fotoPrincipal' => $entrega['foto_entrega'] ?? '',
