@@ -299,16 +299,21 @@ body.sidebar-collapsed .facturacion-shell,
 
 .amount-cell {
     font-weight: 700;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
 }
 
 .amount-cell.is-pending {
-    background: #ff1a1a;
-    color: #fff;
+    background: #fdecef;
+    color: var(--fact-danger);
+    border-color: #f6c7d1;
 }
 
 .amount-cell.is-paid {
-    background: #55aa2a;
-    color: #fff;
+    background: #f5fbf6;
+    color: var(--fact-primary);
+    border-color: #cde8d4;
 }
 
 .table-tools {
