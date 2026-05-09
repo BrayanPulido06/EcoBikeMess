@@ -10,6 +10,7 @@ class FacturacionModels
         $this->conn = conexionDB();
         $this->ensureFacturacionTable();
         $this->ensureAbonosClienteTable();
+        $this->ensureHiddenClientGroupsTable();
         $this->syncFacturacionRows();
     }
 
@@ -69,6 +70,22 @@ class FacturacionModels
                     FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
                     FOREIGN KEY (registrado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
                     INDEX idx_abonos_cliente_fecha (cliente_id, fecha_grupo)
+                )";
+        $this->conn->exec($sql);
+    }
+
+    private function ensureHiddenClientGroupsTable(): void
+    {
+        $sql = "CREATE TABLE IF NOT EXISTS facturacion_grupos_cliente_ocultos (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    cliente_id INT NOT NULL,
+                    fecha_grupo DATE NOT NULL,
+                    ocultado_por INT NULL,
+                    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE KEY uniq_cliente_fecha (cliente_id, fecha_grupo),
+                    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+                    FOREIGN KEY (ocultado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+                    INDEX idx_ocultos_fecha (fecha_grupo)
                 )";
         $this->conn->exec($sql);
     }
@@ -151,6 +168,37 @@ class FacturacionModels
         ]);
     }
 
+    public function ocultarGrupoCliente(int $clienteId, string $fechaGrupo, ?int $ocultadoPor): bool
+    {
+        $sql = "INSERT INTO facturacion_grupos_cliente_ocultos (
+                    cliente_id, fecha_grupo, ocultado_por
+                ) VALUES (
+                    :cliente_id, :fecha_grupo, :ocultado_por
+                )
+                ON DUPLICATE KEY UPDATE
+                    ocultado_por = VALUES(ocultado_por)";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':cliente_id' => $clienteId,
+            ':fecha_grupo' => $fechaGrupo,
+            ':ocultado_por' => $ocultadoPor,
+        ]);
+    }
+
+    private function obtenerGruposClienteOcultos(): array
+    {
+        $sql = "SELECT cliente_id, fecha_grupo FROM facturacion_grupos_cliente_ocultos";
+        $stmt = $this->conn->query($sql);
+        $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+
+        return array_map(static function ($row) {
+            return [
+                'cliente_id' => (int) ($row['cliente_id'] ?? 0),
+                'fecha_grupo' => (string) ($row['fecha_grupo'] ?? ''),
+            ];
+        }, $rows);
+    }
+
     private function obtenerAbonosCliente(?int $clienteId = null): array
     {
         $params = [];
@@ -228,7 +276,7 @@ class FacturacionModels
         $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return $this->mapearResumenClientes($rows);
+        return $this->mapearResumenClientes($rows, $clienteId);
     }
 
     private function obtenerResumenMensajeros(bool $soloVisibles, ?int $mensajeroId = null): array
@@ -279,7 +327,7 @@ class FacturacionModels
         return $this->mapearResumenMensajeros($rows);
     }
 
-    private function mapearResumenClientes(array $rows): array
+    private function mapearResumenClientes(array $rows, ?int $clienteId = null): array
     {
         $items = [];
         $totales = [
@@ -292,15 +340,27 @@ class FacturacionModels
         $diario = [];
 
         foreach ($rows as $row) {
-            $fechaDia = substr((string) $row['fecha_creacion'], 0, 10);
+            $fechaBase = (string) ($row['fecha_entrega'] ?: $row['fecha_creacion']);
+            $fechaDia = substr($fechaBase, 0, 10);
             if (!isset($diario[$fechaDia])) {
                 $diario[$fechaDia] = 0;
             }
             $diario[$fechaDia]++;
         }
 
+        $hiddenGroups = $this->obtenerGruposClienteOcultos();
+        $hiddenMap = [];
+        foreach ($hiddenGroups as $hiddenGroup) {
+            $hiddenMap[(int) $hiddenGroup['cliente_id'] . '__' . (string) $hiddenGroup['fecha_grupo']] = true;
+        }
+
         foreach ($rows as $row) {
-            $fechaDia = substr((string) $row['fecha_creacion'], 0, 10);
+            $fechaBase = (string) ($row['fecha_entrega'] ?: $row['fecha_creacion']);
+            $fechaDia = substr($fechaBase, 0, 10);
+            $hiddenKey = (int) $row['cliente_id'] . '__' . $fechaDia;
+            if (isset($hiddenMap[$hiddenKey])) {
+                continue;
+            }
 
             $valorEnvio = (float) $row['costo_envio'];
             $recaudoEsperado = (float) $row['recaudo_esperado'];

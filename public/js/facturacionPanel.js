@@ -17,8 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedClienteGroupKey: null,
         activeClientModalView: 'detail'
     };
-    const hiddenClientGroupsStorageKey = 'facturacionAdminHiddenClientGroups';
-
     const formatCurrencyNumber = (value) => {
         const amount = Math.round(Number(value || 0));
         return Number.isFinite(amount)
@@ -47,38 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const normalizeText = (value) => String(value || '').trim().toLowerCase();
 
     const getRecaudoRealValue = (item) => Number(item?.valor_recaudo_real || 0);
-
-    const getHiddenClientGroups = () => {
-        if (mode !== 'admin') {
-            return new Set();
-        }
-
-        try {
-            const saved = window.localStorage.getItem(hiddenClientGroupsStorageKey);
-            const parsed = saved ? JSON.parse(saved) : [];
-            return new Set(Array.isArray(parsed) ? parsed : []);
-        } catch (error) {
-            return new Set();
-        }
-    };
-
-    const saveHiddenClientGroups = (groups) => {
-        if (mode !== 'admin') {
-            return;
-        }
-
-        window.localStorage.setItem(hiddenClientGroupsStorageKey, JSON.stringify(Array.from(groups)));
-    };
-
-    const hideClientGroup = (groupKey) => {
-        if (!groupKey || mode !== 'admin') {
-            return;
-        }
-
-        const hiddenGroups = getHiddenClientGroups();
-        hiddenGroups.add(groupKey);
-        saveHiddenClientGroups(hiddenGroups);
-    };
 
     const getClienteAbonos = () => {
         const abonos = state.rawData?.cliente?.abonos;
@@ -246,8 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
             group.statuses.add(item.estado || 'pendiente');
         });
 
-        const hiddenGroups = getHiddenClientGroups();
-
         const groups = Array.from(groupsMap.values())
             .map((group) => {
                 const abonos = getGroupAbonos(group.clienteId, group.dateKey);
@@ -262,7 +226,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     estado: saldo <= 0 ? 'pagado' : 'pendiente'
                 };
             })
-            .filter((group) => !hiddenGroups.has(group.key))
             .sort((a, b) => {
                 if (a.dateKey === b.dateKey) {
                     return a.clienteNombre.localeCompare(b.clienteNombre, 'es', { sensitivity: 'base' });
@@ -747,12 +710,13 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedClienteGroupKey = null;
     };
 
-    const handleHideClientGroup = (button) => {
+    const handleHideClientGroup = async (button) => {
         const groupKey = button?.dataset.groupKey;
         const clientName = button?.dataset.clientName || 'este cliente';
         const dateLabel = button?.dataset.dateLabel || 'la fecha seleccionada';
+        const group = getClienteGroupByKey(groupKey);
 
-        if (!groupKey || mode !== 'admin') {
+        if (!groupKey || !group || mode !== 'admin') {
             return;
         }
 
@@ -761,7 +725,23 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        hideClientGroup(groupKey);
+        const formData = new FormData();
+        formData.append('action', 'ocultar_grupo_cliente');
+        formData.append('cliente_id', String(group.clienteId));
+        formData.append('fecha_grupo', group.dateKey);
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.message || 'No se pudo ocultar la cuenta del dia.');
+        }
+
+        state.rawData = result.data;
         closeClientDetailModal();
         render();
     };
@@ -782,7 +762,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const hideButton = event.target.closest('[data-role="hide-client-group"]');
             if (hideButton) {
-                handleHideClientGroup(hideButton);
+                handleHideClientGroup(hideButton).catch((error) => {
+                    alert(error.message);
+                });
                 return;
             }
 
