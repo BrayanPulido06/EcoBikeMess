@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const money = (value) => `$ ${formatCurrencyNumber(value)}`;
+    const moneyAbs = (value) => `$ ${formatCurrencyNumber(Math.abs(Number(value || 0)))}`;
 
     const parseCurrencyInput = (value) => {
         const digits = String(value || '').replace(/[^\d]/g, '');
@@ -245,14 +246,15 @@ document.addEventListener('DOMContentLoaded', () => {
             .map((group) => {
                 const abonos = getGroupAbonos(group.clienteId, group.dateKey);
                 const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
-                const saldo = Math.max(group.totalServicio - abono, 0);
+                const saldo = Number(group.totalRecaudado || 0) - Number(group.totalServicio || 0);
+                const balance = saldo - abono;
                 return {
                     ...group,
                     abonos,
                     abono,
-                    balance: saldo,
+                    balance,
                     saldo,
-                    estado: saldo <= 0 ? 'pagado' : 'pendiente'
+                    estado: groupStatusFromBalance(balance)
                 };
             })
             .sort((a, b) => {
@@ -273,11 +275,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         groupsAsc.forEach((group) => {
             const previous = Number(runningTotalsByClient.get(group.clientKey) || 0);
-            const current = Math.max(previous + Number(group.totalServicio || 0) - Number(group.abono || 0), 0);
+            const current = previous + Number(group.saldo || 0) - Number(group.abono || 0);
             runningTotalsByClient.set(group.clientKey, current);
             group.totalAcumulado = current;
-            group.totalAcumuladoEstado = current <= 0 ? 'pagado' : 'pendiente';
-            group.estado = current <= 0 ? 'pagado' : 'pendiente';
+            group.totalAcumuladoEstado = groupStatusFromBalance(current);
+            group.estado = groupStatusFromBalance(group.balance);
         });
 
         return groups;
@@ -294,6 +296,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (status === 'pagado') return 'is-paid';
         return 'is-pending';
     };
+
+    const balanceCellClass = (value) => Number(value || 0) >= 0 ? 'is-paid' : 'is-pending';
+
+    const groupStatusFromBalance = (value) => Math.round(Number(value || 0)) === 0 ? 'pagado' : 'pendiente';
 
     const renderClienteTable = (items) => {
         const tbody = document.getElementById('table-body-cliente');
@@ -317,8 +323,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${money(group.totalRecaudado)}</td>
                 <td>${money(group.abono)}</td>
                 <td>${clientGroupStatusBadge(group.estado)}</td>
-                <td class="amount-cell ${amountCellClass(group.estado)}">${money(group.saldo)}</td>
-                <td class="amount-cell ${amountCellClass(group.totalAcumuladoEstado)}">${money(group.totalAcumulado)}</td>
+                <td class="amount-cell ${balanceCellClass(group.saldo)}">${moneyAbs(group.saldo)}</td>
+                <td class="amount-cell ${balanceCellClass(group.totalAcumulado)}">${moneyAbs(group.totalAcumulado)}</td>
                 <td>
                     <div class="table-tools">
                         <button
@@ -641,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedClienteGroupKey = groupKey;
         state.activeClientModalView = 'detail';
         title.textContent = `${group.clienteNombre} - ${group.fechaLabel}`;
-        subtitle.textContent = `${group.paquetesEntregados} entregado(s) | Servicio ${money(group.totalServicio)} | Recaudo ${money(group.totalRecaudado)} | Abono ${money(group.abono)} | Saldo ${money(group.saldo)} | Total ${money(group.totalAcumulado)}`;
+        subtitle.textContent = `${group.paquetesEntregados} entregado(s) | Servicio ${money(group.totalServicio)} | Recaudo ${money(group.totalRecaudado)} | Abono ${money(group.abono)} | Saldo ${moneyAbs(group.saldo)} | Total ${moneyAbs(group.totalAcumulado)}`;
 
         body.innerHTML = `
             <div class="detail-summary-strip">
@@ -649,7 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><span>Recaudado</span><strong>${money(group.totalRecaudado)}</strong></div>
                 <div><span>Abono</span><strong>${money(group.abono)}</strong></div>
                 <div><span>Estado</span><strong>${group.estado === 'pagado' ? 'Pagado' : 'Pendiente'}</strong></div>
-                <div><span>Total acumulado</span><strong>${money(group.totalAcumulado)}</strong></div>
+                <div><span>Total acumulado</span><strong>${moneyAbs(group.totalAcumulado)}</strong></div>
             </div>
             ${mode === 'admin' ? `
                 <div class="facturacion-abono-actions">
@@ -688,15 +694,15 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedClienteGroupKey = groupKey;
         state.activeClientModalView = 'abono';
         title.textContent = `Registrar abono - ${group.clienteNombre}`;
-        subtitle.textContent = `Fecha ${group.fechaLabel} | Servicio ${money(group.totalServicio)} | Abonado ${money(group.abono)} | Total pendiente ${money(group.totalAcumulado)}`;
+        subtitle.textContent = `Fecha ${group.fechaLabel} | Servicio ${money(group.totalServicio)} | Abonado ${money(group.abono)} | Total pendiente ${moneyAbs(group.totalAcumulado)}`;
 
         body.innerHTML = `
             <div class="detail-summary-strip">
                 <div><span>Total servicio</span><strong>${money(group.totalServicio)}</strong></div>
                 <div><span>Total recaudado</span><strong>${money(group.totalRecaudado)}</strong></div>
                 <div><span>Abonado</span><strong>${money(group.abono)}</strong></div>
-                <div><span>Saldo del dia</span><strong>${money(group.saldo)}</strong></div>
-                <div><span>Total acumulado</span><strong>${money(group.totalAcumulado)}</strong></div>
+                <div><span>Saldo del dia</span><strong>${moneyAbs(group.saldo)}</strong></div>
+                <div><span>Total acumulado</span><strong>${moneyAbs(group.totalAcumulado)}</strong></div>
             </div>
             <form id="clienteAbonoForm" class="facturacion-abono-form">
                 <input type="hidden" name="cliente_id" value="${group.clienteId}">
