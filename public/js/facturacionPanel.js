@@ -158,18 +158,47 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
-    const buildClienteSummaryFromGroups = (baseSummary, groups) => {
+    const buildClienteSummaryFromGroups = (groups) => {
         const totalsByClient = new Map();
+
+        let totalEnvios = 0;
+        let totalRecaudos = 0;
+        let cantidadPaquetes = 0;
+        let paquetesEntregados = 0;
 
         groups.forEach((group) => {
             totalsByClient.set(group.clientKey, Number(group.totalAcumulado || 0));
+            totalEnvios += Number(group.totalServicio || 0);
+            totalRecaudos += Number(group.totalRecaudado || 0);
+            cantidadPaquetes += Array.isArray(group.packages) ? group.packages.length : 0;
+            paquetesEntregados += Number(group.paquetesEntregados || 0);
         });
 
         return {
-            ...baseSummary,
-            saldo_actual: Array.from(totalsByClient.values()).reduce((sum, value) => sum + value, 0)
+            saldo_actual: Array.from(totalsByClient.values()).reduce((sum, value) => sum + value, 0),
+            total_envios: totalEnvios,
+            total_recaudos: totalRecaudos,
+            cantidad_paquetes: cantidadPaquetes,
+            paquetes_entregados: paquetesEntregados
         };
     };
+
+    const buildMensajeroSummaryFromItems = (items) => items.reduce((summary, item) => {
+        summary.saldo_actual += Number(item.valor_pago_mensajero || 0);
+        summary.total_envios += Number(item.valor_envio || 0);
+        summary.total_recaudos += Number(item.valor_recaudo_real || 0);
+        summary.cantidad_paquetes += 1;
+        if ((item.estado || '') === 'entregado') {
+            summary.paquetes_entregados += 1;
+        }
+        return summary;
+    }, {
+        saldo_actual: 0,
+        total_envios: 0,
+        total_recaudos: 0,
+        cantidad_paquetes: 0,
+        paquetes_entregados: 0
+    });
 
     const buildClienteGroups = (items) => {
         const filtered = items.filter((item) => matchesFilter(item, 'cliente'));
@@ -328,14 +357,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderMensajeroTable = (items) => {
         const tbody = document.getElementById('table-body-mensajero');
-        if (!tbody) return;
+        if (!tbody) return [];
 
         const filtered = items.filter((item) => matchesFilter(item, 'mensajero'));
         document.getElementById('count-mensajero').textContent = `${filtered.length} registros`;
 
         if (!filtered.length) {
             tbody.innerHTML = '<tr><td colspan="11" class="empty-state">No hay registros con los filtros actuales.</td></tr>';
-            return;
+            return filtered;
         }
 
         tbody.innerHTML = filtered.map((item) => {
@@ -370,6 +399,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </tr>
             `;
         }).join('');
+
+        return filtered;
     };
 
     const render = () => {
@@ -377,12 +408,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (state.rawData.cliente) {
             renderClienteTable(state.rawData.cliente.items);
-            renderSummary(buildClienteSummaryFromGroups(state.rawData.cliente.summary, state.clienteGroups), 'cliente');
+            renderSummary(buildClienteSummaryFromGroups(state.clienteGroups), 'cliente');
         }
 
         if (state.rawData.mensajero) {
-            renderSummary(state.rawData.mensajero.summary, 'mensajero');
-            renderMensajeroTable(state.rawData.mensajero.items);
+            const visibleMensajeroItems = renderMensajeroTable(state.rawData.mensajero.items);
+            renderSummary(buildMensajeroSummaryFromItems(visibleMensajeroItems), 'mensajero');
         }
     };
 
