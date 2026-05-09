@@ -294,6 +294,14 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                         <div id="filtroMensajeroOpciones" class="search-select-options"></div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label>Recaudo</label>
+                    <select id="filtroRecaudo" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="con_recaudo">Con recaudo</option>
+                        <option value="sin_recaudo">Sin recaudo</option>
+                    </select>
+                </div>
                 <div class="form-group align-end">
                     <button class="btn btn-secondary btn-block" id="btnLimpiarFiltros">
                         🔄 Limpiar Filtros
@@ -556,7 +564,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
 
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/rotuloShared.js"></script>
-    <script src="../../public/js/paquetesAdmin.js?v=20260508-2"></script>
+    <script src="../../public/js/paquetesAdmin.js?v=20260508-3"></script>
     <script>
         let currentRotuloData = null;
         const truncarRotulo = (value, max) => {

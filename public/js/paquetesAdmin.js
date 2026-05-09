@@ -26,7 +26,8 @@ document.addEventListener('DOMContentLoaded', function() {
         fechaHasta: document.getElementById('filtroFechaHasta'), // Input date
         cliente: filtroClienteInput,
         estado: document.getElementById('filtroEstado'),       // Select
-        mensajero: filtroMensajeroInput
+        mensajero: filtroMensajeroInput,
+        recaudo: document.getElementById('filtroRecaudo')
     };
 
     // Referencias a Modales

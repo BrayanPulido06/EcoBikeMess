@@ -121,6 +121,13 @@ class PaquetesAdminModel {
                      )";
             $params[':mensajero'] = '%' . trim((string) $filters['mensajero']) . '%';
         }
+        if (!empty($filters['recaudo'])) {
+            if ($filters['recaudo'] === 'con_recaudo') {
+                $sql .= " AND COALESCE(e.recaudo_real, 0) > 0";
+            } elseif ($filters['recaudo'] === 'sin_recaudo') {
+                $sql .= " AND COALESCE(e.recaudo_real, 0) <= 0";
+            }
+        }
         if (!empty($filters['tipo'])) {
             $sql .= " AND p.tipo_servicio = :tipo";
             $params[':tipo'] = $filters['tipo'];

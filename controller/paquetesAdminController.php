@@ -22,6 +22,7 @@ try {
                 'estado' => $_REQUEST['estado'] ?? '',
                 'zona' => $_REQUEST['zona'] ?? '',
                 'mensajero' => $_REQUEST['mensajero'] ?? '',
+                'recaudo' => $_REQUEST['recaudo'] ?? '',
                 'tipo' => $_REQUEST['tipo'] ?? ''
             ];
             
