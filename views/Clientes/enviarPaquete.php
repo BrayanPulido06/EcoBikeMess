@@ -117,11 +117,21 @@ $remitente_data = [
         #rotuloPreview .rotulo-scale p strong { font-weight: 800 !important; }
         #rotuloPreview .rotulo-scale .rotulo-total {
             margin: 2px 0;
-            font-size: 26px !important;
-            font-weight: 800;
+            font-size: 42px !important;
+            font-weight: 900;
             color: #28a745;
-            text-align: left;
-            line-height: 1.1;
+            text-align: center;
+            line-height: 1;
+        }
+        .confirmation-note {
+            margin-bottom: 1.25rem;
+            padding: 0.9rem 1rem;
+            border-radius: 10px;
+            background: #f3fbf4;
+            border: 1px solid #d7efdb;
+            color: #2d3e50;
+            font-size: 0.95rem;
+            font-weight: 600;
         }
         #rotuloPreview .rotulo-scale .rotulo-card p {
             margin: 2px 0;
@@ -597,6 +607,9 @@ $remitente_data = [
                             <h2>✓ Confirmar Envío</h2>
                         </div>
                         <div class="card-body">
+                            <div class="confirmation-note">
+                                Para confirmar el envio, debes hacer clic en el boton "Confirmar Envio".
+                            </div>
                             <div id="rotuloPreview" style="background: white; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333;">
                                 <div class="rotulo-scale">
                                     <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 6px;">

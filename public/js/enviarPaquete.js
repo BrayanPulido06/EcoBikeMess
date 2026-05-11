@@ -1391,7 +1391,7 @@ ${qrFinanciero}
                                         </div>
                                         <div style="margin-top: 6px;">
                                             <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800;">💰 Total a Cobrar</h3>
-                                            <p style="margin: 2px 0; font-size: 26px; font-weight: 800; color: #28a745; line-height: 1.1;">${totalCobrarTexto}</p>
+                                            <p style="margin: 2px 0; font-size: 42px; font-weight: 900; color: #28a745; line-height: 1; text-align: center;">${totalCobrarTexto}</p>
                                         </div>
                                     </td>
                                     <td style="width: 40%; text-align: right; vertical-align: top;">
