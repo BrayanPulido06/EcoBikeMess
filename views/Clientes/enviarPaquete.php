@@ -608,7 +608,7 @@ $remitente_data = [
                         </div>
                         <div class="card-body">
                             <div class="confirmation-note">
-                                Para confirmar el envio, debes hacer clic en el boton "Confirmar Envio".
+                                Para agendar tu pedido, debes dar click en el botón "confirmar envío"
                             </div>
                             <div id="rotuloPreview" style="background: white; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333;">
                                 <div class="rotulo-scale">
