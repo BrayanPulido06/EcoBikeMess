@@ -175,18 +175,97 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const d = json.data;
             detalleContent.innerHTML = `
-                <div class="detalle-row"><span>Guia</span><strong>${escapeHtml(d.numero_guia || '')}</strong></div>
-                <div class="detalle-row"><span>Estado</span><strong>${escapeHtml(d.estado || '')}</strong></div>
-                <div class="detalle-row"><span>Remitente</span><strong>${escapeHtml(d.remitente_nombre || d.nombre_emprendimiento || '')}</strong></div>
-                <div class="detalle-row"><span>Destinatario</span><strong>${escapeHtml(d.destinatario_nombre || '')}</strong></div>
-                <div class="detalle-row"><span>Telefono destinatario</span><strong>${escapeHtml(d.destinatario_telefono || '')}</strong></div>
-                <div class="detalle-row"><span>Direccion destino</span><strong>${escapeHtml(d.direccion_destino || '')}</strong></div>
-                <div class="detalle-row"><span>Instrucciones</span><strong>${escapeHtml(d.instrucciones_entrega || 'Sin instrucciones')}</strong></div>
-                <div class="detalle-row"><span>Contenido</span><strong>${escapeHtml(d.descripcion_contenido || 'Sin descripcion')}</strong></div>
-                <div class="detalle-row"><span>Cambios por recoger</span><strong>${normalizeYesNo(d.recoger_cambios)}</strong></div>
-                <div class="detalle-row"><span>Costo envio</span><strong>${formatCurrency(d.costo_envio || 0)}</strong></div>
-                <div class="detalle-row"><span>Recaudo esperado</span><strong>${formatCurrency(d.recaudo_esperado || 0)}</strong></div>
-                <div class="detalle-row"><span>Fecha creacion</span><strong>${formatDate(d.fecha_creacion)}</strong></div>
+                <div class="invoice-header" style="border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
+                    <div style="display:flex; justify-content:space-between; gap: 16px; flex-wrap: wrap;">
+                        <div>
+                            <h3 style="margin:0; color:#2c3e50;">Guia ${escapeHtml(d.numero_guia || '')}</h3>
+                            <p style="margin:5px 0; color:#7f8c8d;">Estado: <strong>${escapeHtml((d.estado || '').toUpperCase())}</strong></p>
+                        </div>
+                        <div class="text-right">
+                            <p style="margin:0;"><strong>Fecha:</strong> ${escapeHtml(rawDateText(d.fecha_creacion))}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <table class="table" style="width:100%; border-collapse: collapse;">
+                    <tbody>
+                        <tr>
+                            <td style="padding:8px;"><strong>Destinatario:</strong></td>
+                            <td style="padding:8px;">${escapeHtml(d.destinatario_nombre || '')}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px;"><strong>Direccion:</strong></td>
+                            <td style="padding:8px;">${escapeHtml(d.direccion_destino || '')}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px;"><strong>Telefono:</strong></td>
+                            <td style="padding:8px;">${escapeHtml(d.destinatario_telefono || '')}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px;"><strong>Remitente:</strong></td>
+                            <td style="padding:8px;">${escapeHtml(d.nombre_emprendimiento || d.remitente_nombre || 'Sin remitente')}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px;"><strong>Contenido:</strong></td>
+                            <td style="padding:8px;">${escapeHtml(d.descripcion_contenido || '')}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px;"><strong>Observaciones:</strong></td>
+                            <td style="padding:8px;">${escapeHtml(d.instrucciones_entrega || 'Sin observaciones')}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px;"><strong>Cambios por recoger:</strong></td>
+                            <td style="padding:8px;">${normalizeYesNo(d.recoger_cambios)}</td>
+                        </tr>
+                        <tr style="background:#f8f9fa;">
+                            <td style="padding:8px;"><strong>Total Recaudado:</strong></td>
+                            <td style="padding:8px;"><strong>${d.estado === 'entregado' && d.infoEntrega ? formatCurrency(d.infoEntrega.recaudo) : 'Pendiente'}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                ${d.estado === 'entregado' && d.infoEntrega ? `
+                    <div class="detalle-section" style="margin-top: 20px;">
+                        <h3 style="margin:0 0 14px; color:#4f6df5; border-bottom:2px solid #4f6df5; padding-bottom:10px;">Detalles de Entrega</h3>
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px;">
+                            ${buildDetailCard('Recibio', d.infoEntrega.nombreRecibe || 'N/A')}
+                            ${buildDetailCard('Parentesco', d.infoEntrega.parentesco || 'N/A')}
+                            ${buildDetailCard('Documento', d.infoEntrega.documento || 'N/A')}
+                            ${buildDetailCard('Fecha de Entrega', formatDate(d.infoEntrega.fecha))}
+                            ${buildDetailCard('Recaudo Realizado', formatCurrency(d.infoEntrega.recaudo || 0))}
+                            <div style="background:#f8f9fb; border-radius:12px; padding:14px; grid-column:1 / -1;">
+                                <div style="color:#5b6777; font-size:0.9rem; margin-bottom:6px;">Observaciones de Entrega</div>
+                                <div style="color:#263849; font-weight:600;">${escapeHtml(d.infoEntrega.observaciones || 'Sin observaciones.')}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detalle-section" style="margin-top: 20px;">
+                        <h3 style="margin:0 0 14px; color:#4f6df5; border-bottom:2px solid #4f6df5; padding-bottom:10px;">Evidencia Fotografica</h3>
+                        <div style="display:flex; flex-wrap:wrap; gap:15px; justify-content:center;">
+                            ${buildPhotoLink(d.infoEntrega.fotoPrincipal, 'Foto Principal')}
+                            ${buildPhotoLink(d.infoEntrega.fotoAdicional, 'Foto Adicional')}
+                            ${!d.infoEntrega.fotoPrincipal && !d.infoEntrega.fotoAdicional ? '<p style="width:100%; text-align:center; color:#728193;">No hay fotos de evidencia disponibles.</p>' : ''}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${d.estado === 'cancelado' ? `
+                    <div class="detalle-section" style="margin-top: 20px; background-color: #fff5f5; border: 1px solid #f5c2c7; border-radius: 12px; padding: 14px;">
+                        <h3 style="margin:0 0 14px; color: #b02a37;">Detalles de Cancelacion</h3>
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px;">
+                            ${buildDetailCard('Motivo', d.infoCancelacion ? (d.infoCancelacion.motivo || 'Sin informacion.') : 'Sin informacion.')}
+                            ${buildDetailCard('Fecha', d.infoCancelacion ? formatDate(d.infoCancelacion.fecha) : 'Sin informacion.')}
+                        </div>
+                    </div>
+
+                    <div class="detalle-section" style="margin-top: 20px;">
+                        <h3 style="margin:0 0 14px; color:#4f6df5; border-bottom:2px solid #4f6df5; padding-bottom:10px;">Evidencia Fotografica</h3>
+                        <div style="display:flex; flex-wrap:wrap; gap:15px; justify-content:center;">
+                            ${d.infoCancelacion && d.infoCancelacion.foto ? buildPhotoLink(d.infoCancelacion.foto, 'Foto Evidencia') : '<p style="width:100%; text-align:center; color:#728193;">No hay fotos de evidencia disponibles.</p>'}
+                        </div>
+                    </div>
+                ` : ''}
             `;
             detalleModal.style.display = 'block';
         } catch (error) {
@@ -278,6 +357,31 @@ document.addEventListener('DOMContentLoaded', function () {
         const text = String(value ?? '').trim().toLowerCase();
         if (['1', 'si', 'sí', 'true', 'x', 'yes'].includes(text)) return 'Si';
         return 'No';
+    }
+
+    function rawDateText(value) {
+        if (!value) return 'Sin fecha';
+        return escapeHtml(String(value).replace('T', ' ').substring(0, 19));
+    }
+
+    function buildDetailCard(label, value) {
+        return `
+            <div style="background:#f8f9fb; border-radius:12px; padding:14px;">
+                <div style="color:#5b6777; font-size:0.9rem; margin-bottom:6px;">${escapeHtml(label)}</div>
+                <div style="color:#263849; font-weight:600;">${escapeHtml(value)}</div>
+            </div>
+        `;
+    }
+
+    function buildPhotoLink(path, alt) {
+        if (!path) return '';
+        const safeAlt = escapeHtml(alt);
+        const safePath = escapeHtml(`../../${String(path).replace(/^\.?\/*/, '')}`);
+        return `
+            <a href="${safePath}" target="_blank" rel="noopener noreferrer" style="display:block; width:150px; height:150px; border:1px solid #ddd; border-radius:8px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+                <img src="${safePath}" alt="${safeAlt}" style="width:100%; height:100%; object-fit:cover;">
+            </a>
+        `;
     }
 
     function escapeHtml(value) {

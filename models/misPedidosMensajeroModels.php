@@ -79,8 +79,10 @@ class MisPedidosMensajeroModel
     public function obtenerDetalle(int $paqueteId, int $usuarioId): ?array
     {
         $sql = "SELECT p.*,
+                       c.nombre_emprendimiento,
                        CONCAT(um.nombres, ' ', um.apellidos) AS mensajero_asignado
                 FROM paquetes p
+                LEFT JOIN clientes c ON p.cliente_id = c.id
                 LEFT JOIN mensajeros m ON p.mensajero_id = m.id
                 LEFT JOIN usuarios um ON m.usuario_id = um.id
                 WHERE p.id = :id AND p.creado_por = :usuario_id
@@ -92,6 +94,56 @@ class MisPedidosMensajeroModel
         ]);
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row ?: null;
+        if (!$row) {
+            return null;
+        }
+
+        if (($row['estado'] ?? '') === 'entregado') {
+            $sqlEntrega = "SELECT * FROM entregas WHERE paquete_id = :id LIMIT 1";
+            $stmtEntrega = $this->conn->prepare($sqlEntrega);
+            $stmtEntrega->execute([':id' => $paqueteId]);
+            $entrega = $stmtEntrega->fetch(PDO::FETCH_ASSOC);
+
+            if ($entrega) {
+                $row['infoEntrega'] = [
+                    'nombreRecibe' => $entrega['nombre_receptor'] ?? '',
+                    'parentesco' => $entrega['parentesco_cargo'] ?? '',
+                    'documento' => $entrega['documento_receptor'] ?? '',
+                    'recaudo' => $entrega['recaudo_real'] ?? 0,
+                    'fecha' => $entrega['fecha_entrega'] ?? '',
+                    'observaciones' => $entrega['observaciones_entrega'] ?? '',
+                    'fotoPrincipal' => $entrega['foto_entrega'] ?? '',
+                    'fotoAdicional' => $entrega['foto_adicional'] ?? ''
+                ];
+            }
+        }
+
+        if (($row['estado'] ?? '') === 'cancelado') {
+            $sqlCancel = "SELECT n.descripcion,
+                                 n.foto_evidencia,
+                                 n.fecha_registro,
+                                 CONCAT(u.nombres, ' ', u.apellidos) AS mensajero
+                          FROM novedades_entrega n
+                          LEFT JOIN mensajeros m ON n.mensajero_id = m.id
+                          LEFT JOIN usuarios u ON m.usuario_id = u.id
+                          WHERE n.paquete_id = :id
+                            AND n.tipo = 'cancelado'
+                          ORDER BY n.fecha_registro DESC
+                          LIMIT 1";
+            $stmtCancel = $this->conn->prepare($sqlCancel);
+            $stmtCancel->execute([':id' => $paqueteId]);
+            $cancel = $stmtCancel->fetch(PDO::FETCH_ASSOC);
+
+            if ($cancel) {
+                $row['infoCancelacion'] = [
+                    'motivo' => $cancel['descripcion'] ?? '',
+                    'foto' => $cancel['foto_evidencia'] ?? '',
+                    'fecha' => $cancel['fecha_registro'] ?? '',
+                    'mensajero' => $cancel['mensajero'] ?? ''
+                ];
+            }
+        }
+
+        return $row;
     }
 }

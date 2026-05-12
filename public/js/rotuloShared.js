@@ -83,6 +83,13 @@
     }
 
     function buildInnerHtml(data) {
+        const totalText = formatMoney(data.recaudo);
+        const totalLength = totalText.length;
+        let totalFontSize = 58;
+        if (totalLength >= 11) totalFontSize = 42;
+        else if (totalLength >= 10) totalFontSize = 46;
+        else if (totalLength >= 9) totalFontSize = 50;
+
         return `
             <div class="rotulo-scale" style="transform:scale(0.72);transform-origin:top left;width:139mm;height:139mm;">
                 <table style="width:100%;border-bottom:2px solid #64c46a;padding-bottom:6px;border-collapse:collapse;">
@@ -131,7 +138,7 @@
                         </div>
                         <div style="margin-top:4px;">
                             <h3 style="margin:0 0 6px;font-size:17px;font-weight:800;color:#30363d;">Total a Cobrar</h3>
-                            <p style="margin:0;font-size:58px;font-weight:900;color:#28a745;line-height:0.82;text-align:center;letter-spacing:0.5px;">${escapeHtml(formatMoney(data.recaudo))}</p>
+                            <p style="margin:0;font-size:${totalFontSize}px;font-weight:900;color:#28a745;line-height:0.9;text-align:center;letter-spacing:0.5px;">${escapeHtml(totalText)}</p>
                         </div>
                     </div>
                     <div style="flex:0 0 132px;display:flex;justify-content:flex-start;align-items:flex-start;padding-top:0;margin-left:-12mm;">
