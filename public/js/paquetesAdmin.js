@@ -657,22 +657,22 @@ function verDetalle(id, options = {}) {
                 };
 
                 const evidenciaItems = [];
-                if (info.infoEntrega && info.infoEntrega.fotoPrincipal) {
+                if (info.infoEntrega) {
                     evidenciaItems.push({
                         tipo: 'entrega',
                         label: 'Entrega principal',
-                        ruta: info.infoEntrega.fotoPrincipal,
+                        ruta: info.infoEntrega.fotoPrincipal || '',
                         target: 'entrega_principal',
-                        allowDelete: true
+                        allowDelete: true,
+                        empty: !info.infoEntrega.fotoPrincipal
                     });
-                }
-                if (info.infoEntrega && info.infoEntrega.fotoAdicional) {
                     evidenciaItems.push({
                         tipo: 'entrega',
                         label: 'Entrega adicional',
-                        ruta: info.infoEntrega.fotoAdicional,
+                        ruta: info.infoEntrega.fotoAdicional || '',
                         target: 'entrega_adicional',
-                        allowDelete: true
+                        allowDelete: true,
+                        empty: !info.infoEntrega.fotoAdicional
                     });
                 }
                 if (info.infoCancelacion && info.infoCancelacion.foto) {
@@ -714,9 +714,9 @@ function verDetalle(id, options = {}) {
 
                 const renderEvidenciaCard = (item) => {
                     const rutaRaw = item.ruta || item.ruta_archivo;
-                    if (!rutaRaw) return '';
-                    const ruta = String(rutaRaw).replace(/^\/+/, '');
-                    const fullPath = `../../${ruta}`;
+                    const hasImage = Boolean(rutaRaw);
+                    const ruta = hasImage ? String(rutaRaw).replace(/^\/+/, '') : '';
+                    const fullPath = hasImage ? `../../${ruta}` : '';
 
                     const canDelete = (item.allowDelete !== false) && (item.imageId || item.target);
                     const deleteAttrs = item.imageId
@@ -742,9 +742,15 @@ function verDetalle(id, options = {}) {
                     ` : '';
                     return `
                         <div class="evidencia-card">
-                            <a href="${fullPath}" class="js-image-lightbox" data-lightbox-src="${fullPath}" data-lightbox-alt="${escapeHtml(item.label)}" aria-label="${escapeHtml(item.label)}">
-                                <img src="${fullPath}" alt="${escapeHtml(item.label)}">
-                            </a>
+                            ${hasImage ? `
+                                <a href="${fullPath}" class="js-image-lightbox" data-lightbox-src="${fullPath}" data-lightbox-alt="${escapeHtml(item.label)}" aria-label="${escapeHtml(item.label)}">
+                                    <img src="${fullPath}" alt="${escapeHtml(item.label)}">
+                                </a>
+                            ` : `
+                                <div style="height: 180px; display:flex; align-items:center; justify-content:center; background:#f8f9fb; color:#7a8699; border:1px dashed #cbd5e1; border-radius:10px; text-align:center; padding:12px;">
+                                    Sin imagen cargada
+                                </div>
+                            `}
                             <div class="evidencia-meta">
                                 <span>${escapeHtml(item.label)}</span>
                                 <span class="badge badge-secondary">${escapeHtml(item.tipo)}</span>
@@ -1007,6 +1013,7 @@ function verDetalle(id, options = {}) {
 
                 const form = document.getElementById('formEditarDetalles');
                 if (form) {
+                    let guardandoCambios = false;
                     if (options.modoCierre) {
                         const estadoSelect = form.querySelector('select[name="estado"]');
                         const fechaEntregaInput = form.querySelector('input[name="entrega_fecha"]');
@@ -1028,6 +1035,16 @@ function verDetalle(id, options = {}) {
 
                     form.addEventListener('submit', async (e) => {
                         e.preventDefault();
+                        if (guardandoCambios) return;
+
+                        guardandoCambios = true;
+                        const submitBtn = form.querySelector('button[type="submit"]');
+                        const originalSubmitText = submitBtn ? submitBtn.textContent : '';
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.textContent = 'Guardando...';
+                        }
+
                         const formData = new FormData(form);
                         const payload = {
                             paquete_id: id,
@@ -1082,6 +1099,12 @@ function verDetalle(id, options = {}) {
                         } catch (err) {
                             console.error(err);
                             alert('Error de conexión al guardar cambios');
+                        } finally {
+                            guardandoCambios = false;
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.textContent = originalSubmitText;
+                            }
                         }
                     });
                 }

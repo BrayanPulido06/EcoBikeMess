@@ -143,10 +143,19 @@ try {
                 $actualizoCancelacion = $model->updateCancelacionInfo($paqueteId, $payloadCancel);
             }
 
+            $success = (bool) $res;
+            if (!empty($payloadEntrega)) {
+                $success = $success && (bool) $actualizoEntrega;
+            }
+            if (!empty($input['cancelacion']) && is_array($input['cancelacion'])) {
+                $success = $success && (bool) $actualizoCancelacion;
+            }
+
             echo json_encode([
-                'success' => $res ? true : false,
+                'success' => $success,
                 'actualizoEntrega' => $actualizoEntrega,
-                'actualizoCancelacion' => $actualizoCancelacion
+                'actualizoCancelacion' => $actualizoCancelacion,
+                'error' => $success ? null : 'No se pudo guardar toda la información del cierre.'
             ]);
             break;
 
@@ -197,6 +206,32 @@ try {
                     continue;
                 }
                 $ruta = '/uploads/' . $subdir . '/' . $basename;
+
+                if ($tipo === 'entrega') {
+                    $fotosActuales = $model->getEntregaFotos($paqueteId) ?: [];
+                    $campo = empty($fotosActuales['foto_entrega']) ? 'foto_entrega' : 'foto_adicional';
+                    if ($model->updateEntregaFoto($paqueteId, $campo, $ruta)) {
+                        $added[] = [
+                            'tipo' => $tipo,
+                            'ruta_archivo' => $ruta,
+                            'target' => $campo === 'foto_entrega' ? 'entrega_principal' : 'entrega_adicional'
+                        ];
+                    }
+                    continue;
+                }
+
+                if ($tipo === 'cancelacion') {
+                    $model->ensureCancelacionRecord($paqueteId);
+                    if ($model->updateCancelacionFoto($paqueteId, $ruta)) {
+                        $added[] = [
+                            'tipo' => $tipo,
+                            'ruta_archivo' => $ruta,
+                            'target' => 'cancelacion'
+                        ];
+                    }
+                    continue;
+                }
+
                 $imageId = $model->addPaqueteImagen($paqueteId, $tipo, $ruta, $userId);
                 $added[] = [
                     'id' => $imageId,

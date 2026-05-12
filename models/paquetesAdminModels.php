@@ -37,6 +37,63 @@ class PaquetesAdminModel {
         }
     }
 
+    private function getEntregaRowId(int $paqueteId): ?int
+    {
+        try {
+            $stmt = $this->conn->prepare("SELECT id FROM entregas WHERE paquete_id = :id ORDER BY id DESC LIMIT 1");
+            $stmt->execute([':id' => $paqueteId]);
+            $value = $stmt->fetchColumn();
+            return $value ? (int) $value : null;
+        } catch (Throwable $e) {
+            return null;
+        }
+    }
+
+    private function ensureEntregaRecord(int $paqueteId, ?int $mensajeroId = null): ?int
+    {
+        $existingId = $this->getEntregaRowId($paqueteId);
+        if ($existingId) {
+            return $existingId;
+        }
+
+        try {
+            $stmt = $this->conn->prepare("INSERT INTO entregas (paquete_id, mensajero_id, fecha_entrega) VALUES (:paquete_id, :mensajero_id, NOW())");
+            $stmt->execute([
+                ':paquete_id' => $paqueteId,
+                ':mensajero_id' => $mensajeroId ?: null
+            ]);
+            return (int) $this->conn->lastInsertId();
+        } catch (Throwable $e) {
+            return $this->getEntregaRowId($paqueteId);
+        }
+    }
+
+    private function getUltimaCancelacionId(int $paqueteId): ?int
+    {
+        $sql = "SELECT id FROM novedades_entrega
+                WHERE paquete_id = :id AND tipo = 'cancelado'
+                ORDER BY fecha_registro DESC, id DESC
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':id' => $paqueteId]);
+        $value = $stmt->fetchColumn();
+        return $value ? (int) $value : null;
+    }
+
+    public function ensureCancelacionRecord(int $paqueteId): ?int
+    {
+        $existingId = $this->getUltimaCancelacionId($paqueteId);
+        if ($existingId) {
+            return $existingId;
+        }
+
+        $sql = "INSERT INTO novedades_entrega (paquete_id, tipo, descripcion, fecha_registro)
+                VALUES (:paquete_id, 'cancelado', '', NOW())";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':paquete_id' => $paqueteId]);
+        return (int) $this->conn->lastInsertId();
+    }
+
     public function getFilters() {
         // Obtener Clientes para el filtro
         $sqlClientes = "SELECT DISTINCT c.id, 
@@ -219,7 +276,7 @@ class PaquetesAdminModel {
             $info = $stmtInfo->fetch(PDO::FETCH_ASSOC);
 
             if ($info) {
-                $sqlEntrega = "SELECT * FROM entregas WHERE paquete_id = :id";
+                $sqlEntrega = "SELECT * FROM entregas WHERE paquete_id = :id ORDER BY id DESC LIMIT 1";
                 $stmtEntrega = $this->conn->prepare($sqlEntrega);
                 $stmtEntrega->execute([':id' => $id]);
                 $entrega = $stmtEntrega->fetch(PDO::FETCH_ASSOC) ?: [];
@@ -381,38 +438,25 @@ class PaquetesAdminModel {
     }
 
     public function updateEntregaInfo($paqueteId, $data) {
-        $sql = "INSERT INTO entregas (
-                    paquete_id,
-                    mensajero_id,
-                    nombre_receptor,
-                    parentesco_cargo,
-                    documento_receptor,
-                    recaudo_real,
-                    recibio_cambios,
-                    fecha_entrega,
-                    observaciones
-                ) VALUES (
-                    :id,
-                    :mensajero_id,
-                    :nombre_receptor,
-                    :parentesco,
-                    :documento,
-                    :recaudo,
-                    :recibio_cambios,
-                    :fecha_entrega,
-                    :observaciones
-                )
-                ON DUPLICATE KEY UPDATE
-                    mensajero_id = VALUES(mensajero_id),
-                    nombre_receptor = VALUES(nombre_receptor),
-                    parentesco_cargo = VALUES(parentesco_cargo),
-                    documento_receptor = VALUES(documento_receptor),
-                    recaudo_real = VALUES(recaudo_real),
-                    recibio_cambios = VALUES(recibio_cambios),
-                    fecha_entrega = VALUES(fecha_entrega),
-                    observaciones = VALUES(observaciones)";
+        $entregaId = $this->ensureEntregaRecord((int) $paqueteId, (int) ($data['mensajero_id'] ?? 0));
+        if (!$entregaId) {
+            return false;
+        }
+
+        $sql = "UPDATE entregas SET
+                    paquete_id = :paquete_id,
+                    mensajero_id = :mensajero_id,
+                    nombre_receptor = :nombre_receptor,
+                    parentesco_cargo = :parentesco,
+                    documento_receptor = :documento,
+                    recaudo_real = :recaudo,
+                    recibio_cambios = :recibio_cambios,
+                    fecha_entrega = :fecha_entrega,
+                    observaciones = :observaciones
+                WHERE id = :entrega_id";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
+            ':paquete_id' => $paqueteId,
             ':mensajero_id' => $data['mensajero_id'] ?: null,
             ':nombre_receptor' => $data['nombre_receptor'],
             ':parentesco' => $data['parentesco_cargo'] ?: null,
@@ -421,19 +465,13 @@ class PaquetesAdminModel {
             ':recibio_cambios' => !empty($data['recibio_cambios']) ? 1 : 0,
             ':fecha_entrega' => $data['fecha_entrega'] ?: null,
             ':observaciones' => $data['observaciones'] ?: null,
-            ':id' => $paqueteId
+            ':entrega_id' => $entregaId
         ]);
     }
 
     public function updateCancelacionInfo($paqueteId, $data) {
-        $sqlId = "SELECT id FROM novedades_entrega
-                  WHERE paquete_id = :id AND tipo = 'cancelado'
-                  ORDER BY fecha_registro DESC
-                  LIMIT 1";
-        $stmtId = $this->conn->prepare($sqlId);
-        $stmtId->execute([':id' => $paqueteId]);
-        $row = $stmtId->fetch(PDO::FETCH_ASSOC);
-        if (!$row) {
+        $cancelacionId = $this->getUltimaCancelacionId((int) $paqueteId);
+        if (!$cancelacionId) {
             return false;
         }
 
@@ -441,7 +479,7 @@ class PaquetesAdminModel {
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
             ':descripcion' => $data['descripcion'],
-            ':id' => $row['id']
+            ':id' => $cancelacionId
         ]);
     }
 
@@ -472,7 +510,7 @@ class PaquetesAdminModel {
     }
 
     public function getEntregaFotos($paqueteId) {
-        $sql = "SELECT foto_entrega, foto_adicional FROM entregas WHERE paquete_id = :id";
+        $sql = "SELECT foto_entrega, foto_adicional FROM entregas WHERE paquete_id = :id ORDER BY id DESC LIMIT 1";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':id' => $paqueteId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -482,15 +520,19 @@ class PaquetesAdminModel {
         if (!in_array($campo, ['foto_entrega', 'foto_adicional'], true)) {
             return false;
         }
-        $sql = "UPDATE entregas SET {$campo} = :ruta WHERE paquete_id = :id";
+        $entregaId = $this->ensureEntregaRecord((int) $paqueteId, null);
+        if (!$entregaId) {
+            return false;
+        }
+        $sql = "UPDATE entregas SET {$campo} = :ruta WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([':ruta' => $ruta, ':id' => $paqueteId]);
+        return $stmt->execute([':ruta' => $ruta, ':id' => $entregaId]);
     }
 
     public function getCancelacionFoto($paqueteId) {
         $sql = "SELECT foto_evidencia FROM novedades_entrega
                 WHERE paquete_id = :id AND tipo = 'cancelado'
-                ORDER BY fecha_registro DESC
+                ORDER BY fecha_registro DESC, id DESC
                 LIMIT 1";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':id' => $paqueteId]);
@@ -498,19 +540,13 @@ class PaquetesAdminModel {
     }
 
     public function updateCancelacionFoto($paqueteId, $ruta) {
-        $sqlId = "SELECT id FROM novedades_entrega
-                  WHERE paquete_id = :id AND tipo = 'cancelado'
-                  ORDER BY fecha_registro DESC
-                  LIMIT 1";
-        $stmtId = $this->conn->prepare($sqlId);
-        $stmtId->execute([':id' => $paqueteId]);
-        $row = $stmtId->fetch(PDO::FETCH_ASSOC);
-        if (!$row) {
+        $cancelacionId = $this->getUltimaCancelacionId((int) $paqueteId);
+        if (!$cancelacionId) {
             return false;
         }
         $sql = "UPDATE novedades_entrega SET foto_evidencia = :ruta WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([':ruta' => $ruta, ':id' => $row['id']]);
+        return $stmt->execute([':ruta' => $ruta, ':id' => $cancelacionId]);
     }
 
     public function assignMensajero($paqueteId, $mensajeroId, $userId) {
