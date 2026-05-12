@@ -209,6 +209,8 @@ body {
 
 .pedido-actions {
     display: flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
     justify-content: flex-end;
 }
 
@@ -216,6 +218,17 @@ body {
     border: none;
     background: #eef5f0;
     color: #2d3e50;
+    border-radius: 10px;
+    padding: 0.65rem 0.9rem;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-rotulo {
+    border: none;
+    background: #eaf7ed;
+    color: #1f7a36;
     border-radius: 10px;
     padding: 0.65rem 0.9rem;
     font: inherit;
@@ -251,6 +264,10 @@ body {
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
 }
 
+.rotulo-dialog {
+    width: min(96vw, 860px);
+}
+
 .detalle-close {
     border: none;
     background: #eef5f0;
@@ -262,6 +279,49 @@ body {
     cursor: pointer;
     margin-left: auto;
     display: block;
+}
+
+.rotulo-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.rotulo-modal-header h2 {
+    margin: 0;
+    color: #213547;
+    font-size: 1.25rem;
+}
+
+.rotulo-modal-actions {
+    display: flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.btn-descargar-rotulo {
+    border: none;
+    background: #5cb85c;
+    color: #fff;
+    border-radius: 10px;
+    padding: 0.55rem 0.95rem;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.rotulo-preview-wrap {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    overflow: auto;
+}
+
+#rotuloPreview {
+    background: #fff;
 }
 
 .detalle-content {

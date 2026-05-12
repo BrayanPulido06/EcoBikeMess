@@ -18,8 +18,11 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
-    <link rel="stylesheet" href="../../public/css/misPedidosMensajero.css?v=20260418-1">
+    <link rel="stylesheet" href="../../public/css/misPedidosMensajero.css?v=20260511-1">
     <link rel="stylesheet" href="../../public/css/responsive.css">
+    <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <header class="mobile-header">
@@ -121,7 +124,24 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
         </div>
     </div>
 
+    <div id="rotuloModal" class="detalle-modal" style="display: none;">
+        <div class="detalle-backdrop" id="rotuloBackdrop"></div>
+        <div class="detalle-dialog rotulo-dialog">
+            <div class="rotulo-modal-header">
+                <h2>Rotulo de envio</h2>
+                <div class="rotulo-modal-actions">
+                    <button type="button" class="btn-descargar-rotulo" id="btnDownloadRotulo">Descargar PDF</button>
+                    <button type="button" class="detalle-close" id="closeRotuloModal">Cerrar</button>
+                </div>
+            </div>
+            <div class="rotulo-preview-wrap">
+                <div id="rotuloPreview"></div>
+            </div>
+        </div>
+    </div>
+
     <script src="../../public/js/mensajeroLayout.js?v=20260418-1"></script>
-    <script src="../../public/js/misPedidosMensajero.js?v=20260418-1"></script>
+    <script src="../../public/js/rotuloShared.js"></script>
+    <script src="../../public/js/misPedidosMensajero.js?v=20260511-1"></script>
 </body>
 </html>

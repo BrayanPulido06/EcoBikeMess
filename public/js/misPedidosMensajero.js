@@ -10,10 +10,18 @@ document.addEventListener('DOMContentLoaded', function () {
         fechaHasta: document.getElementById('filtroFechaHasta')
     };
 
-    const modal = document.getElementById('detalleModal');
-    const modalContent = document.getElementById('detalleContent');
-    const modalClose = document.getElementById('detalleClose');
-    const modalBackdrop = document.getElementById('detalleBackdrop');
+    const detalleModal = document.getElementById('detalleModal');
+    const detalleContent = document.getElementById('detalleContent');
+    const detalleClose = document.getElementById('detalleClose');
+    const detalleBackdrop = document.getElementById('detalleBackdrop');
+
+    const rotuloModal = document.getElementById('rotuloModal');
+    const rotuloPreview = document.getElementById('rotuloPreview');
+    const rotuloClose = document.getElementById('closeRotuloModal');
+    const rotuloBackdrop = document.getElementById('rotuloBackdrop');
+    const btnDownloadRotulo = document.getElementById('btnDownloadRotulo');
+
+    let currentRotuloData = null;
 
     document.getElementById('btnBuscar')?.addEventListener('click', cargarTodo);
     document.getElementById('btnLimpiar')?.addEventListener('click', function () {
@@ -30,8 +38,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    modalClose?.addEventListener('click', cerrarModal);
-    modalBackdrop?.addEventListener('click', cerrarModal);
+    detalleClose?.addEventListener('click', cerrarDetalle);
+    detalleBackdrop?.addEventListener('click', cerrarDetalle);
+    rotuloClose?.addEventListener('click', cerrarRotulo);
+    rotuloBackdrop?.addEventListener('click', cerrarRotulo);
+    btnDownloadRotulo?.addEventListener('click', descargarRotuloActual);
 
     async function cargarTodo() {
         await Promise.all([cargarEstadisticas(), cargarPedidos()]);
@@ -78,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const json = await response.json();
 
             if (!json.success) {
-                listEl.innerHTML = `<div class="empty-state">${json.message || 'No fue posible cargar los pedidos.'}</div>`;
+                listEl.innerHTML = `<div class="empty-state">${escapeHtml(json.message || 'No fue posible cargar los pedidos.')}</div>`;
                 return;
             }
 
@@ -136,14 +147,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
 
                 <div class="pedido-actions">
-                    <button type="button" class="btn-detalle" data-id="${row.id}">Ver detalle</button>
+                    <button type="button" class="btn-rotulo" data-action="rotulo" data-id="${row.id}">Ver rotulo</button>
+                    <button type="button" class="btn-detalle" data-action="detalle" data-id="${row.id}">Ver detalle</button>
                 </div>
             </article>
         `).join('');
 
-        listEl.querySelectorAll('.btn-detalle').forEach(btn => {
+        listEl.querySelectorAll('[data-action="detalle"]').forEach(btn => {
             btn.addEventListener('click', function () {
                 abrirDetalle(Number(btn.dataset.id));
+            });
+        });
+
+        listEl.querySelectorAll('[data-action="rotulo"]').forEach(btn => {
+            btn.addEventListener('click', function () {
+                cargarRotulo(Number(btn.dataset.id), btn);
             });
         });
     }
@@ -153,32 +171,95 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch(`${API}?${buildParams('detalle', { id })}`);
             const json = await response.json();
 
-            if (!json.success || !json.data) {
-                return;
-            }
+            if (!json.success || !json.data) return;
 
             const d = json.data;
-            modalContent.innerHTML = `
+            detalleContent.innerHTML = `
                 <div class="detalle-row"><span>Guia</span><strong>${escapeHtml(d.numero_guia || '')}</strong></div>
                 <div class="detalle-row"><span>Estado</span><strong>${escapeHtml(d.estado || '')}</strong></div>
-                <div class="detalle-row"><span>Remitente</span><strong>${escapeHtml(d.remitente_nombre || '')}</strong></div>
+                <div class="detalle-row"><span>Remitente</span><strong>${escapeHtml(d.remitente_nombre || d.nombre_emprendimiento || '')}</strong></div>
                 <div class="detalle-row"><span>Destinatario</span><strong>${escapeHtml(d.destinatario_nombre || '')}</strong></div>
                 <div class="detalle-row"><span>Telefono destinatario</span><strong>${escapeHtml(d.destinatario_telefono || '')}</strong></div>
                 <div class="detalle-row"><span>Direccion destino</span><strong>${escapeHtml(d.direccion_destino || '')}</strong></div>
                 <div class="detalle-row"><span>Instrucciones</span><strong>${escapeHtml(d.instrucciones_entrega || 'Sin instrucciones')}</strong></div>
                 <div class="detalle-row"><span>Contenido</span><strong>${escapeHtml(d.descripcion_contenido || 'Sin descripcion')}</strong></div>
+                <div class="detalle-row"><span>Cambios por recoger</span><strong>${normalizeYesNo(d.recoger_cambios)}</strong></div>
                 <div class="detalle-row"><span>Costo envio</span><strong>${formatCurrency(d.costo_envio || 0)}</strong></div>
                 <div class="detalle-row"><span>Recaudo esperado</span><strong>${formatCurrency(d.recaudo_esperado || 0)}</strong></div>
                 <div class="detalle-row"><span>Fecha creacion</span><strong>${formatDate(d.fecha_creacion)}</strong></div>
             `;
-            modal.style.display = 'block';
+            detalleModal.style.display = 'block';
         } catch (error) {
             console.error('Error cargando detalle:', error);
         }
     }
 
-    function cerrarModal() {
-        if (modal) modal.style.display = 'none';
+    async function cargarRotulo(id, button) {
+        const originalText = button?.textContent || 'Ver rotulo';
+        if (button) {
+            button.textContent = 'Cargando...';
+            button.disabled = true;
+        }
+
+        try {
+            const response = await fetch(`${API}?${buildParams('detalle', { id })}`);
+            const json = await response.json();
+
+            if (!json.success || !json.data) {
+                alert(json.message || 'No se pudo cargar el rotulo.');
+                return;
+            }
+
+            currentRotuloData = {
+                guia: json.data.numero_guia,
+                remitente_nombre: json.data.remitente_nombre || 'EcoBikeMess',
+                tienda_nombre: json.data.nombre_emprendimiento || json.data.remitente_nombre || 'Tienda',
+                destinatario_nombre: json.data.destinatario_nombre,
+                destinatario_direccion: json.data.direccion_destino,
+                destinatario_telefono: json.data.destinatario_telefono || '',
+                destinatario_observaciones: json.data.instrucciones_entrega || 'Sin observaciones',
+                cambios: json.data.recoger_cambios,
+                recaudo: json.data.recaudo_esperado || 0
+            };
+
+            if (!window.RotuloEcoBike || !rotuloPreview) {
+                alert('El generador de rotulos no esta disponible.');
+                return;
+            }
+
+            await window.RotuloEcoBike.mountPreview(rotuloPreview, currentRotuloData);
+            rotuloModal.style.display = 'block';
+        } catch (error) {
+            console.error('Error cargando rotulo:', error);
+            alert('Error de conexion al cargar el rotulo.');
+        } finally {
+            if (button) {
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        }
+    }
+
+    async function descargarRotuloActual() {
+        if (!currentRotuloData || !window.RotuloEcoBike) {
+            alert('Primero abre un rotulo.');
+            return;
+        }
+
+        try {
+            await window.RotuloEcoBike.downloadPdf(currentRotuloData, { filePrefix: 'Rotulo' });
+        } catch (error) {
+            console.error('Error descargando rotulo:', error);
+            alert('No se pudo generar el PDF del rotulo.');
+        }
+    }
+
+    function cerrarDetalle() {
+        if (detalleModal) detalleModal.style.display = 'none';
+    }
+
+    function cerrarRotulo() {
+        if (rotuloModal) rotuloModal.style.display = 'none';
     }
 
     function formatCurrency(value) {
@@ -191,6 +272,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return value;
         return date.toLocaleString('es-CO');
+    }
+
+    function normalizeYesNo(value) {
+        const text = String(value ?? '').trim().toLowerCase();
+        if (['1', 'si', 'sí', 'true', 'x', 'yes'].includes(text)) return 'Si';
+        return 'No';
     }
 
     function escapeHtml(value) {
