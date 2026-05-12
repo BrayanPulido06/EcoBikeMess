@@ -116,11 +116,16 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
         </section>
     </main>
 
-    <div id="detalleModal" class="detalle-modal" style="display: none;">
+    <div id="detalleModal" class="detalle-modal modal" style="display: none;">
         <div class="detalle-backdrop" id="detalleBackdrop"></div>
-        <div class="detalle-dialog">
-            <button type="button" class="detalle-close" id="detalleClose">Cerrar</button>
-            <div id="detalleContent" class="detalle-content"></div>
+        <div class="detalle-dialog modal-content modal-large">
+            <div class="modal-header">
+                <h2>Detalles de la Factura</h2>
+                <button type="button" class="btn-close" id="detalleClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="detalleContent" class="detalle-content"></div>
+            </div>
         </div>
     </div>
 
@@ -141,7 +146,8 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     </div>
 
     <script src="../../public/js/mensajeroLayout.js?v=20260418-1"></script>
+    <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/rotuloShared.js?v=20260511-1"></script>
-    <script src="../../public/js/misPedidosMensajero.js?v=20260511-1"></script>
+    <script src="../../public/js/misPedidosMensajero.js?v=20260511-2"></script>
 </body>
 </html>

@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <p style="margin:5px 0; color:#7f8c8d;">Estado: <strong>${escapeHtml((d.estado || '').toUpperCase())}</strong></p>
                         </div>
                         <div class="text-right">
-                            <p style="margin:0;"><strong>Fecha:</strong> ${escapeHtml(rawDateText(d.fecha_creacion))}</p>
+                            <p style="margin:0;"><strong>Fecha:</strong> ${rawDateText(d.fecha_creacion)}</p>
                         </div>
                     </div>
                 </div>
@@ -226,9 +226,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 ${d.estado === 'entregado' && d.infoEntrega ? `
                     <div class="detalle-section" style="margin-top: 20px;">
-                        <h3 style="margin:0 0 14px; color:#4f6df5; border-bottom:2px solid #4f6df5; padding-bottom:10px;">Detalles de Entrega</h3>
+                        <h3 style="margin:0 0 14px; color:#4f6df5; border-bottom:2px solid #4f6df5; padding-bottom:10px;">✅ Detalles de Entrega</h3>
                         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px;">
-                            ${buildDetailCard('Recibio', d.infoEntrega.nombreRecibe || 'N/A')}
+                            ${buildDetailCard('Recibió', d.infoEntrega.nombreRecibe || 'N/A')}
                             ${buildDetailCard('Parentesco', d.infoEntrega.parentesco || 'N/A')}
                             ${buildDetailCard('Documento', d.infoEntrega.documento || 'N/A')}
                             ${buildDetailCard('Fecha de Entrega', formatDate(d.infoEntrega.fecha))}
@@ -241,11 +241,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <div class="detalle-section" style="margin-top: 20px;">
-                        <h3 style="margin:0 0 14px; color:#4f6df5; border-bottom:2px solid #4f6df5; padding-bottom:10px;">Evidencia Fotografica</h3>
-                        <div style="display:flex; flex-wrap:wrap; gap:15px; justify-content:center;">
+                        <h3 style="margin:0 0 14px; color:#4f6df5; border-bottom:2px solid #4f6df5; padding-bottom:10px;">📸 Evidencia Fotográfica</h3>
+                        <div class="fotos-evidencia-container" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
                             ${buildPhotoLink(d.infoEntrega.fotoPrincipal, 'Foto Principal')}
                             ${buildPhotoLink(d.infoEntrega.fotoAdicional, 'Foto Adicional')}
-                            ${!d.infoEntrega.fotoPrincipal && !d.infoEntrega.fotoAdicional ? '<p style="width:100%; text-align:center; color:#728193;">No hay fotos de evidencia disponibles.</p>' : ''}
+                            ${!d.infoEntrega.fotoPrincipal && !d.infoEntrega.fotoAdicional ? '<p class="text-muted" style="width: 100%; text-align: center;">No hay fotos de evidencia disponibles.</p>' : ''}
                         </div>
                     </div>
                 ` : ''}
@@ -260,14 +260,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <div class="detalle-section" style="margin-top: 20px;">
-                        <h3 style="margin:0 0 14px; color:#4f6df5; border-bottom:2px solid #4f6df5; padding-bottom:10px;">Evidencia Fotografica</h3>
-                        <div style="display:flex; flex-wrap:wrap; gap:15px; justify-content:center;">
-                            ${d.infoCancelacion && d.infoCancelacion.foto ? buildPhotoLink(d.infoCancelacion.foto, 'Foto Evidencia') : '<p style="width:100%; text-align:center; color:#728193;">No hay fotos de evidencia disponibles.</p>'}
+                        <h3 style="margin:0 0 14px; color:#4f6df5; border-bottom:2px solid #4f6df5; padding-bottom:10px;">📸 Evidencia Fotográfica</h3>
+                        <div class="fotos-evidencia-container" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+                            ${d.infoCancelacion && d.infoCancelacion.foto ? buildPhotoLink(d.infoCancelacion.foto, 'Foto Evidencia') : '<p class="text-muted" style="width: 100%; text-align: center;">No hay fotos de evidencia disponibles.</p>'}
                         </div>
                     </div>
                 ` : ''}
             `;
-            detalleModal.style.display = 'block';
+            detalleModal.style.display = 'flex';
         } catch (error) {
             console.error('Error cargando detalle:', error);
         }
@@ -361,7 +361,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function rawDateText(value) {
         if (!value) return 'Sin fecha';
-        return escapeHtml(String(value).replace('T', ' ').substring(0, 19));
+        return String(value).replace('T', ' ').substring(0, 19);
     }
 
     function buildDetailCard(label, value) {
@@ -376,10 +376,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function buildPhotoLink(path, alt) {
         if (!path) return '';
         const safeAlt = escapeHtml(alt);
-        const safePath = escapeHtml(`../../${String(path).replace(/^\.?\/*/, '')}`);
+        const relativePath = String(path).replace(/^(\.\.\/|\.\/|\/)+/, '');
+        const safePath = `../../${relativePath}`;
         return `
-            <a href="${safePath}" target="_blank" rel="noopener noreferrer" style="display:block; width:150px; height:150px; border:1px solid #ddd; border-radius:8px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-                <img src="${safePath}" alt="${safeAlt}" style="width:100%; height:100%; object-fit:cover;">
+            <a href="${safePath}" class="js-image-lightbox" data-lightbox-src="${safePath}" data-lightbox-alt="${safeAlt}" style="display: block; width: 150px; height: 150px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <img src="${safePath}" alt="${safeAlt}" style="width: 100%; height: 100%; object-fit: cover;">
             </a>
         `;
     }
