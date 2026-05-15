@@ -289,13 +289,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${recaudoRealFormateado}</td>
                     <td>${cambiosRecogidos}</td>
                     <td>${envioAgregado}</td>
+                    <td>${p.guia}</td>
                     <td>
                         <div class="action-buttons">
                             ${p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-danger" onclick="abrirModalCancelarServicio(${p.id}, '${guiaSeguro}', '${nombrePaquete}')" title="Cancelar servicio">Cancelar</button>` : ''}
                             <button class="btn btn-sm btn-dark" onclick="eliminarPaqueteAdmin(${p.id}, '${guiaSeguro}', '${nombrePaquete}')" title="Eliminar paquete">Eliminar</button>
                         </div>
                     </td>
-                    <td>${p.guia}</td>
                 </tr>
             `;
         });
