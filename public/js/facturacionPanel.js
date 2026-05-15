@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const abonos = getGroupAbonos(group.clienteId, group.dateKey);
                 const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
                 const saldo = Number(group.totalRecaudado || 0) - Number(group.totalServicio || 0);
-                const balance = saldo - abono;
+                const balance = saldo + abono;
                 return {
                     ...group,
                     abonos,
@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         groupsAsc.forEach((group) => {
             const previous = Number(runningTotalsByClient.get(group.clientKey) || 0);
-            const current = previous + Number(group.saldo || 0) - Number(group.abono || 0);
+            const current = previous + Number(group.saldo || 0) + Number(group.abono || 0);
             runningTotalsByClient.set(group.clientKey, current);
             group.totalAcumulado = current;
             group.totalAcumuladoEstado = groupStatusFromBalance(current);
