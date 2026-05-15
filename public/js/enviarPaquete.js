@@ -316,7 +316,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const campos = {
                 'remitente_nombre': data.nombre_completo,
                 'remitente_telefono': data.telefono,
-                'remitente_email': data.correo,
                 'remitente_direccion': data.direccion
             };
 
@@ -408,7 +407,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // 0. Llenar Remitente si viene en la plantilla
                     setField('remitente_nombre', getStructuredValue(0, getValue('remitente nombre') || getValue('datos remitente nombre') || getValue('nombre remitente')));
                     setField('remitente_telefono', getStructuredValue(1, getValue('remitente telefono') || getValue('telefono remitente')));
-                    setField('remitente_email', getStructuredValue(2, getValue('remitente email') || getValue('email de contacto') || getValue('correo remitente')));
+                    setField('observaciones_recoleccion', getStructuredValue(2, getValue('observaciones de recoleccion') || getValue('observacion de recoleccion') || getValue('observaciones recoleccion') || getValue('email de contacto') || getValue('remitente email') || getValue('correo remitente')));
                     setField('remitente_direccion', getStructuredValue(3, getValue('direccion de origen') || getValue('remitente direccion') || getValue('origen')));
 
                     // 1. Llenar Destinatario
@@ -521,7 +520,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 cliente_id: document.getElementById('cliente_id')?.value || '',
                 remitente_nombre: getStructuredValue(0, getValue('remitente nombre') || getValue('datos remitente nombre') || getValue('nombre remitente')) || document.getElementById('remitente_nombre').value || (window.remitenteData?.nombre_completo),
                 remitente_telefono: getStructuredValue(1, getValue('remitente telefono') || getValue('telefono remitente')) || document.getElementById('remitente_telefono').value || (window.remitenteData?.telefono),
-                remitente_email: getStructuredValue(2, getValue('remitente email') || getValue('email de contacto') || getValue('correo remitente')) || document.getElementById('remitente_email').value || (window.remitenteData?.correo),
+                observaciones_recoleccion: getStructuredValue(2, getValue('observaciones de recoleccion') || getValue('observacion de recoleccion') || getValue('observaciones recoleccion') || getValue('email de contacto') || getValue('remitente email') || getValue('correo remitente')) || document.getElementById('observaciones_recoleccion').value || '',
                 remitente_direccion: getStructuredValue(3, getValue('direccion de origen') || getValue('remitente direccion') || getValue('origen')) || document.getElementById('remitente_direccion').value || (window.remitenteData?.direccion),
                 destinatario_nombre: getStructuredValue(4, getValue('nombre') || getValue('destinatario')),
                 destinatario_telefono: getStructuredValue(5, getValue('num destinatario') || getValue('telefono') || getValue('celular') || getValue('movil')),
@@ -783,8 +782,8 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
             [7, "Igual o mayor a 50 x 50 cm", "Notificar"],
             [],
             ["Datos Remitente", "", "", "", "Datos Destinatario", "", "", "", "Información del Paquete", "", "", "", "", "", ""],
-            ["Nombre Completo", "Telefono", "Email de contacto", "Direccion de Origen", "Nombre Completo", "Telefono", "Direccion de Destino", "Observaciones y/o Descripciones", "Pago Contra Entrega (si/no)", "Valor recaudo", "Dimensiones del paquete", "Entrega Mismo Dia (si/no)", "Zona Periférica (si/no)", "Recoger Cambios (si/no)", "Sumar envio al recaudo (si/no)"],
-            ["Ej: Pepito Perez", "1234567890", "pepito@gmail.com", "Carrera 5 #33-22", "Maria Perez", "1234567890", "Calle 4 #23-10 Este", "Ninguna", "si", 100000, 3, "no", "no", "si", "si"]
+            ["Nombre Completo", "Telefono", "Observaciones de Recoleccion", "Direccion de Origen", "Nombre Completo", "Telefono", "Direccion de Destino", "Observaciones y/o Descripciones", "Pago Contra Entrega (si/no)", "Valor recaudo", "Dimensiones del paquete", "Entrega Mismo Dia (si/no)", "Zona Periferica (si/no)", "Recoger Cambios (si/no)", "Sumar envio al recaudo (si/no)"],
+            ["Ej: Pepito Perez", "1234567890", "", "Carrera 5 #33-22", "Maria Perez", "1234567890", "Calle 4 #23-10 Este", "Ninguna", "si", 100000, 3, "no", "no", "si", "si"]
         ];
 
         rows.forEach(row => sheet.addRow(row));
@@ -906,7 +905,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                         [7, "Igual o mayor a 50 x 50 cm", "Notificar"],
                         [],
                         ["Datos Remitente", "", "", "", "Datos Destinatario", "", "", "", "Información Del Paquete", "", "", "", "", "", ""],
-                        ["Nombre Completo", "Telefono", "Email de contacto", "Direccion de Origen", "Nombre Completo", "Telefono", "Direccion de Destino", "Observaciones y/o Descripciones", "Pago Contra Entrega (si/no)", "Valor recaudo", "Dimensiones del paquete", "Entrega Mismo Dia (si/no)", "Zona Periférica (si/no)", "Recoger Cambios (si/no)", "Sumar envio al recaudo (si/no)"]
+                        ["Nombre Completo", "Telefono", "Observaciones de Recoleccion", "Direccion de Origen", "Nombre Completo", "Telefono", "Direccion de Destino", "Observaciones y/o Descripciones", "Pago Contra Entrega (si/no)", "Valor recaudo", "Dimensiones del paquete", "Entrega Mismo Dia (si/no)", "Zona Periferica (si/no)", "Recoger Cambios (si/no)", "Sumar envio al recaudo (si/no)"]
                     ]);
                     sheet['!cols'] = [
                         { wch: 18 }, { wch: 26 }, { wch: 16 }, { wch: 22 },

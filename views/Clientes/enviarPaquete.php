@@ -419,8 +419,8 @@ $remitente_data = [
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="remitente_email">Email de Contacto *</label>
-                                <input type="email" id="remitente_email" name="remitente_email" required>
+                                <label for="observaciones_recoleccion">Observaciones de Recolección</label>
+                                <textarea id="observaciones_recoleccion" name="observaciones_recoleccion" rows="3" placeholder="Ej: Llamar al llegar, recoger en portería, tocar el timbre 2 veces, etc."></textarea>
                                 <span class="error-message"></span>
                             </div>
                             <div class="form-group">

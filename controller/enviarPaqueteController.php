@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $datos['cliente_id'] = $cliente_id;
         $datos['creado_por'] = $usuario_id;
         $datos['descripcion_contenido'] = trim((string) ($_POST['descripcion_contenido'] ?? ''));
+        $datos['observaciones_recoleccion'] = trim((string) ($_POST['observaciones_recoleccion'] ?? ''));
 
         $datos['tiene_recaudo'] = isset($_POST['tiene_recaudo']) ? 1 : 0;
         $datos['tiene_cambios'] = isset($_POST['recoger_cambios']) ? 1 : 0;

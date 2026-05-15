@@ -141,6 +141,7 @@ CREATE TABLE IF NOT EXISTS paquetes (
     remitente_telefono VARCHAR(20) NOT NULL,
     remitente_correo VARCHAR(150),
     direccion_origen TEXT NOT NULL,
+    observaciones_recoleccion TEXT,
     destinatario_nombre VARCHAR(200) NOT NULL,
     destinatario_telefono VARCHAR(10) NOT NULL,
     destinatario_telefono2 VARCHAR(10),

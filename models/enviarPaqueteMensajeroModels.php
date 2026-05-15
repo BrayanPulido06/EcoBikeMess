@@ -27,7 +27,8 @@ class EnvioMensajeroModel
         $columns = [
             'envio_mismo_dia' => "ALTER TABLE paquetes ADD COLUMN envio_mismo_dia TINYINT(1) NOT NULL DEFAULT 0 AFTER dimensiones",
             'zona_periferica' => "ALTER TABLE paquetes ADD COLUMN zona_periferica TINYINT(1) NOT NULL DEFAULT 0 AFTER envio_mismo_dia",
-            'recoger_cambios' => "ALTER TABLE paquetes ADD COLUMN recoger_cambios TINYINT(1) NOT NULL DEFAULT 0 AFTER zona_periferica"
+            'recoger_cambios' => "ALTER TABLE paquetes ADD COLUMN recoger_cambios TINYINT(1) NOT NULL DEFAULT 0 AFTER zona_periferica",
+            'observaciones_recoleccion' => "ALTER TABLE paquetes ADD COLUMN observaciones_recoleccion TEXT NULL AFTER direccion_origen"
         ];
 
         foreach ($columns as $column => $sql) {
@@ -115,8 +116,8 @@ class EnvioMensajeroModel
                     numero_guia,
                     remitente_nombre,
                     remitente_telefono,
-                    remitente_correo,
                     direccion_origen,
+                    observaciones_recoleccion,
                     destinatario_nombre,
                     destinatario_telefono,
                     direccion_destino,
@@ -138,8 +139,8 @@ class EnvioMensajeroModel
                     :numero_guia,
                     :remitente_nombre,
                     :remitente_telefono,
-                    :remitente_email,
                     :remitente_direccion,
+                    :observaciones_recoleccion,
                     :destinatario_nombre,
                     :destinatario_telefono,
                     :destinatario_direccion,
@@ -165,8 +166,8 @@ class EnvioMensajeroModel
                 ':numero_guia' => $datos['numero_guia'],
                 ':remitente_nombre' => $datos['remitente_nombre'],
                 ':remitente_telefono' => $datos['remitente_telefono'],
-                ':remitente_email' => $datos['remitente_email'],
                 ':remitente_direccion' => $datos['remitente_direccion'],
+                ':observaciones_recoleccion' => trim((string) ($datos['observaciones_recoleccion'] ?? '')),
                 ':destinatario_nombre' => $datos['destinatario_nombre'],
                 ':destinatario_telefono' => $datos['destinatario_telefono'],
                 ':destinatario_direccion' => $datos['destinatario_direccion'],
