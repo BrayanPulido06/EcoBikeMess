@@ -232,25 +232,6 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
             </div>
         </header>
 
-        <!-- Resumen de Estadísticas -->
-        <div class="stats-quick">
-            <div class="stat-card" style="border-left: 5px solid #e74c3c;">
-                <div class="stat-icon" style="background-color: rgba(231, 76, 60, 0.1); color: #e74c3c;">$</div>
-                <div class="stat-info">
-                    <span class="stat-label">Saldo a Pagar</span>
-                    <span class="stat-value" id="statSaldoPagar" style="color: #e74c3c;">$0</span>
-                    <small style="color: #666; font-size: 0.8em;">(Envíos > Recaudos)</small>
-                </div>
-            </div>
-            <div class="stat-card" style="border-left: 5px solid #2ecc71;">
-                <div class="stat-icon" style="background-color: rgba(46, 204, 113, 0.1); color: #2ecc71;">$</div>
-                <div class="stat-info">
-                    <span class="stat-label">Saldo a Favor</span>
-                    <span class="stat-value" id="statSaldoFavor" style="color: #2ecc71;">$0</span>
-                    <small style="color: #666; font-size: 0.8em;">(Recaudos > Envíos)</small>
-                </div>
-            </div>
-        </div>
 
         <!-- Filtros y Búsqueda -->
         <div class="filters-section">
