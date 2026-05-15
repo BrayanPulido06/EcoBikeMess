@@ -326,6 +326,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                             <th>N°</th>
                             <th><input type="checkbox" id="selectAll"></th>
                             <th>Acciones</th>
+                            <th>Acciones 2</th>
                             <th class="sortable" data-column="fecha">Fecha/Hora <span class="sort-icon">↕</span></th>
                             <th>Remitente</th>
                             <th>Nombre</th>
@@ -561,11 +562,45 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             </div>
         </div>
 
+        <div class="modal" id="modalCancelarServicio">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Cancelar Servicio</h2>
+                    <button class="btn-close" id="btnCerrarCancelarServicio">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCancelarServicio">
+                        <input type="hidden" id="cancelarPaqueteId" name="paquete_id">
+                        <div class="form-group">
+                            <label>Guía</label>
+                            <input type="text" id="cancelarGuia" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Nombre del paquete</label>
+                            <input type="text" id="cancelarNombrePaquete" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Razón de cancelación *</label>
+                            <textarea id="cancelarMotivo" name="motivo" class="form-control" rows="4" required placeholder="Describe la razón por la cual se cancela el servicio"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Evidencia fotográfica *</label>
+                            <input type="file" id="cancelarEvidencia" name="evidencia" class="form-control" accept="image/*" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="btnCancelarServicioCerrar">Cerrar</button>
+                            <button type="submit" class="btn btn-danger">Confirmar Cancelación</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/rotuloShared.js"></script>
-    <script src="../../public/js/paquetesAdmin.js?v=20260511-1"></script>
+    <script src="../../public/js/paquetesAdmin.js?v=20260514-2"></script>
     <script>
         let currentRotuloData = null;
         const truncarRotulo = (value, max) => {

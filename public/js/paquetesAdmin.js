@@ -34,7 +34,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const modals = {
         detalles: document.getElementById('modalDetalles'),
         asignar: document.getElementById('modalAsignar'),
-        editar: document.getElementById('modalEditar')
+        editar: document.getElementById('modalEditar'),
+        cancelarServicio: document.getElementById('modalCancelarServicio')
     };
 
     // --- INICIALIZACIÓN ---
@@ -112,6 +113,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Botones Cancelar en Modales
     document.getElementById('btnCancelarAsignar')?.addEventListener('click', () => closeModal('asignar'));
     document.getElementById('btnCancelarEditar')?.addEventListener('click', () => closeModal('editar'));
+    document.getElementById('btnCancelarServicioCerrar')?.addEventListener('click', () => {
+        const modal = document.getElementById('modalCancelarServicio');
+        if (modal) modal.style.display = 'none';
+    });
+
+    const formCancelarServicio = document.getElementById('formCancelarServicio');
+    if (formCancelarServicio) {
+        formCancelarServicio.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await cancelarServicioAction();
+        });
+    }
 
     // --- EXPORTACIÓN ---
     if (btnExportExcel) btnExportExcel.addEventListener('click', exportarExcel);
@@ -147,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function listarPaquetes() {
         // Mostrar indicador de carga
         if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center;">Cargando datos...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="18" style="text-align:center;">Cargando datos...</td></tr>';
         }
 
         // Construir URL con los parámetros de los filtros
@@ -168,12 +181,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     renderizarTabla(response.data);
                 } else if (response.error) {
                     console.error('Error del servidor:', response.error);
-                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="17" class="text-danger text-center">Error: ${response.error}</td></tr>`;
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="18" class="text-danger text-center">Error: ${response.error}</td></tr>`;
                 }
             })
             .catch(error => {
                 console.error('Error en la petición:', error);
-                if (tableBody) tableBody.innerHTML = `<tr><td colspan="17" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
+                if (tableBody) tableBody.innerHTML = `<tr><td colspan="18" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
             });
     }
     window.listarPaquetes = listarPaquetes;
@@ -183,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!tableBody) return;
 
         if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="18" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
             if (selectAllCheckbox) {
                 selectAllCheckbox.checked = false;
             }
@@ -248,6 +261,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const envioAgregado = String(p.envio_destinatario || '').toLowerCase() === 'si'
                 ? `<span class="badge badge-success">Sí</span> ${valorEnvioFormateado}`
                 : `<span class="badge badge-secondary">No</span> ${valorEnvioFormateado}`;
+            const nombrePaquete = escaparJsString(p.nombre_paquete || p.descripcion_contenido || p.destinatario || 'Sin nombre');
+            const guiaSeguro = escaparJsString(p.guia || '');
 
             html += `
                 <tr class="paquete-row">
@@ -259,6 +274,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})" title="Ver Detalle">👁️</button>
                             ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-success" onclick="cerrarPaqueteAdmin(${p.id})" title="Cerrar paquete">✅ Cerrar</button>` : ''}
                             ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar">🚴 Asignar</button>` : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            ${p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-danger" onclick="abrirModalCancelarServicio(${p.id}, '${guiaSeguro}', '${nombrePaquete}')" title="Cancelar servicio">Cancelar</button>` : ''}
+                            <button class="btn btn-sm btn-dark" onclick="eliminarPaqueteAdmin(${p.id}, '${guiaSeguro}', '${nombrePaquete}')" title="Eliminar paquete">Eliminar</button>
                         </div>
                     </td>
                     <td>${p.fechaIngreso}</td>
@@ -313,6 +334,14 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/"/g, '&quot;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
+    }
+
+    function escaparJsString(valor) {
+        return String(valor || '')
+            .replace(/\\/g, '\\\\')
+            .replace(/'/g, "\\'")
+            .replace(/\r/g, ' ')
+            .replace(/\n/g, ' ');
     }
 
     function debounce(fn, wait = 250) {
@@ -1204,6 +1233,101 @@ function verDetalle(id, options = {}) {
 
 window.cerrarPaqueteAdmin = function(id) {
     verDetalle(id, { modoCierre: true });
+};
+
+window.abrirModalCancelarServicio = function(id, guia, nombrePaquete) {
+    const modal = document.getElementById('modalCancelarServicio');
+    if (!modal) return;
+
+    const paqueteIdInput = document.getElementById('cancelarPaqueteId');
+    const guiaInput = document.getElementById('cancelarGuia');
+    const nombreInput = document.getElementById('cancelarNombrePaquete');
+    const motivoInput = document.getElementById('cancelarMotivo');
+    const evidenciaInput = document.getElementById('cancelarEvidencia');
+
+    if (paqueteIdInput) paqueteIdInput.value = id;
+    if (guiaInput) guiaInput.value = guia || '';
+    if (nombreInput) nombreInput.value = nombrePaquete || '';
+    if (motivoInput) motivoInput.value = '';
+    if (evidenciaInput) evidenciaInput.value = '';
+
+    modal.style.display = 'flex';
+};
+
+async function cancelarServicioAction() {
+    const paqueteId = document.getElementById('cancelarPaqueteId')?.value || '';
+    const motivo = document.getElementById('cancelarMotivo')?.value.trim() || '';
+    const evidenciaInput = document.getElementById('cancelarEvidencia');
+    const modal = document.getElementById('modalCancelarServicio');
+
+    if (!paqueteId) {
+        alert('No se encontró el paquete a cancelar.');
+        return;
+    }
+
+    if (!motivo) {
+        alert('Debes escribir la razón de cancelación.');
+        return;
+    }
+
+    if (!evidenciaInput?.files?.length) {
+        alert('Debes adjuntar una evidencia fotográfica.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('paquete_id', paqueteId);
+    formData.append('motivo', motivo);
+    formData.append('evidencia', evidenciaInput.files[0]);
+
+    try {
+        const response = await fetch('../../controller/paquetesAdminController.php?action=cancelar_servicio', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            alert('Servicio cancelado correctamente.');
+            if (modal) modal.style.display = 'none';
+            listarPaquetes();
+            return;
+        }
+
+        alert('Error al cancelar: ' + (result.error || 'Desconocido'));
+    } catch (error) {
+        console.error(error);
+        alert('Error de conexión al cancelar el servicio.');
+    }
+}
+
+window.eliminarPaqueteAdmin = async function(id, guia, nombrePaquete) {
+    const descripcion = nombrePaquete || 'Sin nombre';
+    const confirmacion = confirm(`¿Seguro que deseas eliminar este paquete?\n\nGuía: ${guia || 'N/A'}\nNombre del paquete: ${descripcion}`);
+
+    if (!confirmacion) {
+        return;
+    }
+
+    try {
+        const response = await fetch('../../controller/paquetesAdminController.php?action=eliminar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paquete_id: id })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            alert('Paquete eliminado correctamente.');
+            listarPaquetes();
+            return;
+        }
+
+        alert('Error al eliminar: ' + (result.error || 'Desconocido'));
+    } catch (error) {
+        console.error(error);
+        alert('Error de conexión al eliminar el paquete.');
+    }
 };
 
 // Abrir modal de Guía (Rótulo) desde Admin

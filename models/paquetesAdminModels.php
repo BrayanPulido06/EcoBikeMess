@@ -7,6 +7,7 @@ class PaquetesAdminModel {
     public function __construct() {
         $this->conn = conexionDB();
         $this->ensureEntregaAdditionalColumns();
+        $this->ensureNovedadesAdminSupport();
     }
 
     private function columnExists(string $table, string $column): bool
@@ -34,6 +35,19 @@ class PaquetesAdminModel {
                     // No bloqueamos la app si la alteración falla.
                 }
             }
+        }
+    }
+
+    private function ensureNovedadesAdminSupport(): void
+    {
+        try {
+            $stmt = $this->conn->query("SHOW COLUMNS FROM novedades_entrega LIKE 'mensajero_id'");
+            $column = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : null;
+            if ($column && strtoupper((string) ($column['Null'] ?? 'NO')) === 'NO') {
+                $this->conn->exec("ALTER TABLE novedades_entrega MODIFY COLUMN mensajero_id INT NULL");
+            }
+        } catch (Throwable $e) {
+            // No bloquear la app si falla el ajuste.
         }
     }
 
@@ -144,6 +158,7 @@ class PaquetesAdminModel {
                        p.costo_envio as costo_envio,
                        p.recaudo_esperado as recaudo_esperado,
                        COALESCE(e.recaudo_real, 0) as recaudo_real,
+                       p.descripcion_contenido as nombre_paquete,
                        " . ($hasRecibioCambiosEntrega ? "CASE WHEN COALESCE(e.recibio_cambios, 0) = 1 THEN 1 ELSE {$fallbackCambiosExpr} END" : $fallbackCambiosExpr) . " as recibio_cambios,
                        p.tipo_servicio as tipo, 
                        p.instrucciones_entrega as observaciones,
@@ -481,6 +496,169 @@ class PaquetesAdminModel {
             ':descripcion' => $data['descripcion'],
             ':id' => $cancelacionId
         ]);
+    }
+
+    public function cancelarServicioAdmin(int $paqueteId, string $motivo, string $fotoRuta, int $usuarioId = 0): bool
+    {
+        $motivo = trim($motivo);
+        if ($paqueteId <= 0 || $motivo === '' || trim($fotoRuta) === '') {
+            throw new Exception('Debes indicar un motivo y adjuntar una evidencia fotográfica.');
+        }
+
+        try {
+            $this->conn->beginTransaction();
+
+            $stmtPaquete = $this->conn->prepare("SELECT id, estado, mensajero_id FROM paquetes WHERE id = :id LIMIT 1");
+            $stmtPaquete->execute([':id' => $paqueteId]);
+            $paquete = $stmtPaquete->fetch(PDO::FETCH_ASSOC);
+
+            if (!$paquete) {
+                throw new Exception('El paquete no existe.');
+            }
+
+            $stmtNovedad = $this->conn->prepare(
+                "INSERT INTO novedades_entrega (paquete_id, mensajero_id, tipo, descripcion, foto_evidencia, fecha_registro)
+                 VALUES (:paquete_id, :mensajero_id, 'cancelado', :descripcion, :foto_evidencia, NOW())"
+            );
+            $stmtNovedad->execute([
+                ':paquete_id' => $paqueteId,
+                ':mensajero_id' => !empty($paquete['mensajero_id']) ? (int) $paquete['mensajero_id'] : null,
+                ':descripcion' => $motivo,
+                ':foto_evidencia' => $fotoRuta
+            ]);
+
+            $stmtUpdate = $this->conn->prepare("UPDATE paquetes SET estado = 'cancelado' WHERE id = :id");
+            $stmtUpdate->execute([':id' => $paqueteId]);
+
+            try {
+                $stmtHist = $this->conn->prepare(
+                    "INSERT INTO historial_paquetes (paquete_id, estado_anterior, estado_nuevo, usuario_id, observaciones, fecha_creacion)
+                     VALUES (:paquete_id, :estado_anterior, 'cancelado', :usuario_id, :observaciones, NOW())"
+                );
+                $stmtHist->execute([
+                    ':paquete_id' => $paqueteId,
+                    ':estado_anterior' => $paquete['estado'] ?? '',
+                    ':usuario_id' => $usuarioId > 0 ? $usuarioId : null,
+                    ':observaciones' => $motivo
+                ]);
+            } catch (Throwable $e) {
+                // No bloqueamos si el historial falla.
+            }
+
+            $this->conn->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    public function getPaqueteResumenParaEliminar(int $paqueteId): ?array
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT id, numero_guia, destinatario_nombre, descripcion_contenido
+             FROM paquetes
+             WHERE id = :id
+             LIMIT 1"
+        );
+        $stmt->execute([':id' => $paqueteId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function eliminarPaqueteAdmin(int $paqueteId): array
+    {
+        if ($paqueteId <= 0) {
+            throw new Exception('ID de paquete inválido.');
+        }
+
+        $resumen = $this->getPaqueteResumenParaEliminar($paqueteId);
+        if (!$resumen) {
+            throw new Exception('El paquete no existe.');
+        }
+
+        $rutas = [];
+
+        try {
+            $this->conn->beginTransaction();
+
+            $stmtEntrega = $this->conn->prepare("SELECT foto_entrega, foto_adicional FROM entregas WHERE paquete_id = :id");
+            $stmtEntrega->execute([':id' => $paqueteId]);
+            foreach ($stmtEntrega->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                foreach (['foto_entrega', 'foto_adicional'] as $campo) {
+                    if (!empty($row[$campo])) {
+                        $rutas[] = $row[$campo];
+                    }
+                }
+            }
+
+            $stmtNovedades = $this->conn->prepare("SELECT foto_evidencia FROM novedades_entrega WHERE paquete_id = :id");
+            $stmtNovedades->execute([':id' => $paqueteId]);
+            foreach ($stmtNovedades->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                if (!empty($row['foto_evidencia'])) {
+                    $rutas[] = $row['foto_evidencia'];
+                }
+            }
+
+            $stmtImagenes = $this->conn->prepare("SELECT ruta_archivo FROM paquete_imagenes WHERE paquete_id = :id");
+            $stmtImagenes->execute([':id' => $paqueteId]);
+            foreach ($stmtImagenes->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                if (!empty($row['ruta_archivo'])) {
+                    $rutas[] = $row['ruta_archivo'];
+                }
+            }
+
+            $stmtComprobantes = $this->conn->prepare("SELECT archivo_pdf, foto_entrega FROM comprobantes WHERE paquete_id = :id");
+            $stmtComprobantes->execute([':id' => $paqueteId]);
+            foreach ($stmtComprobantes->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                foreach (['archivo_pdf', 'foto_entrega'] as $campo) {
+                    if (!empty($row[$campo])) {
+                        $rutas[] = $row[$campo];
+                    }
+                }
+            }
+
+            $stmtDelete = $this->conn->prepare("DELETE FROM historial_paquetes WHERE paquete_id = :id");
+            try { $stmtDelete->execute([':id' => $paqueteId]); } catch (Throwable $e) {}
+
+            $stmtDelete = $this->conn->prepare("DELETE FROM detalle_facturas WHERE paquete_id = :id");
+            try { $stmtDelete->execute([':id' => $paqueteId]); } catch (Throwable $e) {}
+
+            $stmtDelete = $this->conn->prepare("DELETE FROM facturacion WHERE paquete_id = :id");
+            try { $stmtDelete->execute([':id' => $paqueteId]); } catch (Throwable $e) {}
+
+            $stmtDelete = $this->conn->prepare("DELETE FROM paquete_imagenes WHERE paquete_id = :id");
+            $stmtDelete->execute([':id' => $paqueteId]);
+
+            $stmtDelete = $this->conn->prepare("DELETE FROM imagenes WHERE comprobante_id IN (SELECT id FROM comprobantes WHERE paquete_id = :id)");
+            try { $stmtDelete->execute([':id' => $paqueteId]); } catch (Throwable $e) {}
+
+            $stmtDelete = $this->conn->prepare("DELETE FROM comprobantes WHERE paquete_id = :id");
+            try { $stmtDelete->execute([':id' => $paqueteId]); } catch (Throwable $e) {}
+
+            $stmtDelete = $this->conn->prepare("DELETE FROM novedades_entrega WHERE paquete_id = :id");
+            $stmtDelete->execute([':id' => $paqueteId]);
+
+            $stmtDelete = $this->conn->prepare("DELETE FROM entregas WHERE paquete_id = :id");
+            $stmtDelete->execute([':id' => $paqueteId]);
+
+            $stmtDelete = $this->conn->prepare("DELETE FROM paquetes WHERE id = :id");
+            $stmtDelete->execute([':id' => $paqueteId]);
+
+            $this->conn->commit();
+
+            return [
+                'resumen' => $resumen,
+                'rutas' => array_values(array_unique(array_filter($rutas)))
+            ];
+        } catch (Throwable $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            throw $e;
+        }
     }
 
     public function addPaqueteImagen($paqueteId, $tipo, $ruta, $userId) {

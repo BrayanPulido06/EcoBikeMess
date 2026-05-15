@@ -159,6 +159,78 @@ try {
             ]);
             break;
 
+        case 'cancelar_servicio':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                echo json_encode(['success' => false, 'error' => 'Método no permitido']);
+                break;
+            }
+
+            $paqueteId = (int) ($_POST['paquete_id'] ?? 0);
+            $motivo = trim((string) ($_POST['motivo'] ?? ''));
+
+            if ($paqueteId <= 0) {
+                echo json_encode(['success' => false, 'error' => 'ID de paquete inválido']);
+                break;
+            }
+
+            if ($motivo === '') {
+                echo json_encode(['success' => false, 'error' => 'Debes ingresar la razón de cancelación']);
+                break;
+            }
+
+            if (empty($_FILES['evidencia'])) {
+                echo json_encode(['success' => false, 'error' => 'Debes adjuntar una evidencia fotográfica']);
+                break;
+            }
+
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+            $basename = saveUploadedFileSafe($_FILES['evidencia'], dirname(__DIR__) . '/uploads/novedades', $allowedMimes, 'ebm_cancel', true);
+            if (!$basename) {
+                echo json_encode(['success' => false, 'error' => 'No se pudo guardar la evidencia fotográfica']);
+                break;
+            }
+
+            $ruta = '/uploads/novedades/' . $basename;
+
+            try {
+                $res = $model->cancelarServicioAdmin($paqueteId, $motivo, $ruta, (int) ($_SESSION['user_id'] ?? 0));
+                echo json_encode(['success' => (bool) $res]);
+            } catch (Throwable $e) {
+                eliminarArchivoSiExiste($ruta);
+                throw $e;
+            }
+            break;
+
+        case 'eliminar':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                echo json_encode(['success' => false, 'error' => 'Método no permitido']);
+                break;
+            }
+
+            $raw = file_get_contents('php://input');
+            $input = json_decode($raw, true);
+            if (!is_array($input)) {
+                echo json_encode(['success' => false, 'error' => 'Payload inválido']);
+                break;
+            }
+
+            $paqueteId = (int) ($input['paquete_id'] ?? 0);
+            if ($paqueteId <= 0) {
+                echo json_encode(['success' => false, 'error' => 'ID de paquete inválido']);
+                break;
+            }
+
+            $result = $model->eliminarPaqueteAdmin($paqueteId);
+            foreach (($result['rutas'] ?? []) as $ruta) {
+                eliminarArchivoSiExiste($ruta);
+            }
+
+            echo json_encode([
+                'success' => true,
+                'resumen' => $result['resumen'] ?? null
+            ]);
+            break;
+
         case 'imagen_subir':
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 echo json_encode(['success' => false, 'error' => 'Método no permitido']);
