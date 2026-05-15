@@ -276,12 +276,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar">🚴 Asignar</button>` : ''}
                         </div>
                     </td>
-                    <td>
-                        <div class="action-buttons">
-                            ${p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-danger" onclick="abrirModalCancelarServicio(${p.id}, '${guiaSeguro}', '${nombrePaquete}')" title="Cancelar servicio">Cancelar</button>` : ''}
-                            <button class="btn btn-sm btn-dark" onclick="eliminarPaqueteAdmin(${p.id}, '${guiaSeguro}', '${nombrePaquete}')" title="Eliminar paquete">Eliminar</button>
-                        </div>
-                    </td>
                     <td>${p.fechaIngreso}</td>
                     <td>${p.remitente || '<span class="text-muted">N/A</span>'}</td>
                     <td>${p.nombre_persona || '<span class="text-muted">N/A</span>'}</td>
@@ -295,6 +289,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${recaudoRealFormateado}</td>
                     <td>${cambiosRecogidos}</td>
                     <td>${envioAgregado}</td>
+                    <td>
+                        <div class="action-buttons">
+                            ${p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-danger" onclick="abrirModalCancelarServicio(${p.id}, '${guiaSeguro}', '${nombrePaquete}')" title="Cancelar servicio">Cancelar</button>` : ''}
+                            <button class="btn btn-sm btn-dark" onclick="eliminarPaqueteAdmin(${p.id}, '${guiaSeguro}', '${nombrePaquete}')" title="Eliminar paquete">Eliminar</button>
+                        </div>
+                    </td>
                     <td>${p.guia}</td>
                 </tr>
             `;
