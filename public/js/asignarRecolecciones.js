@@ -21,6 +21,7 @@ function renderAccionesRecoleccion(rec) {
     const ids = escapeHtml(rec.ids);
     const direccion = escapeHtml(rec.direccion_origen);
     const cliente = escapeHtml(rec.cliente_nombre);
+    const observaciones = escapeHtml(rec.observaciones_recoleccion || '');
     const esPendiente = rec.estado === 'pendiente';
 
     if (['entregado', 'completada', 'cancelado'].includes(rec.estado)) {
@@ -34,7 +35,7 @@ function renderAccionesRecoleccion(rec) {
     return `
         <div class="actions">
             <button class="btn btn-sm btn-info btn-ver-detalles" title="Ver Paquetes" data-ids="${ids}">Ver</button>
-            <button class="btn btn-sm ${esPendiente ? 'btn-warning' : 'btn-secondary'} btn-asignar-recoleccion" title="${esPendiente ? 'Asignar Recoleccion' : 'Reasignar'}" data-ids="${ids}" data-direccion="${direccion}" data-cliente="${cliente}">${esPendiente ? 'Asignar' : 'Reasignar'}</button>
+            <button class="btn btn-sm ${esPendiente ? 'btn-warning' : 'btn-secondary'} btn-asignar-recoleccion" title="${esPendiente ? 'Asignar Recoleccion' : 'Reasignar'}" data-ids="${ids}" data-direccion="${direccion}" data-cliente="${cliente}" data-observaciones="${observaciones}">${esPendiente ? 'Asignar' : 'Reasignar'}</button>
             <button class="btn btn-sm btn-danger btn-cancelar-recoleccion" title="Cancelar" data-ids="${ids}">Cancelar</button>
         </div>
     `;
@@ -90,7 +91,8 @@ function manejarClickTabla(event) {
         asignarRecoleccion(
             btnAsignar.dataset.ids || '',
             btnAsignar.dataset.direccion || '',
-            btnAsignar.dataset.cliente || ''
+            btnAsignar.dataset.cliente || '',
+            btnAsignar.dataset.observaciones || ''
         );
         return;
     }
@@ -271,7 +273,7 @@ window.verDetallesPaquetes = async function(ids) {
                             <div class="detalle-item"><div class="detalle-label">Paquetes Recogidos</div><div class="detalle-value">${recoleccionData.cantidad_real || 'No registrado'}</div></div>
                             <div class="detalle-item"><div class="detalle-label">Fecha Completada</div><div class="detalle-value">${recoleccionData.fecha_completada ? new Date(recoleccionData.fecha_completada).toLocaleString() : 'N/A'}</div></div>
                         </div>
-                        <h4 style="margin-top:1rem; margin-bottom:0.5rem;">Observaciones del Mensajero</h4>
+                        <h4 style="margin-top:1rem; margin-bottom:0.5rem;">Observaciones registradas en la recoleccion</h4>
                         <p style="background:#f8f9fa; padding:10px; border-radius:5px; min-height: 40px;">${recoleccionData.observaciones_recoleccion || 'No hay observaciones.'}</p>
                     `;
                 }
@@ -307,6 +309,10 @@ window.verDetallesPaquetes = async function(ids) {
                             <div class="detalle-item"><div class="detalle-label">Direccion</div><div class="detalle-value">${primerPaquete.direccion_origen}</div></div>
                             <div class="detalle-item"><div class="detalle-label">Telefono</div><div class="detalle-value">${primerPaquete.cli_telefono || 'N/A'}</div></div>
                         </div>
+                        <div style="margin-top: 12px;">
+                            <div class="detalle-label">Observaciones de recoleccion solicitadas</div>
+                            <div class="detalle-value" style="background:#f8f9fa; padding:10px; border-radius:5px; min-height: 40px;">${primerPaquete.observaciones_recoleccion || 'Sin observaciones de recoleccion.'}</div>
+                        </div>
                     </div>
                     <div class="detalle-section"><h3 style="margin-top: 20px;">Detalles de la Recoleccion</h3>${recoleccionInfoHtml}</div>
                     <div class="detalle-section"><h3 style="margin-top: 20px;">Fotos de Evidencia</h3>${fotosHtml}</div>
@@ -341,7 +347,7 @@ window.verDetallesPaquetes = async function(ids) {
     }
 };
 
-window.asignarRecoleccion = function(ids, direccion, cliente) {
+window.asignarRecoleccion = function(ids, direccion, cliente, observaciones = '') {
     const modal = document.getElementById('modalAsignarRapido');
     if (modal) {
         const infoContainer = document.getElementById('infoRecoleccionAsignar');
@@ -350,7 +356,8 @@ window.asignarRecoleccion = function(ids, direccion, cliente) {
                 infoContainer.innerHTML = `
                     <p style="margin:0; font-size: 0.9em; color: #6c757d;">Asignando recoleccion para:</p>
                     <p style="margin:2px 0 0; font-weight: 600;"><strong>Cliente:</strong> ${cliente}</p>
-                    <p style="margin:2px 0 0; font-weight: 600;"><strong>Direccion:</strong> ${direccion}</p>`;
+                    <p style="margin:2px 0 0; font-weight: 600;"><strong>Direccion:</strong> ${direccion}</p>
+                    <p style="margin:6px 0 0; font-weight: 600;"><strong>Observaciones:</strong> ${observaciones || 'Sin observaciones de recoleccion.'}</p>`;
             } else {
                 infoContainer.innerHTML = '<p>Informacion de recoleccion no disponible.</p>';
             }

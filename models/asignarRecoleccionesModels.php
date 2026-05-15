@@ -73,8 +73,9 @@ class AsignarRecoleccionesModel {
     }
 
     public function listarRecolecciones($filtros) {
-        $sql = "SELECT 
+                $sql = "SELECT 
                     p.direccion_origen,
+                    GROUP_CONCAT(DISTINCT NULLIF(TRIM(p.observaciones_recoleccion), '') SEPARATOR ' | ') as observaciones_recoleccion,
                     p.estado as estado_paquete,
                     MAX(r.estado) as estado_recoleccion,
                     p.mensajero_id,
@@ -166,6 +167,11 @@ class AsignarRecoleccionesModel {
                 throw new Exception('No se encontraron paquetes para asignar.');
             }
 
+            $sqlObservaciones = "SELECT GROUP_CONCAT(DISTINCT NULLIF(TRIM(observaciones_recoleccion), '') SEPARATOR ' | ')
+                                 FROM paquetes
+                                 WHERE id IN ($ids)";
+            $observacionesRecoleccion = trim((string) $this->conn->query($sqlObservaciones)->fetchColumn());
+
             $sqlRecoleccionExistente = "SELECT recoleccion_id
                                         FROM paquetes
                                         WHERE id IN ($ids)
@@ -185,6 +191,7 @@ class AsignarRecoleccionesModel {
                                       nombre_contacto = :contacto,
                                       telefono_contacto = :telefono,
                                       cantidad_estimada = :cantidad,
+                                      observaciones_recoleccion = :observaciones_recoleccion,
                                       estado = 'asignada',
                                       fecha_asignacion = NOW()
                                   WHERE id = :recoleccion_id";
@@ -195,15 +202,16 @@ class AsignarRecoleccionesModel {
                     ':contacto' => $contacto,
                     ':telefono' => $info['telefono'],
                     ':cantidad' => $cantidad,
+                    ':observaciones_recoleccion' => $observacionesRecoleccion !== '' ? $observacionesRecoleccion : null,
                     ':recoleccion_id' => $recoleccionExistenteId
                 ]);
 
                 $recoleccionId = $recoleccionExistenteId;
             } else {
                 $sqlInsert = "INSERT INTO recolecciones
-                              (numero_orden, cliente_id, mensajero_id, direccion_recoleccion, nombre_contacto, telefono_contacto, cantidad_estimada, estado, fecha_asignacion, creada_por)
+                              (numero_orden, cliente_id, mensajero_id, direccion_recoleccion, nombre_contacto, telefono_contacto, cantidad_estimada, observaciones_recoleccion, estado, fecha_asignacion, creada_por)
                               VALUES
-                              (:orden, :cliente, :mensajero, :direccion, :contacto, :telefono, :cantidad, 'asignada', NOW(), :creada_por)";
+                              (:orden, :cliente, :mensajero, :direccion, :contacto, :telefono, :cantidad, :observaciones_recoleccion, 'asignada', NOW(), :creada_por)";
                 $stmtInsert = $this->conn->prepare($sqlInsert);
                 $stmtInsert->execute([
                     ':orden' => $numeroOrden,
@@ -213,6 +221,7 @@ class AsignarRecoleccionesModel {
                     ':contacto' => $contacto,
                     ':telefono' => $info['telefono'],
                     ':cantidad' => $cantidad,
+                    ':observaciones_recoleccion' => $observacionesRecoleccion !== '' ? $observacionesRecoleccion : null,
                     ':creada_por' => $creadoPor
                 ]);
 

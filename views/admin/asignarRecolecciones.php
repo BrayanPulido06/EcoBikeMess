@@ -396,9 +396,9 @@ $recolecciones = $model->listarRecolecciones([]);
                                             <button class="btn btn-sm btn-info" title="Ver Paquetes" onclick="verDetallesPaquetes('<?php echo $rec['ids']; ?>')">👁️</button>
                                             <?php if (!in_array($rec['estado'], ['entregado', 'completada', 'cancelado'])): ?>
                                                 <?php if ($rec['estado'] === 'pendiente'): ?>
-                                                    <button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('<?php echo $rec['ids']; ?>', '<?php echo htmlspecialchars($rec['direccion_origen'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($rec['cliente_nombre'], ENT_QUOTES); ?>')">🚴</button>
+                                                    <button class="btn btn-sm btn-warning" title="Asignar Recolección" onclick="asignarRecoleccion('<?php echo $rec['ids']; ?>', '<?php echo htmlspecialchars($rec['direccion_origen'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($rec['cliente_nombre'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($rec['observaciones_recoleccion'] ?? '', ENT_QUOTES); ?>')">🚴</button>
                                                 <?php else: ?>
-                                                    <button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('<?php echo $rec['ids']; ?>', '<?php echo htmlspecialchars($rec['direccion_origen'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($rec['cliente_nombre'], ENT_QUOTES); ?>')">🔄</button>
+                                                    <button class="btn btn-sm btn-secondary" title="Reasignar" onclick="asignarRecoleccion('<?php echo $rec['ids']; ?>', '<?php echo htmlspecialchars($rec['direccion_origen'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($rec['cliente_nombre'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($rec['observaciones_recoleccion'] ?? '', ENT_QUOTES); ?>')">🔄</button>
                                                 <?php endif; ?>
                                                 <button class="btn btn-sm btn-danger" title="Cancelar" onclick="cancelarRecoleccion('<?php echo $rec['ids']; ?>')">🗑️</button>
                                             <?php endif; ?>
