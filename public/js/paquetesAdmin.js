@@ -1501,12 +1501,20 @@ document.addEventListener('click', function(event) {
 
 function asignarMensajeroAction() {
     const form = document.getElementById('formAsignarMensajero');
-    const paqueteId = document.getElementById('hiddenPaqueteId').value;
-    const paqueteIds = String(document.getElementById('hiddenPaqueteIds')?.value || '')
+    const paqueteId = String(document.getElementById('hiddenPaqueteId')?.value || '').trim();
+    let paqueteIds = String(document.getElementById('hiddenPaqueteIds')?.value || '')
         .split(',')
         .map(id => id.trim())
         .filter(Boolean);
     const mensajeroId = document.getElementById('asignarMensajero').value;
+
+    const seleccionadosEnTabla = Array.from(document.querySelectorAll('.paquete-checkbox:checked'))
+        .map(cb => String(cb.value || '').trim())
+        .filter(Boolean);
+
+    if (seleccionadosEnTabla.length > paqueteIds.length) {
+        paqueteIds = seleccionadosEnTabla;
+    }
 
     if (!mensajeroId) {
         alert('Por favor seleccione un mensajero');
@@ -1520,7 +1528,7 @@ function asignarMensajeroAction() {
 
     const formData = new FormData();
     formData.append('mensajero_id', mensajeroId);
-    const esMasivo = (form?.dataset.bulkMode === '1') || paqueteIds.length > 1;
+    const esMasivo = paqueteIds.length > 1 || (form?.dataset.bulkMode === '1');
 
     if (esMasivo) {
         paqueteIds.forEach(id => formData.append('paquete_ids[]', id));

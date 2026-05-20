@@ -608,7 +608,8 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         window.abrirModalAsignacionMasiva = async function() {
             const seleccionados = Array.from(document.querySelectorAll('.paquete-checkbox:checked')).map((checkbox) => ({
                 id: String(checkbox.value || '').trim(),
-                guia: String(checkbox.dataset.guia || '').trim()
+                guia: String(checkbox.dataset.guia || '').trim(),
+                row: checkbox.closest('tr')
             })).filter((item) => item.id !== '');
 
             if (seleccionados.length === 0) {
@@ -647,12 +648,20 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             }
 
             const ids = seleccionados.map((item) => item.id);
-            const guias = seleccionados.map((item) => item.guia).filter(Boolean);
+            const guias = seleccionados.map((item) => {
+                if (item.guia) {
+                    return item.guia;
+                }
+
+                const celdas = item.row ? item.row.querySelectorAll('td') : [];
+                const guiaCelda = celdas.length >= 17 ? celdas[16] : null;
+                return String(guiaCelda?.textContent || '').trim();
+            }).filter(Boolean);
 
             hiddenPaqueteId.value = ids.length === 1 ? ids[0] : '';
             hiddenPaqueteIds.value = ids.join(',');
             form.dataset.bulkMode = ids.length > 1 ? '1' : '0';
-            inputGuias.value = guias.join('\n');
+            inputGuias.value = guias.length > 0 ? guias.join('\n') : ids.join('\n');
             inputBuscarMensajero.value = '';
             inputMensajero.value = '';
 
