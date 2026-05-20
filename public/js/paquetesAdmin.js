@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableBody = document.getElementById('tablaPaquetesBody');
     const btnLimpiar = document.getElementById('btnLimpiarFiltros');
     const btnExportExcel = document.getElementById('btnExportarExcel');
+    const btnAsignarSeleccionados = document.getElementById('btnAsignarSeleccionados');
     const btnExportarGuias = document.getElementById('btnExportarGuias');
     const selectAllCheckbox = document.getElementById('selectAll');
     const btnNuevoPaquete = document.getElementById('btnNuevoPaquete');
@@ -84,7 +85,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             if (filtroClienteInput) filtroClienteInput.value = '';
             if (filtroMensajeroInput) filtroMensajeroInput.value = '';
-            listarPaquetes();
+            if (typeof window.listarPaquetes === 'function') {
+                window.listarPaquetes();
+            }
         });
     }
     
@@ -128,6 +131,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- EXPORTACIÓN ---
     if (btnExportExcel) btnExportExcel.addEventListener('click', exportarExcel);
+    if (btnAsignarSeleccionados) {
+        btnAsignarSeleccionados.addEventListener('click', abrirModalAsignacionMasiva);
+    }
     if (btnExportarGuias) btnExportarGuias.addEventListener('click', descargarGuiasSeleccionadas);
 
     // --- NUEVO PAQUETE ---
@@ -143,6 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     cb.checked = this.checked;
                     actualizarFilaSeleccionada(cb);
                 });
+                actualizarEstadoBotonAsignacionMasiva();
             });
         }
         document.addEventListener('change', (e) => {
@@ -151,6 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const all = document.querySelectorAll('.paquete-checkbox');
                 const checked = document.querySelectorAll('.paquete-checkbox:checked');
                 if (selectAllCheckbox) selectAllCheckbox.checked = all.length > 0 && all.length === checked.length;
+                actualizarEstadoBotonAsignacionMasiva();
             }
         });
 
@@ -200,6 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (selectAllCheckbox) {
                 selectAllCheckbox.checked = false;
             }
+            actualizarEstadoBotonAsignacionMasiva();
             return;
         }
 
@@ -318,6 +327,33 @@ document.addEventListener('DOMContentLoaded', function() {
             const checked = document.querySelectorAll('.paquete-checkbox:checked');
             selectAllCheckbox.checked = checkboxes.length > 0 && checkboxes.length === checked.length;
         }
+        actualizarEstadoBotonAsignacionMasiva();
+    }
+
+    function getSelectedPackageIds() {
+        return Array.from(document.querySelectorAll('.paquete-checkbox:checked'))
+            .map(cb => String(cb.value || '').trim())
+            .filter(Boolean);
+    }
+
+    function actualizarEstadoBotonAsignacionMasiva() {
+        if (!btnAsignarSeleccionados) return;
+
+        const cantidad = getSelectedPackageIds().length;
+        btnAsignarSeleccionados.disabled = cantidad === 0;
+        btnAsignarSeleccionados.textContent = cantidad > 0
+            ? `Asignar Mensajero (${cantidad})`
+            : 'Asignar Mensajero';
+    }
+
+    function abrirModalAsignacionMasiva() {
+        const ids = getSelectedPackageIds();
+        if (ids.length === 0) {
+            alert('Selecciona al menos un paquete para asignar.');
+            return;
+        }
+
+        abrirModalAsignar(ids, `${ids.length} paquete(s) seleccionados`);
     }
 
     function normalizarTexto(texto) {
@@ -1290,7 +1326,7 @@ async function cancelarServicioAction() {
         if (result.success) {
             alert('Servicio cancelado correctamente.');
             if (modal) modal.style.display = 'none';
-            listarPaquetes();
+            if (typeof window.listarPaquetes === 'function') window.listarPaquetes();
             return;
         }
 
@@ -1319,7 +1355,7 @@ window.eliminarPaqueteAdmin = async function(id, guia, nombrePaquete) {
 
         if (result.success) {
             alert('Paquete eliminado correctamente.');
-            listarPaquetes();
+            if (typeof window.listarPaquetes === 'function') window.listarPaquetes();
             return;
         }
 
@@ -1382,39 +1418,57 @@ function cargarRotuloAdmin(id) {
 function abrirModalAsignar(id, guia) {
     const modal = document.getElementById('modalAsignar');
     const inputId = document.getElementById('asignarGuia'); // Usamos este input oculto o visible para guardar el ID
+    const form = document.getElementById('formAsignarMensajero');
     
-    if (modal) {
-        // Guardamos el ID del paquete en el formulario (puedes usar un data-attribute o un input hidden)
-        // Si tu HTML tiene un input para mostrar la guía, úsalo, si no, crea un hidden dinámicamente
-        if (!document.getElementById('hiddenPaqueteId')) {
-            const hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.id = 'hiddenPaqueteId';
-            hidden.name = 'paquete_id';
-            document.getElementById('formAsignarMensajero').appendChild(hidden);
-        }
-        document.getElementById('hiddenPaqueteId').value = id;
-        
-        if (inputId) inputId.value = guia; // Mostrar número de guía
-        
-        // Resetear búsqueda y selección en el modal
-        document.getElementById('buscarMensajeroInput').value = '';
-        document.getElementById('asignarMensajero').value = ''; // Limpiar ID seleccionado
-        
-        if (todosLosMensajeros.length === 0) {
-            cargarFiltros(); // Intentar cargar de nuevo si la lista está vacía
-        } else {
-            renderizarListaMensajeros(todosLosMensajeros); // Mostrar todos de nuevo
-        }
-        
-        document.querySelectorAll('.mensajero-item').forEach(el => el.classList.remove('selected'));
-        
-        modal.style.display = 'flex';
+    if (!modal || !form) return;
+
+    const ids = Array.isArray(id) ? id.map(v => String(v).trim()).filter(Boolean) : [String(id).trim()].filter(Boolean);
+    const isMasivo = ids.length > 1;
+
+    if (!document.getElementById('hiddenPaqueteId')) {
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.id = 'hiddenPaqueteId';
+        hidden.name = 'paquete_id';
+        form.appendChild(hidden);
     }
+
+    if (!document.getElementById('hiddenPaqueteIds')) {
+        const hiddenMultiple = document.createElement('input');
+        hiddenMultiple.type = 'hidden';
+        hiddenMultiple.id = 'hiddenPaqueteIds';
+        hiddenMultiple.name = 'paquete_ids';
+        form.appendChild(hiddenMultiple);
+    }
+
+    document.getElementById('hiddenPaqueteId').value = isMasivo ? '' : (ids[0] || '');
+    document.getElementById('hiddenPaqueteIds').value = ids.join(',');
+    form.dataset.bulkMode = isMasivo ? '1' : '0';
+
+    if (inputId) {
+        inputId.value = guia || (isMasivo ? `${ids.length} paquete(s) seleccionados` : '');
+    }
+
+    document.getElementById('buscarMensajeroInput').value = '';
+    document.getElementById('asignarMensajero').value = '';
+
+    if (todosLosMensajeros.length === 0) {
+        cargarFiltros();
+    } else {
+        renderizarListaMensajeros(todosLosMensajeros);
+    }
+
+    document.querySelectorAll('.mensajero-item').forEach(el => el.classList.remove('selected'));
+    modal.style.display = 'flex';
 }
 
 function asignarMensajeroAction() {
+    const form = document.getElementById('formAsignarMensajero');
     const paqueteId = document.getElementById('hiddenPaqueteId').value;
+    const paqueteIds = String(document.getElementById('hiddenPaqueteIds')?.value || '')
+        .split(',')
+        .map(id => id.trim())
+        .filter(Boolean);
     const mensajeroId = document.getElementById('asignarMensajero').value;
 
     if (!mensajeroId) {
@@ -1422,26 +1476,47 @@ function asignarMensajeroAction() {
         return;
     }
 
-    const formData = new FormData();
-    formData.append('paquete_id', paqueteId);
-    formData.append('mensajero_id', mensajeroId);
+    if (paqueteIds.length === 0 && !paqueteId) {
+        alert('No se encontraron paquetes para asignar.');
+        return;
+    }
 
-    fetch('../../controller/paquetesAdminController.php?action=asignar', {
+    const formData = new FormData();
+    formData.append('mensajero_id', mensajeroId);
+    const esMasivo = (form?.dataset.bulkMode === '1') || paqueteIds.length > 1;
+
+    if (esMasivo) {
+        paqueteIds.forEach(id => formData.append('paquete_ids[]', id));
+    } else {
+        formData.append('paquete_id', paqueteId || paqueteIds[0]);
+    }
+
+    fetch(`../../controller/paquetesAdminController.php?action=${esMasivo ? 'asignar_masivo' : 'asignar'}`, {
         method: 'POST',
         body: formData
     })
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('Mensajero asignado correctamente');
+            const cantidad = Number(data.asignados || (esMasivo ? paqueteIds.length : 1));
+            alert(esMasivo
+                ? `Mensajero asignado correctamente a ${cantidad} paquete(s).`
+                : 'Mensajero asignado correctamente');
             document.getElementById('modalAsignar').style.display = 'none';
-            document.querySelector('.btn-close').click(); // Truco para recargar o llamar a listarPaquetes()
-            location.reload(); // Recargar para ver cambios
+            if (document.getElementById('buscarMensajeroInput')) document.getElementById('buscarMensajeroInput').value = '';
+            if (document.getElementById('asignarMensajero')) document.getElementById('asignarMensajero').value = '';
+            if (document.getElementById('hiddenPaqueteId')) document.getElementById('hiddenPaqueteId').value = '';
+            if (document.getElementById('hiddenPaqueteIds')) document.getElementById('hiddenPaqueteIds').value = '';
+            if (form) form.dataset.bulkMode = '0';
+            if (typeof window.listarPaquetes === 'function') window.listarPaquetes();
         } else {
             alert('Error al asignar: ' + (data.error || 'Desconocido'));
         }
     })
-    .catch(err => console.error(err));
+    .catch(err => {
+        console.error(err);
+        alert('Error de conexión al asignar el mensajero.');
+    });
 }
 
 // Función global para seleccionar un mensajero de la lista

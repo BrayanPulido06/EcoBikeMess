@@ -46,12 +46,43 @@ try {
             
         case 'asignar':
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $paqueteId = $_POST['paquete_id'];
-                $mensajeroId = $_POST['mensajero_id'];
+                $paqueteId = (int) ($_POST['paquete_id'] ?? 0);
+                $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
                 $userId = $_SESSION['user_id'] ?? 0;
-                
+
+                if ($paqueteId <= 0 || $mensajeroId <= 0) {
+                    echo json_encode(['success' => false, 'error' => 'Datos de asignación inválidos']);
+                    break;
+                }
+
                 $res = $model->assignMensajero($paqueteId, $mensajeroId, $userId);
                 echo json_encode(['success' => $res]);
+            }
+            break;
+
+        case 'asignar_masivo':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
+                $paqueteIds = $_POST['paquete_ids'] ?? [];
+                $userId = $_SESSION['user_id'] ?? 0;
+
+                if (!is_array($paqueteIds)) {
+                    $paqueteIds = [];
+                }
+
+                $paqueteIds = array_values(array_unique(array_filter(array_map('intval', $paqueteIds), static fn($id) => $id > 0)));
+
+                if ($mensajeroId <= 0 || empty($paqueteIds)) {
+                    echo json_encode(['success' => false, 'error' => 'Debes seleccionar paquetes y un mensajero válido']);
+                    break;
+                }
+
+                $asignados = $model->assignMensajeroBulk($paqueteIds, $mensajeroId, $userId);
+                echo json_encode([
+                    'success' => $asignados > 0,
+                    'asignados' => $asignados,
+                    'error' => $asignados > 0 ? null : 'No se pudieron asignar los paquetes seleccionados'
+                ]);
             }
             break;
 

@@ -754,5 +754,63 @@ class PaquetesAdminModel {
             throw new Exception("Error en BD: " . $e->getMessage());
         }
     }
+
+    public function assignMensajeroBulk(array $paqueteIds, int $mensajeroId, int $userId): int
+    {
+        $paqueteIds = array_values(array_unique(array_filter(array_map('intval', $paqueteIds), static fn($id) => $id > 0)));
+        if (empty($paqueteIds)) {
+            return 0;
+        }
+
+        try {
+            $this->conn->beginTransaction();
+
+            $placeholders = implode(',', array_fill(0, count($paqueteIds), '?'));
+            $sqlIds = "SELECT id
+                       FROM paquetes
+                       WHERE id IN ($placeholders) AND estado NOT IN ('entregado', 'cancelado')";
+            $stmtIds = $this->conn->prepare($sqlIds);
+            $stmtIds->execute($paqueteIds);
+            $idsAsignables = array_map('intval', $stmtIds->fetchAll(PDO::FETCH_COLUMN) ?: []);
+
+            if (empty($idsAsignables)) {
+                $this->conn->commit();
+                return 0;
+            }
+
+            $placeholdersAsignables = implode(',', array_fill(0, count($idsAsignables), '?'));
+            $sql = "UPDATE paquetes
+                    SET mensajero_id = ?, estado = 'en_transito', fecha_asignacion = NOW()
+                    WHERE id IN ($placeholdersAsignables) AND estado NOT IN ('entregado', 'cancelado')";
+
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute(array_merge([$mensajeroId], $idsAsignables));
+            $asignados = (int) $stmt->rowCount();
+
+            if ($asignados > 0) {
+                try {
+                    $sqlHist = "INSERT INTO historial_paquetes (paquete_id, estado_anterior, estado_nuevo, usuario_id, observaciones, fecha_creacion)
+                                VALUES (:id, 'pendiente', 'en_transito', :user_id, 'Mensajero asignado manualmente (masivo)', NOW())";
+                    $stmtHist = $this->conn->prepare($sqlHist);
+                    foreach ($idsAsignables as $paqueteId) {
+                        $stmtHist->execute([
+                            ':id' => $paqueteId,
+                            ':user_id' => $userId
+                        ]);
+                    }
+                } catch (PDOException $e) {
+                    // Continuar si falla el historial.
+                }
+            }
+
+            $this->conn->commit();
+            return $asignados;
+        } catch (Exception $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            throw new Exception("Error en BD: " . $e->getMessage());
+        }
+    }
 }
 ?>

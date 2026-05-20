@@ -241,6 +241,9 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 <button class="btn btn-secondary" id="btnExportarExcel">
                     📊 Exportar Excel
                 </button>
+                <button class="btn btn-secondary" id="btnAsignarSeleccionados" disabled>
+                    Asignar Mensajero
+                </button>
                 <button class="btn btn-secondary" id="btnExportarGuias">
                     🧾 Descargar Guías
                 </button>
@@ -463,7 +466,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 <div class="modal-body">
                     <form id="formAsignarMensajero">
                         <div class="form-group">
-                            <label>Paquete</label>
+                            <label>Paquete(s)</label>
                             <input type="text" id="asignarGuia" readonly class="form-control">
                         </div>
                         <div class="form-group">
