@@ -319,11 +319,6 @@ $remitente_data = [
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="remitente_email">Email de Contacto *</label>
-                                <input type="email" id="remitente_email" name="remitente_email" required>
-                                <span class="error-message"></span>
-                            </div>
-                            <div class="form-group">
                                 <label for="remitente_direccion">Dirección de Origen Completa *</label>
                                 <textarea id="remitente_direccion" name="remitente_direccion" rows="3" placeholder="Ej: Calle 123 #45-67, Apto 301, Barrio Centro" required></textarea>
                                 <span class="error-message"></span>
