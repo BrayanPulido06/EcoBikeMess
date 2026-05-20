@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
             html += `
                 <tr class="paquete-row">
                     <td class="numero-paquete">${index + 1}</td>
-                    <td class="col-seleccion"><input type="checkbox" class="paquete-checkbox" value="${p.id}"></td>
+                    <td class="col-seleccion"><input type="checkbox" class="paquete-checkbox" value="${p.id}" data-guia="${escaparAtributoHtml(p.guia || '')}"></td>
                     <td>
                         <div class="action-buttons">
                             <button class="btn btn-sm btn-warning" onclick="cargarRotuloAdmin(${p.id})" title="Guía">🏷️ Guía</button>
@@ -354,21 +354,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function abrirModalAsignacionMasiva() {
-        const paquetesSeleccionados = getSelectedPackages();
-        const ids = paquetesSeleccionados.map(p => String(p.id));
-        if (ids.length === 0) {
-            alert('Selecciona al menos un paquete para asignar.');
-            return;
+        if (typeof window.abrirModalAsignacionMasiva === 'function') {
+            window.abrirModalAsignacionMasiva();
         }
-
-        const guias = paquetesSeleccionados
-            .map(p => String(p.guia || '').trim())
-            .filter(Boolean);
-
-        abrirModalAsignar(ids, guias.join('\n'));
     }
-
-    window.abrirModalAsignacionMasiva = abrirModalAsignacionMasiva;
 
     function normalizarTexto(texto) {
         return String(texto || '')
@@ -1475,6 +1464,40 @@ function abrirModalAsignar(id, guia) {
     document.querySelectorAll('.mensajero-item').forEach(el => el.classList.remove('selected'));
     modal.style.display = 'flex';
 }
+
+window.abrirModalAsignacionMasiva = function() {
+    const seleccionados = Array.from(document.querySelectorAll('.paquete-checkbox:checked')).map((checkbox) => ({
+        id: String(checkbox.value || '').trim(),
+        guia: String(checkbox.dataset.guia || '').trim()
+    })).filter((item) => item.id !== '');
+
+    if (seleccionados.length === 0) {
+        alert('Selecciona al menos un paquete para asignar.');
+        return;
+    }
+
+    if (typeof abrirModalAsignar !== 'function') {
+        alert('No se pudo abrir el modal de asignación.');
+        return;
+    }
+
+    const ids = seleccionados.map((item) => item.id);
+    const guias = seleccionados
+        .map((item) => item.guia)
+        .filter(Boolean);
+
+    abrirModalAsignar(ids, guias.join('\n'));
+};
+
+document.addEventListener('click', function(event) {
+    const botonAsignarMasivo = event.target.closest('#btnAsignarSeleccionados');
+    if (!botonAsignarMasivo) {
+        return;
+    }
+
+    event.preventDefault();
+    window.abrirModalAsignacionMasiva();
+});
 
 function asignarMensajeroAction() {
     const form = document.getElementById('formAsignarMensajero');
