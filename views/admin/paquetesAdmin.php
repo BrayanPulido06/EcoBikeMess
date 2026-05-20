@@ -605,6 +605,90 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
     <script src="../../public/js/rotuloShared.js"></script>
     <script src="../../public/js/paquetesAdmin.js?v=20260514-2"></script>
     <script>
+        window.abrirModalAsignacionMasiva = async function() {
+            const seleccionados = Array.from(document.querySelectorAll('.paquete-checkbox:checked')).map((checkbox) => ({
+                id: String(checkbox.value || '').trim(),
+                guia: String(checkbox.dataset.guia || '').trim()
+            })).filter((item) => item.id !== '');
+
+            if (seleccionados.length === 0) {
+                alert('Selecciona al menos un paquete para asignar.');
+                return;
+            }
+
+            const modal = document.getElementById('modalAsignar');
+            const form = document.getElementById('formAsignarMensajero');
+            const inputGuias = document.getElementById('asignarGuia');
+            const inputBuscarMensajero = document.getElementById('buscarMensajeroInput');
+            const inputMensajero = document.getElementById('asignarMensajero');
+            const listaMensajeros = document.getElementById('listaMensajeros');
+
+            if (!modal || !form || !inputGuias || !inputBuscarMensajero || !inputMensajero || !listaMensajeros) {
+                alert('No se pudo abrir el modal de asignación.');
+                return;
+            }
+
+            let hiddenPaqueteId = document.getElementById('hiddenPaqueteId');
+            if (!hiddenPaqueteId) {
+                hiddenPaqueteId = document.createElement('input');
+                hiddenPaqueteId.type = 'hidden';
+                hiddenPaqueteId.id = 'hiddenPaqueteId';
+                hiddenPaqueteId.name = 'paquete_id';
+                form.appendChild(hiddenPaqueteId);
+            }
+
+            let hiddenPaqueteIds = document.getElementById('hiddenPaqueteIds');
+            if (!hiddenPaqueteIds) {
+                hiddenPaqueteIds = document.createElement('input');
+                hiddenPaqueteIds.type = 'hidden';
+                hiddenPaqueteIds.id = 'hiddenPaqueteIds';
+                hiddenPaqueteIds.name = 'paquete_ids';
+                form.appendChild(hiddenPaqueteIds);
+            }
+
+            const ids = seleccionados.map((item) => item.id);
+            const guias = seleccionados.map((item) => item.guia).filter(Boolean);
+
+            hiddenPaqueteId.value = ids.length === 1 ? ids[0] : '';
+            hiddenPaqueteIds.value = ids.join(',');
+            form.dataset.bulkMode = ids.length > 1 ? '1' : '0';
+            inputGuias.value = guias.join('\n');
+            inputBuscarMensajero.value = '';
+            inputMensajero.value = '';
+
+            try {
+                if (typeof todosLosMensajeros !== 'undefined' && Array.isArray(todosLosMensajeros) && todosLosMensajeros.length > 0 && typeof renderizarListaMensajeros === 'function') {
+                    renderizarListaMensajeros(todosLosMensajeros);
+                } else {
+                    const response = await fetch('../../controller/paquetesAdminController.php?action=filtros');
+                    const data = await response.json();
+                    const mensajeros = Array.isArray(data.mensajeros) ? data.mensajeros : [];
+
+                    if (typeof todosLosMensajeros !== 'undefined') {
+                        todosLosMensajeros = mensajeros;
+                    }
+
+                    if (typeof renderizarListaMensajeros === 'function') {
+                        renderizarListaMensajeros(mensajeros);
+                    } else {
+                        listaMensajeros.innerHTML = mensajeros.map((m) => `
+                            <div class="mensajero-item" onclick="seleccionarMensajero(${Number(m.id || 0)}, '${String(m.nombre || '').replace(/'/g, "\\'")}')" data-id="${Number(m.id || 0)}">
+                                <div style="font-weight:bold;">${String(m.nombre || '')}</div>
+                                <div style="font-size:0.85em; color:#666;">
+                                    <span style="color:${m.estado === 'activo' ? 'green' : 'gray'}">● ${String(m.estado || 'sin estado')}</span> | Tareas activas: ${Number(m.tareas_activas || 0)}
+                                </div>
+                            </div>
+                        `).join('') || '<div class="mensajero-item text-muted">No se encontraron mensajeros</div>';
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+            }
+
+            document.querySelectorAll('.mensajero-item').forEach((el) => el.classList.remove('selected'));
+            modal.style.display = 'flex';
+        };
+
         let currentRotuloData = null;
         const truncarRotulo = (value, max) => {
             const text = String(value || '').replace(/\s+/g, ' ').trim();
