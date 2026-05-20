@@ -340,7 +340,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!btnAsignarSeleccionados) return;
 
         const cantidad = getSelectedPackageIds().length;
-        btnAsignarSeleccionados.disabled = cantidad === 0;
+        const deshabilitado = cantidad === 0;
+        btnAsignarSeleccionados.classList.toggle('is-disabled', deshabilitado);
+        btnAsignarSeleccionados.setAttribute('aria-disabled', deshabilitado ? 'true' : 'false');
         btnAsignarSeleccionados.textContent = cantidad > 0
             ? `Asignar Mensajero (${cantidad})`
             : 'Asignar Mensajero';

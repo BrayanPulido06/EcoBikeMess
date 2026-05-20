@@ -133,6 +133,11 @@ body {
     cursor: not-allowed;
 }
 
+.btn.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* Stats Quick */
 .stats-quick {
     display: grid;
