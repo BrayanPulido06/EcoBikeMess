@@ -336,6 +336,11 @@ document.addEventListener('DOMContentLoaded', function() {
             .filter(Boolean);
     }
 
+    function getSelectedPackages() {
+        const ids = getSelectedPackageIds();
+        return currentData.filter(p => ids.includes(String(p.id)));
+    }
+
     function actualizarEstadoBotonAsignacionMasiva() {
         if (!btnAsignarSeleccionados) return;
 
@@ -349,14 +354,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function abrirModalAsignacionMasiva() {
-        const ids = getSelectedPackageIds();
+        const paquetesSeleccionados = getSelectedPackages();
+        const ids = paquetesSeleccionados.map(p => String(p.id));
         if (ids.length === 0) {
             alert('Selecciona al menos un paquete para asignar.');
             return;
         }
 
-        abrirModalAsignar(ids, `${ids.length} paquete(s) seleccionados`);
+        const guias = paquetesSeleccionados
+            .map(p => String(p.guia || '').trim())
+            .filter(Boolean);
+
+        abrirModalAsignar(ids, guias.join('\n'));
     }
+
+    window.abrirModalAsignacionMasiva = abrirModalAsignacionMasiva;
 
     function normalizarTexto(texto) {
         return String(texto || '')

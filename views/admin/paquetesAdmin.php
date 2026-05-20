@@ -241,7 +241,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 <button class="btn btn-secondary" id="btnExportarExcel">
                     📊 Exportar Excel
                 </button>
-                <button class="btn btn-secondary is-disabled" id="btnAsignarSeleccionados" aria-disabled="true">
+                <button type="button" class="btn btn-secondary is-disabled" id="btnAsignarSeleccionados" aria-disabled="true" onclick="if (window.abrirModalAsignacionMasiva) window.abrirModalAsignacionMasiva();">
                     Asignar Mensajero
                 </button>
                 <button class="btn btn-secondary" id="btnExportarGuias">
@@ -467,7 +467,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                     <form id="formAsignarMensajero">
                         <div class="form-group">
                             <label>Paquete(s)</label>
-                            <input type="text" id="asignarGuia" readonly class="form-control">
+                            <textarea id="asignarGuia" readonly class="form-control" rows="4" style="resize: vertical;"></textarea>
                         </div>
                         <div class="form-group">
                             <label>Seleccionar Mensajero *</label>
