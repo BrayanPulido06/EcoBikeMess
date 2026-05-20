@@ -264,6 +264,12 @@ $remitente_data = [
                                     Usar datos del cliente
                                 </button>
                                 <input type="file" id="excelUpload" accept=".xlsx, .xls" style="display: none;">
+                                <button type="button" class="btn-text" id="btnUploadExcel" style="color: #2196f3;">
+                                    📂 Cargar Excel
+                                </button>
+                                <button type="button" class="btn-text" id="btnDownloadTemplate" style="color: #28a745;">
+                                    📥 Descargar Plantilla
+                                </button>
                             </div>
                         </div>
 
@@ -292,6 +298,10 @@ $remitente_data = [
                         </div>
                     </div>
 
+                    <div class="cliente-alert">
+                        Selecciona el cliente dueño del envío. Si necesitas, puedes editar el remitente manualmente o cargarlo por Excel a nombre de otra persona o tienda.
+                    </div>
+
                     
                 </div>
             </div>
@@ -316,6 +326,11 @@ $remitente_data = [
                             <div class="form-group">
                                 <label for="remitente_direccion">Dirección de Origen Completa *</label>
                                 <textarea id="remitente_direccion" name="remitente_direccion" rows="3" placeholder="Ej: Calle 123 #45-67, Apto 301, Barrio Centro" required></textarea>
+                                <span class="error-message"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="observaciones_recoleccion">Observaciones de Recolección</label>
+                                <textarea id="observaciones_recoleccion" name="observaciones_recoleccion" rows="3" placeholder="Ej: Llamar al llegar, recoger en portería, local 12, bodega, etc."></textarea>
                                 <span class="error-message"></span>
                             </div>
                         </div>
@@ -628,6 +643,7 @@ $remitente_data = [
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 
     <script src="../../public/js/rotuloShared.js"></script>
     <script src="../../public/js/digitarAdminEnvio.js"></script>

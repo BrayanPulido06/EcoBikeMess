@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const numeroGuiaHiddenInput = document.getElementById('numeroGuiaHidden');
     const btnDownloadPDF = document.getElementById('btnDownloadPDF');
     const formAction = form?.getAttribute('action') || '../../controller/enviarPaqueteController.php';
+    const isAdminFlow = /enviarPaqueteAdminController\.php$/i.test(formAction);
     const qrcodeContainer = document.getElementById('qrcode');
     const destinatarioTelefonoInput = document.getElementById('destinatario_telefono');
     const destinatarioFlexCheckbox = document.getElementById('destinatario_es_flex');
@@ -108,6 +109,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const day = String(date.getDate()).padStart(2, '0');
         const random = generarSufijoAleatorio(5);
         return `EBM-${year}${month}${day}-${random}`;
+    };
+
+    const getRemitenteDisplayName = (manualName = '') => {
+        const remitenteManual = String(manualName || '').trim();
+        const tiendaCliente = String(window.remitenteData?.nombre_tienda || '').trim();
+        const nombreCliente = String(window.remitenteData?.nombre_completo || '').trim();
+
+        if (!isAdminFlow) {
+            return tiendaCliente || remitenteManual || 'Tienda';
+        }
+
+        if (remitenteManual && tiendaCliente && nombreCliente && remitenteManual === nombreCliente) {
+            return tiendaCliente;
+        }
+
+        return remitenteManual || tiendaCliente || 'Tienda';
     };
 
     const descripcionDimension = (value) => {
@@ -520,7 +537,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 cliente_id: document.getElementById('cliente_id')?.value || '',
                 remitente_nombre: getStructuredValue(0, getValue('remitente nombre') || getValue('datos remitente nombre') || getValue('nombre remitente')) || document.getElementById('remitente_nombre').value || (window.remitenteData?.nombre_completo),
                 remitente_telefono: getStructuredValue(1, getValue('remitente telefono') || getValue('telefono remitente')) || document.getElementById('remitente_telefono').value || (window.remitenteData?.telefono),
-                observaciones_recoleccion: getStructuredValue(2, getValue('observaciones de recoleccion') || getValue('observacion de recoleccion') || getValue('observaciones recoleccion') || getValue('email de contacto') || getValue('remitente email') || getValue('correo remitente')) || document.getElementById('observaciones_recoleccion').value || '',
+                observaciones_recoleccion: getStructuredValue(2, getValue('observaciones de recoleccion') || getValue('observacion de recoleccion') || getValue('observaciones recoleccion') || getValue('email de contacto') || getValue('remitente email') || getValue('correo remitente')) || document.getElementById('observaciones_recoleccion')?.value || '',
                 remitente_direccion: getStructuredValue(3, getValue('direccion de origen') || getValue('remitente direccion') || getValue('origen')) || document.getElementById('remitente_direccion').value || (window.remitenteData?.direccion),
                 destinatario_nombre: getStructuredValue(4, getValue('nombre') || getValue('destinatario')),
                 destinatario_telefono: getStructuredValue(5, getValue('num destinatario') || getValue('telefono') || getValue('celular') || getValue('movil')),
@@ -645,7 +662,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 await window.RotuloEcoBike.downloadPdf({
                     guia: numeroGuia,
-                    tienda_nombre: window.remitenteData?.nombre_tienda || item.remitente_nombre || 'Tienda',
+                    tienda_nombre: getRemitenteDisplayName(item.remitente_nombre),
                     remitente_nombre: item.remitente_nombre || '',
                     destinatario_nombre: item.destinatario_nombre || '',
                     destinatario_direccion: item.destinatario_direccion || '',
@@ -1180,7 +1197,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
 
             currentPreviewRotuloData = {
                 guia: numeroGuia,
-                tienda_nombre: window.remitenteData?.nombre_tienda || document.getElementById('remitente_nombre').value || 'Tienda',
+                tienda_nombre: getRemitenteDisplayName(document.getElementById('remitente_nombre').value),
                 remitente_nombre: document.getElementById('remitente_nombre').value || '',
                 destinatario_nombre: document.getElementById('destinatario_nombre').value || '',
                 destinatario_direccion: document.getElementById('destinatario_direccion').value || '',
@@ -1200,7 +1217,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         }
 
         // Usar el nombre de la tienda desde los datos cargados de la BD (window.remitenteData)
-        document.getElementById('confirm_tienda_nombre').textContent = window.remitenteData?.nombre_tienda || 'Tienda';
+        document.getElementById('confirm_tienda_nombre').textContent = getRemitenteDisplayName(document.getElementById('remitente_nombre').value);
 
         document.getElementById('confirm_destinatario_nombre').textContent = document.getElementById('destinatario_nombre').value;
         document.getElementById('confirm_destinatario_telefono').textContent = document.getElementById('destinatario_telefono').value;
@@ -1376,7 +1393,7 @@ ${qrFinanciero}
                                     <td style="width: 4%;"></td>
                                     <td style="width: 48%; vertical-align: top; border: 1px solid #eee; padding: 6px; border-radius: 8px;">
                                         <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📤 Remitente</h3>
-                                        <p style="margin: 2px 0; line-height: 1.05;"><strong>Tienda:</strong> <span style="font-size: 15px; font-weight: 700;">${window.remitenteData?.nombre_tienda || 'Tienda'}</span></p>
+                                        <p style="margin: 2px 0; line-height: 1.05;"><strong>Tienda:</strong> <span style="font-size: 15px; font-weight: 700;">${getRemitenteDisplayName(document.getElementById('remitente_nombre').value)}</span></p>
                                     </td>
                                 </tr>
                             </table>
