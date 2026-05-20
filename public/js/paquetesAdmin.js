@@ -1506,7 +1506,10 @@ function asignarMensajeroAction() {
         .split(',')
         .map(id => id.trim())
         .filter(Boolean);
-    const mensajeroId = document.getElementById('asignarMensajero').value;
+    const inputMensajeroId = document.getElementById('asignarMensajero');
+    const inputBuscarMensajero = document.getElementById('buscarMensajeroInput');
+    const inputGuias = document.getElementById('asignarGuia');
+    let mensajeroId = String(inputMensajeroId?.value || '').trim();
 
     const seleccionadosEnTabla = Array.from(document.querySelectorAll('.paquete-checkbox:checked'))
         .map(cb => String(cb.value || '').trim())
@@ -1514,6 +1517,22 @@ function asignarMensajeroAction() {
 
     if (seleccionadosEnTabla.length > paqueteIds.length) {
         paqueteIds = seleccionadosEnTabla;
+    }
+
+    const guiasEnModal = String(inputGuias?.value || '')
+        .split(/\r?\n/)
+        .map(linea => linea.trim())
+        .filter(Boolean);
+
+    if (!mensajeroId) {
+        const nombreSeleccionado = String(inputBuscarMensajero?.value || '').trim().toLowerCase();
+        if (nombreSeleccionado && Array.isArray(todosLosMensajeros)) {
+            const encontrado = todosLosMensajeros.find(m => String(m.nombre || '').trim().toLowerCase() === nombreSeleccionado);
+            if (encontrado && inputMensajeroId) {
+                mensajeroId = String(encontrado.id || '').trim();
+                inputMensajeroId.value = mensajeroId;
+            }
+        }
     }
 
     if (!mensajeroId) {
@@ -1528,7 +1547,7 @@ function asignarMensajeroAction() {
 
     const formData = new FormData();
     formData.append('mensajero_id', mensajeroId);
-    const esMasivo = paqueteIds.length > 1 || (form?.dataset.bulkMode === '1');
+    const esMasivo = paqueteIds.length > 1 || guiasEnModal.length > 1 || seleccionadosEnTabla.length > 1 || (form?.dataset.bulkMode === '1');
 
     if (esMasivo) {
         paqueteIds.forEach(id => formData.append('paquete_ids[]', id));
