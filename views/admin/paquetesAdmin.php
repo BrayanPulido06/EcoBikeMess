@@ -18,7 +18,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
-    <link rel="stylesheet" href="../../public/css/paquetesAdmin.css">
+    <link rel="stylesheet" href="../../public/css/paquetesAdmin.css?v=20260523-1">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
@@ -326,7 +326,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 <table id="tablaPaquetes">
                     <thead>
                         <tr>
-                            <th title="Checklist de control">✓</th>
+                            <th title="Checklist de control"></th>
                             <th>N°</th>
                             <th><input type="checkbox" id="selectAll"></th>
                             <th>Acciones</th>
