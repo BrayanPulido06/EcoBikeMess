@@ -7,6 +7,7 @@ class PaquetesAdminModel {
     public function __construct() {
         $this->conn = conexionDB();
         $this->ensureEntregaAdditionalColumns();
+        $this->ensureChecklistVerdeColumn();
         $this->ensureNovedadesAdminSupport();
     }
 
@@ -50,6 +51,17 @@ class PaquetesAdminModel {
             // No bloquear la app si falla el ajuste.
         }
     }
+    private function ensureChecklistVerdeColumn(): void
+    {
+        if (!$this->columnExists('paquetes', 'checklist_verde')) {
+            try {
+                $this->conn->exec("ALTER TABLE paquetes ADD COLUMN checklist_verde TINYINT(1) NOT NULL DEFAULT 0 AFTER fecha_escaneo");
+            } catch (Throwable $e) {
+                // No bloqueamos la app si la alteración falla.
+            }
+        }
+    }
+
 
     private function getEntregaRowId(int $paqueteId): ?int
     {
@@ -144,6 +156,7 @@ class PaquetesAdminModel {
         $sql = "SELECT p.id, 
                        p.numero_guia as guia, 
                        p.fecha_creacion as fechaIngreso,
+                       COALESCE(p.checklist_verde, 0) as checklist_verde,
                        COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos)) as remitente,
                        CONCAT(uc.nombres, ' ', uc.apellidos) as nombre_persona,
                        p.destinatario_nombre as destinatario, 
@@ -237,6 +250,16 @@ class PaquetesAdminModel {
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function updateChecklistVerde(int $paqueteId, int $checked): bool
+    {
+        $sql = "UPDATE paquetes SET checklist_verde = :checked WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':checked' => $checked === 1 ? 1 : 0,
+            ':id' => $paqueteId
+        ]);
     }
 
     public function getPaqueteDetails($id) {

@@ -189,6 +189,35 @@ try {
                 'error' => $success ? null : 'No se pudo guardar toda la información del cierre.'
             ]);
             break;
+        case 'toggle_checklist_verde':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                echo json_encode(['success' => false, 'error' => 'Método no permitido']);
+                break;
+            }
+
+            $raw = file_get_contents('php://input');
+            $input = json_decode($raw, true);
+            if (!is_array($input)) {
+                echo json_encode(['success' => false, 'error' => 'Payload inválido']);
+                break;
+            }
+
+            $paqueteId = (int) ($input['paquete_id'] ?? 0);
+            $checked = !empty($input['checklist_verde']) ? 1 : 0;
+
+            if ($paqueteId <= 0) {
+                echo json_encode(['success' => false, 'error' => 'ID de paquete inválido']);
+                break;
+            }
+
+            $res = $model->updateChecklistVerde($paqueteId, $checked);
+            echo json_encode([
+                'success' => (bool) $res,
+                'checklist_verde' => $checked,
+                'error' => $res ? null : 'No se pudo actualizar el checklist'
+            ]);
+            break;
+
 
         case 'cancelar_servicio':
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

@@ -153,6 +153,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         document.addEventListener('change', (e) => {
+            if (e.target && e.target.classList.contains('checklist-verde-checkbox')) {
+                toggleChecklistVerde(e.target);
+                return;
+            }
             if (e.target && e.target.classList.contains('paquete-checkbox')) {
                 actualizarFilaSeleccionada(e.target);
                 const all = document.querySelectorAll('.paquete-checkbox');
@@ -168,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function listarPaquetes() {
         // Mostrar indicador de carga
         if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="18" style="text-align:center;">Cargando datos...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="19" style="text-align:center;">Cargando datos...</td></tr>';
         }
 
         // Construir URL con los parámetros de los filtros
@@ -189,12 +193,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     renderizarTabla(response.data);
                 } else if (response.error) {
                     console.error('Error del servidor:', response.error);
-                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="18" class="text-danger text-center">Error: ${response.error}</td></tr>`;
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="19" class="text-danger text-center">Error: ${response.error}</td></tr>`;
                 }
             })
             .catch(error => {
                 console.error('Error en la petición:', error);
-                if (tableBody) tableBody.innerHTML = `<tr><td colspan="18" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
+                if (tableBody) tableBody.innerHTML = `<tr><td colspan="19" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
             });
     }
     window.listarPaquetes = listarPaquetes;
@@ -204,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!tableBody) return;
 
         if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="18" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="19" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
             if (selectAllCheckbox) {
                 selectAllCheckbox.checked = false;
             }
@@ -275,6 +279,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             html += `
                 <tr class="paquete-row">
+                    <td class="col-checklist-verde">
+                        <label class="checklist-verde-control">
+                            <input type="checkbox" class="checklist-verde-checkbox" value="${p.id}" ${Number(p.checklist_verde) === 1 ? 'checked' : ''}>
+                            <span class="checklist-verde-indicator"></span>
+                        </label>
+                    </td>
                     <td class="numero-paquete">${index + 1}</td>
                     <td class="col-seleccion"><input type="checkbox" class="paquete-checkbox" value="${p.id}" data-guia="${escaparAtributoHtml(p.guia || '')}"></td>
                     <td>
@@ -311,6 +321,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
         tableBody.innerHTML = html;
         sincronizarFilasSeleccionadas();
+    }
+
+    async function toggleChecklistVerde(checkbox) {
+        const paqueteId = String(checkbox.value || '').trim();
+        if (!paqueteId) return;
+
+        checkbox.disabled = true;
+        try {
+            const response = await fetch('../../controller/paquetesAdminController.php?action=toggle_checklist_verde', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    paquete_id: paqueteId,
+                    checklist_verde: checkbox.checked ? 1 : 0
+                })
+            });
+            const result = await response.json();
+
+            if (!result.success) {
+                checkbox.checked = !checkbox.checked;
+                alert('No se pudo actualizar el checklist: ' + (result.error || 'Desconocido'));
+                return;
+            }
+
+            const paquete = currentData.find((item) => String(item.id) === paqueteId);
+            if (paquete) {
+                paquete.checklist_verde = checkbox.checked ? 1 : 0;
+            }
+        } catch (error) {
+            console.error(error);
+            checkbox.checked = !checkbox.checked;
+            alert('Error de conexión al actualizar el checklist.');
+        } finally {
+            checkbox.disabled = false;
+        }
     }
 
     function actualizarFilaSeleccionada(checkbox) {

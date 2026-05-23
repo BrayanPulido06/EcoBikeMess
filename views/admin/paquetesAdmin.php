@@ -326,6 +326,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 <table id="tablaPaquetes">
                     <thead>
                         <tr>
+                            <th title="Checklist de control">✓</th>
                             <th>N°</th>
                             <th><input type="checkbox" id="selectAll"></th>
                             <th>Acciones</th>
@@ -777,3 +778,4 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
     </script>
 </body>
 </html>
+
