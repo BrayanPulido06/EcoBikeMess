@@ -354,6 +354,11 @@ table {
     text-align: center;
 }
 
+#tablaPaquetes thead th:nth-child(1) {
+    font-size: 0;
+    color: transparent;
+}
+
 #tablaPaquetes th:nth-child(2),
 #tablaPaquetes td:nth-child(2) {
     width: 60px;
@@ -382,49 +387,14 @@ table {
     text-align: center;
 }
 
-.checklist-verde-control {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
-
-.checklist-verde-control input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.checklist-verde-indicator {
+.checklist-verde-checkbox {
     width: 18px;
     height: 18px;
-    border: 2px solid #9ca3af;
-    border-radius: 4px;
-    background: #fff;
-    display: inline-block;
-    transition: all 0.2s ease;
-    position: relative;
+    cursor: pointer;
+    accent-color: #28a745;
 }
 
-.checklist-verde-control input:checked + .checklist-verde-indicator {
-    background: #28a745;
-    border-color: #28a745;
-}
-
-.checklist-verde-control input:checked + .checklist-verde-indicator::after {
-    content: '';
-    position: absolute;
-    left: 5px;
-    top: 1px;
-    width: 4px;
-    height: 9px;
-    border: solid #fff;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-}
-
-.checklist-verde-control input:disabled + .checklist-verde-indicator {
+.checklist-verde-checkbox:disabled {
     opacity: 0.7;
     cursor: wait;
 }

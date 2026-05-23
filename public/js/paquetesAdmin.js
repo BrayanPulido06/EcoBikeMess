@@ -280,10 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
             html += `
                 <tr class="paquete-row">
                     <td class="col-checklist-verde">
-                        <label class="checklist-verde-control">
-                            <input type="checkbox" class="checklist-verde-checkbox" value="${p.id}" ${Number(p.checklist_verde) === 1 ? 'checked' : ''}>
-                            <span class="checklist-verde-indicator"></span>
-                        </label>
+                        <input type="checkbox" class="checklist-verde-checkbox" value="${p.id}" ${Number(p.checklist_verde) === 1 ? 'checked' : ''}>
                     </td>
                     <td class="numero-paquete">${index + 1}</td>
                     <td class="col-seleccion"><input type="checkbox" class="paquete-checkbox" value="${p.id}" data-guia="${escaparAtributoHtml(p.guia || '')}"></td>

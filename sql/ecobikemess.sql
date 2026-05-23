@@ -167,6 +167,7 @@ CREATE TABLE IF NOT EXISTS paquetes (
     qr_code VARCHAR(255) UNIQUE,
     escaneado BOOLEAN DEFAULT FALSE,
     fecha_escaneo TIMESTAMP NULL,
+    checklist_verde TINYINT(1) NOT NULL DEFAULT 0,
     FOREIGN KEY (cliente_id) REFERENCES clientes(id),
     FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id),
     FOREIGN KEY (mensajero_recoleccion_id) REFERENCES mensajeros(id),
