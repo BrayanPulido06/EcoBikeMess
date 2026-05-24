@@ -75,6 +75,33 @@ class PaquetesAdminModel {
         }
     }
 
+    private function buscarClientePorRemitente(string $remitente): ?array
+    {
+        $remitente = trim($remitente);
+        if ($remitente === '' || $remitente === '-') {
+            return null;
+        }
+
+        $sql = "SELECT c.id,
+                       COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos)) AS nombre
+                FROM clientes c
+                LEFT JOIN usuarios u ON c.usuario_id = u.id
+                WHERE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos)) = :nombre
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':nombre' => $remitente]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    private function obtenerClienteActualPaquete(int $paqueteId): ?int
+    {
+        $stmt = $this->conn->prepare("SELECT cliente_id FROM paquetes WHERE id = :id LIMIT 1");
+        $stmt->execute([':id' => $paqueteId]);
+        $value = $stmt->fetchColumn();
+        return $value ? (int) $value : null;
+    }
+
     private function ensureEntregaRecord(int $paqueteId, ?int $mensajeroId = null): ?int
     {
         $existingId = $this->getEntregaRowId($paqueteId);
@@ -469,8 +496,12 @@ class PaquetesAdminModel {
     }
 
     public function updatePaqueteAdmin($id, $data) {
+        $clienteAsignado = $this->buscarClientePorRemitente((string) ($data['remitente_nombre'] ?? ''));
+        $clienteIdFinal = $clienteAsignado['id'] ?? $this->obtenerClienteActualPaquete((int) $id);
+
         $sql = "UPDATE paquetes SET 
                     numero_guia = :numero_guia,
+                    cliente_id = :cliente_id,
                     remitente_nombre = :remitente_nombre,
                     destinatario_nombre = :destinatario,
                     destinatario_telefono = :telefono,
@@ -487,6 +518,7 @@ class PaquetesAdminModel {
 
         $params = [
             ':numero_guia' => $data['numero_guia'],
+            ':cliente_id' => $clienteIdFinal,
             ':remitente_nombre' => $data['remitente_nombre'],
             ':destinatario' => $data['destinatario_nombre'],
             ':telefono' => $data['destinatario_telefono'],
