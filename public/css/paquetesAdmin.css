@@ -354,14 +354,6 @@ table {
     text-align: center;
 }
 
-#tablaPaquetes thead th:nth-child(1) {
-    font-size: 0;
-    color: transparent;
-    line-height: 0;
-    padding-left: 0;
-    padding-right: 0;
-}
-
 #tablaPaquetes th:nth-child(2),
 #tablaPaquetes td:nth-child(2) {
     width: 60px;
