@@ -1,13 +1,13 @@
 // Variable global para almacenar todos los mensajeros
 let todosLosMensajeros = [];
 let todosLosClientes = [];
-let currentData = []; // Almacenar datos actuales de la tabla para exportación
+let currentData = []; // Almacenar datos actuales de la tabla para exportaciÃ³n
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Script paquetesAdmin.js cargado correctamente');
 
     // --- REFERENCIAS AL DOM ---
-    // Asegúrate de que tu tabla en HTML tenga <tbody id="tablaPaquetesBody">
+    // AsegÃºrate de que tu tabla en HTML tenga <tbody id="tablaPaquetesBody">
     const tableBody = document.getElementById('tablaPaquetesBody');
     const btnLimpiar = document.getElementById('btnLimpiarFiltros');
     const btnExportExcel = document.getElementById('btnExportarExcel');
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const filtroMensajeroInput = document.getElementById('filtroMensajeroInput');
     const filtroMensajeroOpciones = document.getElementById('filtroMensajeroOpciones');
     
-    // Referencias a los filtros (Asegúrate de que los IDs en tu HTML coincidan)
+    // Referencias a los filtros (AsegÃºrate de que los IDs en tu HTML coincidan)
     const inputs = {
         search: document.getElementById('searchInput'),        // Input tipo text (Corregido ID)
         fechaDesde: document.getElementById('filtroFechaDesde'), // Input date
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
         cancelarServicio: document.getElementById('modalCancelarServicio')
     };
 
-    // --- INICIALIZACIÓN ---
+    // --- INICIALIZACIÃ“N ---
     listarPaquetes(); // Carga la tabla inicial
     setupModalClosers(); // Configura los botones de cerrar modales
 
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Botón Limpiar Filtros
+    // BotÃ³n Limpiar Filtros
     if (btnLimpiar) {
         btnLimpiar.addEventListener('click', function() {
             Object.values(inputs).forEach(input => {
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- EXPORTACIÓN ---
+    // --- EXPORTACIÃ“N ---
     if (btnExportExcel) btnExportExcel.addEventListener('click', exportarExcel);
     if (btnAsignarSeleccionados) {
         btnAsignarSeleccionados.addEventListener('click', abrirModalAsignacionMasiva);
@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
             tableBody.innerHTML = '<tr><td colspan="19" style="text-align:center;">Cargando datos...</td></tr>';
         }
 
-        // Construir URL con los parámetros de los filtros
+        // Construir URL con los parÃ¡metros de los filtros
         const params = new URLSearchParams();
         params.append('action', 'listar');
         
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Petición AJAX al controlador
+        // PeticiÃ³n AJAX al controlador
         fetch(`../../controller/paquetesAdminController.php?${params.toString()}`)
             .then(response => response.json())
             .then(response => {
@@ -197,8 +197,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Error en la petición:', error);
-                if (tableBody) tableBody.innerHTML = `<tr><td colspan="19" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
+                console.error('Error en la peticiÃ³n:', error);
+                if (tableBody) tableBody.innerHTML = `<tr><td colspan="19" class="text-danger text-center">Error de conexiÃ³n al cargar datos.</td></tr>`;
             });
     }
     window.listarPaquetes = listarPaquetes;
@@ -216,11 +216,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        currentData = data; // Guardar datos para exportación
+        currentData = data; // Guardar datos para exportaciÃ³n
 
         let html = '';
         data.forEach((p, index) => {
-            // Definir color del badge según estado
+            // Definir color del badge segÃºn estado
             let badgeClass = 'secondary'; // Gris por defecto
             
             switch(p.estado) {
@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 case 'devuelto': badgeClass = 'dark'; break;       // Oscuro
             }
 
-            // Definir color y etiqueta del estado de recolección
+            // Definir color y etiqueta del estado de recolecciÃ³n
             let badgeRecoleccion = 'secondary';
             let estadoRecLabel = 'Sin asignar';
             const estadoRec = p.estado_recoleccion || '';
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         break;
                     case 'en_curso':
                         badgeRecoleccion = 'primary';
-                        estadoRecLabel = 'En tránsito';
+                        estadoRecLabel = 'En trÃ¡nsito';
                         break;
                     case 'asignada':
                         badgeRecoleccion = 'info';
@@ -266,13 +266,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const recaudoRealFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.recaudo_real || 0);
             const valorEnvioFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.costo_envio || 0);
             const cambiosRecogidos = Number(p.recibio_cambios) === 1
-                ? '<span class="badge badge-success">Sí</span>'
+                ? '<span class="badge badge-success">SÃ­</span>'
                 : '<span class="badge badge-secondary">No</span>';
 
             const mensajeroEntrega = p.mensajero_entrega || '<span class="text-muted font-italic">Sin asignar</span>';
             const mensajeroRecoleccion = p.mensajero_recoleccion || '<span class="text-muted font-italic">Sin asignar</span>';
             const envioAgregado = String(p.envio_destinatario || '').toLowerCase() === 'si'
-                ? `<span class="badge badge-success">Sí</span> ${valorEnvioFormateado}`
+                ? `<span class="badge badge-success">SÃ­</span> ${valorEnvioFormateado}`
                 : `<span class="badge badge-secondary">No</span> ${valorEnvioFormateado}`;
             const nombrePaquete = escaparJsString(p.nombre_paquete || p.descripcion_contenido || p.destinatario || 'Sin nombre');
             const guiaSeguro = escaparJsString(p.guia || '');
@@ -286,10 +286,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td class="col-seleccion"><input type="checkbox" class="paquete-checkbox" value="${p.id}" data-guia="${escaparAtributoHtml(p.guia || '')}"></td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn btn-sm btn-warning" onclick="cargarRotuloAdmin(${p.id})" title="Guía">??? Guía</button>
-                            <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})" title="Ver Detalle">???</button>
-                            ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-success" onclick="cerrarPaqueteAdmin(${p.id})" title="Cerrar paquete">? Cerrar</button>` : ''}
-                            ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar/Reasignar">?? Asignar</button>` : ''}
+                            <button class="btn btn-sm btn-warning" onclick="cargarRotuloAdmin(${p.id})" title="Guia">Guia</button>
+                            <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})" title="Ver detalle">Ver</button>
+                            ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-success" onclick="cerrarPaqueteAdmin(${p.id})" title="Cerrar paquete">Cerrar</button>` : ''}
+                            ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar o reasignar">Asignar</button>` : ''}
                         </div>
                     </td>
                     <td>${p.fechaIngreso}</td>
@@ -349,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error(error);
             checkbox.checked = !checkbox.checked;
-            alert('Error de conexión al actualizar el checklist.');
+            alert('Error de conexiÃ³n al actualizar el checklist.');
         } finally {
             checkbox.disabled = false;
         }
@@ -505,7 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- FUNCIONES DE EXPORTACIÓN ---
+    // --- FUNCIONES DE EXPORTACIÃ“N ---
     function getPaquetesParaExportar() {
         const selectedCheckboxes = document.querySelectorAll('.paquete-checkbox:checked');
         let dataToExport = [];
@@ -527,19 +527,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const exportData = data.map(p => ({
-            "Guía": p.guia,
+            "GuÃ­a": p.guia,
             "Fecha": p.fechaIngreso,
             "Remitente": p.remitente,
             "Nombre": p.nombre_persona,
             "Destinatario": p.destinatario,
-            "Dirección": p.direccion,
+            "DirecciÃ³n": p.direccion,
             "Mensajero Recoge": p.mensajero_recoleccion || 'Sin asignar',
             "Estado Rec.": p.estado_recoleccion || 'pendiente',
             "Mensajero Entrega": p.mensajero_entrega || 'Sin asignar',
             "Estado Entrega": p.estado,
             "Recaudo": p.recaudo_esperado || 0,
             "Recaudo Real": p.recaudo_real || 0,
-            "Cambios Recogidos": Number(p.recibio_cambios) === 1 ? 'Sí' : 'No',
+            "Cambios Recogidos": Number(p.recibio_cambios) === 1 ? 'SÃ­' : 'No',
             "Valor Envio": p.costo_envio || 0,
             "Envio Agregado": p.envio_destinatario || 'no'
         }));
@@ -560,7 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function renderRotuloToCanvas(datos) {
         if (!window.RotuloEcoBike) {
-            throw new Error('RotuloEcoBike no está disponible');
+            throw new Error('RotuloEcoBike no estÃ¡ disponible');
         }
         return window.RotuloEcoBike.renderToCanvas(datos);
     }
@@ -593,7 +593,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     destinatario_telefono: info.destinatario_telefono || '',
                     destinatario_observaciones: info.instrucciones_entrega || 'Sin observaciones',
                     contenido: info.descripcion_contenido || '',
-                    cambios: info.recoger_cambios ? 'Sí' : 'No',
+                    cambios: info.recoger_cambios ? 'SÃ­' : 'No',
                     recaudo: info.recaudo_esperado || 0
                 };
 
@@ -603,12 +603,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 pdf.addImage(imgData, 'PNG', 0, 0, 100, 100);
                 first = false;
             } catch (err) {
-                console.error('Error generando guía:', err);
+                console.error('Error generando guÃ­a:', err);
             }
         }
 
         if (first) {
-            alert('No se pudieron generar las guías.');
+            alert('No se pudieron generar las guÃ­as.');
             return;
         }
         const fecha = new Date().toISOString().slice(0, 10);
@@ -637,7 +637,7 @@ function cargarFiltros() {
 // Llamar a cargar filtros al inicio
 cargarFiltros();
 
-// Función para renderizar la lista de mensajeros en el modal (divs en lugar de options)
+// FunciÃ³n para renderizar la lista de mensajeros en el modal (divs en lugar de options)
 function renderizarListaMensajeros(lista) {
     const contenedor = document.getElementById('listaMensajeros');
     if (!contenedor) return;
@@ -663,7 +663,7 @@ function renderizarListaMensajeros(lista) {
     contenedor.innerHTML = html;
 }
 
-// Función para filtrar la lista cuando el usuario escribe
+// FunciÃ³n para filtrar la lista cuando el usuario escribe
 function filtrarListaMensajeros(e) {
     const texto = e.target.value.toLowerCase();
     const filtrados = todosLosMensajeros.filter(m => 
@@ -689,7 +689,7 @@ function verDetalle(id, options = {}) {
                 const novedades = data.novedades || [];
 
                 if (!info) {
-                    const msg = data.error ? `Error: ${data.error}` : 'No se encontró información del paquete.';
+                    const msg = data.error ? `Error: ${data.error}` : 'No se encontrÃ³ informaciÃ³n del paquete.';
                     container.innerHTML = `<p class="text-danger text-center">${msg}</p>`;
                     return;
                 }
@@ -757,7 +757,7 @@ function verDetalle(id, options = {}) {
                     const estados = [
                         { value: 'pendiente', label: 'Pendiente' },
                         { value: 'asignado', label: 'Asignado' },
-                        { value: 'en_transito', label: 'En tránsito' },
+                        { value: 'en_transito', label: 'En trÃ¡nsito' },
                         { value: 'en_ruta', label: 'En ruta' },
                         { value: 'entregado', label: 'Entregado' },
                         { value: 'devuelto', label: 'Devuelto' },
@@ -788,7 +788,7 @@ function verDetalle(id, options = {}) {
                 if (info.infoCancelacion && info.infoCancelacion.foto) {
                     evidenciaItems.push({
                         tipo: 'cancelacion',
-                        label: 'Cancelación',
+                        label: 'CancelaciÃ³n',
                         ruta: info.infoCancelacion.foto,
                         target: 'cancelacion',
                         allowDelete: true
@@ -901,7 +901,7 @@ function verDetalle(id, options = {}) {
                                     <div style="border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#fff;">
                                         <div class="text-muted small">${escapeHtml(n.fecha_registro || '')}</div>
                                         <p style="margin:6px 0 0;font-size:0.95em;">${escapeHtml(n.descripcion || '')}</p>
-                                        <small class="text-muted">Mensajero: ${escapeHtml(n.mensajero || 'Sin información')}</small>
+                                        <small class="text-muted">Mensajero: ${escapeHtml(n.mensajero || 'Sin informaciÃ³n')}</small>
                                         <div style="margin-top:10px;">
                                             ${renderNovedadFotos(n)}
                                         </div>
@@ -912,15 +912,15 @@ function verDetalle(id, options = {}) {
                     `;
                 };
 
-                const yesNoLabel = (value) => (Number(value) === 1 || String(value).toLowerCase() === '1' ? 'Sí' : 'No');
+                const yesNoLabel = (value) => (Number(value) === 1 || String(value).toLowerCase() === '1' ? 'SÃ­' : 'No');
 
                 let html = `
                     <form id="formEditarDetalles" data-paquete-id="${info.paquete_id}">
                         <div class="detalle-section">
-                            <h3>?? Información del Paquete</h3>
+                            <h3>?? InformaciÃ³n del Paquete</h3>
                             <div class="detalle-grid">
                                 <div class="detalle-item">
-                                    <div class="detalle-label">Número de Guía</div>
+                                    <div class="detalle-label">NÃºmero de GuÃ­a</div>
                                     <input class="form-control" name="numero_guia" value="${escapeHtml(info.numero_guia)}">
                                 </div>
                                 <div class="detalle-item">
@@ -942,15 +942,15 @@ function verDetalle(id, options = {}) {
                                     <input class="form-control" name="destinatario_nombre" value="${escapeHtml(info.destinatario_nombre || '')}">
                                 </div>
                                 <div class="detalle-item">
-                                    <div class="detalle-label">Teléfono Destinatario</div>
+                                    <div class="detalle-label">TelÃ©fono Destinatario</div>
                                     <input class="form-control" name="destinatario_telefono" value="${escapeHtml(info.destinatario_telefono || '')}">
                                 </div>
                                 <div class="detalle-item" style="grid-column: span 2;">
-                                    <div class="detalle-label">Dirección de Entrega</div>
+                                    <div class="detalle-label">DirecciÃ³n de Entrega</div>
                                     <textarea class="form-control" name="direccion_destino" rows="2">${escapeHtml(info.direccion_destino || '')}</textarea>
                                 </div>
                                 <div class="detalle-item">
-                                    <div class="detalle-label">Mensajero Recolección</div>
+                                    <div class="detalle-label">Mensajero RecolecciÃ³n</div>
                                     <select class="form-control" name="mensajero_recoleccion_id">
                                         ${renderMensajeroOptions(info.mensajero_recoleccion_id)}
                                     </select>
@@ -972,7 +972,7 @@ function verDetalle(id, options = {}) {
                                     <input class="form-control" name="descripcion_contenido" value="${escapeHtml(info.descripcion_contenido || '')}">
                                 </div>
                                 <div class="detalle-item">
-                                    <div class="detalle-label">Costo Envío</div>
+                                    <div class="detalle-label">Costo EnvÃ­o</div>
                                     <input class="form-control" type="number" name="costo_envio" step="0.01" min="0" value="${escapeHtml(info.costo_envio || 0)}">
                                 </div>
                                 <div class="detalle-item">
@@ -990,11 +990,11 @@ function verDetalle(id, options = {}) {
                             <h3>? Adicionales</h3>
                             <div class="detalle-grid">
                                 <div class="detalle-item">
-                                    <div class="detalle-label">Dimensión escogida</div>
+                                    <div class="detalle-label">DimensiÃ³n escogida</div>
                                     <div class="detalle-value">${escapeHtml(info.dimensiones || 'Sin registro')}</div>
                                 </div>
                                 <div class="detalle-item">
-                                    <div class="detalle-label">Entrega el mismo día</div>
+                                    <div class="detalle-label">Entrega el mismo dÃ­a</div>
                                     <div class="detalle-value">${yesNoLabel(info.envio_mismo_dia)}</div>
                                 </div>
                                 <div class="detalle-item">
@@ -1006,8 +1006,8 @@ function verDetalle(id, options = {}) {
                                     <div class="detalle-value">${yesNoLabel(info.recoger_cambios)}</div>
                                 </div>
                                 <div class="detalle-item">
-                                    <div class="detalle-label">Sumar envío al recaudo</div>
-                                    <div class="detalle-value">${String(info.envio_destinatario || '').toLowerCase() === 'si' ? 'Sí' : 'No'}</div>
+                                    <div class="detalle-label">Sumar envÃ­o al recaudo</div>
+                                    <div class="detalle-value">${String(info.envio_destinatario || '').toLowerCase() === 'si' ? 'SÃ­' : 'No'}</div>
                                 </div>
                             </div>
                         </div>
@@ -1040,7 +1040,7 @@ function verDetalle(id, options = {}) {
                                     <div class="detalle-label">Cambios recogidos</div>
                                     <select class="form-control" name="entrega_recibio_cambios">
                                         <option value="0" ${Number(info.infoEntrega.recibioCambios || 0) === 0 ? 'selected' : ''}>No</option>
-                                        <option value="1" ${Number(info.infoEntrega.recibioCambios || 0) === 1 ? 'selected' : ''}>Sí</option>
+                                        <option value="1" ${Number(info.infoEntrega.recibioCambios || 0) === 1 ? 'selected' : ''}>SÃ­</option>
                                     </select>
                                 </div>
                                 <div class="detalle-item" style="grid-column: span 2;">
@@ -1053,7 +1053,7 @@ function verDetalle(id, options = {}) {
 
                         ${info.infoCancelacion ? `
                         <div class="detalle-section" style="margin-top: 20px; background-color: #fff5f5; border: 1px solid #f5c2c7;">
-                            <h3 style="color: #b02a37;">? Detalles de Cancelación</h3>
+                            <h3 style="color: #b02a37;">? Detalles de CancelaciÃ³n</h3>
                             <div class="detalle-grid">
                                 <div class="detalle-item">
                                     <div class="detalle-label">Motivo</div>
@@ -1061,11 +1061,11 @@ function verDetalle(id, options = {}) {
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Fecha</div>
-                                    <div class="detalle-value">${escapeHtml(info.infoCancelacion.fecha || 'Sin información.')}</div>
+                                    <div class="detalle-value">${escapeHtml(info.infoCancelacion.fecha || 'Sin informaciÃ³n.')}</div>
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Mensajero</div>
-                                    <div class="detalle-value">${escapeHtml(info.infoCancelacion.mensajero || 'Sin información.')}</div>
+                                    <div class="detalle-value">${escapeHtml(info.infoCancelacion.mensajero || 'Sin informaciÃ³n.')}</div>
                                 </div>
                             </div>
                         </div>
@@ -1075,21 +1075,21 @@ function verDetalle(id, options = {}) {
                         ${renderNovedadesSection('?? Historial de Cancelaciones', cancelaciones)}
 
                         <div class="detalle-section" style="margin-top: 20px;">
-                            <h3>??? Evidencias e Imágenes</h3>
+                            <h3>Evidencias e Imagenes</h3>
                             <div class="evidencia-grid">
                                 ${evidenciaItems.map(renderEvidenciaCard).join('')}
                                 ${extraItems.map(renderEvidenciaCard).join('')}
-                                ${evidenciaItems.length === 0 && extraItems.length === 0 ? '<p class="text-muted">No hay imágenes registradas.</p>' : ''}
+                                ${evidenciaItems.length === 0 && extraItems.length === 0 ? '<p class="text-muted">No hay imÃ¡genes registradas.</p>' : ''}
                             </div>
                             <div class="evidencia-upload">
                                 <select class="form-control" id="tipoImagenNueva">
                                     <option value="general">General</option>
                                     <option value="entrega">Entrega</option>
-                                    <option value="cancelacion">Cancelación</option>
-                                    <option value="recoleccion">Recolección</option>
+                                    <option value="cancelacion">CancelaciÃ³n</option>
+                                    <option value="recoleccion">RecolecciÃ³n</option>
                                 </select>
                                 <input class="form-control" type="file" id="imagenesNueva" multiple accept="image/*">
-                                <button type="button" class="btn btn-primary" id="btnSubirImagenes">Subir imágenes</button>
+                                <button type="button" class="btn btn-primary" id="btnSubirImagenes">Subir imÃ¡genes</button>
                             </div>
                         </div>
 
@@ -1208,7 +1208,7 @@ function verDetalle(id, options = {}) {
                             }
                         } catch (err) {
                             console.error(err);
-                            alert('Error de conexión al guardar cambios');
+                            alert('Error de conexiÃ³n al guardar cambios');
                         } finally {
                             guardandoCambios = false;
                             if (submitBtn) {
@@ -1226,7 +1226,7 @@ function verDetalle(id, options = {}) {
                         const inputFiles = document.getElementById('imagenesNueva');
                         if (!inputFiles || !inputFiles.files || inputFiles.files.length === 0) {
                             if (inputFiles) inputFiles.click();
-                            alert('Selecciona una o más imágenes');
+                            alert('Selecciona una o mÃ¡s imÃ¡genes');
                             return;
                         }
                         const fd = new FormData();
@@ -1240,21 +1240,21 @@ function verDetalle(id, options = {}) {
                             });
                             const result = await resp.json();
                             if (result.success) {
-                                alert('Imágenes subidas');
+                                alert('ImÃ¡genes subidas');
                                 verDetalle(id);
                             } else {
                                 alert('Error al subir: ' + (result.error || 'Desconocido'));
                             }
                         } catch (err) {
                             console.error(err);
-                            alert('Error al subir imágenes');
+                            alert('Error al subir imÃ¡genes');
                         }
                     });
                 }
 
                 container.querySelectorAll('[data-action="eliminar-imagen"]').forEach(btn => {
                     btn.addEventListener('click', async () => {
-                        if (!confirm('¿Eliminar esta imagen?')) return;
+                        if (!confirm('Â¿Eliminar esta imagen?')) return;
                         const imageId = btn.getAttribute('data-image-id');
                         const target = btn.getAttribute('data-target');
                         const payload = { paquete_id: id };
@@ -1274,7 +1274,7 @@ function verDetalle(id, options = {}) {
                             }
                         } catch (err) {
                             console.error(err);
-                            alert('Error de conexión al eliminar');
+                            alert('Error de conexiÃ³n al eliminar');
                         }
                     });
                 });
@@ -1342,12 +1342,12 @@ async function cancelarServicioAction() {
     const modal = document.getElementById('modalCancelarServicio');
 
     if (!paqueteId) {
-        alert('No se encontró el paquete a cancelar.');
+        alert('No se encontrÃ³ el paquete a cancelar.');
         return;
     }
 
     if (!motivo) {
-        alert('Debes escribir la razón de cancelación.');
+        alert('Debes escribir la razÃ³n de cancelaciÃ³n.');
         return;
     }
 
@@ -1374,13 +1374,13 @@ async function cancelarServicioAction() {
         alert('Error al cancelar: ' + (result.error || 'Desconocido'));
     } catch (error) {
         console.error(error);
-        alert('Error de conexión al cancelar el servicio.');
+        alert('Error de conexiÃ³n al cancelar el servicio.');
     }
 }
 
 window.eliminarPaqueteAdmin = async function(id, guia, nombrePaquete) {
     const descripcion = nombrePaquete || 'Sin nombre';
-    const confirmacion = confirm(`¿Seguro que deseas eliminar este paquete?\n\nGuía: ${guia || 'N/A'}\nNombre del paquete: ${descripcion}`);
+    const confirmacion = confirm(`Â¿Seguro que deseas eliminar este paquete?\n\nGuÃ­a: ${guia || 'N/A'}\nNombre del paquete: ${descripcion}`);
 
     if (!confirmacion) {
         return;
@@ -1403,16 +1403,16 @@ window.eliminarPaqueteAdmin = async function(id, guia, nombrePaquete) {
         alert('Error al eliminar: ' + (result.error || 'Desconocido'));
     } catch (error) {
         console.error(error);
-        alert('Error de conexión al eliminar el paquete.');
+        alert('Error de conexiÃ³n al eliminar el paquete.');
     }
 };
 
-// Abrir modal de Guía (Rótulo) desde Admin
+// Abrir modal de GuÃ­a (RÃ³tulo) desde Admin
 function cargarRotuloAdmin(id) {
     const btn = event?.currentTarget;
     const originalContent = btn ? btn.innerHTML : null;
     if (btn) {
-        btn.innerHTML = '?';
+        btn.innerHTML = '...';
         btn.disabled = true;
     }
 
@@ -1426,7 +1426,7 @@ function cargarRotuloAdmin(id) {
 
             const info = response.info;
             if (!info) {
-                alert('No se pudieron cargar los datos de la guía.');
+                alert('No se pudieron cargar los datos de la guÃ­a.');
                 return;
             }
 
@@ -1439,7 +1439,7 @@ function cargarRotuloAdmin(id) {
                 destinatario_telefono: info.destinatario_telefono || '',
                 destinatario_observaciones: info.instrucciones_entrega || 'Sin observaciones',
                 contenido: info.descripcion_contenido || '',
-                cambios: info.recoger_cambios ? 'Sí' : 'No',
+                cambios: info.recoger_cambios ? 'SÃ­' : 'No',
                 costo_envio: info.costo_envio,
                 recaudo: info.recaudo_esperado || 0
             };
@@ -1452,7 +1452,7 @@ function cargarRotuloAdmin(id) {
                 btn.innerHTML = originalContent;
                 btn.disabled = false;
             }
-            alert('Error de conexión al cargar la guía.');
+            alert('Error de conexiÃ³n al cargar la guÃ­a.');
         });
 }
 
@@ -1515,7 +1515,7 @@ window.abrirModalAsignacionMasiva = function() {
     }
 
     if (typeof abrirModalAsignar !== 'function') {
-        alert('No se pudo abrir el modal de asignación.');
+        alert('No se pudo abrir el modal de asignaciÃ³n.');
         return;
     }
 
@@ -1617,16 +1617,16 @@ function asignarMensajeroAction() {
     })
     .catch(err => {
         console.error(err);
-        alert('Error de conexión al asignar el mensajero.');
+        alert('Error de conexiÃ³n al asignar el mensajero.');
     });
 }
 
-// Función global para seleccionar un mensajero de la lista
+// FunciÃ³n global para seleccionar un mensajero de la lista
 window.seleccionarMensajero = function(id, nombre) {
     // Actualizar input oculto
     document.getElementById('asignarMensajero').value = id;
     
-    // Actualizar input visual de búsqueda con el nombre seleccionado
+    // Actualizar input visual de bÃºsqueda con el nombre seleccionado
     document.getElementById('buscarMensajeroInput').value = nombre;
     
     // Resaltar visualmente
