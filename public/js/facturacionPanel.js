@@ -98,12 +98,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const matchesFilter = (item, panel) => {
         const filter = state.filters[panel];
         const text = normalizeText(filter.q);
-        const haystack = [
-            item.numero_guia,
-            item.destinatario_nombre,
-            item.cliente_nombre,
-            item.mensajero_nombre
-        ].join(' ').toLowerCase();
+        const haystack = panel === 'cliente'
+            ? [
+                item.numero_guia,
+                item.cliente_nombre,
+                item.cliente_contacto
+            ].join(' ').toLowerCase()
+            : [
+                item.numero_guia,
+                item.destinatario_nombre,
+                item.cliente_nombre,
+                item.mensajero_nombre
+            ].join(' ').toLowerCase();
 
         if (text && !haystack.includes(text)) {
             return false;

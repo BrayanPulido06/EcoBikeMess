@@ -46,7 +46,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                     <div class="facturacion-filters">
                         <div class="facturacion-field">
                             <label>Buscar</label>
-                            <input type="text" placeholder="Guia, cliente o destinatario" data-panel-filter="cliente" data-filter-field="q">
+                            <input type="text" placeholder="Guia o cliente" data-panel-filter="cliente" data-filter-field="q">
                         </div>
                         <div class="facturacion-field">
                             <label>Estado</label>
