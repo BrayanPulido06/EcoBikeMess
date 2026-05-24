@@ -157,8 +157,14 @@ class PaquetesAdminModel {
                        p.numero_guia as guia, 
                        p.fecha_creacion as fechaIngreso,
                        COALESCE(p.checklist_verde, 0) as checklist_verde,
-                       COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos)) as remitente,
-                       CONCAT(uc.nombres, ' ', uc.apellidos) as nombre_persona,
+                       CASE
+                           WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%' THEN COALESCE(NULLIF(p.remitente_nombre, ''), '-')
+                           ELSE COALESCE(NULLIF(p.remitente_nombre, ''), NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
+                       END as remitente,
+                       CASE
+                           WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%' THEN '-'
+                           ELSE COALESCE(NULLIF(CONCAT(uc.nombres, ' ', uc.apellidos), ''), '-')
+                       END as nombre_persona,
                        p.destinatario_nombre as destinatario, 
                        p.destinatario_telefono as telefonoDestinatario,
                        p.direccion_destino as direccion, 
@@ -278,9 +284,18 @@ class PaquetesAdminModel {
             $sqlInfo = "SELECT p.numero_guia, 
                                p.id as paquete_id,
                                p.fecha_creacion,
-                               COALESCE(NULLIF(c.nombre_emprendimiento, ''), NULLIF(p.remitente_nombre, ''), CONCAT(uc.nombres, ' ', uc.apellidos)) as tienda_nombre,
-                               COALESCE(NULLIF(p.remitente_nombre, ''), NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos)) as remitente,
-                               p.remitente_nombre as remitente_editable,
+                               CASE
+                                   WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%' THEN COALESCE(NULLIF(p.remitente_nombre, ''), '-')
+                                   ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), NULLIF(p.remitente_nombre, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
+                               END as tienda_nombre,
+                               CASE
+                                   WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%' THEN COALESCE(NULLIF(p.remitente_nombre, ''), '-')
+                                   ELSE COALESCE(NULLIF(p.remitente_nombre, ''), NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
+                               END as remitente,
+                               CASE
+                                   WHEN p.remitente_nombre = '-' THEN ''
+                                   ELSE COALESCE(p.remitente_nombre, '')
+                               END as remitente_editable,
                                p.destinatario_nombre, 
                                p.destinatario_telefono,
                                p.destinatario_telefono2,
