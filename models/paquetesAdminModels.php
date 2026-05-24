@@ -524,8 +524,8 @@ class PaquetesAdminModel {
     public function cancelarServicioAdmin(int $paqueteId, string $motivo, string $fotoRuta, int $usuarioId = 0): bool
     {
         $motivo = trim($motivo);
-        if ($paqueteId <= 0 || $motivo === '' || trim($fotoRuta) === '') {
-            throw new Exception('Debes indicar un motivo y adjuntar una evidencia fotográfica.');
+        if ($paqueteId <= 0 || $motivo === '') {
+            throw new Exception('Debes indicar un motivo para cancelar el servicio.');
         }
 
         try {

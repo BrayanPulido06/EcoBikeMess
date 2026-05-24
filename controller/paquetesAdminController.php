@@ -238,19 +238,17 @@ try {
                 break;
             }
 
-            if (empty($_FILES['evidencia'])) {
-                echo json_encode(['success' => false, 'error' => 'Debes adjuntar una evidencia fotográfica']);
-                break;
-            }
+            $ruta = '';
+            if (!empty($_FILES['evidencia']) && (int) ($_FILES['evidencia']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+                $basename = saveUploadedFileSafe($_FILES['evidencia'], dirname(__DIR__) . '/uploads/novedades', $allowedMimes, 'ebm_cancel', true);
+                if (!$basename) {
+                    echo json_encode(['success' => false, 'error' => 'No se pudo guardar la evidencia fotográfica']);
+                    break;
+                }
 
-            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
-            $basename = saveUploadedFileSafe($_FILES['evidencia'], dirname(__DIR__) . '/uploads/novedades', $allowedMimes, 'ebm_cancel', true);
-            if (!$basename) {
-                echo json_encode(['success' => false, 'error' => 'No se pudo guardar la evidencia fotográfica']);
-                break;
+                $ruta = '/uploads/novedades/' . $basename;
             }
-
-            $ruta = '/uploads/novedades/' . $basename;
 
             try {
                 $res = $model->cancelarServicioAdmin($paqueteId, $motivo, $ruta, (int) ($_SESSION['user_id'] ?? 0));
@@ -514,3 +512,5 @@ function eliminarArchivoSiExiste($ruta)
     }
 }
 ?>
+
+

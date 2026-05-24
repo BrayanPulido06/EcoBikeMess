@@ -588,8 +588,8 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                             <textarea id="cancelarMotivo" name="motivo" class="form-control" rows="4" required placeholder="Describe la razón por la cual se cancela el servicio"></textarea>
                         </div>
                         <div class="form-group">
-                            <label>Evidencia fotográfica *</label>
-                            <input type="file" id="cancelarEvidencia" name="evidencia" class="form-control" accept="image/*" required>
+                            <label>Evidencia fotográfica</label>
+                            <input type="file" id="cancelarEvidencia" name="evidencia" class="form-control" accept="image/*">
                         </div>
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" id="btnCancelarServicioCerrar">Cerrar</button>
