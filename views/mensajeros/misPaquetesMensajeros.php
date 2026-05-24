@@ -275,7 +275,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             <!-- Recaudo -->
             <div class="form-group">
                 <label for="totalRecaudar">Total a Recaudar</label>
-                <div class="input-dinero input-dinero-bloqueado">
+                <div id="grupoTotalRecaudar" class="input-dinero input-dinero-bloqueado">
                     <input type="text" id="totalRecaudar" name="totalRecaudar"
                            value="$ 0" readonly>
                 </div>

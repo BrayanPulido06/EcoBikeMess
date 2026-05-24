@@ -589,6 +589,7 @@ function abrirFormularioEntrega(id) {
         destinatarioEntrega.value = paqueteActual.nombreDestinatario || '';
         destinatarioEntrega.readOnly = true;
     }
+    document.getElementById('grupoTotalRecaudar')?.closest('.form-group')?.classList.remove('oculto');
     fotoEntregaPrincipal = null;
     fotoEntregaAdicional = null;
     document.getElementById('previsualizacionFotoEntrega').innerHTML = '';
@@ -649,6 +650,7 @@ function abrirNuevaEntrega() {
     if (totalRecaudar) totalRecaudar.value = formatearMontoInput(0);
     if (totalRecaudado) totalRecaudado.value = formatearMontoInput(0);
     if (recibioCambios) recibioCambios.checked = false;
+    document.getElementById('grupoTotalRecaudar')?.closest('.form-group')?.classList.add('oculto');
     fotoEntregaPrincipal = null;
     fotoEntregaAdicional = null;
     document.getElementById('previsualizacionFotoEntrega').innerHTML = '';
