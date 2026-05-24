@@ -17,6 +17,8 @@ const STORAGE_SCANNED_QR_KEY = 'ecobikemess_mensajero_scanned_qr_v1';
 let qrEscaneadosMap = new Map();
 let contextoFotoModal = null;
 let resolverDecisionActual = null;
+let entregaManualActiva = false;
+let guiaEntregaManual = '';
 
 // ============================================
 // FUNCIONES DE FEEDBACK TÁCTIL
@@ -560,6 +562,8 @@ function llamarDestinatario(telefono = paqueteActual?.telefono) {
 // ============================================
 function abrirFormularioEntrega(id) {
     feedbackClick();
+    entregaManualActiva = false;
+    guiaEntregaManual = '';
     paqueteActual = paquetes.find(p => p.id === id || `virtual_${p.guia}` === id);
     
     if (!paqueteActual || paqueteActual.estado === 'entregado') {
@@ -583,6 +587,7 @@ function abrirFormularioEntrega(id) {
     const destinatarioEntrega = document.getElementById('nombreDestinatarioEntrega');
     if (destinatarioEntrega) {
         destinatarioEntrega.value = paqueteActual.nombreDestinatario || '';
+        destinatarioEntrega.readOnly = true;
     }
     fotoEntregaPrincipal = null;
     fotoEntregaAdicional = null;
@@ -624,70 +629,39 @@ function abrirFormularioEntrega(id) {
 
 function abrirNuevaEntrega() {
     feedbackClick();
-    const form = document.getElementById('formNuevaEntrega');
-    if (form) form.reset();
+    entregaManualActiva = true;
+    guiaEntregaManual = generarNumeroGuia();
+    paqueteActual = null;
+
+    document.getElementById('formEntrega')?.reset();
+    const destinatarioEntrega = document.getElementById('nombreDestinatarioEntrega');
+    const formGuia = document.getElementById('formGuia');
+    const totalRecaudar = document.getElementById('totalRecaudar');
+    const totalRecaudado = document.getElementById('totalRecaudado');
+    const recibioCambios = document.getElementById('recibioCambios');
+
+    if (destinatarioEntrega) {
+        destinatarioEntrega.value = '';
+        destinatarioEntrega.readOnly = false;
+        destinatarioEntrega.removeAttribute('readonly');
+    }
+    if (formGuia) formGuia.textContent = `Guía: ${guiaEntregaManual}`;
+    if (totalRecaudar) totalRecaudar.value = formatearMontoInput(0);
+    if (totalRecaudado) totalRecaudado.value = formatearMontoInput(0);
+    if (recibioCambios) recibioCambios.checked = false;
+    fotoEntregaPrincipal = null;
+    fotoEntregaAdicional = null;
+    document.getElementById('previsualizacionFotoEntrega').innerHTML = '';
+    document.getElementById('previsualizacionFotoEntregaAdicional').innerHTML = '';
 
     window.scrollTo(0, 0);
     document.getElementById('vistaLista').classList.add('oculto');
     document.getElementById('vistaDetalle').classList.add('oculto');
-    document.getElementById('vistaFormularioEntrega').classList.add('oculto');
     document.getElementById('vistaFormularioNovedad').classList.add('oculto');
-    document.getElementById('vistaNuevaEntrega').classList.remove('oculto');
-}
+    document.getElementById('vistaFormularioEntrega').classList.remove('oculto');
 
-async function registrarNuevaEntrega() {
-    const destinatario = document.getElementById('nuevaEntregaDestinatario')?.value.trim() || '';
-    const telefono = (document.getElementById('nuevaEntregaTelefono')?.value || '').replace(/\D/g, '');
-    const direccion = document.getElementById('nuevaEntregaDireccion')?.value.trim() || '';
-    const instrucciones = document.getElementById('nuevaEntregaInstrucciones')?.value.trim() || '';
-    const contenido = document.getElementById('nuevaEntregaContenido')?.value.trim() || '';
-    const valorRecaudo = parsearMonto(document.getElementById('nuevaEntregaRecaudo')?.value || '');
-
-    if (!destinatario || !telefono || !direccion) {
-        feedbackError();
-        mostrarToast('Completa destinatario, teléfono y dirección.', 'warning', { title: 'Campos incompletos' });
-        return;
-    }
-
-    if (telefono.length < 7) {
-        feedbackError();
-        mostrarToast('Ingresa un teléfono válido.', 'warning', { title: 'Dato inválido' });
-        return;
-    }
-
-    mostrarLoading(true, 'Creando entrega...');
-    try {
-        const payload = {
-            numero_guia: generarNumeroGuia(),
-            destinatario_nombre: destinatario,
-            destinatario_telefono: telefono,
-            direccion_destino: direccion,
-            instrucciones_entrega: instrucciones,
-            descripcion_contenido: contenido,
-            valor_recaudo: valorRecaudo
-        };
-
-        const resp = await fetch(`${API_MIS_PAQUETES}?action=crear_entrega_manual`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const json = await resp.json();
-        if (!json.success) {
-            throw new Error(json.message || 'No se pudo crear la entrega');
-        }
-
-        await cargarPaquetes();
-        refrescarListaActual();
-        feedbackExito();
-        mostrarToast(`Entrega creada con guía ${json.guia || payload.numero_guia}`, 'success', { title: 'Listo' });
-        volverALista();
-    } catch (error) {
-        feedbackError();
-        mostrarToast(error.message || 'Ocurrió un error al crear la entrega', 'error', { title: 'Error', duration: 4200 });
-    } finally {
-        mostrarLoading(false);
-    }
+    actualizarFechaHora();
+    actualizarInfoGPS();
 }
 
 // ============================================
@@ -926,7 +900,12 @@ document.getElementById('formEntrega')?.addEventListener('submit', async functio
         fecha: new Date().toISOString(),
         ubicacion: ubicacionActual ? {...ubicacionActual} : null
     };
-    
+
+    if (entregaManualActiva) {
+        completarEntregaManual(datosEntrega);
+        return;
+    }
+
     completarEntrega(datosEntrega);
 });
 
@@ -973,14 +952,62 @@ async function completarEntrega(datosEntrega) {
     }
 }
 
-function mostrarConfirmacionEntrega(datos) {
+async function completarEntregaManual(datosEntrega) {
+    feedbackClick();
+    mostrarLoading(true, 'Registrando entrega manual...');
+
+    try {
+        const destinatario = document.getElementById('nombreDestinatarioEntrega')?.value.trim() || '';
+        if (!destinatario) {
+            throw new Error('Debes indicar el destinatario del paquete');
+        }
+
+        const payload = {
+            numero_guia: guiaEntregaManual || generarNumeroGuia(),
+            destinatario_nombre: destinatario,
+            nombreRecibe: datosEntrega.nombreRecibe,
+            parentesco: datosEntrega.parentesco,
+            documento: datosEntrega.documento,
+            recaudoEsperado: datosEntrega.recaudoEsperado,
+            recaudo: datosEntrega.recaudo,
+            recibioCambios: datosEntrega.recibioCambios,
+            observaciones: datosEntrega.observaciones,
+            fotos: datosEntrega.fotos,
+            ubicacion: datosEntrega.ubicacion
+        };
+
+        const resp = await fetch(`${API_MIS_PAQUETES}?action=crear_entrega_manual`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const json = await resp.json();
+        if (!json.success) {
+            throw new Error(json.message || 'No se pudo registrar la entrega manual');
+        }
+
+        await cargarPaquetes();
+        refrescarListaActual();
+        feedbackExito();
+        mostrarToast(`Entrega registrada con guía ${json.guia || payload.numero_guia}`, 'success', { title: 'Listo' });
+        document.getElementById('vistaFormularioEntrega').classList.add('oculto');
+        mostrarConfirmacionEntrega(datosEntrega, json.guia || payload.numero_guia);
+    } catch (error) {
+        feedbackError();
+        mostrarToast(error.message || 'Ocurrió un error al registrar la entrega manual', 'error', { title: 'Error', duration: 4200 });
+    } finally {
+        mostrarLoading(false);
+    }
+}
+
+function mostrarConfirmacionEntrega(datos, guia = paqueteActual?.guia || guiaEntregaManual) {
     const modal = document.getElementById('modalConfirmacion');
     const resumen = document.getElementById('resumenEntrega');
     
     resumen.innerHTML = `
         <div class="resumen-item">
             <span>Guía:</span>
-            <strong>${paqueteActual.guia}</strong>
+            <strong>${guia}</strong>
         </div>
         <div class="resumen-item">
             <span>Recibió:</span>
@@ -1188,11 +1215,6 @@ document.getElementById('formNovedad')?.addEventListener('submit', function(e) {
     registrarNovedad();
 });
 
-document.getElementById('formNuevaEntrega')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    registrarNuevaEntrega();
-});
-
 async function registrarNovedad() {
     const descripcion = document.getElementById('descripcionNovedad').value.trim();
     if (!tipoNovedadActual) {
@@ -1372,23 +1394,8 @@ function configurarEventListeners() {
         });
     });
 
-    document.getElementById('btnVolverNuevaEntrega')?.addEventListener('click', function() {
-        feedbackClick();
-        mostrarModalDecision('Volver al listado', 'Si vuelves ahora, se perderán los datos de la nueva entrega.').then(aceptado => {
-            if (aceptado) volverALista();
-        });
-    });
-
     document.getElementById('totalRecaudado')?.addEventListener('input', function() {
         this.value = formatearMontoInput(parsearMonto(this.value));
-    });
-
-    document.getElementById('nuevaEntregaRecaudo')?.addEventListener('input', function() {
-        this.value = this.value.trim() === '' ? '' : formatearMontoInput(parsearMonto(this.value));
-    });
-
-    document.getElementById('nuevaEntregaTelefono')?.addEventListener('input', function() {
-        this.value = this.value.replace(/\D/g, '').slice(0, 15);
     });
 
     document.getElementById('btnDecisionCancelar')?.addEventListener('click', function() {
@@ -1443,6 +1450,8 @@ function volverALista() {
     document.getElementById('vistaNuevaEntrega').classList.add('oculto');
     document.getElementById('vistaLista').classList.remove('oculto');
     paqueteActual = null;
+    entregaManualActiva = false;
+    guiaEntregaManual = '';
     fotoEntregaPrincipal = null;
     fotoEntregaAdicional = null;
     fotoNovedad = null;

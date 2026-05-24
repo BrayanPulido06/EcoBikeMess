@@ -88,11 +88,16 @@ try {
             }
 
             $destinatario = trim((string) ($input['destinatario_nombre'] ?? ''));
-            $telefono = preg_replace('/\D+/', '', (string) ($input['destinatario_telefono'] ?? ''));
-            $direccion = trim((string) ($input['direccion_destino'] ?? ''));
+            $nombreRecibe = trim((string) ($input['nombreRecibe'] ?? ''));
+            $documento = trim((string) ($input['documento'] ?? ''));
+            $fotos = $input['fotos'] ?? [];
 
-            if ($destinatario === '' || $telefono === '' || $direccion === '') {
-                throw new Exception('Debes completar destinatario, teléfono y dirección');
+            if ($destinatario === '' || $nombreRecibe === '' || $documento === '') {
+                throw new Exception('Debes completar destinatario, nombre de quien recibe y documento');
+            }
+
+            if (empty($fotos) || empty($fotos[0]['data'])) {
+                throw new Exception('Debes adjuntar al menos una foto');
             }
 
             $envioModel = new EnvioMensajeroModel();
@@ -119,23 +124,56 @@ try {
                 'remitente_direccion' => 'Pendiente por definir',
                 'observaciones_recoleccion' => 'Entrega registrada manualmente por mensajero' . ($nombreMensajero !== '' ? ': ' . $nombreMensajero : ''),
                 'destinatario_nombre' => $destinatario,
-                'destinatario_telefono' => $telefono,
-                'destinatario_direccion' => $direccion,
-                'instrucciones_entrega' => trim((string) ($input['instrucciones_entrega'] ?? '')),
-                'descripcion_contenido' => trim((string) ($input['descripcion_contenido'] ?? '')) ?: 'Entrega creada desde mis paquetes',
+                'destinatario_telefono' => '0',
+                'destinatario_direccion' => 'Sin dirección registrada',
+                'instrucciones_entrega' => '',
+                'descripcion_contenido' => 'Entrega creada desde mis paquetes',
                 'dimensiones' => null,
                 'envio_mismo_dia' => 0,
                 'zona_periferica' => 0,
                 'recoger_cambios' => 0,
                 'envio_destinatario' => 'no',
-                'tiene_recaudo' => !empty($input['valor_recaudo']) ? 1 : 0,
-                'valor_recaudo' => (string) ((int) ($input['valor_recaudo'] ?? 0)),
+                'tiene_recaudo' => !empty($input['recaudoEsperado']) ? 1 : 0,
+                'valor_recaudo' => (string) ((int) ($input['recaudoEsperado'] ?? 0)),
                 'costo_total' => '0',
                 'mensajero_id' => (int) $mensajero['id'],
                 'estado' => 'pendiente'
             ];
 
             $envioModel->registrarEnvio($datos);
+
+            $paquete = $model->obtenerPaquetePorGuia($numeroGuia, (int) $mensajero['id']);
+            if (!$paquete) {
+                throw new Exception('No se pudo ubicar la entrega recién creada');
+            }
+
+            $rutaPrincipal = guardarImagenBase64($fotos[0]['data'], 'entregas');
+            if (!$rutaPrincipal) {
+                throw new Exception('No se pudo guardar la foto principal');
+            }
+
+            $rutaAdicional = null;
+            if (!empty($fotos[1]['data'])) {
+                $rutaAdicional = guardarImagenBase64($fotos[1]['data'], 'entregas');
+            }
+
+            $payloadEntrega = [
+                'paquete_id' => (int) $paquete['id'],
+                'numero_guia' => $numeroGuia,
+                'nombre_receptor' => $nombreRecibe,
+                'parentesco_cargo' => trim((string) ($input['parentesco'] ?? '')),
+                'documento_receptor' => $documento,
+                'recaudo_real' => (float) ($input['recaudo'] ?? 0),
+                'recibio_cambios' => !empty($input['recibioCambios']) ? 1 : 0,
+                'observaciones' => trim((string) ($input['observaciones'] ?? '')),
+                'lat' => isset($input['ubicacion']['lat']) ? (float) $input['ubicacion']['lat'] : null,
+                'lng' => isset($input['ubicacion']['lng']) ? (float) $input['ubicacion']['lng'] : null,
+                'foto_entrega' => $rutaPrincipal,
+                'foto_adicional' => $rutaAdicional
+            ];
+
+            $model->registrarEntrega((int) $mensajero['id'], $payloadEntrega);
+
             echo json_encode([
                 'success' => true,
                 'message' => 'Entrega creada correctamente',
