@@ -2,6 +2,7 @@
 let todosLosMensajeros = [];
 let todosLosClientes = [];
 let currentData = []; // Almacenar datos actuales de la tabla para exportación
+let selectedPackageIds = new Set();
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Script paquetesAdmin.js cargado correctamente');
@@ -147,6 +148,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const checkboxes = document.querySelectorAll('.paquete-checkbox');
                 checkboxes.forEach(cb => {
                     cb.checked = this.checked;
+                    const packageId = String(cb.value || '').trim();
+                    if (packageId) {
+                        if (this.checked) {
+                            selectedPackageIds.add(packageId);
+                        } else {
+                            selectedPackageIds.delete(packageId);
+                        }
+                    }
                     actualizarFilaSeleccionada(cb);
                 });
                 actualizarEstadoBotonAsignacionMasiva();
@@ -158,6 +167,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             if (e.target && e.target.classList.contains('paquete-checkbox')) {
+                const packageId = String(e.target.value || '').trim();
+                if (packageId) {
+                    if (e.target.checked) {
+                        selectedPackageIds.add(packageId);
+                    } else {
+                        selectedPackageIds.delete(packageId);
+                    }
+                }
                 actualizarFilaSeleccionada(e.target);
                 const all = document.querySelectorAll('.paquete-checkbox');
                 const checked = document.querySelectorAll('.paquete-checkbox:checked');
@@ -283,7 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <input type="checkbox" class="checklist-verde-checkbox" value="${p.id}" ${Number(p.checklist_verde) === 1 ? 'checked' : ''}>
                     </td>
                     <td class="numero-paquete">${index + 1}</td>
-                    <td class="col-seleccion"><input type="checkbox" class="paquete-checkbox" value="${p.id}" data-guia="${escaparAtributoHtml(p.guia || '')}"></td>
+                    <td class="col-seleccion"><input type="checkbox" class="paquete-checkbox" value="${p.id}" data-guia="${escaparAtributoHtml(p.guia || '')}" ${selectedPackageIds.has(String(p.id)) ? 'checked' : ''}></td>
                     <td>
                         <div class="action-buttons">
                             <button class="btn btn-sm btn-warning" onclick="cargarRotuloAdmin(${p.id})" title="Guia">Guia</button>
@@ -373,9 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getSelectedPackageIds() {
-        return Array.from(document.querySelectorAll('.paquete-checkbox:checked'))
-            .map(cb => String(cb.value || '').trim())
-            .filter(Boolean);
+        return Array.from(selectedPackageIds);
     }
 
     function getSelectedPackages() {
@@ -1564,6 +1579,10 @@ function asignarMensajeroAction() {
         paqueteIds = seleccionadosEnTabla;
     }
 
+    if (selectedPackageIds.size > paqueteIds.length) {
+        paqueteIds = Array.from(selectedPackageIds);
+    }
+
     const guiasEnModal = String(inputGuias?.value || '')
         .split(/\r?\n/)
         .map(linea => linea.trim())
@@ -1611,6 +1630,10 @@ function asignarMensajeroAction() {
             alert(esMasivo
                 ? `Mensajero asignado correctamente a ${cantidad} paquete(s).`
                 : 'Mensajero asignado correctamente');
+            paqueteIds.forEach(id => selectedPackageIds.delete(String(id)));
+            if (!esMasivo && paqueteId) {
+                selectedPackageIds.delete(String(paqueteId));
+            }
             document.getElementById('modalAsignar').style.display = 'none';
             if (document.getElementById('buscarMensajeroInput')) document.getElementById('buscarMensajeroInput').value = '';
             if (document.getElementById('asignarMensajero')) document.getElementById('asignarMensajero').value = '';
