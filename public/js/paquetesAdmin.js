@@ -3,6 +3,7 @@ let todosLosMensajeros = [];
 let todosLosClientes = [];
 let currentData = []; // Almacenar datos actuales de la tabla para exportación
 let selectedPackageIds = new Set();
+let selectedPackagesMeta = new Map();
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Script paquetesAdmin.js cargado correctamente');
@@ -234,6 +235,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         currentData = data; // Guardar datos para exportación
+        data.forEach((p) => {
+            const packageId = String(p.id || '').trim();
+            if (!packageId) return;
+            selectedPackagesMeta.set(packageId, {
+                id: packageId,
+                guia: String(p.guia || '').trim()
+            });
+        });
 
         let html = '';
         data.forEach((p, index) => {
@@ -394,8 +403,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getSelectedPackages() {
-        const ids = getSelectedPackageIds();
-        return currentData.filter(p => ids.includes(String(p.id)));
+        return getSelectedPackageIds().map(id => selectedPackagesMeta.get(String(id))).filter(Boolean);
     }
 
     function actualizarEstadoBotonAsignacionMasiva() {
@@ -1526,10 +1534,7 @@ function abrirModalAsignar(id, guia) {
 }
 
 window.abrirModalAsignacionMasiva = function() {
-    const seleccionados = Array.from(document.querySelectorAll('.paquete-checkbox:checked')).map((checkbox) => ({
-        id: String(checkbox.value || '').trim(),
-        guia: String(checkbox.dataset.guia || '').trim()
-    })).filter((item) => item.id !== '');
+    const seleccionados = getSelectedPackages();
 
     if (seleccionados.length === 0) {
         alert('Selecciona al menos un paquete para asignar.');
