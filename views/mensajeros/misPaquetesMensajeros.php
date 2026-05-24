@@ -114,6 +114,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 <span id="contadorEntregados" class="contador-badge entregado">0</span>
             </div>
             <div class="header-actions" style="display: flex; gap: 10px;">
+                <button id="btnNuevaEntrega" type="button" title="Crear entrega" aria-label="Crear nueva entrega" style="background: #059669; color: #ffffff; min-width: 92px; height: 40px; border-radius: 10px; border: 1px solid #059669; display: inline-flex; align-items: center; justify-content: center; padding: 0 14px; font-size: 0.95rem; font-weight: 600;">Entrega</button>
                 <button id="btnActualizar" class="btn-icon" title="Actualizar" aria-label="Actualizar paquetes" style="background: #f8fdf9; color: #2d3e50; width: 40px; height: 40px; border-radius: 10px; border: 1px solid #e8f5f1; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; line-height: 1;">↻</button>
             </div>
         </div>
@@ -424,6 +425,55 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
         </form>
     </div>
 
+    <!-- Vista Nueva Entrega Manual -->
+    <div id="vistaNuevaEntrega" class="vista-formulario oculto">
+        <div class="formulario-header">
+            <button type="button" id="btnVolverNuevaEntrega" class="btn-volver formulario-volver">Volver</button>
+            <h2>Nueva Entrega</h2>
+            <p>Se generar&aacute; una gu&iacute;a autom&aacute;ticamente</p>
+        </div>
+
+        <form id="formNuevaEntrega" class="formulario-entrega">
+            <div class="form-group">
+                <label for="nuevaEntregaDestinatario" class="obligatorio">Destinatario</label>
+                <input type="text" id="nuevaEntregaDestinatario" name="destinatario_nombre" placeholder="Nombre completo" required>
+            </div>
+
+            <div class="form-group">
+                <label for="nuevaEntregaTelefono" class="obligatorio">Tel&eacute;fono</label>
+                <input type="text" id="nuevaEntregaTelefono" name="destinatario_telefono" placeholder="3001234567" inputmode="numeric" autocomplete="off" required>
+            </div>
+
+            <div class="form-group">
+                <label for="nuevaEntregaDireccion" class="obligatorio">Direcci&oacute;n</label>
+                <textarea id="nuevaEntregaDireccion" name="direccion_destino" rows="3" placeholder="Direcci&oacute;n completa de entrega" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="nuevaEntregaInstrucciones">Instrucciones de entrega</label>
+                <textarea id="nuevaEntregaInstrucciones" name="instrucciones_entrega" rows="3" placeholder="Torre, apartamento, referencia, observaciones..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="nuevaEntregaContenido">Contenido o detalle</label>
+                <input type="text" id="nuevaEntregaContenido" name="descripcion_contenido" placeholder="Ej: Sobre, caja peque&ntilde;a, documento...">
+            </div>
+
+            <div class="form-group">
+                <label for="nuevaEntregaRecaudo">Total a cobrar</label>
+                <div class="input-dinero">
+                    <input type="text" id="nuevaEntregaRecaudo" name="valor_recaudo" placeholder="0" inputmode="numeric" autocomplete="off">
+                </div>
+            </div>
+
+            <div class="form-acciones">
+                <button type="submit" id="btnGuardarNuevaEntrega" class="btn-exito btn-grande">
+                    Crear entrega
+                </button>
+            </div>
+        </form>
+    </div>
+
     <!-- Modal de Confirmación -->
     <div id="modalConfirmacion" class="modal oculto">
         <div class="modal-contenido modal-exito">
@@ -467,13 +517,13 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
 
     <script src="../../public/js/mensajeroLayout.js?v=20260422-2"></script>
     <script src="../../public/js/uiToast.js"></script>
-    <script src="../../public/js/misPaquetesMensajeros.js?v=20260422-2"></script>
+    <script src="../../public/js/misPaquetesMensajeros.js?v=20260524-1"></script>
 
     <script>
         // Garantizar que todos los botones "Volver" regresen a la lista principal
         document.addEventListener('DOMContentLoaded', function() {
             const vistaLista = document.getElementById('vistaLista');
-            const modales = ['vistaDetalle', 'vistaFormularioEntrega', 'vistaFormularioNovedad'];
+            const modales = ['vistaDetalle', 'vistaFormularioEntrega', 'vistaFormularioNovedad', 'vistaNuevaEntrega'];
             const botonesVolver = ['btnVolverDetalle', 'btnVolverEntrega', 'btnVolverNovedad'];
 
             botonesVolver.forEach(id => {

@@ -131,7 +131,9 @@ class EnvioMensajeroModel
                     tipo_servicio,
                     recaudo_esperado,
                     costo_envio,
+                    mensajero_id,
                     estado,
+                    fecha_asignacion,
                     fecha_creacion
                 ) VALUES (
                     :cliente_id,
@@ -154,7 +156,9 @@ class EnvioMensajeroModel
                     :tipo_servicio,
                     :valor_recaudo,
                     :costo_total,
-                    'pendiente',
+                    :mensajero_id,
+                    :estado,
+                    :fecha_asignacion,
                     NOW()
                 )";
 
@@ -180,7 +184,10 @@ class EnvioMensajeroModel
                 ':envio_destinatario' => $datos['envio_destinatario'] ?? 'no',
                 ':tipo_servicio' => $tipo_servicio,
                 ':valor_recaudo' => $datos['valor_recaudo'],
-                ':costo_total' => $datos['costo_total']
+                ':costo_total' => $datos['costo_total'],
+                ':mensajero_id' => !empty($datos['mensajero_id']) ? (int) $datos['mensajero_id'] : null,
+                ':estado' => trim((string) ($datos['estado'] ?? 'pendiente')) ?: 'pendiente',
+                ':fecha_asignacion' => !empty($datos['mensajero_id']) ? date('Y-m-d H:i:s') : null
             ]);
         } catch (PDOException $e) {
             error_log("Error en EnvioMensajeroModel::registrarEnvio: " . $e->getMessage());
