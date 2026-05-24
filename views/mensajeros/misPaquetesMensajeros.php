@@ -114,7 +114,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 <span id="contadorEntregados" class="contador-badge entregado">0</span>
             </div>
             <div class="header-actions" style="display: flex; gap: 10px;">
-                <button id="btnNuevaEntrega" type="button" title="Crear entrega" aria-label="Crear nueva entrega" style="background: #059669; color: #ffffff; min-width: 92px; height: 40px; border-radius: 10px; border: 1px solid #059669; display: inline-flex; align-items: center; justify-content: center; padding: 0 14px; font-size: 0.95rem; font-weight: 600;">Entrega</button>
+                <button id="btnNuevaEntrega" type="button" title="Crear entrega" aria-label="Crear nueva entrega" style="background: #059669; color: #ffffff; min-width: 92px; height: 40px; border-radius: 10px; border: 1px solid #059669; display: inline-flex; align-items: center; justify-content: center; padding: 0 14px; font-size: 0.95rem; font-weight: 600;">Entrega sin rotulo</button>
                 <button id="btnActualizar" class="btn-icon" title="Actualizar" aria-label="Actualizar paquetes" style="background: #f8fdf9; color: #2d3e50; width: 40px; height: 40px; border-radius: 10px; border: 1px solid #e8f5f1; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; line-height: 1;">↻</button>
             </div>
         </div>
