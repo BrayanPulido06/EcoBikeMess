@@ -159,7 +159,7 @@ class PaquetesAdminModel {
                        COALESCE(p.checklist_verde, 0) as checklist_verde,
                        CASE
                            WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%' THEN COALESCE(NULLIF(p.remitente_nombre, ''), '-')
-                           ELSE COALESCE(NULLIF(p.remitente_nombre, ''), NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
+                           ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
                        END as remitente,
                        CASE
                            WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%' THEN '-'
@@ -286,11 +286,11 @@ class PaquetesAdminModel {
                                p.fecha_creacion,
                                CASE
                                    WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%' THEN COALESCE(NULLIF(p.remitente_nombre, ''), '-')
-                                   ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), NULLIF(p.remitente_nombre, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
+                                   ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
                                END as tienda_nombre,
                                CASE
                                    WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%' THEN COALESCE(NULLIF(p.remitente_nombre, ''), '-')
-                                   ELSE COALESCE(NULLIF(p.remitente_nombre, ''), NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
+                                   ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
                                END as remitente,
                                CASE
                                    WHEN p.remitente_nombre = '-' THEN ''

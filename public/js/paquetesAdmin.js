@@ -914,6 +914,10 @@ function verDetalle(id, options = {}) {
 
                 const yesNoLabel = (value) => (Number(value) === 1 || String(value).toLowerCase() === '1' ? 'Sí' : 'No');
 
+                const remitenteOptions = (Array.isArray(todosLosClientes) ? todosLosClientes : [])
+                    .map(cliente => `<option value="${escapeHtml(cliente.nombre || '')}"></option>`)
+                    .join('');
+
                 let html = `
                     <form id="formEditarDetalles" data-paquete-id="${info.paquete_id}">
                         <div class="detalle-section">
@@ -935,7 +939,10 @@ function verDetalle(id, options = {}) {
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Remitente</div>
-                                    <input class="form-control" name="remitente_nombre" value="${escapeHtml(info.remitente_editable || info.remitente || '')}">
+                                    <input class="form-control" name="remitente_nombre" list="clientesRemitenteList" value="${escapeHtml(info.remitente_editable || info.remitente || '')}" placeholder="Escribe para buscar tienda o cliente">
+                                    <datalist id="clientesRemitenteList">
+                                        ${remitenteOptions}
+                                    </datalist>
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Destinatario</div>
