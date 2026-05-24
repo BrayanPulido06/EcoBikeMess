@@ -168,7 +168,11 @@ document.addEventListener('DOMContentLoaded', () => {
         let paquetesEntregados = 0;
 
         groups.forEach((group) => {
-            totalsByClient.set(group.clientKey, Number(group.totalAcumulado || 0));
+            // Los grupos llegan ordenados del más reciente al más antiguo.
+            // Para el resumen debemos conservar el saldo acumulado más reciente de cada cliente.
+            if (!totalsByClient.has(group.clientKey)) {
+                totalsByClient.set(group.clientKey, Number(group.totalAcumulado || 0));
+            }
             totalEnvios += Number(group.totalServicio || 0);
             totalRecaudos += Number(group.totalRecaudado || 0);
             cantidadPaquetes += Array.isArray(group.packages) ? group.packages.length : 0;
