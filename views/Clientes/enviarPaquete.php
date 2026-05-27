@@ -451,7 +451,7 @@ $remitente_data = [
                                     <label class="flex-toggle" for="destinatario_es_flex">
                                         <input type="checkbox" id="destinatario_es_flex" name="destinatario_es_flex" value="1">
                                         <span class="flex-toggle-box">✓</span>
-                                        <span class="flex-toggle-text">El paquete es Mercado Flex</span>
+                                        <span class="flex-toggle-text">Marca está opción si el paquete es de mercado libre</span>
                                     </label>
                                     <span class="error-message"></span>
                                 </div>
