@@ -22,7 +22,7 @@ if ($nombreCompleto === '') {
     <title>Dashboard Mensajero - EcoBikeMess</title>
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
-    <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
+    <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css?v=20260528-1">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <!-- Librería para escaneo de QR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" type="text/javascript"></script>

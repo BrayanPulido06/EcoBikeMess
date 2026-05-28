@@ -52,7 +52,7 @@ $remitente_data = [
     <title>Enviar Paquete - EcoBikeMess</title>
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
-    <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
+    <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css?v=20260528-1">
     <link rel="stylesheet" href="../../public/css/enviarPaqueteMensajero.css">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <style>

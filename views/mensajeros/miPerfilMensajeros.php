@@ -96,7 +96,7 @@ $opcionesTransporte = [
     <title>Mi Perfil - EcoBikeMess</title>
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
-    <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css">
+    <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css?v=20260528-1">
     <link rel="stylesheet" href="../../public/css/miPerfil.css?v=20260420-2">
     <link rel="stylesheet" href="../../public/css/responsive.css">
 </head>
