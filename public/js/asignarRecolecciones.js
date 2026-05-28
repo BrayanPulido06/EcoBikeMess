@@ -36,6 +36,16 @@ function normalizeYesNo(value) {
     return isTruthyValue(value) ? 'Si' : 'No';
 }
 
+function hasMessengerRecollectionClose(recoleccionData) {
+    if (!recoleccionData) return false;
+
+    const estadoRecoleccion = String(recoleccionData.estado || '').toLowerCase();
+    return estadoRecoleccion === 'completada'
+        || Boolean(recoleccionData.fecha_completada)
+        || Boolean(recoleccionData.foto_recoleccion)
+        || Number(recoleccionData.cantidad_real || 0) > 0;
+}
+
 function getPackageObservations(paquete) {
     const observaciones = [
         ['Recoleccion', paquete.observaciones_recoleccion],
@@ -127,11 +137,7 @@ function buildRecollectionDataHtml(recoleccionData) {
         `;
     }
 
-    const estadoRecoleccion = String(recoleccionData.estado || '').toLowerCase();
-    const tieneCierreMensajero = estadoRecoleccion === 'completada'
-        || Boolean(recoleccionData.fecha_completada)
-        || Boolean(recoleccionData.foto_recoleccion)
-        || Number(recoleccionData.cantidad_real || 0) > 0;
+    const tieneCierreMensajero = hasMessengerRecollectionClose(recoleccionData);
     const conformidad = tieneCierreMensajero
         ? (isTruthyValue(recoleccionData.conformidad) ? 'Si' : 'No')
         : 'No registrada';
@@ -189,6 +195,24 @@ function buildRecollectionDataHtml(recoleccionData) {
             ${buildRecollectionPhotosHtml(recoleccionData)}
         </div>
     `;
+}
+
+function getClientPickupObservations(paquetes, recoleccionData) {
+    const observacionesPaquetes = (Array.isArray(paquetes) ? paquetes : [])
+        .map(paquete => String(paquete.observaciones_recoleccion ?? '').trim())
+        .filter(Boolean);
+
+    const observacionesUnicas = [...new Set(observacionesPaquetes)];
+    if (observacionesUnicas.length > 0) {
+        return observacionesUnicas.join(' | ');
+    }
+
+    const observacionRecoleccion = String(recoleccionData?.observaciones_recoleccion ?? '').trim();
+    if (observacionRecoleccion && !hasMessengerRecollectionClose(recoleccionData)) {
+        return observacionRecoleccion;
+    }
+
+    return 'Sin observaciones de recoleccion.';
 }
 
 function buildPackageRows(paquetes) {
@@ -500,6 +524,7 @@ window.verDetallesPaquetes = async function(ids) {
                 const clienteNombre = primerPaquete.nombre_emprendimiento || (primerPaquete.cli_nombres + ' ' + primerPaquete.cli_apellidos);
 
                 const datosRecoleccionHtml = buildRecollectionDataHtml(recoleccionData);
+                const observacionesSolicitadas = getClientPickupObservations(paquetesDetalleActual, recoleccionData);
                 let recoleccionInfoHtml = '<p>No se encontraron detalles de la recoleccion en la tabla `recolecciones`.</p>';
                 if (recoleccionData) {
                     recoleccionInfoHtml = `
@@ -547,7 +572,7 @@ window.verDetallesPaquetes = async function(ids) {
                         </div>
                         <div style="margin-top: 12px;">
                             <div class="detalle-label">Observaciones de recoleccion solicitadas</div>
-                            <div class="detalle-value" style="background:#f8f9fa; padding:10px; border-radius:5px; min-height: 40px;">${primerPaquete.observaciones_recoleccion || 'Sin observaciones de recoleccion.'}</div>
+                            <div class="detalle-value" style="background:#f8f9fa; padding:10px; border-radius:5px; min-height: 40px;">${escapeHtml(observacionesSolicitadas)}</div>
                         </div>
                     </div>
                     <div class="detalle-section">
