@@ -127,7 +127,23 @@ function buildRecollectionDataHtml(recoleccionData) {
         `;
     }
 
-    const conformidad = isTruthyValue(recoleccionData.conformidad) ? 'Si' : 'No';
+    const estadoRecoleccion = String(recoleccionData.estado || '').toLowerCase();
+    const tieneCierreMensajero = estadoRecoleccion === 'completada'
+        || Boolean(recoleccionData.fecha_completada)
+        || Boolean(recoleccionData.foto_recoleccion)
+        || Number(recoleccionData.cantidad_real || 0) > 0;
+    const conformidad = tieneCierreMensajero
+        ? (isTruthyValue(recoleccionData.conformidad) ? 'Si' : 'No')
+        : 'No registrada';
+    const cantidadReal = tieneCierreMensajero
+        ? (recoleccionData.cantidad_real || 'No registrada')
+        : 'No registrada';
+    const fechaCompletada = tieneCierreMensajero && recoleccionData.fecha_completada
+        ? new Date(recoleccionData.fecha_completada).toLocaleString()
+        : 'No registrada';
+    const observacionesMensajero = tieneCierreMensajero
+        ? (recoleccionData.observaciones_recoleccion || 'Sin observaciones registradas por el mensajero.')
+        : 'El mensajero aun no ha registrado observaciones de cierre.';
 
     return `
         <div class="recollection-data-grid">
@@ -149,7 +165,7 @@ function buildRecollectionDataHtml(recoleccionData) {
             </div>
             <div class="detalle-item">
                 <div class="detalle-label">Cantidad recogida</div>
-                <div class="detalle-value">${escapeHtml(recoleccionData.cantidad_real || 'No registrada')}</div>
+                <div class="detalle-value">${escapeHtml(cantidadReal)}</div>
             </div>
             <div class="detalle-item">
                 <div class="detalle-label">Conformidad</div>
@@ -161,12 +177,12 @@ function buildRecollectionDataHtml(recoleccionData) {
             </div>
             <div class="detalle-item">
                 <div class="detalle-label">Fecha completada</div>
-                <div class="detalle-value">${escapeHtml(recoleccionData.fecha_completada ? new Date(recoleccionData.fecha_completada).toLocaleString() : 'N/A')}</div>
+                <div class="detalle-value">${escapeHtml(fechaCompletada)}</div>
             </div>
         </div>
         <div class="recollection-observations">
             <div class="detalle-label">Observaciones del mensajero</div>
-            <div class="detalle-value">${escapeHtml(recoleccionData.observaciones_recoleccion || 'Sin observaciones registradas.')}</div>
+            <div class="detalle-value">${escapeHtml(observacionesMensajero)}</div>
         </div>
         <div class="recollection-photos">
             <div class="detalle-label">Foto subida por el mensajero</div>
