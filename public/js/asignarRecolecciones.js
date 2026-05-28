@@ -1,6 +1,8 @@
 // public/js/asignarRecolecciones.js
 let recolecciones = [];
 let todosLosMensajeros = [];
+let paquetesDetalleActual = [];
+let currentRotuloData = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
@@ -15,6 +17,84 @@ function escapeHtml(value) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function formatCurrency(value) {
+    return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0
+    }).format(Number(value) || 0);
+}
+
+function isTruthyValue(value) {
+    const text = String(value ?? '').trim().toLowerCase();
+    return ['1', 'si', 's\u00ed', 'true', 'x', 'yes'].includes(text);
+}
+
+function normalizeYesNo(value) {
+    return isTruthyValue(value) ? 'Si' : 'No';
+}
+
+function getPackageObservations(paquete) {
+    const observaciones = [
+        ['Recoleccion', paquete.observaciones_recoleccion],
+        ['Entrega', paquete.instrucciones_entrega],
+        ['Registro entrega', paquete.observaciones_entrega],
+        ['Ultima novedad', paquete.ultima_novedad_descripcion]
+    ].filter(([, value]) => String(value ?? '').trim() !== '');
+
+    if (observaciones.length === 0) {
+        return '<span class="text-muted">Sin observaciones</span>';
+    }
+
+    return observaciones.map(([label, value]) => `
+        <div class="package-note"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</div>
+    `).join('');
+}
+
+function getPackageAdditions(paquete) {
+    const additions = [];
+    const addressText = `${paquete.direccion_origen || ''} ${paquete.direccion_destino || ''}`.toLowerCase();
+
+    if (isTruthyValue(paquete.envio_mismo_dia)) additions.push('Entrega hoy');
+    if (isTruthyValue(paquete.recoger_cambios)) additions.push('Recoger cambios');
+    if (isTruthyValue(paquete.zona_periferica)) additions.push('Zona periferica');
+    if (addressText.includes('usme')) additions.push('Ubicacion Usme');
+    if (String(paquete.tipo_servicio || '').toLowerCase() === 'contraentrega' || Number(paquete.recaudo_esperado || 0) > 0) {
+        additions.push(`Recaudo ${formatCurrency(paquete.recaudo_esperado)}`);
+    }
+
+    if (additions.length === 0) {
+        return '<span class="text-muted">Sin adicionales</span>';
+    }
+
+    return additions.map(text => `<span class="package-pill">${escapeHtml(text)}</span>`).join('');
+}
+
+function buildPackageRows(paquetes) {
+    return paquetes.map(paquete => `
+        <tr>
+            <td>
+                <strong>${escapeHtml(paquete.numero_guia || 'Sin guia')}</strong>
+                <br><small>${escapeHtml(paquete.estado || '')}</small>
+            </td>
+            <td>
+                ${escapeHtml(paquete.destinatario_nombre || 'Sin destinatario')}
+                <br><small>${escapeHtml(paquete.direccion_destino || 'Sin direccion')}</small>
+                ${paquete.descripcion_contenido ? `<br><small><strong>Contenido:</strong> ${escapeHtml(paquete.descripcion_contenido)}</small>` : ''}
+            </td>
+            <td>${getPackageObservations(paquete)}</td>
+            <td>${escapeHtml(paquete.dimensiones || 'Sin dimension')}</td>
+            <td><div class="package-pills">${getPackageAdditions(paquete)}</div></td>
+            <td><strong>${formatCurrency(paquete.costo_envio)}</strong></td>
+            <td>
+                <button type="button" class="btn btn-sm btn-info btn-ver-guia-paquete" data-package-id="${escapeHtml(paquete.id)}">
+                    Ver guia
+                </button>
+            </td>
+        </tr>
+    `).join('');
 }
 
 function renderAccionesRecoleccion(rec) {
@@ -73,6 +153,28 @@ function setupEventListeners() {
         listaMensajeros.addEventListener('click', manejarClickMensajeros);
     }
 
+    const detallesBody = document.getElementById('detallesRecoleccionBody');
+    if (detallesBody) {
+        detallesBody.addEventListener('click', manejarClickDetallesModal);
+    }
+
+    const btnCerrarRotulo = document.getElementById('closeRotuloModal');
+    if (btnCerrarRotulo) {
+        btnCerrarRotulo.addEventListener('click', cerrarRotulo);
+    }
+
+    const btnDownloadRotulo = document.getElementById('btnDownloadRotulo');
+    if (btnDownloadRotulo) {
+        btnDownloadRotulo.addEventListener('click', descargarRotuloActual);
+    }
+
+    const rotuloModal = document.getElementById('rotuloModal');
+    if (rotuloModal) {
+        rotuloModal.addEventListener('click', function(event) {
+            if (event.target === rotuloModal) cerrarRotulo();
+        });
+    }
+
     const btnReportes = document.getElementById('btnReportes');
     if (btnReportes) {
         btnReportes.addEventListener('click', () => alert('Funcionalidad de reportes en desarrollo'));
@@ -111,6 +213,19 @@ function manejarClickMensajeros(event) {
         item.dataset.id,
         item.dataset.nombre || ''
     );
+}
+
+function manejarClickDetallesModal(event) {
+    const btnGuia = event.target.closest('.btn-ver-guia-paquete');
+    if (!btnGuia) return;
+
+    const paquete = paquetesDetalleActual.find(item => String(item.id) === String(btnGuia.dataset.packageId));
+    if (!paquete) {
+        alert('No se encontro la informacion de este paquete.');
+        return;
+    }
+
+    verGuiaPaquete(paquete);
 }
 
 async function loadInitialData() {
@@ -261,6 +376,7 @@ window.verDetallesPaquetes = async function(ids) {
             }
 
             if (resultPaquetes.success && resultPaquetes.data.length > 0) {
+                paquetesDetalleActual = resultPaquetes.data;
                 const primerPaquete = resultPaquetes.data[0];
                 const clienteNombre = primerPaquete.nombre_emprendimiento || (primerPaquete.cli_nombres + ' ' + primerPaquete.cli_apellidos);
 
@@ -318,19 +434,21 @@ window.verDetallesPaquetes = async function(ids) {
                     <div class="detalle-section"><h3 style="margin-top: 20px;">Fotos de Evidencia</h3>${fotosHtml}</div>
                     <div class="detalle-section">
                         <h3 style="margin-top: 20px;">Paquetes Incluidos (${resultPaquetes.data.length})</h3>
-                        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px;">
-                            <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
-                                <thead style="background: #f8f9fa; position: sticky; top: 0;">
-                                    <tr><th style="padding: 8px; text-align: left;">Guia</th><th style="padding: 8px; text-align: left;">Destinatario</th><th style="padding: 8px; text-align: left;">Descripcion</th></tr>
+                        <div class="packages-detail-table-wrap">
+                            <table class="packages-detail-table">
+                                <thead>
+                                    <tr>
+                                        <th>Guia</th>
+                                        <th>Destinatario</th>
+                                        <th>Observaciones</th>
+                                        <th>Dimension</th>
+                                        <th>Adicionales</th>
+                                        <th>Costo</th>
+                                        <th>Accion</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                    ${resultPaquetes.data.map(p => `
-                                        <tr style="border-bottom: 1px solid #eee;">
-                                            <td style="padding: 8px;"><strong>${p.numero_guia}</strong></td>
-                                            <td style="padding: 8px;">${p.destinatario_nombre}<br><small>${p.direccion_destino}</small></td>
-                                            <td style="padding: 8px;">${p.descripcion_contenido || '-'}</td>
-                                        </tr>
-                                    `).join('')}
+                                    ${buildPackageRows(paquetesDetalleActual)}
                                 </tbody>
                             </table>
                         </div>
@@ -338,6 +456,7 @@ window.verDetallesPaquetes = async function(ids) {
                 `;
                 container.innerHTML = html;
             } else {
+                paquetesDetalleActual = [];
                 container.innerHTML = '<p class="text-danger text-center">No se encontraron detalles de los paquetes.</p>';
             }
         } catch (error) {
@@ -346,6 +465,61 @@ window.verDetallesPaquetes = async function(ids) {
         }
     }
 };
+
+async function verGuiaPaquete(paquete) {
+    const modal = document.getElementById('rotuloModal');
+    const preview = document.getElementById('rotuloPreview');
+
+    if (!modal || !preview) {
+        alert('No se encontro el modal de la guia.');
+        return;
+    }
+
+    currentRotuloData = {
+        guia: paquete.numero_guia,
+        remitente_nombre: paquete.remitente_nombre || 'EcoBikeMess',
+        tienda_nombre: paquete.nombre_emprendimiento || paquete.remitente_nombre || 'Tienda',
+        destinatario_nombre: paquete.destinatario_nombre,
+        destinatario_direccion: paquete.direccion_destino,
+        destinatario_telefono: paquete.destinatario_telefono || '',
+        destinatario_observaciones: paquete.instrucciones_entrega || paquete.observaciones_entrega || 'Sin observaciones',
+        cambios: normalizeYesNo(paquete.recoger_cambios),
+        recaudo: paquete.recaudo_esperado || 0
+    };
+
+    if (!window.RotuloEcoBike) {
+        alert('El generador de guias no esta disponible.');
+        return;
+    }
+
+    try {
+        preview.innerHTML = '<p style="text-align:center; padding: 2rem;">Cargando guia...</p>';
+        modal.style.display = 'flex';
+        await window.RotuloEcoBike.mountPreview(preview, currentRotuloData);
+    } catch (error) {
+        console.error('Error mostrando guia:', error);
+        alert('No se pudo cargar la guia.');
+    }
+}
+
+function cerrarRotulo() {
+    const modal = document.getElementById('rotuloModal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function descargarRotuloActual() {
+    if (!currentRotuloData || !window.RotuloEcoBike) {
+        alert('Primero abre una guia.');
+        return;
+    }
+
+    try {
+        await window.RotuloEcoBike.downloadPdf(currentRotuloData, { filePrefix: 'Guia' });
+    } catch (error) {
+        console.error('Error descargando guia:', error);
+        alert('No se pudo generar el PDF de la guia.');
+    }
+}
 
 window.asignarRecoleccion = function(ids, direccion, cliente, observaciones = '') {
     const modal = document.getElementById('modalAsignarRapido');

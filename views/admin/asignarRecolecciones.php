@@ -23,6 +23,9 @@ $recolecciones = $model->listarRecolecciones([]);
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         /* Estilos para insignias de estado y prioridad */
         .badge {
@@ -287,6 +290,24 @@ $recolecciones = $model->listarRecolecciones([]);
         </div>
 
         <!-- Modal Asignación Rápida (Nuevo) -->
+        <!-- Modal Guia de Paquete -->
+        <div class="modal" id="rotuloModal" style="display: none;">
+            <div class="modal-content rotulo-modal-content">
+                <div class="modal-header">
+                    <h2>Guia de Envio</h2>
+                    <button class="btn-close" id="closeRotuloModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="rotulo-preview-wrap">
+                        <div id="rotuloPreview"></div>
+                    </div>
+                    <div class="modal-actions rotulo-actions">
+                        <button type="button" class="btn btn-primary" id="btnDownloadRotulo">Descargar PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="modal" id="modalAsignarRapido" style="display: none;">
             <div class="modal-content">
                 <div class="modal-header">
@@ -413,6 +434,7 @@ $recolecciones = $model->listarRecolecciones([]);
         </div>
     </div>
 
+    <script src="../../public/js/rotuloShared.js?v=20260511-1"></script>
     <script src="../../public/js/asignarRecolecciones.js"></script>
 </body>
 </html>

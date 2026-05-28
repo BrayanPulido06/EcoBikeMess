@@ -249,6 +249,91 @@ body {
     padding: 30px;
 }
 
+#modalDetalles .modal-content {
+    max-width: min(96vw, 1050px);
+}
+
+.packages-detail-table-wrap {
+    max-height: 360px;
+    overflow: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.packages-detail-table {
+    min-width: 980px;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+}
+
+.packages-detail-table thead {
+    background: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.packages-detail-table th,
+.packages-detail-table td {
+    padding: 10px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid #eef0f2;
+}
+
+.packages-detail-table small,
+.text-muted {
+    color: #6c757d;
+}
+
+.package-note {
+    margin-bottom: 6px;
+    line-height: 1.35;
+}
+
+.package-note:last-child {
+    margin-bottom: 0;
+}
+
+.package-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.package-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: #e8f5f1;
+    color: #1f7a36;
+    padding: 4px 8px;
+    font-size: 0.82em;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.rotulo-modal-content {
+    max-width: min(96vw, 860px);
+}
+
+.rotulo-preview-wrap {
+    display: flex;
+    justify-content: center;
+    overflow: auto;
+}
+
+.rotulo-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+#rotuloPreview {
+    background: #fff;
+}
+
 /* Form Styles */
 .form-grid {
     display: grid;

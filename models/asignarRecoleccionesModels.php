@@ -251,10 +251,25 @@ class AsignarRecoleccionesModel {
     public function obtenerDetallesPaquetes($ids) {
         if (!preg_match('/^[0-9,]+$/', $ids)) return [];
 
-        $sql = "SELECT p.*, 
+        $sql = "SELECT p.*,
+                       e.observaciones as observaciones_entrega,
+                       e.recaudo_real,
+                       e.recibio_cambios,
+                       ne.tipo as ultima_novedad_tipo,
+                       ne.descripcion as ultima_novedad_descripcion,
                        c.nombre_emprendimiento, 
                        u.nombres as cli_nombres, u.apellidos as cli_apellidos, u.telefono as cli_telefono
                 FROM paquetes p
+                LEFT JOIN entregas e ON e.paquete_id = p.id
+                LEFT JOIN (
+                    SELECT n1.*
+                    FROM novedades_entrega n1
+                    INNER JOIN (
+                        SELECT paquete_id, MAX(id) AS max_id
+                        FROM novedades_entrega
+                        GROUP BY paquete_id
+                    ) ult ON ult.max_id = n1.id
+                ) ne ON ne.paquete_id = p.id
                 LEFT JOIN clientes c ON p.cliente_id = c.id
                 LEFT JOIN usuarios u ON c.usuario_id = u.id
                 WHERE p.id IN ($ids)";

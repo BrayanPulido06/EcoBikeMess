@@ -141,9 +141,9 @@ $manualClienteUrl = app_asset_url('doc/Manual%20procedimiento%20clientes.docx.pd
                     </div>
                     <div class="info-details">
                         <p>1. Recolección: Pasaremos por tu ubicación entre 10:00 a.m. y 12:30 p.m. para recoger tu paquete.</strong></p>
-                        <p>2. Consolidación: Tu pedido llegará a nuestro centro de acopio en Chapinero alrededor de la 1:00 p.m., donde lo prepararemos para su distribución.</p>
+                        <p>2. Consolidación: Tu pedido llegará a nuestro centro de acopio en Chapinero alrededor de las 2:00 p.m., donde lo prepararemos para su distribución.</p>
                         <p>3. Distribución:</p>
-                        <p>- Los pedidos salen clasificados por zonas alrededor de las 2:00pm</p>
+                        <p>- Los pedidos salen clasificados por zonas alrededor de las 3:00pm</p>
                         <p>- Las entregas se realizan durante el resto del día (el horario exacto puede variar según ubicación y volumen de pedidos).</p>
                         <p>4. Notificación: El cliente final recibirá un aviso por WhatsApp o por llamada antes del mensajero llegar, para asegurar que esté disponible para recibir</p>
                         <p>5. Confirmación: Al cierre del día, te enviaremos el soporte de entrega.</p>
