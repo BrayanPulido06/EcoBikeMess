@@ -1,15 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('EcoBikeMess inicioMensajero.js v1.2.7 - Máximo Rendimiento'); 
     // Desactivar Service Worker/caché agresiva en móvil (puede impedir permisos de cámara y cargar JS/CSS viejos)
-    try {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister())).catch(() => {});
-        }
-        if (window.caches && typeof window.caches.keys === 'function') {
-            window.caches.keys().then(keys => keys.forEach(k => window.caches.delete(k))).catch(() => {});
-        }
-    } catch (_) {}
-    
     // Estado de la aplicación
     let scannedQRs = [];
     let sessionStartTime = new Date();

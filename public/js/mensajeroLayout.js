@@ -1,17 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-    try {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(regs => {
-                regs.forEach(r => r.unregister());
-            }).catch(() => {});
-        }
-        if (window.caches && typeof window.caches.keys === 'function') {
-            window.caches.keys().then(keys => {
-                keys.forEach(k => window.caches.delete(k));
-            }).catch(() => {});
-        }
-    } catch (_) {}
-
     const menuBtn = document.getElementById('menuBtn');
     const sideMenu = document.getElementById('sideMenu');
     const menuOverlay = document.getElementById('menuOverlay');

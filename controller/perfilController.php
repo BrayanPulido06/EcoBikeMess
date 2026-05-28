@@ -248,6 +248,7 @@ try {
     $_SESSION['user_phone'] = $telefono;
     if ($role === 'mensajero' && isset($updateFields['foto']) && $updateFields['foto'] !== '') {
         $_SESSION['user_photo'] = $updateFields['foto'];
+        unset($_SESSION['user_photo_resolved']);
     }
 
     redirectPerfil($role, '?mensaje=' . urlencode('Perfil actualizado correctamente'));

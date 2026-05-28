@@ -51,27 +51,23 @@ $resolverFotoPerfil = static function (?string $ruta): string {
         return '../../public/img/default-avatar.png';
     }
 
-    $extension = strtolower(pathinfo($rutaFisica, PATHINFO_EXTENSION));
-    $mime = match ($extension) {
-        'jpg', 'jpeg' => 'image/jpeg',
-        'png' => 'image/png',
-        'webp' => 'image/webp',
-        'gif' => 'image/gif',
-        default => 'application/octet-stream',
-    };
-
-    $contenido = @file_get_contents($rutaFisica);
-    if ($contenido === false) {
-        return '../../public/img/default-avatar.png';
-    }
-
-    return 'data:' . $mime . ';base64,' . base64_encode($contenido);
+    $relativePath = str_replace('\\', '/', ltrim(str_replace($projectRoot, '', $rutaFisica), DIRECTORY_SEPARATOR));
+    return app_url($relativePath);
 };
 
 $fotoMensajero = trim((string) ($mensajero['foto'] ?? ''));
 $fotoMensajeroCache = $_SESSION['user_photo_resolved'] ?? '';
 if ($fotoMensajero !== '' && ($_SESSION['user_photo'] ?? '') === $fotoMensajero && is_string($fotoMensajeroCache) && $fotoMensajeroCache !== '') {
-    $fotoMensajero = $fotoMensajeroCache;
+    if (str_starts_with($fotoMensajeroCache, 'data:image/')) {
+        unset($_SESSION['user_photo_resolved']);
+        $fotoMensajero = $resolverFotoPerfil($fotoMensajero);
+        if (!empty($mensajero['foto'])) {
+            $_SESSION['user_photo'] = $mensajero['foto'];
+            $_SESSION['user_photo_resolved'] = $fotoMensajero;
+        }
+    } else {
+        $fotoMensajero = $fotoMensajeroCache;
+    }
 } else {
     $fotoMensajero = $resolverFotoPerfil($fotoMensajero);
     if (!empty($mensajero['foto'])) {
@@ -312,7 +308,7 @@ $opcionesTransporte = [
         </div>
     </main>
 
-    <script src="../../public/js/mensajeroLayout.js"></script>
+    <script src="../../public/js/mensajeroLayout.js?v=20260528-1"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const fotoInput = document.getElementById('foto_perfil');

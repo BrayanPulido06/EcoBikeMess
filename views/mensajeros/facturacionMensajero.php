@@ -105,6 +105,6 @@ requireWebAuth(['mensajero']);
     </main>
 
     <script src="../../public/js/facturacionPanel.js"></script>
-    <script src="../../public/js/mensajeroLayout.js"></script>
+    <script src="../../public/js/mensajeroLayout.js?v=20260528-1"></script>
 </body>
 </html>

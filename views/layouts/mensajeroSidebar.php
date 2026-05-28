@@ -40,21 +40,8 @@ $resolverFotoPerfil = static function (?string $ruta): string {
         return '../../public/img/default-avatar.png';
     }
 
-    $extension = strtolower(pathinfo($rutaFisica, PATHINFO_EXTENSION));
-    $mime = match ($extension) {
-        'jpg', 'jpeg' => 'image/jpeg',
-        'png' => 'image/png',
-        'webp' => 'image/webp',
-        'gif' => 'image/gif',
-        default => 'application/octet-stream',
-    };
-
-    $contenido = @file_get_contents($rutaFisica);
-    if ($contenido === false) {
-        return '../../public/img/default-avatar.png';
-    }
-
-    return 'data:' . $mime . ';base64,' . base64_encode($contenido);
+    $relativePath = str_replace('\\', '/', ltrim(str_replace($projectRoot, '', $rutaFisica), DIRECTORY_SEPARATOR));
+    return app_url($relativePath);
 };
 
 $fotoSidebarOriginal = trim((string) ($_SESSION['user_photo'] ?? ''));
@@ -80,7 +67,15 @@ if ($fotoSidebar === '') {
 }
 
 if ($fotoSidebar !== '' && $fotoSidebar === $fotoSidebarOriginal && is_string($fotoSidebarCache) && $fotoSidebarCache !== '') {
-    $fotoSidebar = $fotoSidebarCache;
+    if (str_starts_with($fotoSidebarCache, 'data:image/')) {
+        unset($_SESSION['user_photo_resolved']);
+        $fotoSidebar = $resolverFotoPerfil($fotoSidebar);
+        if ($fotoSidebarOriginal !== '') {
+            $_SESSION['user_photo_resolved'] = $fotoSidebar;
+        }
+    } else {
+        $fotoSidebar = $fotoSidebarCache;
+    }
 } else {
     $fotoSidebar = $resolverFotoPerfil($fotoSidebar);
     if ($fotoSidebarOriginal !== '') {

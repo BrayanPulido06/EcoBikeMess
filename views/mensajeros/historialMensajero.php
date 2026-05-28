@@ -198,7 +198,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
         </div>
     </div>
 
-    <script src="../../public/js/mensajeroLayout.js"></script>
+    <script src="../../public/js/mensajeroLayout.js?v=20260528-1"></script>
     <script src="../../public/js/historialMensajero.js"></script>
 </body>
 </html>
