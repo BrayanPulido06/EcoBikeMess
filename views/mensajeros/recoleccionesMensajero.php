@@ -194,7 +194,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                     <span id="detalleHorarioSugerido"></span>
                 </div>
                 <div class="info-item instrucciones">
-                    <span class="info-label">Instrucciones Especiales:</span>
+                    <span class="info-label">Observaciones del cliente para la recolecciÃ³n:</span>
                     <p id="detalleInstrucciones"></p>
                 </div>
             </section>
@@ -264,6 +264,11 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             <div class="form-group">
                 <label>Total de paquetes a recoger</label>
                 <div id="formTotalPaquetes" class="cantidad-grande">0</div>
+            </div>
+
+            <div class="form-group">
+                <label>Observaciones del cliente para la recolecciÃ³n</label>
+                <div id="formObservacionesCliente" class="input-readonly observaciones-cliente-recoleccion"></div>
             </div>
 
             <div class="form-group">

@@ -9,6 +9,15 @@ let mensajeroId = 'MENSAJERO_001'; // Se obtendría dinámicamente en producció
 let watchId = null; // Para tracking de GPS continuo
 const API_RECOLECCIONES = '../../controller/recoleccionesMensajeroController.php';
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // ============================================
 // FUNCIONES DE FEEDBACK TÁCTIL
 // ============================================
@@ -185,7 +194,8 @@ async function cargarRecolecciones() {
             cantidadPaquetes: Number(r.cantidad_estimada || 0),
             cantidadReal: Number(r.cantidad_real || 0),
             horarioSugerido: r.horario_preferido || 'Sin horario',
-            instrucciones: r.descripcion_paquetes || r.observaciones_recoleccion || '',
+            instrucciones: r.descripcion_paquetes || '',
+            observacionesCliente: r.observaciones_cliente_recoleccion || r.observaciones_recoleccion || '',
             fotoRecoleccion: r.foto_recoleccion || '',
             paquetes: []
         }));
@@ -316,7 +326,7 @@ function verDetalleRecoleccion(id) {
     document.getElementById('detalleTelefono').textContent = recoleccionActual.telefono;
     document.getElementById('detalleCantidadPaquetes').textContent = recoleccionActual.cantidadPaquetes;
     document.getElementById('detalleHorarioSugerido').textContent = recoleccionActual.horarioSugerido;
-    document.getElementById('detalleInstrucciones').textContent = recoleccionActual.instrucciones;
+    document.getElementById('detalleInstrucciones').textContent = recoleccionActual.observacionesCliente || 'Sin observaciones de recoleccion.';
     
     // Mostrar/ocultar botones según estado
     const btnLlegue = document.getElementById('btnLleguePunto');
@@ -380,8 +390,9 @@ function renderPaquetesAsignados() {
     } else {
         listaEl.innerHTML = paquetes.map(p => `
             <div class="paquete-recoleccion-item">
-                <strong>${p.numero_guia}</strong>
-                <span>${p.destinatario_nombre || 'Sin nombre'}</span>
+                <strong>${escapeHtml(p.numero_guia)}</strong>
+                <span>${escapeHtml(p.destinatario_nombre || 'Sin nombre')}</span>
+                ${p.observaciones_recoleccion ? `<small><strong>Obs. recoleccion:</strong> ${escapeHtml(p.observaciones_recoleccion)}</small>` : ''}
             </div>
         `).join('');
     }
@@ -461,6 +472,10 @@ function mostrarFormularioRecoleccion() {
     document.getElementById('formDireccionRecoleccion').value = recoleccionActual.direccion || '';
     document.getElementById('formNombreContacto').value = recoleccionActual.nombreContacto || '';
     document.getElementById('formTelefonoContacto').value = recoleccionActual.telefono || '';
+    const observacionesClienteEl = document.getElementById('formObservacionesCliente');
+    if (observacionesClienteEl) {
+        observacionesClienteEl.textContent = recoleccionActual.observacionesCliente || 'Sin observaciones de recoleccion.';
+    }
     const totalEl = document.getElementById('formTotalPaquetes');
     if (totalEl) totalEl.textContent = recoleccionActual.cantidadPaquetes || 0;
     const fechaAsignacionEl = document.getElementById('formFechaAsignacion');
@@ -482,8 +497,9 @@ function renderGuiasFormulario() {
     }
     lista.innerHTML = paquetes.map(p => `
         <div class="paquete-recoleccion-item">
-            <strong>${p.numero_guia}</strong>
-            <span>${p.destinatario_nombre || 'Sin nombre'}</span>
+            <strong>${escapeHtml(p.numero_guia)}</strong>
+            <span>${escapeHtml(p.destinatario_nombre || 'Sin nombre')}</span>
+            ${p.observaciones_recoleccion ? `<small><strong>Obs. recoleccion:</strong> ${escapeHtml(p.observaciones_recoleccion)}</small>` : ''}
         </div>
     `).join('');
 }

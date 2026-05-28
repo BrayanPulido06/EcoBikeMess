@@ -40,7 +40,12 @@ class RecoleccionesMensajeroModels
                     r.foto_recoleccion,
                     r.horario_preferido,
                     r.descripcion_paquetes,
-                    r.observaciones_recoleccion
+                    r.observaciones_recoleccion,
+                    (
+                        SELECT GROUP_CONCAT(DISTINCT NULLIF(TRIM(p_obs.observaciones_recoleccion), '') SEPARATOR ' | ')
+                        FROM paquetes p_obs
+                        WHERE p_obs.recoleccion_id = r.id
+                    ) AS observaciones_cliente_recoleccion
                 FROM recolecciones r
                 WHERE r.mensajero_id = :mensajero_id
                   AND r.estado IN ('asignada', 'en_curso', 'completada')
@@ -91,7 +96,7 @@ class RecoleccionesMensajeroModels
 
     public function listarPaquetesRecoleccion($recoleccionId, $mensajeroId)
     {
-        $sql = "SELECT p.numero_guia, p.destinatario_nombre
+        $sql = "SELECT p.numero_guia, p.destinatario_nombre, p.observaciones_recoleccion
                 FROM recolecciones r
                 INNER JOIN paquetes p
                     ON p.recoleccion_id = r.id
