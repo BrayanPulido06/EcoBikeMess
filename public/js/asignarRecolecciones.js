@@ -72,6 +72,109 @@ function getPackageAdditions(paquete) {
     return additions.map(text => `<span class="package-pill">${escapeHtml(text)}</span>`).join('');
 }
 
+function buildFileUrl(path) {
+    const cleanPath = String(path ?? '').trim();
+    if (!cleanPath) return '';
+    if (/^https?:\/\//i.test(cleanPath)) return cleanPath;
+    return `../../${cleanPath.replace(/^(\.\.\/|\.\/|\/)+/, '')}`;
+}
+
+function getRecollectionPhotos(rawValue) {
+    if (!rawValue) return [];
+
+    if (Array.isArray(rawValue)) {
+        return rawValue.filter(Boolean);
+    }
+
+    const rawText = String(rawValue).trim();
+    if (!rawText) return [];
+
+    try {
+        const parsed = JSON.parse(rawText);
+        return Array.isArray(parsed) ? parsed.filter(Boolean) : [rawText];
+    } catch (error) {
+        return [rawText];
+    }
+}
+
+function buildRecollectionPhotosHtml(recoleccionData) {
+    const fotos = getRecollectionPhotos(recoleccionData?.foto_recoleccion);
+
+    if (fotos.length === 0) {
+        return '<p class="text-muted">El mensajero aun no ha subido foto de recoleccion.</p>';
+    }
+
+    return `
+        <div class="recollection-photo-grid">
+            ${fotos.map((foto, index) => {
+                const url = buildFileUrl(foto);
+                return `
+                    <a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="recollection-photo-link">
+                        <img src="${escapeHtml(url)}" alt="Foto de recoleccion ${index + 1}">
+                    </a>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
+function buildRecollectionDataHtml(recoleccionData) {
+    if (!recoleccionData) {
+        return `
+            <div class="recollection-data-empty">
+                No hay datos registrados por el mensajero para esta recoleccion.
+            </div>
+        `;
+    }
+
+    const conformidad = isTruthyValue(recoleccionData.conformidad) ? 'Si' : 'No';
+
+    return `
+        <div class="recollection-data-grid">
+            <div class="detalle-item">
+                <div class="detalle-label">Estado</div>
+                <div class="detalle-value">${escapeHtml(recoleccionData.estado || 'N/A')}</div>
+            </div>
+            <div class="detalle-item">
+                <div class="detalle-label">Orden</div>
+                <div class="detalle-value">${escapeHtml(recoleccionData.numero_orden || 'N/A')}</div>
+            </div>
+            <div class="detalle-item">
+                <div class="detalle-label">Horario</div>
+                <div class="detalle-value">${escapeHtml(recoleccionData.horario_preferido || 'N/A')}</div>
+            </div>
+            <div class="detalle-item">
+                <div class="detalle-label">Cantidad estimada</div>
+                <div class="detalle-value">${escapeHtml(recoleccionData.cantidad_estimada || 'N/A')}</div>
+            </div>
+            <div class="detalle-item">
+                <div class="detalle-label">Cantidad recogida</div>
+                <div class="detalle-value">${escapeHtml(recoleccionData.cantidad_real || 'No registrada')}</div>
+            </div>
+            <div class="detalle-item">
+                <div class="detalle-label">Conformidad</div>
+                <div class="detalle-value">${conformidad}</div>
+            </div>
+            <div class="detalle-item">
+                <div class="detalle-label">Fecha asignacion</div>
+                <div class="detalle-value">${escapeHtml(recoleccionData.fecha_asignacion ? new Date(recoleccionData.fecha_asignacion).toLocaleString() : 'N/A')}</div>
+            </div>
+            <div class="detalle-item">
+                <div class="detalle-label">Fecha completada</div>
+                <div class="detalle-value">${escapeHtml(recoleccionData.fecha_completada ? new Date(recoleccionData.fecha_completada).toLocaleString() : 'N/A')}</div>
+            </div>
+        </div>
+        <div class="recollection-observations">
+            <div class="detalle-label">Observaciones del mensajero</div>
+            <div class="detalle-value">${escapeHtml(recoleccionData.observaciones_recoleccion || 'Sin observaciones registradas.')}</div>
+        </div>
+        <div class="recollection-photos">
+            <div class="detalle-label">Foto subida por el mensajero</div>
+            ${buildRecollectionPhotosHtml(recoleccionData)}
+        </div>
+    `;
+}
+
 function buildPackageRows(paquetes) {
     return paquetes.map(paquete => `
         <tr>
@@ -380,6 +483,7 @@ window.verDetallesPaquetes = async function(ids) {
                 const primerPaquete = resultPaquetes.data[0];
                 const clienteNombre = primerPaquete.nombre_emprendimiento || (primerPaquete.cli_nombres + ' ' + primerPaquete.cli_apellidos);
 
+                const datosRecoleccionHtml = buildRecollectionDataHtml(recoleccionData);
                 let recoleccionInfoHtml = '<p>No se encontraron detalles de la recoleccion en la tabla `recolecciones`.</p>';
                 if (recoleccionData) {
                     recoleccionInfoHtml = `
@@ -430,8 +534,10 @@ window.verDetallesPaquetes = async function(ids) {
                             <div class="detalle-value" style="background:#f8f9fa; padding:10px; border-radius:5px; min-height: 40px;">${primerPaquete.observaciones_recoleccion || 'Sin observaciones de recoleccion.'}</div>
                         </div>
                     </div>
-                    <div class="detalle-section"><h3 style="margin-top: 20px;">Detalles de la Recoleccion</h3>${recoleccionInfoHtml}</div>
-                    <div class="detalle-section"><h3 style="margin-top: 20px;">Fotos de Evidencia</h3>${fotosHtml}</div>
+                    <div class="detalle-section">
+                        <h3 style="margin-top: 20px;">Datos de recoleccion</h3>
+                        ${datosRecoleccionHtml}
+                    </div>
                     <div class="detalle-section">
                         <h3 style="margin-top: 20px;">Paquetes Incluidos (${resultPaquetes.data.length})</h3>
                         <div class="packages-detail-table-wrap">

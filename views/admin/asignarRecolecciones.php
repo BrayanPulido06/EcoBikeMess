@@ -19,7 +19,7 @@ $recolecciones = $model->listarRecolecciones([]);
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
-    <link rel="stylesheet" href="../../public/css/asignarRecolecciones.css">
+    <link rel="stylesheet" href="../../public/css/asignarRecolecciones.css?v=20260528-2">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -435,6 +435,6 @@ $recolecciones = $model->listarRecolecciones([]);
     </div>
 
     <script src="../../public/js/rotuloShared.js?v=20260511-1"></script>
-    <script src="../../public/js/asignarRecolecciones.js"></script>
+    <script src="../../public/js/asignarRecolecciones.js?v=20260528-2"></script>
 </body>
 </html>

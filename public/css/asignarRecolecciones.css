@@ -314,6 +314,45 @@ body {
     white-space: nowrap;
 }
 
+.recollection-data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.recollection-data-empty,
+.recollection-observations,
+.recollection-photos {
+    margin-top: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.recollection-photo-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.recollection-photo-link {
+    display: block;
+    width: 140px;
+    height: 140px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #dde5df;
+    background: #fff;
+}
+
+.recollection-photo-link img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 .rotulo-modal-content {
     max-width: min(96vw, 860px);
 }
