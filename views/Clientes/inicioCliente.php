@@ -34,6 +34,8 @@ foreach ($chartDataRaw as $row) {
         $dataEntregados[$mesIndex] = intval($row['entregados']);
     }
 }
+
+$manualClienteUrl = app_asset_url('doc/Manual%20procedimiento%20clientes.docx.pdf');
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -54,7 +56,6 @@ foreach ($chartDataRaw as $row) {
     <style>
         /* Estilos para la nueva tarjeta de información */
         .important-info-card {
-            grid-column: 1 / -1; /* Ocupa todo el ancho de la fila */
             flex-direction: column;
             align-items: flex-start;
         }
@@ -81,6 +82,40 @@ foreach ($chartDataRaw as $row) {
             color: #5cb85c;
             font-weight: bold;
             cursor: pointer;
+        }
+        .manual-card {
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+        .manual-card .manual-description {
+            color: #5a6c7d;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-top: 0.8rem;
+        }
+        .manual-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-top: 1.2rem;
+        }
+        .manual-actions .btn-primary,
+        .manual-download-link {
+            padding: 0.75rem 1.4rem;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .manual-download-link {
+            border: 1px solid #5cb85c;
+            color: #5cb85c;
+            background: #f8fdf9;
+            transition: all 0.3s ease;
+        }
+        .manual-download-link:hover {
+            background: #e8f5f1;
+            transform: translateY(-2px);
         }
     </style>
 </head>
@@ -116,6 +151,16 @@ foreach ($chartDataRaw as $row) {
                     <button class="btn-details" id="toggleInfoBtn">
                         Ver Información ▼
                     </button>
+                </div>
+                <div class="stat-card manual-card">
+                    <div class="stat-info">
+                        <h2>Manual de uso</h2>
+                        <p class="manual-description">Consulta el manual para conocer el paso a paso del uso de la plataforma.</p>
+                    </div>
+                    <div class="manual-actions">
+                        <a href="<?php echo htmlspecialchars($manualClienteUrl, ENT_QUOTES, 'UTF-8'); ?>" class="btn-primary" target="_blank" rel="noopener">Ver PDF</a>
+                        <a href="<?php echo htmlspecialchars($manualClienteUrl, ENT_QUOTES, 'UTF-8'); ?>" class="manual-download-link" download>Descargar PDF</a>
+                    </div>
                 </div>
             </div>
 
