@@ -149,24 +149,29 @@ class PaquetesAdminModel {
 
     public function getFilters() {
         // Obtener Clientes para el filtro
-        $sqlClientes = "SELECT DISTINCT c.id,
-                               CASE
-                                   WHEN COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero - %'
-                                   THEN COALESCE(
-                                       (
-                                           SELECT NULLIF(NULLIF(p2.remitente_nombre, 'Pendiente por definir'), '')
-                                           FROM paquetes p2
-                                           WHERE p2.cliente_id = c.id
-                                           ORDER BY p2.fecha_creacion DESC, p2.id DESC
-                                           LIMIT 1
-                                       ),
-                                       NULLIF(TRIM(REPLACE(c.nombre_emprendimiento, 'Operativo Mensajero - ', '')), ''),
-                                       CONCAT(u.nombres, ' ', u.apellidos)
-                                   )
-                                   ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos))
-                               END as nombre
-                        FROM clientes c
-                        JOIN usuarios u ON c.usuario_id = u.id
+        $sqlClientes = "SELECT MIN(id) as id, nombre
+                        FROM (
+                            SELECT c.id,
+                                   TRIM(CASE
+                                       WHEN COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero - %'
+                                       THEN COALESCE(
+                                           (
+                                               SELECT NULLIF(NULLIF(p2.remitente_nombre, 'Pendiente por definir'), '')
+                                               FROM paquetes p2
+                                               WHERE p2.cliente_id = c.id
+                                               ORDER BY p2.fecha_creacion DESC, p2.id DESC
+                                               LIMIT 1
+                                           ),
+                                           NULLIF(TRIM(REPLACE(c.nombre_emprendimiento, 'Operativo Mensajero - ', '')), ''),
+                                           CONCAT(u.nombres, ' ', u.apellidos)
+                                       )
+                                       ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos))
+                                   END) as nombre
+                            FROM clientes c
+                            JOIN usuarios u ON c.usuario_id = u.id
+                        ) clientes_filtro
+                        WHERE nombre <> ''
+                        GROUP BY nombre
                         ORDER BY nombre ASC";
         $stmtC = $this->conn->query($sqlClientes);
         $clientes = $stmtC->fetchAll(PDO::FETCH_ASSOC);
