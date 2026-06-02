@@ -149,8 +149,22 @@ class PaquetesAdminModel {
 
     public function getFilters() {
         // Obtener Clientes para el filtro
-        $sqlClientes = "SELECT DISTINCT c.id, 
-                               COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos)) as nombre
+        $sqlClientes = "SELECT DISTINCT c.id,
+                               CASE
+                                   WHEN COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero - %'
+                                   THEN COALESCE(
+                                       (
+                                           SELECT NULLIF(NULLIF(p2.remitente_nombre, 'Pendiente por definir'), '')
+                                           FROM paquetes p2
+                                           WHERE p2.cliente_id = c.id
+                                           ORDER BY p2.fecha_creacion DESC, p2.id DESC
+                                           LIMIT 1
+                                       ),
+                                       NULLIF(TRIM(REPLACE(c.nombre_emprendimiento, 'Operativo Mensajero - ', '')), ''),
+                                       CONCAT(u.nombres, ' ', u.apellidos)
+                                   )
+                                   ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos))
+                               END as nombre
                         FROM clientes c
                         JOIN usuarios u ON c.usuario_id = u.id
                         ORDER BY nombre ASC";
@@ -248,7 +262,14 @@ class PaquetesAdminModel {
             $params[':fechaHasta'] = $filters['fechaHasta'];
         }
         if (!empty($filters['cliente'])) {
-            $sql .= " AND COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos)) COLLATE utf8mb4_unicode_ci LIKE :cliente";
+            $sql .= " AND CASE
+                            WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                                 OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
+                                 OR COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero - %'
+                                 OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
+                            THEN COALESCE(NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''), '-')
+                            ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
+                         END COLLATE utf8mb4_unicode_ci LIKE :cliente";
             $params[':cliente'] = '%' . trim((string) $filters['cliente']) . '%';
         }
         if (!empty($filters['estado'])) {
