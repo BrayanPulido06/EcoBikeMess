@@ -124,14 +124,30 @@ $remitente_data = [
             line-height: 1;
         }
         .confirmation-note {
-            margin-bottom: 1.25rem;
-            padding: 0.9rem 1rem;
-            border-radius: 10px;
-            background: #f3fbf4;
-            border: 1px solid #d7efdb;
-            color: #2d3e50;
-            font-size: 0.95rem;
-            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.85rem;
+            margin-bottom: 1.5rem;
+            padding: 1.2rem 1.4rem;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #fff8db 0%, #ffe9a8 100%);
+            border: 3px solid #f0ad00;
+            color: #1f2d3d;
+            font-size: 1.15rem;
+            font-weight: 800;
+            line-height: 1.35;
+            text-align: center;
+            box-shadow: 0 8px 22px rgba(240, 173, 0, 0.22);
+            text-transform: uppercase;
+        }
+        .confirmation-note-icon {
+            flex: 0 0 auto;
+            font-size: 1.75rem;
+            line-height: 1;
+        }
+        .confirmation-note strong {
+            color: #0f7d32;
         }
         #rotuloPreview .rotulo-scale .rotulo-card p {
             margin: 2px 0;
@@ -608,7 +624,8 @@ $remitente_data = [
                         </div>
                         <div class="card-body">
                             <div class="confirmation-note">
-                                Para agendar tu pedido, debes dar click en el botón "confirmar envío"
+                                <span class="confirmation-note-icon">⚠️</span>
+                                <span>Para agendar tu pedido, debes dar click en el botón <strong>"confirmar envío"</strong></span>
                             </div>
                             <div id="rotuloPreview" style="background: white; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333;">
                                 <div class="rotulo-scale">
