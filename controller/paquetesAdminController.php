@@ -218,6 +218,63 @@ try {
             ]);
             break;
 
+        case 'crear_entrega_sin_rotulo':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                echo json_encode(['success' => false, 'error' => 'Metodo no permitido']);
+                break;
+            }
+
+            $rutaPrincipal = '';
+            $rutaAdicional = '';
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+
+            if (empty($_FILES['foto_entrega']) || (int) ($_FILES['foto_entrega']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+                echo json_encode(['success' => false, 'error' => 'Debes adjuntar la evidencia fotografica']);
+                break;
+            }
+
+            $basenamePrincipal = saveUploadedFileSafe($_FILES['foto_entrega'], dirname(__DIR__) . '/uploads/entregas', $allowedMimes, 'ebm_entrega_admin', true);
+            if (!$basenamePrincipal) {
+                echo json_encode(['success' => false, 'error' => 'No se pudo guardar la evidencia fotografica']);
+                break;
+            }
+            $rutaPrincipal = '/uploads/entregas/' . $basenamePrincipal;
+
+            if (!empty($_FILES['foto_adicional']) && (int) ($_FILES['foto_adicional']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                $basenameAdicional = saveUploadedFileSafe($_FILES['foto_adicional'], dirname(__DIR__) . '/uploads/entregas', $allowedMimes, 'ebm_entrega_admin_extra', true);
+                if (!$basenameAdicional) {
+                    eliminarArchivoSiExiste($rutaPrincipal);
+                    echo json_encode(['success' => false, 'error' => 'No se pudo guardar la foto adicional']);
+                    break;
+                }
+                $rutaAdicional = '/uploads/entregas/' . $basenameAdicional;
+            }
+
+            try {
+                $payload = [
+                    'cliente_id' => (int) ($_POST['cliente_id'] ?? 0),
+                    'mensajero_id' => (int) ($_POST['mensajero_id'] ?? 0),
+                    'numero_guia' => trim((string) ($_POST['numero_guia'] ?? '')),
+                    'destinatario_nombre' => trim((string) ($_POST['destinatario_nombre'] ?? '')),
+                    'nombre_receptor' => trim((string) ($_POST['nombre_receptor'] ?? '')),
+                    'parentesco_cargo' => trim((string) ($_POST['parentesco_cargo'] ?? '')),
+                    'documento_receptor' => trim((string) ($_POST['documento_receptor'] ?? '')),
+                    'recaudo_real' => (float) ($_POST['recaudo_real'] ?? 0),
+                    'recibio_cambios' => isset($_POST['recibio_cambios']) ? 1 : 0,
+                    'observaciones' => trim((string) ($_POST['observaciones'] ?? '')),
+                    'foto_entrega' => $rutaPrincipal,
+                    'foto_adicional' => $rutaAdicional,
+                    'creado_por' => (int) ($_SESSION['user_id'] ?? 0)
+                ];
+
+                $result = $model->crearEntregaSinRotuloAdmin($payload);
+                echo json_encode(['success' => true, 'guia' => $result['guia'], 'paquete_id' => $result['paquete_id']]);
+            } catch (Throwable $e) {
+                eliminarArchivoSiExiste($rutaPrincipal);
+                eliminarArchivoSiExiste($rutaAdicional);
+                throw $e;
+            }
+            break;
 
         case 'cancelar_servicio':
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

@@ -620,6 +620,145 @@ class PaquetesAdminModel {
         ]);
     }
 
+    public function crearEntregaSinRotuloAdmin(array $data): array
+    {
+        $clienteId = (int) ($data['cliente_id'] ?? 0);
+        $mensajeroId = (int) ($data['mensajero_id'] ?? 0);
+        $numeroGuia = trim((string) ($data['numero_guia'] ?? ''));
+        $destinatario = trim((string) ($data['destinatario_nombre'] ?? ''));
+        $nombreReceptor = trim((string) ($data['nombre_receptor'] ?? ''));
+        $documento = trim((string) ($data['documento_receptor'] ?? ''));
+        $fotoEntrega = trim((string) ($data['foto_entrega'] ?? ''));
+
+        if ($clienteId <= 0 || $mensajeroId <= 0 || $numeroGuia === '' || $destinatario === '' || $nombreReceptor === '' || $documento === '' || $fotoEntrega === '') {
+            throw new Exception('Debes completar tienda, mensajero, destinatario, quien recibe, documento/placa y evidencia.');
+        }
+
+        $stmtGuia = $this->conn->prepare("SELECT COUNT(*) FROM paquetes WHERE numero_guia = :guia");
+        $stmtGuia->execute([':guia' => $numeroGuia]);
+        if ((int) $stmtGuia->fetchColumn() > 0) {
+            throw new Exception('La guía generada ya existe. Intenta de nuevo.');
+        }
+
+        $stmtCliente = $this->conn->prepare(
+            "SELECT c.id,
+                    COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos)) AS nombre,
+                    COALESCE(NULLIF(c.direccion_principal, ''), '-') AS direccion
+             FROM clientes c
+             LEFT JOIN usuarios u ON u.id = c.usuario_id
+             WHERE c.id = :id
+             LIMIT 1"
+        );
+        $stmtCliente->execute([':id' => $clienteId]);
+        $cliente = $stmtCliente->fetch(PDO::FETCH_ASSOC);
+        if (!$cliente) {
+            throw new Exception('La tienda seleccionada no existe.');
+        }
+
+        $stmtMensajero = $this->conn->prepare("SELECT id FROM mensajeros WHERE id = :id LIMIT 1");
+        $stmtMensajero->execute([':id' => $mensajeroId]);
+        if (!$stmtMensajero->fetch(PDO::FETCH_ASSOC)) {
+            throw new Exception('El mensajero seleccionado no existe.');
+        }
+
+        $recaudo = (float) ($data['recaudo_real'] ?? 0);
+        $recibioCambios = !empty($data['recibio_cambios']) ? 1 : 0;
+        $observaciones = trim((string) ($data['observaciones'] ?? ''));
+        $parentesco = trim((string) ($data['parentesco_cargo'] ?? ''));
+        $fotoAdicional = trim((string) ($data['foto_adicional'] ?? ''));
+        $usuarioId = (int) ($data['creado_por'] ?? 0);
+
+        $this->conn->beginTransaction();
+        try {
+            $stmtPaquete = $this->conn->prepare(
+                "INSERT INTO paquetes (
+                    cliente_id, creado_por, numero_guia, remitente_nombre, remitente_telefono,
+                    direccion_origen, observaciones_recoleccion, destinatario_nombre,
+                    destinatario_telefono, direccion_destino, instrucciones_entrega,
+                    descripcion_contenido, dimensiones, envio_mismo_dia, zona_periferica,
+                    recoger_cambios, envio_destinatario, tipo_servicio, recaudo_esperado,
+                    costo_envio, estado, mensajero_id, fecha_asignacion, fecha_entrega, fecha_creacion
+                ) VALUES (
+                    :cliente_id, :creado_por, :numero_guia, :remitente_nombre, '0',
+                    :direccion_origen, :observaciones_recoleccion, :destinatario_nombre,
+                    '0', 'Sin dirección registrada', :instrucciones_entrega,
+                    'Entrega sin rótulo registrada por admin', NULL, 0, 0,
+                    0, 'no', :tipo_servicio, :recaudo_esperado,
+                    0, 'entregado', :mensajero_id, NOW(), NOW(), NOW()
+                )"
+            );
+            $stmtPaquete->execute([
+                ':cliente_id' => $clienteId,
+                ':creado_por' => $usuarioId,
+                ':numero_guia' => $numeroGuia,
+                ':remitente_nombre' => $cliente['nombre'] ?: 'Tienda',
+                ':direccion_origen' => $cliente['direccion'] ?: '-',
+                ':observaciones_recoleccion' => 'ENTREGA_SIN_ROTULO_ADMIN',
+                ':destinatario_nombre' => $destinatario,
+                ':instrucciones_entrega' => $observaciones,
+                ':tipo_servicio' => $recaudo > 0 ? 'contraentrega' : 'entrega_simple',
+                ':recaudo_esperado' => $recaudo,
+                ':mensajero_id' => $mensajeroId
+            ]);
+
+            $paqueteId = (int) $this->conn->lastInsertId();
+
+            $stmtEntrega = $this->conn->prepare(
+                "INSERT INTO entregas (
+                    paquete_id, mensajero_id, nombre_receptor, parentesco_cargo,
+                    documento_receptor, recaudo_real, recibio_cambios, foto_entrega,
+                    foto_adicional, observaciones, fecha_entrega
+                ) VALUES (
+                    :paquete_id, :mensajero_id, :nombre_receptor, :parentesco_cargo,
+                    :documento_receptor, :recaudo_real, :recibio_cambios, :foto_entrega,
+                    :foto_adicional, :observaciones, NOW()
+                )"
+            );
+            $stmtEntrega->execute([
+                ':paquete_id' => $paqueteId,
+                ':mensajero_id' => $mensajeroId,
+                ':nombre_receptor' => $nombreReceptor,
+                ':parentesco_cargo' => $parentesco ?: null,
+                ':documento_receptor' => $documento,
+                ':recaudo_real' => $recaudo,
+                ':recibio_cambios' => $recibioCambios,
+                ':foto_entrega' => $fotoEntrega,
+                ':foto_adicional' => $fotoAdicional !== '' ? $fotoAdicional : null,
+                ':observaciones' => $observaciones !== '' ? $observaciones : null
+            ]);
+
+            $numeroComprobante = 'COMP-' . date('dmY') . '-' . str_pad((string) $paqueteId, 6, '0', STR_PAD_LEFT);
+            $stmtComprobante = $this->conn->prepare(
+                "INSERT INTO comprobantes (
+                    paquete_id, cliente_id, numero_comprobante, numero_guia,
+                    nombre_receptor, parentesco_cargo, recaudo, observaciones, foto_entrega
+                ) VALUES (
+                    :paquete_id, :cliente_id, :numero_comprobante, :numero_guia,
+                    :nombre_receptor, :parentesco_cargo, :recaudo, :observaciones, :foto_entrega
+                )"
+            );
+            $stmtComprobante->execute([
+                ':paquete_id' => $paqueteId,
+                ':cliente_id' => $clienteId,
+                ':numero_comprobante' => $numeroComprobante,
+                ':numero_guia' => $numeroGuia,
+                ':nombre_receptor' => $nombreReceptor,
+                ':parentesco_cargo' => $parentesco ?: null,
+                ':recaudo' => $recaudo,
+                ':observaciones' => $observaciones !== '' ? $observaciones : null,
+                ':foto_entrega' => $fotoEntrega
+            ]);
+
+            $this->conn->commit();
+            return ['paquete_id' => $paqueteId, 'guia' => $numeroGuia];
+        } catch (Throwable $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            throw $e;
+        }
+    }
+
     public function cancelarServicioAdmin(int $paqueteId, string $motivo, string $fotoRuta, int $usuarioId = 0): bool
     {
         $motivo = trim($motivo);
