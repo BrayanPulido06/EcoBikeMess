@@ -276,7 +276,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                     🧾 Descargar Guías
                 </button>
                 <button class="btn btn-primary" id="btnNuevoPaquete">
-                    + Nuevo Paquete
+                    + Nueva Entrega
                 </button>
             </div>
         </header>
