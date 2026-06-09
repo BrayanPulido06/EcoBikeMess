@@ -140,8 +140,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- NUEVO PAQUETE ---
     if (btnNuevoPaquete) {
-        btnNuevoPaquete.addEventListener('click', () => window.location.href = 'digitarAdmin.php');
+        btnNuevoPaquete.addEventListener('click', abrirModalNuevoPaqueteAdmin);
     }
+
+    document.getElementById('btnCerrarNuevoPaquete')?.addEventListener('click', cerrarModalNuevoPaqueteAdmin);
+    document.getElementById('btnCancelarNuevoPaquete')?.addEventListener('click', cerrarModalNuevoPaqueteAdmin);
+    document.getElementById('formNuevoPaqueteAdmin')?.addEventListener('submit', guardarNuevoPaqueteAdmin);
+    document.getElementById('nuevoClienteId')?.addEventListener('change', autocompletarRemitenteNuevoPaquete);
+    document.getElementById('nuevoValorEnvio')?.addEventListener('input', actualizarCostoNuevoPaquete);
+    document.getElementById('nuevoDimensiones')?.addEventListener('change', actualizarCostoNuevoPaquete);
 
     // --- SELECCIONAR TODOS ---
         if (selectAllCheckbox) {
@@ -575,6 +582,140 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function formatMoney(val) {
         return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val || 0);
+    }
+
+    function generarSufijoGuiaNuevoPaquete(length = 5) {
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let result = '';
+        for (let i = 0; i < length; i += 1) {
+            result += letters.charAt(Math.floor(Math.random() * letters.length));
+        }
+        return result;
+    }
+
+    function generarGuiaNuevoPaquete() {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `EBM-${year}${month}${day}-${generarSufijoGuiaNuevoPaquete()}`;
+    }
+
+    async function asegurarClientesNuevoPaquete() {
+        if (todosLosClientes.length > 0) return todosLosClientes;
+
+        const response = await fetch('../../controller/paquetesAdminController.php?action=filtros');
+        const data = await response.json();
+        todosLosClientes = data.clientes || [];
+        if (data.mensajeros) {
+            todosLosMensajeros = data.mensajeros;
+            renderizarListaMensajeros(todosLosMensajeros);
+        }
+        return todosLosClientes;
+    }
+
+    function cargarClientesNuevoPaquete() {
+        const select = document.getElementById('nuevoClienteId');
+        if (!select) return;
+
+        select.innerHTML = '<option value="">Seleccionar cliente...</option>';
+        todosLosClientes.forEach(cliente => {
+            const option = document.createElement('option');
+            option.value = cliente.id;
+            option.textContent = cliente.nombre;
+            option.dataset.nombre = cliente.nombre;
+            select.appendChild(option);
+        });
+    }
+
+    function autocompletarRemitenteNuevoPaquete() {
+        const select = document.getElementById('nuevoClienteId');
+        const remitenteInput = document.getElementById('nuevoRemitenteNombre');
+        if (!select || !remitenteInput) return;
+
+        const selectedOption = select.options[select.selectedIndex];
+        if (selectedOption?.dataset?.nombre) {
+            remitenteInput.value = selectedOption.dataset.nombre;
+        }
+    }
+
+    function actualizarCostoNuevoPaquete() {
+        const costoBase = Number(document.getElementById('nuevoValorEnvio')?.value || 0);
+        const recargoDimension = Number(document.getElementById('nuevoDimensiones')?.value || 0);
+        const costoTotal = Math.max(0, costoBase + recargoDimension);
+        const costoHidden = document.getElementById('nuevoCostoTotal');
+        if (costoHidden) costoHidden.value = String(costoTotal);
+    }
+
+    async function abrirModalNuevoPaqueteAdmin() {
+        const modal = document.getElementById('modalNuevoPaquete');
+        const form = document.getElementById('formNuevoPaqueteAdmin');
+        if (!modal || !form) {
+            window.location.href = 'digitarAdmin.php';
+            return;
+        }
+
+        try {
+            await asegurarClientesNuevoPaquete();
+            cargarClientesNuevoPaquete();
+        } catch (error) {
+            console.error('Error cargando clientes:', error);
+        }
+
+        form.reset();
+        document.getElementById('nuevoNumeroGuia').value = generarGuiaNuevoPaquete();
+        document.getElementById('nuevoValorEnvio').value = '8000';
+        document.getElementById('nuevoValorRecaudo').value = '0';
+        actualizarCostoNuevoPaquete();
+        modal.style.display = 'flex';
+    }
+
+    function cerrarModalNuevoPaqueteAdmin() {
+        const modal = document.getElementById('modalNuevoPaquete');
+        if (modal) modal.style.display = 'none';
+    }
+
+    async function guardarNuevoPaqueteAdmin(e) {
+        e.preventDefault();
+        const form = e.currentTarget;
+        const submitBtn = document.getElementById('btnGuardarNuevoPaquete');
+        const recaudoInput = document.getElementById('nuevoValorRecaudo');
+        const tieneRecaudo = document.getElementById('nuevoTieneRecaudo');
+
+        actualizarCostoNuevoPaquete();
+        if (recaudoInput && Number(recaudoInput.value || 0) > 0 && tieneRecaudo) {
+            tieneRecaudo.checked = true;
+        }
+
+        const originalText = submitBtn?.textContent || 'Crear paquete';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creando...';
+        }
+
+        try {
+            const response = await fetch('../../controller/enviarPaqueteAdminController.php', {
+                method: 'POST',
+                body: new FormData(form)
+            });
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message || 'No se pudo crear el paquete');
+            }
+
+            cerrarModalNuevoPaqueteAdmin();
+            alert(`Paquete creado correctamente. Guía: ${result.guia || document.getElementById('nuevoNumeroGuia')?.value || ''}`);
+            if (typeof window.listarPaquetes === 'function') window.listarPaquetes();
+        } catch (error) {
+            console.error(error);
+            alert(error.message || 'Error de conexión al crear el paquete.');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        }
     }
 
     function buildRotuloHtml(datos) {

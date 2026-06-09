@@ -46,6 +46,34 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             overflow-y: auto; /* Scroll interno si es necesario */
         }
         /* Estilos para la lista de mensajeros con búsqueda */
+        .modal-nuevo-paquete .modal-content {
+            max-width: 760px;
+            width: min(94vw, 760px);
+        }
+        .nuevo-paquete-help {
+            margin: 0 0 18px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            font-weight: 600;
+        }
+        .form-check-inline {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 42px;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: #f9fafb;
+        }
+        .form-check-inline input {
+            width: 18px;
+            height: 18px;
+            accent-color: #28a745;
+        }
         .mensajeros-list-container {
             border: 1px solid #ced4da;
             border-radius: 4px;
@@ -367,6 +395,103 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 </div>
                 <div class="pagination-controls" id="paginationControls">
                     <!-- Se genera dinámicamente -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Nuevo Paquete -->
+        <div class="modal modal-nuevo-paquete" id="modalNuevoPaquete">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2>+ Nuevo Paquete</h2>
+                    <button type="button" class="btn-close" id="btnCerrarNuevoPaquete">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="nuevo-paquete-help">Crea el paquete sin salir de esta pantalla. La gu&iacute;a se genera autom&aacute;ticamente.</p>
+                    <form id="formNuevoPaqueteAdmin">
+                        <input type="hidden" name="ajax" value="1">
+                        <input type="hidden" name="numero_guia" id="nuevoNumeroGuia">
+                        <input type="hidden" name="costo_total" id="nuevoCostoTotal" value="8000">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="nuevoClienteId">Cliente/Remitente *</label>
+                                <select id="nuevoClienteId" name="cliente_id" class="form-control" required>
+                                    <option value="">Seleccionar cliente...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="nuevoRemitenteNombre">Nombre remitente *</label>
+                                <input type="text" id="nuevoRemitenteNombre" name="remitente_nombre" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="nuevoRemitenteTelefono">Tel&eacute;fono remitente</label>
+                                <input type="tel" id="nuevoRemitenteTelefono" name="remitente_telefono" class="form-control" placeholder="3001234567">
+                            </div>
+                            <div class="form-group">
+                                <label for="nuevoRemitenteDireccion">Direcci&oacute;n origen</label>
+                                <input type="text" id="nuevoRemitenteDireccion" name="remitente_direccion" class="form-control" placeholder="Direcci&oacute;n de recogida">
+                            </div>
+                            <div class="form-group">
+                                <label for="nuevoDestinatarioNombre">Destinatario *</label>
+                                <input type="text" id="nuevoDestinatarioNombre" name="destinatario_nombre" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="nuevoDestinatarioTelefono">Tel&eacute;fono destinatario *</label>
+                                <input type="tel" id="nuevoDestinatarioTelefono" name="destinatario_telefono" class="form-control" required placeholder="3001234567">
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="nuevoDestinatarioDireccion">Direcci&oacute;n destino *</label>
+                                <textarea id="nuevoDestinatarioDireccion" name="destinatario_direccion" class="form-control" rows="2" required></textarea>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="nuevoInstruccionesEntrega">Observaciones / instrucciones</label>
+                                <textarea id="nuevoInstruccionesEntrega" name="instrucciones_entrega" class="form-control" rows="2" placeholder="Torre, apartamento, referencias, detalles..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="nuevoDescripcionContenido">Contenido</label>
+                                <input type="text" id="nuevoDescripcionContenido" name="descripcion_contenido" class="form-control" placeholder="Sobre, caja, documento...">
+                            </div>
+                            <div class="form-group">
+                                <label for="nuevoDimensiones">Dimensiones *</label>
+                                <select id="nuevoDimensiones" name="dimensiones_paquete" class="form-control" required>
+                                    <option value="0">Menor o igual a 20 x 20 cm</option>
+                                    <option value="2000">Entre 21x21 y 30x30 cm</option>
+                                    <option value="4000">Entre 31x31 y 35x35 cm</option>
+                                    <option value="7000">Entre 36x36 y 40x40 cm</option>
+                                    <option value="10000">Entre 41x41 y 45x45 cm</option>
+                                    <option value="12000">Entre 46x46 y 49x49 cm</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="nuevoValorRecaudo">Valor recaudo</label>
+                                <input type="number" id="nuevoValorRecaudo" name="valor_recaudo" class="form-control" min="0" step="100" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="nuevoValorEnvio">Costo env&iacute;o</label>
+                                <input type="number" id="nuevoValorEnvio" class="form-control" min="0" step="100" value="8000">
+                            </div>
+                            <label class="form-check-inline">
+                                <input type="checkbox" id="nuevoTieneRecaudo" name="tiene_recaudo">
+                                <span>Tiene recaudo</span>
+                            </label>
+                            <label class="form-check-inline">
+                                <input type="checkbox" id="nuevoEnvioMismoDia" name="envio_mismo_dia">
+                                <span>Entrega mismo d&iacute;a</span>
+                            </label>
+                            <label class="form-check-inline">
+                                <input type="checkbox" id="nuevoZonaPeriferica" name="zona_periferica">
+                                <span>Zona perif&eacute;rica</span>
+                            </label>
+                            <label class="form-check-inline">
+                                <input type="checkbox" id="nuevoRecogerCambios" name="recoger_cambios">
+                                <span>Recoger cambios</span>
+                            </label>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="btnCancelarNuevoPaquete">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" id="btnGuardarNuevoPaquete">Crear paquete</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
