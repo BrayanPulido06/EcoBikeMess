@@ -5,5 +5,6 @@ session_start();
 session_unset();
 session_destroy();
 
-redirect_route('home');
+header('Location: ' . app_url('index.php'), true, 302);
+exit;
 ?>
