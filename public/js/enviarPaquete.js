@@ -34,7 +34,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const qrcodeContainer = document.getElementById('qrcode');
     const destinatarioTelefonoInput = document.getElementById('destinatario_telefono');
     const destinatarioFlexCheckbox = document.getElementById('destinatario_es_flex');
-    const isMensajeroFixedCostMode = () => document.body.classList.contains('mensajero-send-package');
+    const isMensajeroFixedCostMode = () =>
+        window.ECOBIKE_MENSAJERO_FIXED_COST === true
+        || document.body.classList.contains('mensajero-send-package');
     const getFixedShippingCost = () => 8000;
     let destinatarioTelefonoPrevio = '';
     let qrCodeStylingInstance = null; // Para la instancia del nuevo QR
@@ -1062,6 +1064,14 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         const total = modoMensajeroFijo
             ? getFixedShippingCost()
             : (costoBase + recargoRecaudo + recargoMismoDia + recargoZona + recargoDimensiones + recargoCambios);
+
+        if (modoMensajeroFijo) {
+            recargoDimensiones = 0;
+            recargoMismoDia = 0;
+            recargoZona = 0;
+            recargoCambios = 0;
+            recargoRecaudo = 0;
+        }
 
         document.getElementById('costoBase').textContent = `$${costoBase.toLocaleString('es-CO')}`;
         

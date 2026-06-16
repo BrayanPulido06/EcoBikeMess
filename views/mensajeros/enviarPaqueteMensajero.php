@@ -48,6 +48,7 @@ $remitente_data = [
     <base href="<?php echo htmlspecialchars(app_url('/') . '/', ENT_QUOTES, 'UTF-8'); ?>">
     <script>
         window.APP_BASE_PATH = <?php echo json_encode(app_url(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+        window.ECOBIKE_MENSAJERO_FIXED_COST = true;
     </script>
     <title>Enviar Paquete - EcoBikeMess</title>
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
