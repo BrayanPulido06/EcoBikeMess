@@ -14,8 +14,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const valorRecaudoDisplay = document.getElementById('valorRecaudoDisplay');
         const costoTotal = document.getElementById('costoTotal');
         const costoTotalHidden = document.getElementById('costoTotalHidden');
-        const previewRecaudo = document.getElementById('preview_total_recaudo');
-        const radios = document.querySelectorAll('input[name="envio_destinatario"]');
 
         if (costoBase) costoBase.textContent = fixedCostText;
         if (recargoDimensiones) recargoDimensiones.textContent = '$0';
@@ -25,22 +23,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (valorRecaudoDisplay) valorRecaudoDisplay.textContent = '$0';
         if (costoTotal) costoTotal.textContent = fixedCostText;
         if (costoTotalHidden) costoTotalHidden.value = String(fixedCost);
-        if (previewRecaudo) {
-            previewRecaudo.style.display = 'block';
-            previewRecaudo.textContent = `Total a cobrar al destinatario: ${fixedCostText}`;
-        }
-
-        radios.forEach((radio) => {
-            if (radio.value === 'no') {
-                radio.checked = true;
-            }
-        });
-
-        document.querySelectorAll('.radio-card').forEach((card) => {
-            const radio = card.querySelector('input[type="radio"]');
-            if (!radio) return;
-            card.classList.toggle('selected', radio.checked);
-        });
     };
 
     const headerTitle = document.querySelector('.envio-mensajero-header h1');
@@ -68,14 +50,6 @@ document.addEventListener('DOMContentLoaded', function () {
         tiendaInput.value = 'Operativo Mensajero';
     }
 
-    const patchExistingListeners = () => {
-        document.querySelectorAll('input, select, textarea, button').forEach((element) => {
-            element.addEventListener('change', forceFixedCostUI);
-            element.addEventListener('click', forceFixedCostUI);
-        });
-    };
-
-    patchExistingListeners();
     forceFixedCostUI();
     setTimeout(forceFixedCostUI, 0);
     setTimeout(forceFixedCostUI, 250);
