@@ -569,6 +569,106 @@ input, select, textarea {
     transform: scale(0.97);
 }
 
+@media (min-width: 1024px) {
+    .main-content {
+        width: 100%;
+        max-width: none;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    .filtros,
+    .lista-recolecciones,
+    .vista-detalle,
+    .vista-formulario {
+        width: 100%;
+        max-width: none;
+    }
+
+    .lista-recolecciones {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .vista-detalle {
+        padding: 1.5rem 0 2rem;
+    }
+
+    .detalle-contenido {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+    }
+
+    .detalle-contenido .seccion-detalle:first-child,
+    .detalle-contenido .seccion-detalle:last-child {
+        grid-column: 1 / -1;
+    }
+
+    .vista-formulario {
+        max-width: none !important;
+        width: 100% !important;
+        padding: calc(72px + 1rem) 0 1rem !important;
+    }
+
+    .formulario-header,
+    .formulario-recoleccion {
+        width: min(100%, 1240px);
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .formulario-header {
+        text-align: left;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .formulario-header h2 {
+        margin-bottom: 0.15rem;
+    }
+
+    .formulario-volver {
+        margin-bottom: 0;
+    }
+
+    .formulario-recoleccion {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.25rem 1.5rem;
+    }
+
+    .formulario-recoleccion .form-group,
+    .formulario-recoleccion .acciones-detalle {
+        margin-bottom: 0;
+    }
+
+    .formulario-recoleccion .form-group:nth-child(1),
+    .formulario-recoleccion .form-group:nth-child(5),
+    .formulario-recoleccion .form-group:nth-child(6),
+    .formulario-recoleccion .form-group:nth-child(7),
+    .formulario-recoleccion .form-acciones {
+        grid-column: 1 / -1;
+    }
+
+    .formulario-recoleccion .form-group:nth-child(3) .telefono-container {
+        flex-wrap: nowrap;
+    }
+
+    .formulario-recoleccion .form-acciones {
+        grid-column: 1 / -1;
+        margin-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .modal-contenido {
+        max-width: 620px;
+        width: min(620px, 100%);
+    }
+}
+
 /* ============================================
    FORMULARIO DE RECOLECCIÓN
    ============================================ */
