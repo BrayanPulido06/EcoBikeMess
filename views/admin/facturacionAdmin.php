@@ -77,8 +77,8 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                         <table class="facturacion-table facturacion-table-clientes">
                             <thead>
                                 <tr>
-                                    <th>Fecha</th>
                                     <th>Clientes</th>
+                                    <th>Fecha</th>
                                     <th>Paquetes entregados</th>
                                     <th>Total servicio</th>
                                     <th>Total recaudado</th>

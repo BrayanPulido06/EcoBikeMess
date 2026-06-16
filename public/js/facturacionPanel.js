@@ -326,8 +326,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tbody.innerHTML = groups.map((group) => `
             <tr>
-                <td>${group.fechaLabel}</td>
                 <td>${escapeHtml(group.clienteNombre)}</td>
+                <td>${group.fechaLabel}</td>
                 <td>${group.paquetesEntregados}</td>
                 <td>${money(group.totalServicio)}</td>
                 <td>${money(group.totalRecaudado)}</td>
