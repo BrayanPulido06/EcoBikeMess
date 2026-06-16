@@ -1257,8 +1257,9 @@ select {
    ============================================ */
 @media (min-width: 1024px) {
     .vista-detalle {
-        max-width: 1240px;
-        padding: calc(88px + 1rem) 2rem 2rem;
+        width: 100%;
+        max-width: none;
+        padding: calc(88px + 1rem) 1.5rem 2rem;
     }
 
     .detalle-contenido {
@@ -1273,8 +1274,9 @@ select {
     }
 
     .vista-formulario {
-        max-width: 1240px;
-        padding: calc(88px + 1rem) 2rem 2rem;
+        width: 100%;
+        max-width: none;
+        padding: calc(88px + 1rem) 1.5rem 2rem;
     }
 
     .formulario-header {
