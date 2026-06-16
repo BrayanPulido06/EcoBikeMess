@@ -517,6 +517,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
 
     <script src="../../public/js/mensajeroLayout.js?v=20260528-1"></script>
     <script src="../../public/js/uiToast.js"></script>
+    <script src="../../public/js/mensajeroBackGuard.js?v=20260615-1"></script>
     <script src="../../public/js/misPaquetesMensajeros.js?v=20260524-1"></script>
 
     <script>

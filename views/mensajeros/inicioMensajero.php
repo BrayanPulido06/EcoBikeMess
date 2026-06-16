@@ -298,6 +298,7 @@ if ($nombreCompleto === '') {
             }
         });
     </script>
+    <script src="../../public/js/mensajeroBackGuard.js?v=20260615-1"></script>
     <script src="../../public/js/inicioMensajero.js?v=20260528-1"></script>
 </body>
 </html>
