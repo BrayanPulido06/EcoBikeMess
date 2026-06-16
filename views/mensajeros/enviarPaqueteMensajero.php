@@ -309,7 +309,7 @@ $remitente_data = [
         .radio-card-content small { color: #666; font-size: 0.9rem; }
     </style>
 </head>
-<body>
+<body class="mensajero-send-package">
     <header class="mobile-header">
         <button class="menu-btn" id="menuBtn">
             <span class="menu-icon">?</span>

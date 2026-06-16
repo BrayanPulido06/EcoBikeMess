@@ -34,6 +34,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const qrcodeContainer = document.getElementById('qrcode');
     const destinatarioTelefonoInput = document.getElementById('destinatario_telefono');
     const destinatarioFlexCheckbox = document.getElementById('destinatario_es_flex');
+    const isMensajeroFixedCostMode = () => document.body.classList.contains('mensajero-send-package');
+    const getFixedShippingCost = () => 8000;
     let destinatarioTelefonoPrevio = '';
     let qrCodeStylingInstance = null; // Para la instancia del nuevo QR
     let currentPreviewRotuloData = null;
@@ -518,16 +520,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const valorRecaudo = parseFloat(getStructuredValue(9, getValue('valor recaudo') || getValue('recaudo') || 0)) || 0;
             const tieneRecaudo = parseSiNo(getStructuredValue(8, getValue('tiene recaudo') || getValue('pago contra entrega'))) || valorRecaudo > 0;
 
-            const recargoDimensiones = parseInt(dimensionesVal, 10) || 0;
-            const recargoMismoDia = mismoDia ? 2000 : 0;
-            const recargoZona = zonaPeriferica ? 4000 : 0;
-            const recargoCambios = recogerCambios ? 5000 : 0;
+            const modoMensajeroFijo = isMensajeroFixedCostMode();
+            const recargoDimensiones = modoMensajeroFijo ? 0 : (parseInt(dimensionesVal, 10) || 0);
+            const recargoMismoDia = modoMensajeroFijo ? 0 : (mismoDia ? 2000 : 0);
+            const recargoZona = modoMensajeroFijo ? 0 : (zonaPeriferica ? 4000 : 0);
+            const recargoCambios = modoMensajeroFijo ? 0 : (recogerCambios ? 5000 : 0);
             const fijoContraentrega = 3000;
-            const extraRecaudo = (tieneRecaudo && valorRecaudo >= 300000)
-                ? Math.floor((valorRecaudo - 300000) / 100000) * 1000
-                : 0;
-            const recargoRecaudo = tieneRecaudo ? (fijoContraentrega + Math.max(0, extraRecaudo)) : 0;
-            const costoBase = 8000;
+            const extraRecaudo = modoMensajeroFijo
+                ? 0
+                : ((tieneRecaudo && valorRecaudo >= 300000)
+                    ? Math.floor((valorRecaudo - 300000) / 100000) * 1000
+                    : 0);
+            const recargoRecaudo = modoMensajeroFijo ? 0 : (tieneRecaudo ? (fijoContraentrega + Math.max(0, extraRecaudo)) : 0);
+            const costoBase = getFixedShippingCost();
             const total = costoBase + recargoDimensiones + recargoMismoDia + recargoZona + recargoCambios + recargoRecaudo;
             const valorRecaudoFinal = sumarEnvio ? (valorRecaudo + total) : valorRecaudo;
 
@@ -1013,6 +1018,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
 
     // --- CÁLCULO AUTOMÁTICO DE COSTO ---
     function calcularCostoAutomatico() {
+        const modoMensajeroFijo = isMensajeroFixedCostMode();
         // Nuevos campos de recargo
         const mismoDiaCheckbox = document.getElementById('envio_mismo_dia');
         const zonaPerifericaCheckbox = document.getElementById('zona_periferica');
@@ -1043,17 +1049,19 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         let recargoMismoDia = (mismoDiaCheckbox && mismoDiaCheckbox.checked) ? 2000 : 0;
         let recargoZona = (zonaPerifericaCheckbox && zonaPerifericaCheckbox.checked) ? 4000 : 0;
         let recargoCambios = (recogerCambiosCheckbox && recogerCambiosCheckbox.checked) ? 5000 : 0;
-        let recargoDimensiones = parseInt(recargoDimensionesValue, 10) || 0;
+        let recargoDimensiones = modoMensajeroFijo ? 0 : (parseInt(recargoDimensionesValue, 10) || 0);
         
         let recargoRecaudo = 0;
-        if (tieneRecaudoCheckbox && tieneRecaudoCheckbox.checked) {
+        if (!modoMensajeroFijo && tieneRecaudoCheckbox && tieneRecaudoCheckbox.checked) {
             const fijoContraentrega = 3000;
             const monto = Number(baseRecaudo || 0);
             const extra = monto >= 300000 ? Math.floor((monto - 300000) / 100000) * 1000 : 0;
             recargoRecaudo = fijoContraentrega + Math.max(0, extra);
         }
 
-        const total = costoBase + recargoRecaudo + recargoMismoDia + recargoZona + recargoDimensiones + recargoCambios;
+        const total = modoMensajeroFijo
+            ? getFixedShippingCost()
+            : (costoBase + recargoRecaudo + recargoMismoDia + recargoZona + recargoDimensiones + recargoCambios);
 
         document.getElementById('costoBase').textContent = `$${costoBase.toLocaleString('es-CO')}`;
         
