@@ -1255,6 +1255,86 @@ select {
 /* ============================================
    RESPONSIVE
    ============================================ */
+@media (min-width: 1024px) {
+    .vista-detalle {
+        max-width: 1240px;
+        padding: calc(88px + 1rem) 2rem 2rem;
+    }
+
+    .detalle-contenido {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+    }
+
+    .detalle-contenido .seccion-detalle:first-child,
+    .detalle-contenido .accion-entrega-container,
+    .detalle-contenido #infoEntregaRealizada {
+        grid-column: 1 / -1;
+    }
+
+    .vista-formulario {
+        max-width: 1240px;
+        padding: calc(88px + 1rem) 2rem 2rem;
+    }
+
+    .formulario-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .formulario-header h2 {
+        margin-bottom: 0.25rem;
+    }
+
+    .formulario-volver {
+        align-self: flex-start;
+        margin-bottom: 0;
+    }
+
+    #formEntrega {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.25rem 1.5rem;
+    }
+
+    #formEntrega .form-group {
+        margin-bottom: 0;
+    }
+
+    #formEntrega .form-group:nth-child(n + 7),
+    #formEntrega .form-acciones {
+        grid-column: 1 / -1;
+    }
+
+    #formEntrega .fotos-container {
+        min-width: 0;
+    }
+
+    #formEntrega .form-acciones {
+        margin-top: 1rem;
+        padding-bottom: calc(2rem + var(--safe-area-bottom));
+    }
+
+    .modal {
+        padding: 2rem;
+    }
+
+    .modal-contenido {
+        max-width: 620px;
+        width: min(620px, 100%);
+    }
+
+    .modal-foto-opciones {
+        max-width: 560px;
+    }
+
+    .modal-foto-botones {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
     .estadisticas-dia {
         grid-template-columns: repeat(2, 1fr);
