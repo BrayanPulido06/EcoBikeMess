@@ -95,11 +95,11 @@
             '#scanModal',
             '#manualModal',
             '#routeDetailModal',
-            '.vista-formulario:not(.oculto)',
-            '.vista-detalle:not(.oculto)',
             '.modal.active',
             '.detalle-modal',
-            '.modal:not(.oculto)'
+            '.modal:not(.oculto)',
+            '.vista-formulario:not(.oculto)',
+            '.vista-detalle:not(.oculto)'
         ];
 
         for (const selector of candidates) {
