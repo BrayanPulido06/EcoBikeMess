@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../includes/paths.php';
 session_start();
 
@@ -498,11 +498,11 @@ $remitente_data = [
                                 <select id="dimensiones_paquete" name="dimensiones_paquete" required>
                                     <option value="">Seleccionar tamano...</option>
                                     <option value="0">Menor o igual a 20 x 20 cm</option>
-                                    <option value="2000">Entre 21x21 y 30x30 cm (+$2.000)</option>
-                                    <option value="4000">Entre 31x31 y 35x35 cm (+$4.000)</option>
-                                    <option value="7000">Entre 36x36 y 40x40 cm (+$7.000)</option>
-                                    <option value="10000">Entre 41x41 y 45x45 cm (+$10.000)</option>
-                                    <option value="12000">Entre 46x46 y 49x49 cm (+$12.000)</option>
+                                    <option value="2000">Entre 21x21 y 30x30 cm </option>
+                                    <option value="4000">Entre 31x31 y 35x35 cm </option>
+                                    <option value="7000">Entre 36x36 y 40x40 cm </option>
+                                    <option value="10000">Entre 41x41 y 45x45 cm </option>
+                                    <option value="12000">Entre 46x46 y 49x49 cm </option>
                                     <option value="notificar">Igual o mayor a 50 x 50 cm (Notificar)</option>
                                 </select>
                                 <span class="error-message"></span>
@@ -511,19 +511,19 @@ $remitente_data = [
                                 <div class="form-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="envio_mismo_dia" name="envio_mismo_dia">
-                                        <span>Entrega el mismo dia? (+$2.000)</span>
+                                        <span>Entrega el mismo dia?</span>
                                     </label>
                                 </div>
                                 <div class="form-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="zona_periferica" name="zona_periferica">
-                                        <span>Destino Soacha, Usme, C. Bolivar o San Cristobal sur (+$4.000)</span>
+                                        <span>Destino Soacha, Usme, C. Bolivar o San Cristobal sur</span>
                                     </label>
                                 </div>
                                 <div class="form-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="recoger_cambios" name="recoger_cambios">
-                                        <span>Hay cambios por recoger? (+$5.000)</span>
+                                        <span>Hay cambios por recoger?</span>
                                     </label>
                                 </div>
                             </div>
