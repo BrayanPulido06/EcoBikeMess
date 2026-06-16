@@ -758,8 +758,8 @@ $remitente_data = [
 
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/rotuloShared.js"></script>
-    <script src="../../public/js/enviarPaquete.js?v=20260514-2"></script>
-    <script src="../../public/js/enviarPaqueteMensajero.js?v=20260418-1"></script>
+    <script src="../../public/js/enviarPaquete.js?v=20260615-2"></script>
+    <script src="../../public/js/enviarPaqueteMensajero.js?v=20260615-1"></script>
     <script src="../../public/js/mensajeroLayout.js?v=20260528-1"></script>
     <script src="../../public/js/mensajeroBackGuard.js?v=20260615-1"></script>
 </body>
