@@ -10,6 +10,19 @@ class MisPedidosMensajeroModel
         $this->conn = conexionDB();
     }
 
+    public function obtenerMensajeroPorUsuario(int $usuarioId): ?array
+    {
+        $sql = "SELECT m.id, u.nombres, u.apellidos
+                FROM mensajeros m
+                INNER JOIN usuarios u ON u.id = m.usuario_id
+                WHERE m.usuario_id = :usuario_id
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':usuario_id' => $usuarioId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public function listarPedidos(int $usuarioId, ?int $mensajeroId = null, array $filtros = []): array
     {
         $sql = "SELECT p.*,

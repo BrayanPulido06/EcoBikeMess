@@ -49,7 +49,7 @@ try {
         default:
             throw new Exception('Accion no valida.');
     }
-} catch (Exception $e) {
+} catch (Throwable $e) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
