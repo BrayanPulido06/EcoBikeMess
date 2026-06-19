@@ -66,6 +66,34 @@ class MisPedidosMensajeroModel
         return '(' . implode(' OR ', $condiciones) . ')';
     }
 
+    private function construirFiltroRemitenteAsignado(string $nombreCompleto, array &$params): string
+    {
+        if ($nombreCompleto === '') {
+            return '(1 = 0)';
+        }
+
+        $params[':nombre_completo'] = $nombreCompleto;
+
+        return "(
+            LOWER(TRIM(COALESCE(p.remitente_nombre, ''))) = LOWER(:nombre_completo)
+            OR LOWER(TRIM(COALESCE(c.nombre_emprendimiento, CONCAT(uc.nombres, ' ', uc.apellidos), ''))) = LOWER(:nombre_completo)
+        )";
+    }
+
+    private function condicionEntregaManual(): string
+    {
+        return "(
+            COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+            OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
+            OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
+        )";
+    }
+
+    private function condicionRemitenteReal(): string
+    {
+        return "TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')";
+    }
+
     public function obtenerEstadisticas(int $usuarioId, array $filtros = []): array
     {
         $rows = $this->listarPedidos($usuarioId, $filtros);
@@ -100,6 +128,9 @@ class MisPedidosMensajeroModel
         $nombreCompleto = $this->obtenerNombreCompletoUsuario($usuarioId);
         $params = [':id' => $paqueteId];
         $filtroPropietario = $this->construirFiltroPropietario($usuarioId, $clienteId, $nombreCompleto, $params);
+        $filtroRemitenteAsignado = $this->construirFiltroRemitenteAsignado($nombreCompleto, $params);
+        $esEntregaManual = $this->condicionEntregaManual();
+        $tieneRemitenteReal = $this->condicionRemitenteReal();
 
         $sql = "SELECT p.*,
                        c.nombre_emprendimiento,
@@ -110,16 +141,9 @@ class MisPedidosMensajeroModel
                 LEFT JOIN mensajeros m ON p.mensajero_id = m.id
                 LEFT JOIN usuarios um ON m.usuario_id = um.id
                 WHERE p.id = :id
-                  AND {$filtroPropietario}";
-
-        $sql .= "
                   AND (
-                      (
-                          COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
-                          AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'
-                          AND COALESCE(p.descripcion_contenido, '') <> 'Entrega creada desde mis paquetes'
-                      )
-                      OR TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')
+                      (NOT {$esEntregaManual} AND {$filtroPropietario})
+                      OR ({$esEntregaManual} AND {$tieneRemitenteReal} AND {$filtroRemitenteAsignado})
                   )
                 LIMIT 1";
         $stmt = $this->conn->prepare($sql);
@@ -185,6 +209,9 @@ class MisPedidosMensajeroModel
         $nombreCompleto = $this->obtenerNombreCompletoUsuario($usuarioId);
         $params = [];
         $filtroPropietario = $this->construirFiltroPropietario($usuarioId, $clienteId, $nombreCompleto, $params);
+        $filtroRemitenteAsignado = $this->construirFiltroRemitenteAsignado($nombreCompleto, $params);
+        $esEntregaManual = $this->condicionEntregaManual();
+        $tieneRemitenteReal = $this->condicionRemitenteReal();
 
         $sql = "SELECT p.*,
                        CONCAT(um.nombres, ' ', um.apellidos) AS mensajero_asignado
@@ -193,14 +220,9 @@ class MisPedidosMensajeroModel
                 LEFT JOIN usuarios uc ON c.usuario_id = uc.id
                 LEFT JOIN mensajeros m ON p.mensajero_id = m.id
                 LEFT JOIN usuarios um ON m.usuario_id = um.id
-                WHERE {$filtroPropietario}
-                  AND (
-                      (
-                          COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
-                          AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'
-                          AND COALESCE(p.descripcion_contenido, '') <> 'Entrega creada desde mis paquetes'
-                      )
-                      OR TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')
+                WHERE (
+                      (NOT {$esEntregaManual} AND {$filtroPropietario})
+                      OR ({$esEntregaManual} AND {$tieneRemitenteReal} AND {$filtroRemitenteAsignado})
                   )";
         if (!empty($filtros['search'])) {
             $sql .= " AND (p.numero_guia LIKE :search OR p.destinatario_nombre LIKE :search OR p.direccion_destino LIKE :search)";
