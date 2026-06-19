@@ -52,7 +52,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
         <section class="pedidos-header-card">
             <div>
                 <h1>Mis pedidos</h1>
-                <p>Aqui ves tus paquetes creados desde paqueteria y los que te asignan desde administracion.</p>
+                <p>Aqui ves tus pedidos solicitados y los paquetes que te asignan desde administracion.</p>
             </div>
         </section>
 

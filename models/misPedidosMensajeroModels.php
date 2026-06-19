@@ -47,7 +47,7 @@ class MisPedidosMensajeroModel
         return $nombre;
     }
 
-    public function listarPedidos(int $usuarioId, array $filtros = []): array
+    public function listarPedidosSolicitados(int $usuarioId, array $filtros = []): array
     {
         $clienteId = $this->obtenerClienteOperativoPorUsuario($usuarioId);
         $nombreCompleto = $this->obtenerNombreCompletoUsuario($usuarioId);
@@ -95,9 +95,62 @@ class MisPedidosMensajeroModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function listarPedidosAsignados(int $usuarioId, array $filtros = []): array
+    {
+        $mensajero = $this->obtenerMensajeroPorUsuario($usuarioId);
+        if (!$mensajero) {
+            return [];
+        }
+
+        $mensajeroId = (int) $mensajero['id'];
+
+        $sql = "SELECT p.*,
+                       CONCAT(um.nombres, ' ', um.apellidos) AS mensajero_asignado
+                FROM paquetes p
+                LEFT JOIN mensajeros m ON p.mensajero_id = m.id
+                LEFT JOIN usuarios um ON m.usuario_id = um.id
+                WHERE p.mensajero_id = :mensajero_id
+                  AND (p.creado_por IS NULL OR p.creado_por <> :usuario_id)
+                  AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                  AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'";
+        $params = [
+            ':mensajero_id' => $mensajeroId,
+            ':usuario_id' => $usuarioId
+        ];
+
+        if (!empty($filtros['search'])) {
+            $sql .= " AND (p.numero_guia LIKE :search OR p.destinatario_nombre LIKE :search OR p.direccion_destino LIKE :search)";
+            $params[':search'] = '%' . $filtros['search'] . '%';
+        }
+
+        if (!empty($filtros['estado'])) {
+            $sql .= " AND p.estado = :estado";
+            $params[':estado'] = $filtros['estado'];
+        }
+
+        if (!empty($filtros['fechaDesde'])) {
+            $sql .= " AND p.fecha_creacion >= :fecha_desde";
+            $params[':fecha_desde'] = $filtros['fechaDesde'] . ' 00:00:00';
+        }
+
+        if (!empty($filtros['fechaHasta'])) {
+            $sql .= " AND p.fecha_creacion <= :fecha_hasta";
+            $params[':fecha_hasta'] = $filtros['fechaHasta'] . ' 23:59:59';
+        }
+
+        $sql .= " ORDER BY p.fecha_creacion DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function obtenerEstadisticas(int $usuarioId, array $filtros = []): array
     {
-        $rows = $this->listarPedidos($usuarioId, $filtros);
+        $rows = array_merge(
+            $this->listarPedidosSolicitados($usuarioId, $filtros),
+            $this->listarPedidosAsignados($usuarioId, $filtros)
+        );
 
         $stats = [
             'total' => count($rows),
@@ -123,7 +176,7 @@ class MisPedidosMensajeroModel
         return $stats;
     }
 
-    public function obtenerDetalle(int $paqueteId, int $usuarioId): ?array
+    public function obtenerDetalle(int $paqueteId, int $usuarioId, ?int $mensajeroId = null): ?array
     {
         $clienteId = $this->obtenerClienteOperativoPorUsuario($usuarioId);
         $nombreCompleto = $this->obtenerNombreCompletoUsuario($usuarioId);
@@ -138,17 +191,25 @@ class MisPedidosMensajeroModel
                 WHERE p.id = :id
                   AND (p.cliente_id = :cliente_id
                        OR p.creado_por = :usuario_id
-                       OR p.remitente_nombre = :nombre_completo)
-                  AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
-                  AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'
-                LIMIT 1";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([
+                       OR p.remitente_nombre = :nombre_completo";
+        $params = [
             ':id' => $paqueteId,
             ':cliente_id' => $clienteId ?? 0,
             ':usuario_id' => $usuarioId,
             ':nombre_completo' => $nombreCompleto
-        ]);
+        ];
+
+        if (!empty($mensajeroId)) {
+            $sql .= " OR p.mensajero_id = :mensajero_id";
+            $params[':mensajero_id'] = $mensajeroId;
+        }
+
+        $sql .= ")
+                  AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                  AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$row) {
@@ -202,5 +263,13 @@ class MisPedidosMensajeroModel
         }
 
         return $row;
+    }
+
+    public function listarPedidos(int $usuarioId, array $filtros = []): array
+    {
+        return array_values(array_merge(
+            $this->listarPedidosSolicitados($usuarioId, $filtros),
+            $this->listarPedidosAsignados($usuarioId, $filtros)
+        ));
     }
 }

@@ -18,9 +18,18 @@ $filtros = [
 ];
 
 try {
+    $mensajero = $model->obtenerMensajeroPorUsuario($usuarioId);
+    $mensajeroId = $mensajero ? (int) $mensajero['id'] : null;
+
     switch ($action) {
         case 'listar':
-            echo json_encode(['success' => true, 'data' => $model->listarPedidos($usuarioId, $filtros)]);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'solicitados' => $model->listarPedidosSolicitados($usuarioId, $filtros),
+                    'asignados' => $model->listarPedidosAsignados($usuarioId, $filtros),
+                ]
+            ]);
             break;
 
         case 'estadisticas':
@@ -32,7 +41,7 @@ try {
             if ($id <= 0) {
                 throw new Exception('ID de pedido invalido.');
             }
-            $detalle = $model->obtenerDetalle($id, $usuarioId);
+            $detalle = $model->obtenerDetalle($id, $usuarioId, $mensajeroId);
             if (!$detalle) {
                 throw new Exception('Pedido no encontrado.');
             }
