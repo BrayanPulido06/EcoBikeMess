@@ -23,17 +23,50 @@ class MisPedidosMensajeroModel
         return $row ?: null;
     }
 
+    private function obtenerClienteOperativoPorUsuario(int $usuarioId): ?int
+    {
+        $sql = "SELECT c.id
+                FROM clientes c
+                WHERE c.usuario_id = :usuario_id
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':usuario_id' => $usuarioId]);
+        $clienteId = $stmt->fetchColumn();
+        return $clienteId ? (int) $clienteId : null;
+    }
+
+    private function obtenerNombreCompletoUsuario(int $usuarioId): string
+    {
+        $sql = "SELECT CONCAT(nombres, ' ', apellidos) AS nombre
+                FROM usuarios
+                WHERE id = :usuario_id
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':usuario_id' => $usuarioId]);
+        $nombre = trim((string) $stmt->fetchColumn());
+        return $nombre;
+    }
+
     public function listarPedidos(int $usuarioId, array $filtros = []): array
     {
+        $clienteId = $this->obtenerClienteOperativoPorUsuario($usuarioId);
+        $nombreCompleto = $this->obtenerNombreCompletoUsuario($usuarioId);
+
         $sql = "SELECT p.*,
                        CONCAT(um.nombres, ' ', um.apellidos) AS mensajero_asignado
                 FROM paquetes p
                 LEFT JOIN mensajeros m ON p.mensajero_id = m.id
                 LEFT JOIN usuarios um ON m.usuario_id = um.id
-                WHERE p.creado_por = :usuario_id
+                WHERE (p.cliente_id = :cliente_id
+                       OR p.creado_por = :usuario_id
+                       OR p.remitente_nombre = :nombre_completo)
                   AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
                   AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'";
-        $params = [':usuario_id' => $usuarioId];
+        $params = [
+            ':cliente_id' => $clienteId ?? 0,
+            ':usuario_id' => $usuarioId,
+            ':nombre_completo' => $nombreCompleto
+        ];
 
         if (!empty($filtros['search'])) {
             $sql .= " AND (p.numero_guia LIKE :search OR p.destinatario_nombre LIKE :search OR p.direccion_destino LIKE :search)";
@@ -92,6 +125,9 @@ class MisPedidosMensajeroModel
 
     public function obtenerDetalle(int $paqueteId, int $usuarioId): ?array
     {
+        $clienteId = $this->obtenerClienteOperativoPorUsuario($usuarioId);
+        $nombreCompleto = $this->obtenerNombreCompletoUsuario($usuarioId);
+
         $sql = "SELECT p.*,
                        c.nombre_emprendimiento,
                        CONCAT(um.nombres, ' ', um.apellidos) AS mensajero_asignado
@@ -100,14 +136,18 @@ class MisPedidosMensajeroModel
                 LEFT JOIN mensajeros m ON p.mensajero_id = m.id
                 LEFT JOIN usuarios um ON m.usuario_id = um.id
                 WHERE p.id = :id
-                  AND p.creado_por = :usuario_id
+                  AND (p.cliente_id = :cliente_id
+                       OR p.creado_por = :usuario_id
+                       OR p.remitente_nombre = :nombre_completo)
                   AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
                   AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'
                 LIMIT 1";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([
             ':id' => $paqueteId,
-            ':usuario_id' => $usuarioId
+            ':cliente_id' => $clienteId ?? 0,
+            ':usuario_id' => $usuarioId,
+            ':nombre_completo' => $nombreCompleto
         ]);
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
