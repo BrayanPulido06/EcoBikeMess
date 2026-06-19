@@ -94,6 +94,76 @@ class PaquetesAdminModel {
         return $row ?: null;
     }
 
+    private function buscarMensajeroPorNombre(string $nombre): ?array
+    {
+        $nombre = trim($nombre);
+        if ($nombre === '' || $nombre === '-') {
+            return null;
+        }
+
+        $sql = "SELECT m.id AS mensajero_id,
+                       u.id AS usuario_id,
+                       CONCAT(u.nombres, ' ', u.apellidos) AS nombre
+                FROM mensajeros m
+                INNER JOIN usuarios u ON u.id = m.usuario_id
+                WHERE CONCAT(u.nombres, ' ', u.apellidos) = :nombre
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':nombre' => $nombre]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    private function obtenerOCrearClienteOperativoMensajero(array $mensajero): int
+    {
+        $usuarioId = (int) ($mensajero['usuario_id'] ?? 0);
+        if ($usuarioId <= 0) {
+            return 0;
+        }
+
+        $stmt = $this->conn->prepare("SELECT id FROM clientes WHERE usuario_id = :usuario_id LIMIT 1");
+        $stmt->execute([':usuario_id' => $usuarioId]);
+        $clienteId = $stmt->fetchColumn();
+        if ($clienteId) {
+            return (int) $clienteId;
+        }
+
+        $nombre = trim((string) ($mensajero['nombre'] ?? ''));
+        if ($nombre === '') {
+            $nombre = 'Mensajero';
+        }
+
+        $stmtInsert = $this->conn->prepare(
+            "INSERT INTO clientes (
+                usuario_id,
+                nombre_emprendimiento,
+                tipo_producto,
+                instagram,
+                direccion_principal,
+                saldo_pendiente,
+                limite_credito
+            ) VALUES (
+                :usuario_id,
+                :nombre_emprendimiento,
+                :tipo_producto,
+                :instagram,
+                :direccion_principal,
+                0,
+                0
+            )"
+        );
+
+        $stmtInsert->execute([
+            ':usuario_id' => $usuarioId,
+            ':nombre_emprendimiento' => 'Operativo Mensajero - ' . $nombre,
+            ':tipo_producto' => 'Envios creados por mensajero',
+            ':instagram' => 'mensajero',
+            ':direccion_principal' => '-'
+        ]);
+
+        return (int) $this->conn->lastInsertId();
+    }
+
     private function obtenerClienteActualPaquete(int $paqueteId): ?int
     {
         $stmt = $this->conn->prepare("SELECT cliente_id FROM paquetes WHERE id = :id LIMIT 1");
@@ -523,7 +593,19 @@ class PaquetesAdminModel {
 
     public function updatePaqueteAdmin($id, $data) {
         $clienteAsignado = $this->buscarClientePorRemitente((string) ($data['remitente_nombre'] ?? ''));
-        $clienteIdFinal = $clienteAsignado['id'] ?? $this->obtenerClienteActualPaquete((int) $id);
+        $mensajeroAsignado = $this->buscarMensajeroPorNombre((string) ($data['remitente_nombre'] ?? ''));
+
+        $clienteIdFinal = $clienteAsignado['id'] ?? null;
+        $creadoPorFinal = null;
+
+        if ($mensajeroAsignado) {
+            $clienteIdFinal = $this->obtenerOCrearClienteOperativoMensajero($mensajeroAsignado);
+            $creadoPorFinal = (int) ($mensajeroAsignado['usuario_id'] ?? 0);
+        }
+
+        if (!$clienteIdFinal) {
+            $clienteIdFinal = $this->obtenerClienteActualPaquete((int) $id);
+        }
 
         $sql = "UPDATE paquetes SET 
                     numero_guia = :numero_guia,
@@ -541,6 +623,11 @@ class PaquetesAdminModel {
                     mensajero_id = :mensajero_id,
                     mensajero_recoleccion_id = :mensajero_recoleccion_id,
                     fecha_creacion = :fecha_creacion";
+
+        if ($creadoPorFinal !== null && $creadoPorFinal > 0) {
+            $sql .= ",
+                    creado_por = :creado_por";
+        }
 
         $params = [
             ':numero_guia' => $data['numero_guia'],
@@ -560,6 +647,10 @@ class PaquetesAdminModel {
             ':fecha_creacion' => $data['fecha_creacion'] ?: null,
             ':id' => $id
         ];
+
+        if ($creadoPorFinal !== null && $creadoPorFinal > 0) {
+            $params[':creado_por'] = $creadoPorFinal;
+        }
 
         if (!empty($data['fecha_entrega'])) {
             $sql .= ",
