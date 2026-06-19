@@ -93,18 +93,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            renderPedidos(json.data || {});
+            renderPedidos(json.data || []);
         } catch (error) {
             console.error('Error cargando pedidos:', error);
             listEl.innerHTML = '<div class="empty-state">Error de conexion al cargar pedidos.</div>';
         }
     }
 
-    function renderPedidos(data) {
+    function renderPedidos(rows) {
         if (!listEl) return;
-        const solicitados = Array.isArray(data.solicitados) ? data.solicitados : [];
-        const asignados = Array.isArray(data.asignados) ? data.asignados : [];
-        const rows = [...solicitados, ...asignados];
         resultsCountEl.textContent = `${rows.length} resultados`;
 
         if (!rows.length) {
@@ -112,17 +109,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const renderSection = (title, sectionRows) => sectionRows.length ? `
-            <section style="margin-bottom: 18px;">
-                <h3 style="margin: 0 0 10px; color: #2c3e50;">${escapeHtml(title)}</h3>
-                ${sectionRows.map(row => renderPedidoCard(row)).join('')}
-            </section>
-        ` : '';
-
-        listEl.innerHTML = `
-            ${renderSection('Solicitados por ti', solicitados)}
-            ${renderSection('Asignados por administracion', asignados)}
-        `;
+        listEl.innerHTML = rows.map(row => renderPedidoCard(row)).join('');
 
         bindPedidoActions();
     }
