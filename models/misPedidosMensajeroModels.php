@@ -19,8 +19,7 @@ class MisPedidosMensajeroModel
                 LEFT JOIN usuarios um ON m.usuario_id = um.id
                 WHERE p.creado_por = :usuario_id
                   AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
-                  AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'
-                  AND COALESCE(p.descripcion_contenido, '') <> 'Entrega creada desde mis paquetes'";
+                  AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'";
 
         $params = [':usuario_id' => $usuarioId];
 
@@ -92,7 +91,6 @@ class MisPedidosMensajeroModel
                   AND p.creado_por = :usuario_id
                   AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
                   AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'
-                  AND COALESCE(p.descripcion_contenido, '') <> 'Entrega creada desde mis paquetes'
                 LIMIT 1";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([
