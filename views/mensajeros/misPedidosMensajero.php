@@ -31,7 +31,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
         </button>
         <div class="header-info">
             <h1><img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:35px;height:35px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
-            <p class="user-name">Mis pedidos creados</p>
+            <p class="user-name">Mis pedidos y asignados</p>
         </div>
     </header>
 
@@ -52,7 +52,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
         <section class="pedidos-header-card">
             <div>
                 <h1>Mis pedidos</h1>
-                <p>Aqui ves todos los paquetes creados por ti desde paqueteria.</p>
+                <p>Aqui ves tus paquetes creados desde paqueteria y los que te asignan desde administracion.</p>
             </div>
         </section>
 

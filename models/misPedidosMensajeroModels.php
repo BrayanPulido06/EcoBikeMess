@@ -10,18 +10,24 @@ class MisPedidosMensajeroModel
         $this->conn = conexionDB();
     }
 
-    public function listarPedidos(int $usuarioId, array $filtros = []): array
+    public function listarPedidos(int $usuarioId, ?int $mensajeroId = null, array $filtros = []): array
     {
         $sql = "SELECT p.*,
                        CONCAT(um.nombres, ' ', um.apellidos) AS mensajero_asignado
                 FROM paquetes p
                 LEFT JOIN mensajeros m ON p.mensajero_id = m.id
                 LEFT JOIN usuarios um ON m.usuario_id = um.id
-                WHERE p.creado_por = :usuario_id
+                WHERE (p.creado_por = :usuario_id";
+        $params = [':usuario_id' => $usuarioId];
+
+        if (!empty($mensajeroId)) {
+            $sql .= " OR p.mensajero_id = :mensajero_id";
+            $params[':mensajero_id'] = $mensajeroId;
+        }
+
+        $sql .= ")
                   AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
                   AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'";
-
-        $params = [':usuario_id' => $usuarioId];
 
         if (!empty($filtros['search'])) {
             $sql .= " AND (p.numero_guia LIKE :search OR p.destinatario_nombre LIKE :search OR p.direccion_destino LIKE :search)";
@@ -50,9 +56,9 @@ class MisPedidosMensajeroModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function obtenerEstadisticas(int $usuarioId, array $filtros = []): array
+    public function obtenerEstadisticas(int $usuarioId, ?int $mensajeroId = null, array $filtros = []): array
     {
-        $rows = $this->listarPedidos($usuarioId, $filtros);
+        $rows = $this->listarPedidos($usuarioId, $mensajeroId, $filtros);
 
         $stats = [
             'total' => count($rows),
@@ -78,7 +84,7 @@ class MisPedidosMensajeroModel
         return $stats;
     }
 
-    public function obtenerDetalle(int $paqueteId, int $usuarioId): ?array
+    public function obtenerDetalle(int $paqueteId, int $usuarioId, ?int $mensajeroId = null): ?array
     {
         $sql = "SELECT p.*,
                        c.nombre_emprendimiento,
@@ -88,15 +94,23 @@ class MisPedidosMensajeroModel
                 LEFT JOIN mensajeros m ON p.mensajero_id = m.id
                 LEFT JOIN usuarios um ON m.usuario_id = um.id
                 WHERE p.id = :id
-                  AND p.creado_por = :usuario_id
+                  AND (p.creado_por = :usuario_id";
+        $params = [
+            ':id' => $paqueteId,
+            ':usuario_id' => $usuarioId
+        ];
+
+        if (!empty($mensajeroId)) {
+            $sql .= " OR p.mensajero_id = :mensajero_id";
+            $params[':mensajero_id'] = $mensajeroId;
+        }
+
+        $sql .= ")
                   AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
                   AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'
                 LIMIT 1";
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute([
-            ':id' => $paqueteId,
-            ':usuario_id' => $usuarioId
-        ]);
+        $stmt->execute($params);
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$row) {
