@@ -47,6 +47,25 @@ class MisPedidosMensajeroModel
         return $nombre;
     }
 
+    private function construirFiltroPropietario(int $usuarioId, ?int $clienteId, string $nombreCompleto, array &$params): string
+    {
+        $condiciones = [
+            'p.cliente_id = :cliente_id',
+            'p.creado_por = :usuario_id'
+        ];
+
+        $params[':cliente_id'] = $clienteId ?? 0;
+        $params[':usuario_id'] = $usuarioId;
+
+        if ($nombreCompleto !== '') {
+            $condiciones[] = "LOWER(TRIM(COALESCE(p.remitente_nombre, ''))) = LOWER(:nombre_completo)";
+            $condiciones[] = "LOWER(TRIM(COALESCE(c.nombre_emprendimiento, CONCAT(uc.nombres, ' ', uc.apellidos), ''))) = LOWER(:nombre_completo)";
+            $params[':nombre_completo'] = $nombreCompleto;
+        }
+
+        return '(' . implode(' OR ', $condiciones) . ')';
+    }
+
     public function obtenerEstadisticas(int $usuarioId, array $filtros = []): array
     {
         $rows = $this->listarPedidos($usuarioId, $filtros);
@@ -79,6 +98,8 @@ class MisPedidosMensajeroModel
     {
         $clienteId = $this->obtenerClienteOperativoPorUsuario($usuarioId);
         $nombreCompleto = $this->obtenerNombreCompletoUsuario($usuarioId);
+        $params = [':id' => $paqueteId];
+        $filtroPropietario = $this->construirFiltroPropietario($usuarioId, $clienteId, $nombreCompleto, $params);
 
         $sql = "SELECT p.*,
                        c.nombre_emprendimiento,
@@ -89,22 +110,17 @@ class MisPedidosMensajeroModel
                 LEFT JOIN mensajeros m ON p.mensajero_id = m.id
                 LEFT JOIN usuarios um ON m.usuario_id = um.id
                 WHERE p.id = :id
-                  AND (
-                       p.cliente_id = :cliente_id
-                       OR p.creado_por = :usuario_id
-                       OR TRIM(COALESCE(p.remitente_nombre, '')) COLLATE utf8mb4_unicode_ci LIKE :nombre_like
-                       OR TRIM(COALESCE(c.nombre_emprendimiento, CONCAT(uc.nombres, ' ', uc.apellidos), '')) COLLATE utf8mb4_unicode_ci LIKE :nombre_like
-                  )";
-        $params = [
-            ':id' => $paqueteId,
-            ':cliente_id' => $clienteId ?? 0,
-            ':usuario_id' => $usuarioId,
-            ':nombre_like' => '%' . $nombreCompleto . '%'
-        ];
+                  AND {$filtroPropietario}";
 
         $sql .= "
-                  AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
-                  AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'
+                  AND (
+                      (
+                          COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                          AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'
+                          AND COALESCE(p.descripcion_contenido, '') <> 'Entrega creada desde mis paquetes'
+                      )
+                      OR TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')
+                  )
                 LIMIT 1";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
@@ -167,6 +183,8 @@ class MisPedidosMensajeroModel
     {
         $clienteId = $this->obtenerClienteOperativoPorUsuario($usuarioId);
         $nombreCompleto = $this->obtenerNombreCompletoUsuario($usuarioId);
+        $params = [];
+        $filtroPropietario = $this->construirFiltroPropietario($usuarioId, $clienteId, $nombreCompleto, $params);
 
         $sql = "SELECT p.*,
                        CONCAT(um.nombres, ' ', um.apellidos) AS mensajero_asignado
@@ -175,20 +193,15 @@ class MisPedidosMensajeroModel
                 LEFT JOIN usuarios uc ON c.usuario_id = uc.id
                 LEFT JOIN mensajeros m ON p.mensajero_id = m.id
                 LEFT JOIN usuarios um ON m.usuario_id = um.id
-                WHERE (
-                       p.cliente_id = :cliente_id
-                       OR p.creado_por = :usuario_id
-                       OR TRIM(COALESCE(p.remitente_nombre, '')) COLLATE utf8mb4_unicode_ci LIKE :nombre_like
-                       OR TRIM(COALESCE(c.nombre_emprendimiento, CONCAT(uc.nombres, ' ', uc.apellidos), '')) COLLATE utf8mb4_unicode_ci LIKE :nombre_like
-                  )
-                  AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
-                  AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'";
-        $params = [
-            ':cliente_id' => $clienteId ?? 0,
-            ':usuario_id' => $usuarioId,
-            ':nombre_like' => '%' . $nombreCompleto . '%'
-        ];
-
+                WHERE {$filtroPropietario}
+                  AND (
+                      (
+                          COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                          AND COALESCE(p.observaciones_recoleccion, '') NOT LIKE 'Entrega registrada manualmente por mensajero%'
+                          AND COALESCE(p.descripcion_contenido, '') <> 'Entrega creada desde mis paquetes'
+                      )
+                      OR TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')
+                  )";
         if (!empty($filtros['search'])) {
             $sql .= " AND (p.numero_guia LIKE :search OR p.destinatario_nombre LIKE :search OR p.direccion_destino LIKE :search)";
             $params[':search'] = '%' . $filtros['search'] . '%';
