@@ -76,7 +76,7 @@ function saveBase64ImageSafe($base64, $subdir, $prefix = 'ebm')
     }
 
     [$meta, $contenido] = explode('base64,', $base64, 2);
-    $binario = base64_decode($contenido);
+    $binario = base64_decode($contenido, true);
     if ($binario === false) {
         return null;
     }

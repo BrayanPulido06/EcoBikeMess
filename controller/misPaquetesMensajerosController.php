@@ -7,8 +7,14 @@ require_once __DIR__ . '/../includes/upload.php';
 require_once __DIR__ . '/../models/misPaquetesMensajerosModels.php';
 require_once __DIR__ . '/../models/enviarPaqueteMensajeroModels.php';
 
+const MAX_BASE64_IMAGE_LENGTH = 1500000;
+
 function guardarImagenBase64($base64, $subcarpeta = 'entregas')
 {
+    if (!is_string($base64) || strlen($base64) > MAX_BASE64_IMAGE_LENGTH) {
+        throw new Exception('La foto es demasiado pesada. Intenta tomarla nuevamente.');
+    }
+
     return saveBase64ImageSafe($base64, $subcarpeta, 'ebm');
 }
 

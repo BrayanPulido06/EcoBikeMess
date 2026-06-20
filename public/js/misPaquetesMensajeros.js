@@ -14,6 +14,9 @@ let totalRecaudoHoy = 0;
 const API_MIS_PAQUETES = '../../controller/misPaquetesMensajerosController.php';
 let deepLinkProcesado = false;
 const STORAGE_SCANNED_QR_KEY = 'ecobikemess_mensajero_scanned_qr_v1';
+const FOTO_MAX_DIMENSION = 1280;
+const FOTO_JPEG_QUALITY = 0.7;
+const FOTO_MAX_BASE64_BYTES = 1400 * 1024;
 let qrEscaneadosMap = new Map();
 let contextoFotoModal = null;
 let resolverDecisionActual = null;
@@ -145,7 +148,7 @@ function actualizarInfoGPS() {
 async function cargarPaquetes() {
     try {
         const resp = await fetch(`${API_MIS_PAQUETES}?action=listar`);
-        const json = await resp.json();
+        const json = await leerJsonRespuesta(resp, 'No se pudieron cargar los paquetes');
         if (!json.success) {
             throw new Error(json.message || 'No se pudieron cargar los paquetes');
         }
@@ -687,6 +690,61 @@ function manejarCambioImagen(event, callback) {
     event.target.value = '';
 }
 
+function redimensionarImagenParaSubida(archivo) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('No se pudo leer la imagen seleccionada'));
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onerror = () => reject(new Error('No se pudo procesar la imagen seleccionada'));
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height && width > FOTO_MAX_DIMENSION) {
+                    height *= FOTO_MAX_DIMENSION / width;
+                    width = FOTO_MAX_DIMENSION;
+                } else if (height >= width && height > FOTO_MAX_DIMENSION) {
+                    width *= FOTO_MAX_DIMENSION / height;
+                    height = FOTO_MAX_DIMENSION;
+                }
+
+                canvas.width = Math.round(width);
+                canvas.height = Math.round(height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                const data = canvas.toDataURL('image/jpeg', FOTO_JPEG_QUALITY);
+                if (data.length > FOTO_MAX_BASE64_BYTES) {
+                    reject(new Error('La foto quedo demasiado pesada. Intenta tomarla nuevamente o usa una imagen mas liviana.'));
+                    return;
+                }
+                resolve(data);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(archivo);
+    });
+}
+
+async function leerJsonRespuesta(resp, mensajeFallback = 'No se pudo completar la solicitud') {
+    const texto = await resp.text();
+    try {
+        const json = JSON.parse(texto);
+        if (!resp.ok && json && !json.success) {
+            throw new Error(json.message || mensajeFallback);
+        }
+        return json;
+    } catch (error) {
+        if (error instanceof SyntaxError) {
+            const detalle = resp.status ? ` (HTTP ${resp.status})` : '';
+            throw new Error(`${mensajeFallback}${detalle}. El servidor devolvio una respuesta inesperada; revisa limites de subida o errores PHP.`);
+        }
+        throw error;
+    }
+}
+
 function abrirModalFoto(contexto) {
     contextoFotoModal = contexto;
     const modal = document.getElementById('modalFotoOpciones');
@@ -756,59 +814,32 @@ document.getElementById('inputFotoEntregaAdicionalGaleria')?.addEventListener('c
     manejarCambioImagen(e, archivo => procesarFotoEntrega(archivo, 'adicional'));
 });
 
-function procesarFotoEntrega(archivo, tipo = 'principal') {
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            const maxWidth = 1920;
-            const maxHeight = 1920;
-            let width = img.width;
-            let height = img.height;
-            
-            if (width > height) {
-                if (width > maxWidth) {
-                    height *= maxWidth / width;
-                    width = maxWidth;
-                }
-            } else {
-                if (height > maxHeight) {
-                    width *= maxHeight / height;
-                    height = maxHeight;
-                }
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            const fotoData = canvas.toDataURL('image/jpeg', 0.85);
-            
-            const foto = {
-                id: Date.now() + Math.random(),
-                data: fotoData,
-                fecha: new Date(),
-                ubicacion: ubicacionActual ? {...ubicacionActual} : null,
-                nombreArchivo: archivo.name
-            };
-            
-            if (tipo === 'adicional') {
-                fotoEntregaAdicional = foto;
-                mostrarPreviewFotoEntrega(foto, 'adicional');
-            } else {
-                fotoEntregaPrincipal = foto;
-                mostrarPreviewFotoEntrega(foto, 'principal');
-            }
-            feedbackExito();
+async function procesarFotoEntrega(archivo, tipo = 'principal') {
+    try {
+        mostrarLoading(true, 'Optimizando foto...');
+        const fotoData = await redimensionarImagenParaSubida(archivo);
+        const foto = {
+            id: Date.now() + Math.random(),
+            data: fotoData,
+            fecha: new Date(),
+            ubicacion: ubicacionActual ? {...ubicacionActual} : null,
+            nombreArchivo: archivo.name
         };
-        img.src = e.target.result;
-    };
-    
-    reader.readAsDataURL(archivo);
+
+        if (tipo === 'adicional') {
+            fotoEntregaAdicional = foto;
+            mostrarPreviewFotoEntrega(foto, 'adicional');
+        } else {
+            fotoEntregaPrincipal = foto;
+            mostrarPreviewFotoEntrega(foto, 'principal');
+        }
+        feedbackExito();
+    } catch (error) {
+        feedbackError();
+        mostrarToast(error.message || 'No se pudo procesar la foto', 'error', { title: 'Error' });
+    } finally {
+        mostrarLoading(false);
+    }
 }
 
 function mostrarPreviewFotoEntrega(foto, tipo = 'principal') {
@@ -927,7 +958,7 @@ async function completarEntrega(datosEntrega) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        const json = await resp.json();
+        const json = await leerJsonRespuesta(resp, 'No se pudo registrar la entrega');
         if (!json.success) {
             throw new Error(json.message || 'No se pudo registrar la entrega');
         }
@@ -983,7 +1014,7 @@ async function completarEntregaManual(datosEntrega) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        const json = await resp.json();
+        const json = await leerJsonRespuesta(resp, 'No se pudo registrar la entrega manual');
         if (!json.success) {
             throw new Error(json.message || 'No se pudo registrar la entrega manual');
         }
@@ -1113,51 +1144,30 @@ document.getElementById('inputFotoNovedadAdicionalGaleria')?.addEventListener('c
     manejarCambioImagen(e, archivo => procesarFotoNovedad(archivo, true));
 });
 
-function procesarFotoNovedad(archivo, esAdicional) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const maxWidth = 1920;
-            const maxHeight = 1920;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > height) {
-                if (width > maxWidth) {
-                    height *= maxWidth / width;
-                    width = maxWidth;
-                }
-            } else if (height > maxHeight) {
-                width *= maxHeight / height;
-                height = maxHeight;
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            ctx.drawImage(img, 0, 0, width, height);
-
-            const objFoto = {
-                id: Date.now(),
-                data: canvas.toDataURL('image/jpeg', 0.85),
-                fecha: new Date(),
-                ubicacion: ubicacionActual ? { ...ubicacionActual } : null
-            };
-
-            if (esAdicional) {
-                fotoNovedadAdicional = objFoto;
-                renderPreviewFotoNovedadAdicional();
-            } else {
-                fotoNovedad = objFoto;
-                renderPreviewFotoNovedad();
-            }
-            feedbackExito();
+async function procesarFotoNovedad(archivo, esAdicional) {
+    try {
+        mostrarLoading(true, 'Optimizando foto...');
+        const objFoto = {
+            id: Date.now(),
+            data: await redimensionarImagenParaSubida(archivo),
+            fecha: new Date(),
+            ubicacion: ubicacionActual ? { ...ubicacionActual } : null
         };
-        img.src = e.target.result;
-    };
-    reader.readAsDataURL(archivo);
+
+        if (esAdicional) {
+            fotoNovedadAdicional = objFoto;
+            renderPreviewFotoNovedadAdicional();
+        } else {
+            fotoNovedad = objFoto;
+            renderPreviewFotoNovedad();
+        }
+        feedbackExito();
+    } catch (error) {
+        feedbackError();
+        mostrarToast(error.message || 'No se pudo procesar la foto', 'error', { title: 'Error' });
+    } finally {
+        mostrarLoading(false);
+    }
 }
 
 function renderPreviewFotoNovedad() {
@@ -1256,7 +1266,7 @@ async function registrarNovedad() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        const json = await resp.json();
+        const json = await leerJsonRespuesta(resp, 'No se pudo registrar la novedad');
         if (!json.success) {
             throw new Error(json.message || 'No se pudo registrar la novedad');
         }
@@ -1337,7 +1347,7 @@ async function guardarCierreJornada() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        const json = await resp.json();
+        const json = await leerJsonRespuesta(resp, 'No se pudo guardar el cierre');
         if (!json.success) {
             throw new Error(json.message || 'No se pudo guardar el cierre');
         }
