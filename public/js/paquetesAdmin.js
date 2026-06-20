@@ -4,6 +4,14 @@ let todosLosClientes = [];
 let currentData = []; // Almacenar datos actuales de la tabla para exportación
 let selectedPackageIds = new Set();
 let selectedPackagesMeta = new Map();
+const opcionesParentescoNuevaEntrega = [
+    { id: 'Destinatario', nombre: 'Destinatario' },
+    { id: 'Familiar', nombre: 'Familiar' },
+    { id: 'Empleado', nombre: 'Empleado' },
+    { id: 'Portero/Vigilante', nombre: 'Portero/Vigilante' },
+    { id: 'Vecino', nombre: 'Vecino' },
+    { id: 'Otro', nombre: 'Otro' }
+];
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Script paquetesAdmin.js cargado correctamente');
@@ -71,6 +79,30 @@ document.addEventListener('DOMContentLoaded', function() {
         getItems: () => todosLosMensajeros,
         emptyLabel: 'Todos los mensajeros',
         onSelectionChange: listarPaquetes
+    });
+
+    configurarBuscadorFormulario({
+        input: document.getElementById('nuevoClienteInput'),
+        hidden: document.getElementById('nuevoClienteId'),
+        optionsContainer: document.getElementById('nuevoClienteOpciones'),
+        getItems: () => todosLosClientes.filter(cliente => Number(cliente.id) > 0),
+        emptyLabel: 'Seleccionar tienda...'
+    });
+
+    configurarBuscadorFormulario({
+        input: document.getElementById('nuevoMensajeroInput'),
+        hidden: document.getElementById('nuevoMensajeroId'),
+        optionsContainer: document.getElementById('nuevoMensajeroOpciones'),
+        getItems: () => todosLosMensajeros,
+        emptyLabel: 'Seleccionar mensajero...'
+    });
+
+    configurarBuscadorFormulario({
+        input: document.getElementById('nuevoParentescoInput'),
+        hidden: document.getElementById('nuevoParentescoCargo'),
+        optionsContainer: document.getElementById('nuevoParentescoOpciones'),
+        getItems: () => opcionesParentescoNuevaEntrega,
+        emptyLabel: 'Seleccionar...'
     });
 
     document.addEventListener('click', (e) => {
@@ -533,6 +565,76 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- FUNCIONES DE EXPORTACIÓN ---
+    function configurarBuscadorFormulario({ input, hidden, optionsContainer, getItems, emptyLabel }) {
+        if (!input || !hidden || !optionsContainer) return;
+
+        const wrapper = input.closest('.search-select');
+
+        const renderOptions = (query = '') => {
+            const normalizedQuery = normalizarTexto(query);
+            const items = getItems();
+            const filtrados = normalizedQuery
+                ? items.filter(item => normalizarTexto(item.nombre).includes(normalizedQuery))
+                : items;
+
+            let html = `<div class="search-select-option" data-value="" data-label="${escaparAtributoHtml(emptyLabel)}">${emptyLabel}</div>`;
+
+            if (filtrados.length === 0) {
+                html += '<div class="search-select-empty">No se encontraron resultados</div>';
+            } else {
+                filtrados.forEach(item => {
+                    html += `<div class="search-select-option" data-value="${escaparAtributoHtml(item.id)}" data-label="${escaparAtributoHtml(item.nombre)}">${item.nombre}</div>`;
+                });
+            }
+
+            optionsContainer.innerHTML = html;
+            wrapper?.classList.add('open');
+        };
+
+        const seleccionarOpcion = (value, label) => {
+            hidden.value = value || '';
+            input.value = value ? (label || '') : '';
+            wrapper?.classList.remove('open');
+        };
+
+        input.addEventListener('focus', () => renderOptions(input.value));
+        input.addEventListener('input', () => {
+            hidden.value = '';
+            renderOptions(input.value);
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                wrapper?.classList.remove('open');
+                return;
+            }
+
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const exacta = getItems().find(item => normalizarTexto(item.nombre) === normalizarTexto(input.value));
+                if (exacta) seleccionarOpcion(String(exacta.id), exacta.nombre);
+            }
+        });
+        input.addEventListener('blur', () => {
+            window.setTimeout(() => {
+                const exacta = getItems().find(item => normalizarTexto(item.nombre) === normalizarTexto(input.value));
+                if (input.value.trim() === '') {
+                    seleccionarOpcion('', emptyLabel);
+                } else if (exacta) {
+                    seleccionarOpcion(String(exacta.id), exacta.nombre);
+                } else if (!hidden.value) {
+                    input.value = '';
+                }
+                wrapper?.classList.remove('open');
+            }, 150);
+        });
+
+        optionsContainer.addEventListener('mousedown', (e) => {
+            const option = e.target.closest('.search-select-option');
+            if (!option) return;
+            seleccionarOpcion(option.dataset.value || '', option.dataset.label || '');
+        });
+    }
+
     function getPaquetesParaExportar() {
         const selectedCheckboxes = document.querySelectorAll('.paquete-checkbox:checked');
         let dataToExport = [];
@@ -612,28 +714,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function cargarClientesNuevoPaquete() {
-        const select = document.getElementById('nuevoClienteId');
-        if (!select) return;
-
-        select.innerHTML = '<option value="">Seleccionar tienda...</option>';
-        todosLosClientes.forEach(cliente => {
-            const option = document.createElement('option');
-            option.value = cliente.id;
-            option.textContent = cliente.nombre;
-            select.appendChild(option);
-        });
+        const input = document.getElementById('nuevoClienteInput');
+        const hidden = document.getElementById('nuevoClienteId');
+        if (input) input.value = '';
+        if (hidden) hidden.value = '';
     }
 
     function cargarMensajerosNuevoPaquete() {
-        const select = document.getElementById('nuevoMensajeroId');
-        if (!select) return;
+        const input = document.getElementById('nuevoMensajeroInput');
+        const hidden = document.getElementById('nuevoMensajeroId');
+        if (input) input.value = '';
+        if (hidden) hidden.value = '';
+    }
 
-        select.innerHTML = '<option value="">Seleccionar mensajero...</option>';
-        todosLosMensajeros.forEach(mensajero => {
-            const option = document.createElement('option');
-            option.value = mensajero.id;
-            option.textContent = mensajero.nombre;
-            select.appendChild(option);
+    function limpiarBuscadoresNuevoPaquete() {
+        [
+            ['nuevoClienteInput', 'nuevoClienteId'],
+            ['nuevoMensajeroInput', 'nuevoMensajeroId'],
+            ['nuevoParentescoInput', 'nuevoParentescoCargo']
+        ].forEach(([inputId, hiddenId]) => {
+            const input = document.getElementById(inputId);
+            const hidden = document.getElementById(hiddenId);
+            if (input) input.value = '';
+            if (hidden) hidden.value = '';
         });
     }
 
@@ -654,6 +757,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         form.reset();
+        limpiarBuscadoresNuevoPaquete();
         const guia = generarGuiaNuevoPaquete();
         const guiaInput = document.getElementById('nuevoNumeroGuia');
         const guiaTexto = document.getElementById('nuevoGuiaTexto');
@@ -672,6 +776,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const form = e.currentTarget;
         const submitBtn = document.getElementById('btnGuardarNuevoPaquete');
         const originalText = submitBtn?.textContent || 'Registrar entrega';
+
+        const camposBuscables = [
+            { hidden: 'nuevoClienteId', input: 'nuevoClienteInput', mensaje: 'Selecciona una tienda de la lista.' },
+            { hidden: 'nuevoMensajeroId', input: 'nuevoMensajeroInput', mensaje: 'Selecciona el mensajero que entrega.' },
+            { hidden: 'nuevoParentescoCargo', input: 'nuevoParentescoInput', mensaje: 'Selecciona el parentesco o cargo.' }
+        ];
+        const campoInvalido = camposBuscables.find(campo => !String(document.getElementById(campo.hidden)?.value || '').trim());
+        if (campoInvalido) {
+            alert(campoInvalido.mensaje);
+            document.getElementById(campoInvalido.input)?.focus();
+            return;
+        }
+
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Registrando...';

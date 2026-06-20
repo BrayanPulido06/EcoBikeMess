@@ -423,16 +423,20 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                         <div class="nuevo-guia-preview">Gu&iacute;a: <strong id="nuevoGuiaTexto">EBM-00000000-XXXXX</strong></div>
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="nuevoClienteId">Tienda *</label>
-                                <select id="nuevoClienteId" name="cliente_id" class="form-control" required>
-                                    <option value="">Seleccionar tienda...</option>
-                                </select>
+                                <label for="nuevoClienteInput">Tienda *</label>
+                                <div class="search-select">
+                                    <input type="text" id="nuevoClienteInput" class="form-control" placeholder="Buscar tienda..." autocomplete="off" required>
+                                    <input type="hidden" id="nuevoClienteId" name="cliente_id">
+                                    <div id="nuevoClienteOpciones" class="search-select-options"></div>
+                                </div>
                             </div>
                             <div class="form-group">
-                                <label for="nuevoMensajeroId">Mensajero que entrega *</label>
-                                <select id="nuevoMensajeroId" name="mensajero_id" class="form-control" required>
-                                    <option value="">Seleccionar mensajero...</option>
-                                </select>
+                                <label for="nuevoMensajeroInput">Mensajero que entrega *</label>
+                                <div class="search-select">
+                                    <input type="text" id="nuevoMensajeroInput" class="form-control" placeholder="Buscar mensajero..." autocomplete="off" required>
+                                    <input type="hidden" id="nuevoMensajeroId" name="mensajero_id">
+                                    <div id="nuevoMensajeroOpciones" class="search-select-options"></div>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="nuevoDestinatarioNombre">Destinatario *</label>
@@ -443,17 +447,12 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                 <input type="text" id="nuevoNombreReceptor" name="nombre_receptor" class="form-control" required placeholder="Nombre completo">
                             </div>
                             <div class="form-group">
-                                <label for="nuevoParentescoCargo">Parentesco o cargo *</label>
-                                <select id="nuevoParentescoCargo" name="parentesco_cargo" class="form-control" required>
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Titular">Titular</option>
-                                    <option value="Familiar">Familiar</option>
-                                    <option value="Porter&iacute;a">Porter&iacute;a</option>
-                                    <option value="Recepci&oacute;n">Recepci&oacute;n</option>
-                                    <option value="Empleado">Empleado</option>
-                                    <option value="Mensajero">Mensajero</option>
-                                    <option value="Otro">Otro</option>
-                                </select>
+                                <label for="nuevoParentescoInput">Parentesco o cargo *</label>
+                                <div class="search-select">
+                                    <input type="text" id="nuevoParentescoInput" class="form-control" placeholder="Seleccionar..." autocomplete="off" required>
+                                    <input type="hidden" id="nuevoParentescoCargo" name="parentesco_cargo">
+                                    <div id="nuevoParentescoOpciones" class="search-select-options"></div>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="nuevoDocumentoReceptor">N&uacute;mero de c&eacute;dula o placa *</label>
