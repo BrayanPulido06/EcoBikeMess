@@ -590,6 +590,7 @@ document.addEventListener('DOMContentLoaded', function() {
             optionsContainer.innerHTML = html;
             wrapper?.classList.add('open');
         };
+        input.abrirOpcionesBuscador = () => renderOptions(input.value);
 
         const seleccionarOpcion = (value, label) => {
             hidden.value = value || '';
@@ -598,6 +599,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         input.addEventListener('focus', () => renderOptions(input.value));
+        input.addEventListener('click', () => renderOptions(input.value));
         input.addEventListener('input', () => {
             hidden.value = '';
             renderOptions(input.value);
@@ -764,6 +766,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (guiaInput) guiaInput.value = guia;
         if (guiaTexto) guiaTexto.textContent = guia;
         modal.style.display = 'flex';
+
+        window.setTimeout(() => {
+            const tiendaInput = document.getElementById('nuevoClienteInput');
+            tiendaInput?.focus();
+            tiendaInput?.abrirOpcionesBuscador?.();
+        }, 80);
     }
 
     function cerrarModalNuevoPaqueteAdmin() {

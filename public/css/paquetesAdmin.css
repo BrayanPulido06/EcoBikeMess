@@ -269,6 +269,11 @@ body {
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
 }
 
+.modal-nuevo-paquete .search-select-options {
+    z-index: 1200;
+    max-height: 300px;
+}
+
 .search-select.open .search-select-options {
     display: block;
 }
