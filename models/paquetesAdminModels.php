@@ -239,8 +239,21 @@ class PaquetesAdminModel {
                                    END) as nombre
                             FROM clientes c
                             JOIN usuarios u ON c.usuario_id = u.id
+                            UNION ALL
+                            SELECT COALESCE(p.cliente_id, 0) AS id,
+                                   TRIM(CASE
+                                       WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                                            OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
+                                            OR COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero - %'
+                                            OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
+                                       THEN COALESCE(NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''), '-')
+                                       ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos), '-')
+                                   END) AS nombre
+                            FROM paquetes p
+                            LEFT JOIN clientes c ON p.cliente_id = c.id
+                            LEFT JOIN usuarios u ON c.usuario_id = u.id
                         ) clientes_filtro
-                        WHERE nombre <> ''
+                        WHERE nombre NOT IN ('', '-', 'Pendiente por definir')
                         GROUP BY nombre
                         ORDER BY nombre ASC";
         $stmtC = $this->conn->query($sqlClientes);
