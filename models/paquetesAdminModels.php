@@ -771,6 +771,7 @@ class PaquetesAdminModel {
         $parentesco = trim((string) ($data['parentesco_cargo'] ?? ''));
         $fotoAdicional = trim((string) ($data['foto_adicional'] ?? ''));
         $usuarioId = (int) ($data['creado_por'] ?? 0);
+        $costoEntregaSinRotulo = 8000;
 
         $this->conn->beginTransaction();
         try {
@@ -788,7 +789,7 @@ class PaquetesAdminModel {
                     '0', 'Sin dirección registrada', :instrucciones_entrega,
                     'Entrega sin rótulo registrada por admin', NULL, 0, 0,
                     0, 'no', :tipo_servicio, :recaudo_esperado,
-                    0, 'entregado', :mensajero_id, NOW(), NOW(), NOW()
+                    :costo_envio, 'entregado', :mensajero_id, NOW(), NOW(), NOW()
                 )"
             );
             $stmtPaquete->execute([
@@ -802,6 +803,7 @@ class PaquetesAdminModel {
                 ':instrucciones_entrega' => $observaciones,
                 ':tipo_servicio' => $recaudo > 0 ? 'contraentrega' : 'entrega_simple',
                 ':recaudo_esperado' => $recaudo,
+                ':costo_envio' => $costoEntregaSinRotulo,
                 ':mensajero_id' => $mensajeroId
             ]);
 

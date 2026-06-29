@@ -121,6 +121,7 @@ try {
             }
 
             $nombreMensajero = trim((string) (($mensajero['nombres'] ?? '') . ' ' . ($mensajero['apellidos'] ?? '')));
+            $costoEntregaSinRotulo = 8000;
             $datos = [
                 'cliente_id' => $envioModel->obtenerOCrearClienteOperativo($usuarioId, $_SESSION),
                 'creado_por' => $usuarioId,
@@ -141,7 +142,7 @@ try {
                 'envio_destinatario' => 'no',
                 'tiene_recaudo' => !empty($input['recaudoEsperado']) ? 1 : 0,
                 'valor_recaudo' => (string) ((int) ($input['recaudoEsperado'] ?? 0)),
-                'costo_total' => '0',
+                'costo_total' => (string) $costoEntregaSinRotulo,
                 'mensajero_id' => (int) $mensajero['id'],
                 'estado' => 'pendiente'
             ];
