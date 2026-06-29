@@ -253,6 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const groups = Array.from(groupsMap.values())
+            .filter((group) => group.paquetesEntregados > 0)
             .map((group) => {
                 const abonos = getGroupAbonos(group.clienteId, group.dateKey);
                 const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
