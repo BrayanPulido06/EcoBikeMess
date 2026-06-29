@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mensajero: { q: '', estado: '', desde: '', hasta: '' }
         },
         clienteGroups: [],
+        selectedClienteGroups: new Set(),
         selectedClienteGroupKey: null,
         activeClientModalView: 'detail'
     };
@@ -318,15 +319,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const groups = buildClienteGroups(items);
         state.clienteGroups = groups;
+        const visibleKeys = new Set(groups.map((group) => group.key));
+        state.selectedClienteGroups.forEach((key) => {
+            if (!visibleKeys.has(key)) {
+                state.selectedClienteGroups.delete(key);
+            }
+        });
         document.getElementById('count-cliente').textContent = `${groups.length} registros`;
 
         if (!groups.length) {
-            tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No hay registros con los filtros actuales.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" class="empty-state">No hay registros con los filtros actuales.</td></tr>';
+            syncClienteSelectionControls();
             return;
         }
 
         tbody.innerHTML = groups.map((group) => `
             <tr>
+                <td class="select-col">
+                    <input
+                        type="checkbox"
+                        data-role="select-client-group"
+                        data-group-key="${escapeHtml(group.key)}"
+                        aria-label="Seleccionar ${escapeHtml(group.clienteNombre)} del ${escapeHtml(group.fechaLabel)}"
+                        ${state.selectedClienteGroups.has(group.key) ? 'checked' : ''}
+                    >
+                </td>
                 <td>${escapeHtml(group.clienteNombre)}</td>
                 <td>${group.fechaLabel}</td>
                 <td>${group.paquetesEntregados}</td>
@@ -370,6 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             </tr>
         `).join('');
+        syncClienteSelectionControls();
     };
 
     const renderMensajeroTable = (items) => {
@@ -437,8 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const setLoading = (message = 'Cargando informacion...') => {
         const loaders = document.querySelectorAll('[data-loading]');
         loaders.forEach((el) => {
-            const colspan = el.id === 'table-body-mensajero' ? 11 : 10;
-            el.innerHTML = `<tr><td colspan="${colspan}" class="loading-state">${message}</td></tr>`;
+            el.innerHTML = `<tr><td colspan="11" class="loading-state">${message}</td></tr>`;
         });
     };
 
@@ -564,6 +581,26 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const getClienteGroupByKey = (groupKey) => state.clienteGroups.find((group) => group.key === groupKey) || null;
+
+    const syncClienteSelectionControls = () => {
+        const selectAll = document.querySelector('[data-role="select-all-client-groups"]');
+        const bulkButton = document.querySelector('[data-role="hide-selected-client-groups"]');
+        const visibleKeys = state.clienteGroups.map((group) => group.key);
+        const selectedVisible = visibleKeys.filter((key) => state.selectedClienteGroups.has(key));
+
+        if (selectAll) {
+            selectAll.checked = visibleKeys.length > 0 && selectedVisible.length === visibleKeys.length;
+            selectAll.indeterminate = selectedVisible.length > 0 && selectedVisible.length < visibleKeys.length;
+            selectAll.disabled = visibleKeys.length === 0;
+        }
+
+        if (bulkButton) {
+            bulkButton.disabled = selectedVisible.length === 0;
+            bulkButton.textContent = selectedVisible.length > 0
+                ? `Eliminar seleccionados (${selectedVisible.length})`
+                : 'Eliminar seleccionados';
+        }
+    };
 
     const renderPackageCard = (item) => {
         const recaudoReal = getRecaudoRealValue(item);
@@ -758,21 +795,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedClienteGroupKey = null;
     };
 
-    const handleHideClientGroup = async (button) => {
-        const groupKey = button?.dataset.groupKey;
-        const clientName = button?.dataset.clientName || 'este cliente';
-        const dateLabel = button?.dataset.dateLabel || 'la fecha seleccionada';
-        const group = getClienteGroupByKey(groupKey);
-
-        if (!groupKey || !group || mode !== 'admin') {
-            return;
-        }
-
-        const confirmed = window.confirm(`Se ocultara de la vista la cuenta de ${clientName} del ${dateLabel}. Esta accion no elimina nada de la base de datos. Deseas continuar?`);
-        if (!confirmed) {
-            return;
-        }
-
+    const hideClienteGroup = async (group) => {
         const formData = new FormData();
         formData.append('action', 'ocultar_grupo_cliente');
         formData.append('cliente_id', String(group.clienteId));
@@ -790,8 +813,64 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         state.rawData = result.data;
+        return result;
+    };
+
+    const handleHideClientGroup = async (button) => {
+        const groupKey = button?.dataset.groupKey;
+        const clientName = button?.dataset.clientName || 'este cliente';
+        const dateLabel = button?.dataset.dateLabel || 'la fecha seleccionada';
+        const group = getClienteGroupByKey(groupKey);
+
+        if (!groupKey || !group || mode !== 'admin') {
+            return;
+        }
+
+        const confirmed = window.confirm(`Se ocultara de la vista la cuenta de ${clientName} del ${dateLabel}. Esta accion no elimina nada de la base de datos. Deseas continuar?`);
+        if (!confirmed) {
+            return;
+        }
+
+        await hideClienteGroup(group);
+        state.selectedClienteGroups.delete(group.key);
         closeClientDetailModal();
         render();
+    };
+
+    const handleHideSelectedClientGroups = async (button) => {
+        if (mode !== 'admin') {
+            return;
+        }
+
+        const groups = state.clienteGroups.filter((group) => state.selectedClienteGroups.has(group.key));
+        if (!groups.length) {
+            return;
+        }
+
+        const confirmed = window.confirm(`Se ocultaran ${groups.length} cuenta(s) seleccionada(s) de la vista. Esta accion no elimina nada de la base de datos. Deseas continuar?`);
+        if (!confirmed) {
+            return;
+        }
+
+        const originalText = button?.textContent || 'Eliminar seleccionados';
+        if (button) {
+            button.disabled = true;
+            button.textContent = 'Eliminando...';
+        }
+
+        try {
+            for (const group of groups) {
+                await hideClienteGroup(group);
+                state.selectedClienteGroups.delete(group.key);
+            }
+            closeClientDetailModal();
+            render();
+        } finally {
+            if (button) {
+                button.textContent = originalText;
+                syncClienteSelectionControls();
+            }
+        }
     };
 
     const bindAdminActions = () => {
@@ -812,6 +891,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (hideButton) {
                 handleHideClientGroup(hideButton).catch((error) => {
                     alert(error.message);
+                });
+                return;
+            }
+
+            const bulkHideButton = event.target.closest('[data-role="hide-selected-client-groups"]');
+            if (bulkHideButton) {
+                handleHideSelectedClientGroups(bulkHideButton).catch((error) => {
+                    alert(error.message);
+                    syncClienteSelectionControls();
                 });
                 return;
             }
@@ -845,6 +933,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     button.disabled = false;
                 }, 1200);
                 alert(error.message);
+            }
+        });
+
+        document.addEventListener('change', (event) => {
+            const rowCheckbox = event.target.closest('[data-role="select-client-group"]');
+            if (rowCheckbox) {
+                const groupKey = rowCheckbox.dataset.groupKey;
+                if (rowCheckbox.checked) {
+                    state.selectedClienteGroups.add(groupKey);
+                } else {
+                    state.selectedClienteGroups.delete(groupKey);
+                }
+                syncClienteSelectionControls();
+                return;
+            }
+
+            const selectAll = event.target.closest('[data-role="select-all-client-groups"]');
+            if (selectAll) {
+                state.clienteGroups.forEach((group) => {
+                    if (selectAll.checked) {
+                        state.selectedClienteGroups.add(group.key);
+                    } else {
+                        state.selectedClienteGroups.delete(group.key);
+                    }
+                });
+                renderClienteTable(state.rawData?.cliente?.items || []);
             }
         });
 
@@ -930,8 +1044,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bindAdminActions();
     fetchData().catch((error) => {
         document.querySelectorAll('[data-loading]').forEach((el) => {
-            const colspan = el.id === 'table-body-mensajero' ? 11 : 10;
-            el.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">${error.message}</td></tr>`;
+            el.innerHTML = `<tr><td colspan="11" class="empty-state">${error.message}</td></tr>`;
         });
     });
 });

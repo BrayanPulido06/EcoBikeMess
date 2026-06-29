@@ -69,6 +69,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                             <input type="date" data-panel-filter="cliente" data-filter-field="hasta">
                         </div>
                         <div class="facturacion-actions">
+                            <button class="fact-btn danger" type="button" data-role="hide-selected-client-groups" disabled>Eliminar seleccionados</button>
                             <button class="fact-btn secondary" type="button" data-reset-panel="cliente">Limpiar filtros</button>
                         </div>
                     </div>
@@ -77,6 +78,9 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                         <table class="facturacion-table facturacion-table-clientes">
                             <thead>
                                 <tr>
+                                    <th class="select-col">
+                                        <input type="checkbox" data-role="select-all-client-groups" aria-label="Seleccionar todas las filas">
+                                    </th>
                                     <th>Clientes</th>
                                     <th>Fecha</th>
                                     <th>Paquetes entregados</th>
@@ -90,7 +94,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                                 </tr>
                             </thead>
                             <tbody id="table-body-cliente" data-loading>
-                                <tr><td colspan="10" class="loading-state">Cargando informacion...</td></tr>
+                                <tr><td colspan="11" class="loading-state">Cargando informacion...</td></tr>
                             </tbody>
                         </table>
                     </div>

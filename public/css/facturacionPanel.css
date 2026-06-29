@@ -185,6 +185,11 @@ body.sidebar-collapsed .facturacion-shell,
     cursor: pointer;
 }
 
+.fact-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
 .fact-btn.primary {
     background: var(--fact-primary);
     color: #fff;
@@ -240,6 +245,17 @@ body.sidebar-collapsed .facturacion-shell,
 
 .facturacion-table-clientes td {
     white-space: nowrap;
+}
+
+.facturacion-table .select-col {
+    width: 42px;
+    text-align: center;
+}
+
+.facturacion-table .select-col input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
 }
 
 .mono {
