@@ -223,6 +223,10 @@ body.sidebar-collapsed .facturacion-shell,
     min-width: 1080px;
 }
 
+.facturacion-table-cliente-resumen {
+    min-width: 760px;
+}
+
 .facturacion-table th,
 .facturacion-table td {
     padding: 0.95rem 0.85rem;

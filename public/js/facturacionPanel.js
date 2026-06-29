@@ -103,7 +103,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ? [
                 item.numero_guia,
                 item.cliente_nombre,
-                item.cliente_contacto
+                item.cliente_contacto,
+                item.destinatario_nombre
             ].join(' ').toLowerCase()
             : [
                 item.numero_guia,
@@ -313,6 +314,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const groupStatusFromBalance = (value) => Math.round(Number(value || 0)) === 0 ? 'pagado' : 'pendiente';
 
+    const clienteTableColspan = () => mode === 'admin' ? 11 : 7;
+
     const renderClienteTable = (items) => {
         const tbody = document.getElementById('table-body-cliente');
         if (!tbody) return;
@@ -328,42 +331,56 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('count-cliente').textContent = `${groups.length} registros`;
 
         if (!groups.length) {
-            tbody.innerHTML = '<tr><td colspan="11" class="empty-state">No hay registros con los filtros actuales.</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="${clienteTableColspan()}" class="empty-state">No hay registros con los filtros actuales.</td></tr>`;
             syncClienteSelectionControls();
             return;
         }
 
-        tbody.innerHTML = groups.map((group) => `
-            <tr>
-                <td class="select-col">
-                    <input
-                        type="checkbox"
-                        data-role="select-client-group"
-                        data-group-key="${escapeHtml(group.key)}"
-                        aria-label="Seleccionar ${escapeHtml(group.clienteNombre)} del ${escapeHtml(group.fechaLabel)}"
-                        ${state.selectedClienteGroups.has(group.key) ? 'checked' : ''}
-                    >
-                </td>
-                <td>${escapeHtml(group.clienteNombre)}</td>
-                <td>${group.fechaLabel}</td>
-                <td>${group.paquetesEntregados}</td>
-                <td>${money(group.totalServicio)}</td>
-                <td>${money(group.totalRecaudado)}</td>
-                <td>${money(group.abono)}</td>
-                <td>${clientGroupStatusBadge(group.estado)}</td>
-                <td class="amount-cell ${balanceCellClass(group.saldo)}">${moneyAbs(group.saldo)}</td>
-                <td class="amount-cell ${balanceCellClass(group.totalAcumulado)}">${moneyAbs(group.totalAcumulado)}</td>
-                <td>
-                    <div class="table-tools">
-                        <button
-                            type="button"
-                            class="fact-btn tertiary detail-trigger"
-                            data-role="open-client-detail"
+        tbody.innerHTML = groups.map((group) => {
+            if (mode !== 'admin') {
+                return `
+                    <tr>
+                        <td>${group.fechaLabel}</td>
+                        <td>${group.paquetesEntregados}</td>
+                        <td>${money(group.totalServicio)}</td>
+                        <td>${money(group.totalRecaudado)}</td>
+                        <td>${money(group.abono)}</td>
+                        <td>${clientGroupStatusBadge(group.estado)}</td>
+                        <td class="amount-cell ${balanceCellClass(group.saldo)}">${moneyAbs(group.saldo)}</td>
+                    </tr>
+                `;
+            }
+
+            return `
+                <tr>
+                    <td class="select-col">
+                        <input
+                            type="checkbox"
+                            data-role="select-client-group"
                             data-group-key="${escapeHtml(group.key)}"
+                            aria-label="Seleccionar ${escapeHtml(group.clienteNombre)} del ${escapeHtml(group.fechaLabel)}"
+                            ${state.selectedClienteGroups.has(group.key) ? 'checked' : ''}
                         >
-                            Ver paquetes
-                        </button>
-                        ${mode === 'admin' ? `
+                    </td>
+                    <td>${escapeHtml(group.clienteNombre)}</td>
+                    <td>${group.fechaLabel}</td>
+                    <td>${group.paquetesEntregados}</td>
+                    <td>${money(group.totalServicio)}</td>
+                    <td>${money(group.totalRecaudado)}</td>
+                    <td>${money(group.abono)}</td>
+                    <td>${clientGroupStatusBadge(group.estado)}</td>
+                    <td class="amount-cell ${balanceCellClass(group.saldo)}">${moneyAbs(group.saldo)}</td>
+                    <td class="amount-cell ${balanceCellClass(group.totalAcumulado)}">${moneyAbs(group.totalAcumulado)}</td>
+                    <td>
+                        <div class="table-tools">
+                            <button
+                                type="button"
+                                class="fact-btn tertiary detail-trigger"
+                                data-role="open-client-detail"
+                                data-group-key="${escapeHtml(group.key)}"
+                            >
+                                Ver paquetes
+                            </button>
                             <button
                                 type="button"
                                 class="fact-btn secondary detail-trigger"
@@ -382,11 +399,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             >
                                 Eliminar del dia
                             </button>
-                        ` : ''}
-                    </div>
-                </td>
-            </tr>
-        `).join('');
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
         syncClienteSelectionControls();
     };
 
@@ -455,7 +472,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const setLoading = (message = 'Cargando informacion...') => {
         const loaders = document.querySelectorAll('[data-loading]');
         loaders.forEach((el) => {
-            el.innerHTML = `<tr><td colspan="11" class="loading-state">${message}</td></tr>`;
+            const colspan = el.id === 'table-body-cliente' ? clienteTableColspan() : 11;
+            el.innerHTML = `<tr><td colspan="${colspan}" class="loading-state">${message}</td></tr>`;
         });
     };
 
@@ -1044,7 +1062,8 @@ document.addEventListener('DOMContentLoaded', () => {
     bindAdminActions();
     fetchData().catch((error) => {
         document.querySelectorAll('[data-loading]').forEach((el) => {
-            el.innerHTML = `<tr><td colspan="11" class="empty-state">${error.message}</td></tr>`;
+            const colspan = el.id === 'table-body-cliente' ? clienteTableColspan() : 11;
+            el.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">${error.message}</td></tr>`;
         });
     });
 });

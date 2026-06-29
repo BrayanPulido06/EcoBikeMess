@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../../includes/paths.php';
 require_once __DIR__ . '/../../includes/auth.php';
 requireWebAuth(['cliente', 'colaborador']);
+$facturacionPanelCssVersion = @filemtime(__DIR__ . '/../../public/css/facturacionPanel.css') ?: time();
+$facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionPanel.js') ?: time();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -14,7 +16,7 @@ requireWebAuth(['cliente', 'colaborador']);
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
     <link rel="stylesheet" href="../../public/css/clientesTheme.css">
     <link rel="stylesheet" href="../../public/css/responsive.css">
-    <link rel="stylesheet" href="../../public/css/facturacionPanel.css">
+    <link rel="stylesheet" href="../../public/css/facturacionPanel.css?v=<?php echo $facturacionPanelCssVersion; ?>">
 </head>
 <body class="facturacion-page">
     <?php include '../layouts/clienteNavbar.php'; ?>
@@ -29,7 +31,7 @@ requireWebAuth(['cliente', 'colaborador']);
             <div class="facturacion-top">
                 <div>
                     <h1>Facturación del cliente</h1>
-                    <p>Aquí ves la misma información de facturación hacia cliente que revisa el administrador.</p>
+                    <p>Consulta tus entregas facturadas por día, con servicio, recaudos y saldo diario.</p>
                 </div>
                 <div class="facturacion-role-badge">Cliente</div>
             </div>
@@ -38,22 +40,6 @@ requireWebAuth(['cliente', 'colaborador']);
 
             <div class="facturacion-card">
                 <div class="facturacion-filters">
-                    <div class="facturacion-field">
-                        <label>Buscar</label>
-                        <input type="text" placeholder="Guía o destinatario" data-panel-filter="cliente" data-filter-field="q">
-                    </div>
-                    <div class="facturacion-field">
-                        <label>Estado</label>
-                        <select data-panel-filter="cliente" data-filter-field="estado">
-                            <option value="">Todos</option>
-                            <option value="pendiente">Pendiente</option>
-                            <option value="asignado">Asignado</option>
-                            <option value="en_transito">En tránsito</option>
-                            <option value="en_ruta">En ruta</option>
-                            <option value="entregado">Entregado</option>
-                            <option value="cancelado">Cancelado</option>
-                        </select>
-                    </div>
                     <div class="facturacion-field">
                         <label>Desde</label>
                         <input type="date" data-panel-filter="cliente" data-filter-field="desde">
@@ -68,23 +54,20 @@ requireWebAuth(['cliente', 'colaborador']);
                 </div>
 
                 <div class="facturacion-table-wrap">
-                    <table class="facturacion-table">
+                    <table class="facturacion-table facturacion-table-clientes facturacion-table-cliente-resumen">
                         <thead>
                             <tr>
-                                <th>Número guía</th>
-                                <th>Cliente</th>
-                                <th>Destinatario</th>
-                                <th>Paquetes por día</th>
-                                <th>Valor envío</th>
-                                <th>Agregado al recaudo</th>
-                                <th>Valor recaudo</th>
-                                <th>Recaudo real</th>
-                                <th>Estado</th>
                                 <th>Fecha</th>
+                                <th>Paquetes entregados</th>
+                                <th>Total servicio</th>
+                                <th>Total recaudado</th>
+                                <th>Abono</th>
+                                <th>Estado</th>
+                                <th>Saldo</th>
                             </tr>
                         </thead>
                         <tbody id="table-body-cliente" data-loading>
-                            <tr><td colspan="10" class="loading-state">Cargando información...</td></tr>
+                            <tr><td colspan="7" class="loading-state">Cargando información...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -95,6 +78,6 @@ requireWebAuth(['cliente', 'colaborador']);
         </section>
     </main>
 
-    <script src="../../public/js/facturacionPanel.js"></script>
+    <script src="../../public/js/facturacionPanel.js?v=<?php echo $facturacionPanelJsVersion; ?>"></script>
 </body>
 </html>
