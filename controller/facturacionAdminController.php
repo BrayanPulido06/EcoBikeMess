@@ -122,6 +122,34 @@ try {
         exit;
     }
 
+    if ($method === 'POST' && $action === 'actualizar_estado_grupo_cliente') {
+        $clienteId = (int) ($_POST['cliente_id'] ?? 0);
+        $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+        $estado = trim((string) ($_POST['estado'] ?? ''));
+        $actualizadoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+
+        if ($clienteId <= 0) {
+            throw new InvalidArgumentException('Cliente invalido.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+            throw new InvalidArgumentException('La fecha del grupo no es valida.');
+        }
+
+        if (!in_array($estado, ['pendiente', 'pagado'], true)) {
+            throw new InvalidArgumentException('Estado invalido.');
+        }
+
+        $model->actualizarEstadoGrupoCliente($clienteId, $fechaGrupo, $estado, $actualizadoPor);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Estado actualizado correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
     throw new InvalidArgumentException('Accion no valida.');
 } catch (Throwable $e) {
     http_response_code(400);

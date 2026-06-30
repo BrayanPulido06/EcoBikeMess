@@ -59,6 +59,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const getGroupAbonoTotal = (clienteId, fechaGrupo) => getGroupAbonos(clienteId, fechaGrupo)
         .reduce((sum, abono) => sum + Number(abono.monto || 0), 0);
 
+    const getClienteEstados = () => {
+        const estados = state.rawData?.cliente?.estados;
+        return Array.isArray(estados) ? estados : [];
+    };
+
+    const getGroupEstadoManual = (clienteId, fechaGrupo) => {
+        const estado = getClienteEstados()
+            .find((item) => Number(item.cliente_id) === Number(clienteId) && String(item.fecha_grupo) === String(fechaGrupo));
+        return estado?.estado || '';
+    };
+
     const clientDisplayName = (item) => {
         const contact = normalizeText(item.cliente_contacto) ? String(item.cliente_contacto).trim() : '';
         const business = normalizeText(item.cliente_nombre) ? String(item.cliente_nombre).trim() : '';
@@ -261,13 +272,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
                 const saldo = Number(group.totalRecaudado || 0) - Number(group.totalServicio || 0);
                 const balance = saldo + abono;
+                const estadoManual = getGroupEstadoManual(group.clienteId, group.dateKey);
                 return {
                     ...group,
                     abonos,
                     abono,
                     balance,
                     saldo,
-                    estado: groupStatusFromBalance(balance)
+                    estado: estadoManual || groupStatusFromBalance(balance)
                 };
             })
             .sort((a, b) => {
@@ -292,7 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
             runningTotalsByClient.set(group.clientKey, current);
             group.totalAcumulado = current;
             group.totalAcumuladoEstado = groupStatusFromBalance(current);
-            group.estado = groupStatusFromBalance(group.balance);
         });
 
         return groups;
@@ -304,6 +315,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return '<span class="status-chip pending">Pendiente</span>';
     };
+
+    const clientGroupStatusSelect = (group) => `
+        <select
+            class="status-select ${group.estado === 'pagado' ? 'paid' : 'pending'}"
+            data-role="client-group-status"
+            data-group-key="${escapeHtml(group.key)}"
+            aria-label="Estado de facturacion ${escapeHtml(group.clienteNombre)} ${escapeHtml(group.fechaLabel)}"
+        >
+            <option value="pendiente" ${group.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
+            <option value="pagado" ${group.estado === 'pagado' ? 'selected' : ''}>Pagado</option>
+        </select>
+    `;
 
     const amountCellClass = (status) => {
         if (status === 'pagado') return 'is-paid';
@@ -368,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${money(group.totalServicio)}</td>
                     <td>${money(group.totalRecaudado)}</td>
                     <td>${money(group.abono)}</td>
-                    <td>${clientGroupStatusBadge(group.estado)}</td>
+                    <td>${clientGroupStatusSelect(group)}</td>
                     <td class="amount-cell ${balanceCellClass(group.saldo)}">${moneyAbs(group.saldo)}</td>
                     <td class="amount-cell ${balanceCellClass(group.totalAcumulado)}">${moneyAbs(group.totalAcumulado)}</td>
                     <td>
@@ -552,6 +575,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await response.json();
         if (!result.success) {
             throw new Error(result.message || 'No se pudo actualizar el pago.');
+        }
+
+        state.rawData = result.data;
+        render();
+    };
+
+    const saveClientGroupStatus = async (groupKey, estado) => {
+        const group = getClienteGroupByKey(groupKey);
+        if (!group || mode !== 'admin') {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('action', 'actualizar_estado_grupo_cliente');
+        formData.append('cliente_id', String(group.clienteId));
+        formData.append('fecha_grupo', group.dateKey);
+        formData.append('estado', estado);
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.message || 'No se pudo actualizar el estado.');
         }
 
         state.rawData = result.data;
@@ -955,6 +1005,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.addEventListener('change', (event) => {
+            const statusSelect = event.target.closest('[data-role="client-group-status"]');
+            if (statusSelect) {
+                const previousClass = statusSelect.className;
+                statusSelect.disabled = true;
+                saveClientGroupStatus(statusSelect.dataset.groupKey, statusSelect.value).catch((error) => {
+                    alert(error.message);
+                    statusSelect.disabled = false;
+                    statusSelect.className = previousClass;
+                });
+                return;
+            }
+
             const rowCheckbox = event.target.closest('[data-role="select-client-group"]');
             if (rowCheckbox) {
                 const groupKey = rowCheckbox.dataset.groupKey;

@@ -11,6 +11,7 @@ class FacturacionModels
         $this->ensureFacturacionTable();
         $this->ensureAbonosClienteTable();
         $this->ensureHiddenClientGroupsTable();
+        $this->ensureClientGroupStatusTable();
         $this->syncFacturacionRows();
     }
 
@@ -90,6 +91,23 @@ class FacturacionModels
         $this->conn->exec($sql);
     }
 
+    private function ensureClientGroupStatusTable(): void
+    {
+        $sql = "CREATE TABLE IF NOT EXISTS facturacion_estados_cliente (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    cliente_id INT NOT NULL,
+                    fecha_grupo DATE NOT NULL,
+                    estado ENUM('pendiente', 'pagado') NOT NULL DEFAULT 'pendiente',
+                    actualizado_por INT NULL,
+                    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    UNIQUE KEY uniq_estado_cliente_fecha (cliente_id, fecha_grupo),
+                    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+                    FOREIGN KEY (actualizado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+                    INDEX idx_estado_cliente_fecha (cliente_id, fecha_grupo)
+                )";
+        $this->conn->exec($sql);
+    }
+
     public function obtenerClienteIdPorUsuario(int $usuarioId): ?int
     {
         $sql = "SELECT id FROM clientes WHERE usuario_id = :usuario_id LIMIT 1";
@@ -119,7 +137,7 @@ class FacturacionModels
     public function obtenerVistaCliente(int $clienteId): array
     {
         return [
-            'cliente' => $this->obtenerResumenClientes($clienteId),
+            'cliente' => $this->obtenerResumenClientes($clienteId, false),
         ];
     }
 
@@ -185,6 +203,29 @@ class FacturacionModels
         ]);
     }
 
+    public function actualizarEstadoGrupoCliente(int $clienteId, string $fechaGrupo, string $estado, ?int $actualizadoPor): bool
+    {
+        if (!in_array($estado, ['pendiente', 'pagado'], true)) {
+            throw new InvalidArgumentException('Estado de facturacion invalido.');
+        }
+
+        $sql = "INSERT INTO facturacion_estados_cliente (
+                    cliente_id, fecha_grupo, estado, actualizado_por
+                ) VALUES (
+                    :cliente_id, :fecha_grupo, :estado, :actualizado_por
+                )
+                ON DUPLICATE KEY UPDATE
+                    estado = VALUES(estado),
+                    actualizado_por = VALUES(actualizado_por)";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':cliente_id' => $clienteId,
+            ':fecha_grupo' => $fechaGrupo,
+            ':estado' => $estado,
+            ':actualizado_por' => $actualizadoPor,
+        ]);
+    }
+
     private function obtenerGruposClienteOcultos(): array
     {
         $sql = "SELECT cliente_id, fecha_grupo FROM facturacion_grupos_cliente_ocultos";
@@ -197,6 +238,29 @@ class FacturacionModels
                 'fecha_grupo' => (string) ($row['fecha_grupo'] ?? ''),
             ];
         }, $rows);
+    }
+
+    private function obtenerEstadosCliente(?int $clienteId = null): array
+    {
+        $params = [];
+        $where = '';
+
+        if ($clienteId !== null) {
+            $where = 'WHERE cliente_id = :cliente_id';
+            $params[':cliente_id'] = $clienteId;
+        }
+
+        $sql = "SELECT cliente_id, fecha_grupo, estado FROM facturacion_estados_cliente {$where}";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+
+        return array_map(static function ($row) {
+            return [
+                'cliente_id' => (int) ($row['cliente_id'] ?? 0),
+                'fecha_grupo' => (string) ($row['fecha_grupo'] ?? ''),
+                'estado' => (string) ($row['estado'] ?? 'pendiente'),
+            ];
+        }, $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     private function obtenerAbonosCliente(?int $clienteId = null): array
@@ -239,7 +303,7 @@ class FacturacionModels
         }, $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
-    private function obtenerResumenClientes(?int $clienteId = null): array
+    private function obtenerResumenClientes(?int $clienteId = null, bool $aplicarOcultos = true): array
     {
         $params = [];
         $where = '';
@@ -276,7 +340,7 @@ class FacturacionModels
         $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return $this->mapearResumenClientes($rows, $clienteId);
+        return $this->mapearResumenClientes($rows, $clienteId, $aplicarOcultos);
     }
 
     private function obtenerResumenMensajeros(bool $soloVisibles, ?int $mensajeroId = null): array
@@ -327,7 +391,7 @@ class FacturacionModels
         return $this->mapearResumenMensajeros($rows);
     }
 
-    private function mapearResumenClientes(array $rows, ?int $clienteId = null): array
+    private function mapearResumenClientes(array $rows, ?int $clienteId = null, bool $aplicarOcultos = true): array
     {
         $items = [];
         $totales = [
@@ -348,10 +412,12 @@ class FacturacionModels
             $diario[$fechaDia]++;
         }
 
-        $hiddenGroups = $this->obtenerGruposClienteOcultos();
         $hiddenMap = [];
-        foreach ($hiddenGroups as $hiddenGroup) {
-            $hiddenMap[(int) $hiddenGroup['cliente_id'] . '__' . (string) $hiddenGroup['fecha_grupo']] = true;
+        if ($aplicarOcultos) {
+            $hiddenGroups = $this->obtenerGruposClienteOcultos();
+            foreach ($hiddenGroups as $hiddenGroup) {
+                $hiddenMap[(int) $hiddenGroup['cliente_id'] . '__' . (string) $hiddenGroup['fecha_grupo']] = true;
+            }
         }
 
         foreach ($rows as $row) {
@@ -401,6 +467,7 @@ class FacturacionModels
             'summary' => $this->normalizarResumen($totales),
             'items' => $items,
             'abonos' => $this->obtenerAbonosCliente($clienteId),
+            'estados' => $this->obtenerEstadosCliente($clienteId),
         ];
     }
 

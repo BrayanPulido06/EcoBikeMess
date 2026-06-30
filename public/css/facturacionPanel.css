@@ -317,6 +317,27 @@ body.sidebar-collapsed .facturacion-shell,
     color: #1e6d2f;
 }
 
+.status-select {
+    min-width: 120px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 0.45rem 0.65rem;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.status-select.pending {
+    background: #fff200;
+    color: #5f5600;
+}
+
+.status-select.paid {
+    background: #d8f3dc;
+    color: #1e6d2f;
+}
+
 .amount-cell {
     font-weight: 700;
     border-radius: 12px;
