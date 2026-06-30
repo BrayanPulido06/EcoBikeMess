@@ -24,6 +24,7 @@ class FacturacionModels
                     mensajero_id INT NULL,
                     valor_pago_mensajero DECIMAL(10,2) NOT NULL DEFAULT 7000.00,
                     mostrar_al_mensajero BOOLEAN NOT NULL DEFAULT FALSE,
+                    costo_adicional_servicio DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                     observaciones_admin TEXT NULL,
                     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -35,6 +36,17 @@ class FacturacionModels
                     INDEX idx_facturacion_visible (mostrar_al_mensajero)
                 )";
         $this->conn->exec($sql);
+        $this->ensureFacturacionColumn('costo_adicional_servicio', "ALTER TABLE facturacion ADD COLUMN costo_adicional_servicio DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER mostrar_al_mensajero");
+        $this->ensureFacturacionColumn('observaciones_admin', "ALTER TABLE facturacion ADD COLUMN observaciones_admin TEXT NULL AFTER costo_adicional_servicio");
+    }
+
+    private function ensureFacturacionColumn(string $column, string $alterSql): void
+    {
+        $stmt = $this->conn->prepare("SHOW COLUMNS FROM facturacion LIKE :column_name");
+        $stmt->execute([':column_name' => $column]);
+        if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+            $this->conn->exec($alterSql);
+        }
     }
 
     private function syncFacturacionRows(): void
@@ -186,6 +198,20 @@ class FacturacionModels
         ]);
     }
 
+    public function actualizarCostoAdicionalPaquete(int $paqueteId, float $monto, ?string $descripcion): bool
+    {
+        $sql = "UPDATE facturacion
+                SET costo_adicional_servicio = :monto,
+                    observaciones_admin = :descripcion
+                WHERE paquete_id = :paquete_id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':paquete_id' => $paqueteId,
+            ':monto' => $monto,
+            ':descripcion' => $descripcion,
+        ]);
+    }
+
     public function ocultarGrupoCliente(int $clienteId, string $fechaGrupo, ?int $ocultadoPor): bool
     {
         $sql = "INSERT INTO facturacion_grupos_cliente_ocultos (
@@ -326,6 +352,8 @@ class FacturacionModels
                     p.envio_destinatario,
                     p.recaudo_esperado,
                     COALESCE(e.recaudo_real, 0) AS recaudo_real,
+                    COALESCE(f.costo_adicional_servicio, 0) AS costo_adicional_servicio,
+                    COALESCE(f.observaciones_admin, '') AS observaciones_admin,
                     c.id AS cliente_id,
                     c.nombre_emprendimiento AS cliente_nombre,
                     CONCAT(COALESCE(uc.nombres, ''), ' ', COALESCE(uc.apellidos, '')) AS cliente_contacto
@@ -333,6 +361,7 @@ class FacturacionModels
                 INNER JOIN clientes c ON c.id = p.cliente_id
                 INNER JOIN usuarios uc ON uc.id = c.usuario_id
                 LEFT JOIN entregas e ON e.paquete_id = p.id
+                LEFT JOIN facturacion f ON f.paquete_id = p.id
                 {$where}
                 ORDER BY p.fecha_creacion DESC, p.id DESC";
 
@@ -428,7 +457,9 @@ class FacturacionModels
                 continue;
             }
 
-            $valorEnvio = (float) $row['costo_envio'];
+            $valorEnvioBase = (float) $row['costo_envio'];
+            $costoAdicional = (float) ($row['costo_adicional_servicio'] ?? 0);
+            $valorEnvio = $valorEnvioBase + $costoAdicional;
             $recaudoEsperado = (float) $row['recaudo_esperado'];
             $recaudoReal = (float) $row['recaudo_real'];
             $saldoRegistro = $recaudoReal - $valorEnvio;
@@ -455,6 +486,9 @@ class FacturacionModels
                 'direccion_destino' => $row['direccion_destino'],
                 'instrucciones_entrega' => $row['instrucciones_entrega'],
                 'valor_envio' => $valorEnvio,
+                'valor_envio_base' => $valorEnvioBase,
+                'costo_adicional_servicio' => $costoAdicional,
+                'observaciones_admin' => $row['observaciones_admin'],
                 'agregado_al_recaudo' => $agregadoRecaudo,
                 'valor_recaudo' => $recaudoEsperado,
                 'valor_recaudo_real' => $recaudoReal,

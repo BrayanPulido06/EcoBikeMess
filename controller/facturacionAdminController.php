@@ -99,6 +99,37 @@ try {
         exit;
     }
 
+    if ($method === 'POST' && $action === 'actualizar_costo_adicional_paquete') {
+        $paqueteId = (int) ($_POST['paquete_id'] ?? 0);
+        $monto = parseMoneyInput($_POST['monto'] ?? 0);
+        $descripcion = trim((string) ($_POST['descripcion'] ?? ''));
+
+        if ($paqueteId <= 0) {
+            throw new InvalidArgumentException('Paquete invalido.');
+        }
+
+        if ($monto < 0) {
+            throw new InvalidArgumentException('El costo adicional no puede ser negativo.');
+        }
+
+        if ($monto > 0 && $descripcion === '') {
+            throw new InvalidArgumentException('Debes ingresar la descripcion del costo adicional.');
+        }
+
+        $model->actualizarCostoAdicionalPaquete(
+            $paqueteId,
+            $monto,
+            $monto > 0 ? $descripcion : null
+        );
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Costo adicional actualizado correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
     if ($method === 'POST' && $action === 'ocultar_grupo_cliente') {
         $clienteId = (int) ($_POST['cliente_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));

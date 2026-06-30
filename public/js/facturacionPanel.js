@@ -245,6 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     clienteId: Number(item.cliente_id || 0),
                     paquetesEntregados: 0,
                     totalServicio: 0,
+                    subtotalServicio: 0,
+                    totalAdicionales: 0,
                     totalRecaudado: 0,
                     abono: 0,
                     saldo: 0,
@@ -257,8 +259,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const group = groupsMap.get(groupKey);
             if (item.estado === 'entregado') {
+                const valorBase = Number(item.valor_envio_base ?? item.valor_envio ?? 0);
+                const adicional = Number(item.costo_adicional_servicio || 0);
                 group.paquetesEntregados += 1;
-                group.totalServicio += Number(item.valor_envio || 0);
+                group.subtotalServicio += valorBase;
+                group.totalAdicionales += adicional;
+                group.totalServicio += valorBase + adicional;
                 group.totalRecaudado += getRecaudoRealValue(item);
                 group.packages.push(item);
             }
@@ -635,6 +641,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const savePackageAdditionalCost = async (form) => {
+        const formData = new FormData();
+        formData.append('action', 'actualizar_costo_adicional_paquete');
+        formData.append('paquete_id', form.paquete_id.value);
+        formData.append('monto', form.monto.value || '0');
+        formData.append('descripcion', form.descripcion.value || '');
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.message || 'No se pudo actualizar el costo adicional.');
+        }
+
+        state.rawData = result.data;
+        render();
+        if (state.selectedClienteGroupKey) {
+            openClientDetailModal(state.selectedClienteGroupKey);
+        }
+    };
+
     const syncCurrencyInput = (input) => {
         if (!input) return;
 
@@ -672,7 +703,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderPackageCard = (item) => {
         const recaudoReal = getRecaudoRealValue(item);
-        const saldo = Math.max(Number(item.valor_envio || 0), 0);
+        const valorBase = Number(item.valor_envio_base ?? item.valor_envio ?? 0);
+        const adicional = Number(item.costo_adicional_servicio || 0);
+        const valorTotal = Number(item.valor_envio || 0);
+        const saldo = Math.max(valorTotal, 0);
         return `
             <article class="package-card">
                 <div class="package-card-head">
@@ -688,8 +722,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         <strong>${escapeHtml(item.direccion_destino || 'Sin direccion')}</strong>
                     </div>
                     <div class="package-data">
-                        <span class="package-label">Valor envio</span>
-                        <strong>${money(item.valor_envio)}</strong>
+                        <span class="package-label">Servicio base</span>
+                        <strong>${money(valorBase)}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Adicional</span>
+                        <strong>${money(adicional)}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Total servicio</span>
+                        <strong>${money(valorTotal)}</strong>
                     </div>
                     <div class="package-data">
                         <span class="package-label">Valor recaudado</span>
@@ -707,7 +749,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="package-label">Instrucciones</span>
                         <strong>${escapeHtml(item.instrucciones_entrega || 'Sin instrucciones')}</strong>
                     </div>
+                    <div class="package-data package-full">
+                        <span class="package-label">Motivo adicional</span>
+                        <strong>${escapeHtml(item.observaciones_admin || 'Sin adicional')}</strong>
+                    </div>
                 </div>
+                ${mode === 'admin' ? `
+                    <div class="facturacion-abono-actions">
+                        <button
+                            type="button"
+                            class="fact-btn secondary"
+                            data-role="open-package-additional-cost"
+                            data-package-id="${item.paquete_id}"
+                        >
+                            Editar adicional
+                        </button>
+                    </div>
+                ` : ''}
             </article>
         `;
     };
@@ -768,6 +826,9 @@ document.addEventListener('DOMContentLoaded', () => {
         body.innerHTML = `
             <div class="detail-summary-strip">
                 <div><span>Entregados</span><strong>${group.paquetesEntregados}</strong></div>
+                <div><span>Servicio base</span><strong>${money(group.subtotalServicio)}</strong></div>
+                <div><span>Adicionales</span><strong>${money(group.totalAdicionales)}</strong></div>
+                <div><span>Total servicio</span><strong>${money(group.totalServicio)}</strong></div>
                 <div><span>Recaudado</span><strong>${money(group.totalRecaudado)}</strong></div>
                 <div><span>Abono</span><strong>${money(group.abono)}</strong></div>
                 <div><span>Estado</span><strong>${group.estado === 'pagado' ? 'Pagado' : 'Pendiente'}</strong></div>
@@ -814,6 +875,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         body.innerHTML = `
             <div class="detail-summary-strip">
+                <div><span>Servicio base</span><strong>${money(group.subtotalServicio)}</strong></div>
+                <div><span>Adicionales</span><strong>${money(group.totalAdicionales)}</strong></div>
                 <div><span>Total servicio</span><strong>${money(group.totalServicio)}</strong></div>
                 <div><span>Total recaudado</span><strong>${money(group.totalRecaudado)}</strong></div>
                 <div><span>Abonado</span><strong>${money(group.abono)}</strong></div>
@@ -848,6 +911,58 @@ document.addEventListener('DOMContentLoaded', () => {
             </form>
             <div class="facturacion-footnote">Historial de abonos registrados para este cliente en esta fecha.</div>
             ${renderAbonoHistory(group)}
+        `;
+
+        modal.classList.remove('modal-hidden');
+        modal.setAttribute('aria-hidden', 'false');
+    };
+
+    const openPackageAdditionalCostModal = (paqueteId) => {
+        const group = getClienteGroupByKey(state.selectedClienteGroupKey);
+        const item = group?.packages.find((pkg) => Number(pkg.paquete_id) === Number(paqueteId));
+        const modal = document.getElementById('facturacionDetailModal');
+        const title = document.getElementById('facturacionDetailTitle');
+        const subtitle = document.getElementById('facturacionDetailSubtitle');
+        const body = document.getElementById('facturacionDetailBody');
+
+        if (!group || !item || !modal || !title || !subtitle || !body) {
+            return;
+        }
+
+        const valorBase = Number(item.valor_envio_base ?? item.valor_envio ?? 0);
+        const adicional = Number(item.costo_adicional_servicio || 0);
+
+        state.activeClientModalView = 'additional-cost';
+        title.textContent = `Adicional paquete ${item.numero_guia}`;
+        subtitle.textContent = `${group.clienteNombre} | ${group.fechaLabel} | Servicio base ${money(valorBase)} | Adicional ${money(adicional)}`;
+
+        body.innerHTML = `
+            <div class="detail-summary-strip">
+                <div><span>Guia</span><strong>${escapeHtml(item.numero_guia)}</strong></div>
+                <div><span>Destinatario</span><strong>${escapeHtml(item.destinatario_nombre || 'Sin destinatario')}</strong></div>
+                <div><span>Servicio base</span><strong>${money(valorBase)}</strong></div>
+                <div><span>Adicional actual</span><strong>${money(adicional)}</strong></div>
+                <div><span>Total servicio</span><strong>${money(Number(item.valor_envio || 0))}</strong></div>
+            </div>
+            <form id="paqueteCostoAdicionalForm" class="facturacion-abono-form">
+                <input type="hidden" name="paquete_id" value="${item.paquete_id}">
+                <div class="facturacion-abono-grid">
+                    <label class="facturacion-field">
+                        <span>Valor adicional</span>
+                        <input type="hidden" name="monto" value="${adicional > 0 ? adicional : ''}">
+                        <input type="text" name="monto_display" inputmode="numeric" autocomplete="off" placeholder="$ 2.000" value="${adicional > 0 ? money(adicional) : ''}">
+                    </label>
+                    <label class="facturacion-field facturacion-field-full">
+                        <span>Descripcion</span>
+                        <textarea name="descripcion" rows="3" placeholder="Ej: espera prolongada en entrega">${escapeHtml(item.observaciones_admin || '')}</textarea>
+                    </label>
+                </div>
+                <div class="facturacion-abono-actions">
+                    <button type="submit" class="fact-btn primary" data-role="submit-package-additional-cost">Guardar adicional</button>
+                    <button type="button" class="fact-btn tertiary" data-role="open-client-detail" data-group-key="${escapeHtml(group.key)}">Volver al dia</button>
+                </div>
+                <div class="facturacion-footnote">Para quitar el adicional, deja el valor en cero o vacio y guarda.</div>
+            </form>
         `;
 
         modal.classList.remove('modal-hidden');
@@ -952,6 +1067,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const abonoButton = event.target.closest('[data-role="open-client-abono"]');
             if (abonoButton) {
                 openClientAbonoModal(abonoButton.dataset.groupKey);
+                return;
+            }
+
+            const packageAdditionalCostButton = event.target.closest('[data-role="open-package-additional-cost"]');
+            if (packageAdditionalCostButton) {
+                openPackageAdditionalCostModal(packageAdditionalCostButton.dataset.packageId);
                 return;
             }
 
@@ -1066,6 +1187,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 await saveClientAbono(form);
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                if (submitButton) {
+                    submitButton.textContent = originalText;
+                    submitButton.disabled = false;
+                }
+            }
+        });
+
+        document.addEventListener('submit', async (event) => {
+            const form = event.target.closest('#paqueteCostoAdicionalForm');
+            if (!form) return;
+
+            event.preventDefault();
+            const amountDisplayInput = form.querySelector('input[name="monto_display"]');
+            if (amountDisplayInput) {
+                syncCurrencyInput(amountDisplayInput);
+            }
+
+            const monto = Number(form.monto.value || 0);
+            if (monto > 0 && !String(form.descripcion.value || '').trim()) {
+                alert('Ingresa la descripcion del costo adicional.');
+                return;
+            }
+
+            const submitButton = form.querySelector('[data-role="submit-package-additional-cost"]');
+            const originalText = submitButton ? submitButton.textContent : 'Guardar adicional';
+            if (submitButton) {
+                submitButton.textContent = 'Guardando...';
+                submitButton.disabled = true;
+            }
+
+            try {
+                await savePackageAdditionalCost(form);
             } catch (error) {
                 alert(error.message);
             } finally {
