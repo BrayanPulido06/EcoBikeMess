@@ -343,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const groupStatusFromBalance = (value) => Math.round(Number(value || 0)) === 0 ? 'pagado' : 'pendiente';
 
-    const clienteTableColspan = () => mode === 'admin' ? 11 : 7;
+    const clienteTableColspan = () => mode === 'admin' ? 11 : 8;
 
     const renderClienteTable = (items) => {
         const tbody = document.getElementById('table-body-cliente');
@@ -376,6 +376,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${money(group.abono)}</td>
                         <td>${clientGroupStatusBadge(group.estado)}</td>
                         <td class="amount-cell ${balanceCellClass(group.saldo)}">${moneyAbs(group.saldo)}</td>
+                        <td>
+                            <button
+                                type="button"
+                                class="fact-btn tertiary detail-trigger"
+                                data-role="open-client-detail"
+                                data-group-key="${escapeHtml(group.key)}"
+                            >
+                                Ver paquetes
+                            </button>
+                        </td>
                     </tr>
                 `;
             }

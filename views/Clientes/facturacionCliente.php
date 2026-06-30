@@ -64,10 +64,11 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                                 <th>Abono</th>
                                 <th>Estado</th>
                                 <th>Saldo</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="table-body-cliente" data-loading>
-                            <tr><td colspan="7" class="loading-state">Cargando información...</td></tr>
+                            <tr><td colspan="8" class="loading-state">Cargando información...</td></tr>
                         </tbody>
                     </table>
                 </div>
