@@ -36,7 +36,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                 <div class="facturacion-role-badge">Cliente</div>
             </div>
 
-            <div id="summary-cliente" class="facturacion-summary"></div>
+            <div id="summary-cliente" class="facturacion-summary" style="display: none;"></div>
 
             <div class="facturacion-card">
                 <div class="facturacion-filters">
