@@ -51,6 +51,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const getRecaudoRealValue = (item) => Number(item?.valor_recaudo_real || 0);
 
+    const getMessengerPaymentValue = (item) => {
+        const value = Number(item?.valor_pago_mensajero || 0);
+        return value > 0 ? value : 7000;
+    };
+
     const getClienteAbonos = () => {
         const abonos = state.rawData?.cliente?.abonos;
         return Array.isArray(abonos) ? abonos : [];
@@ -264,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const buildMensajeroSummaryFromItems = (items) => items.reduce((summary, item) => {
-        summary.saldo_actual += Number(item.valor_pago_mensajero || 0);
+        summary.saldo_actual += getMessengerPaymentValue(item);
         summary.total_envios += Number(item.valor_envio || 0);
         summary.total_recaudos += Number(item.valor_recaudo_real || 0);
         summary.cantidad_paquetes += 1;
@@ -408,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const group = groupsMap.get(groupKey);
             if (item.estado === 'entregado') {
                 group.entregas += 1;
-                group.totalPago += Number(item.valor_pago_mensajero || 0);
+                group.totalPago += getMessengerPaymentValue(item);
                 group.totalRecaudado += getRecaudoRealValue(item);
                 group.packages.push(item);
             }
@@ -629,7 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${money(item.valor_recaudo)}</td>
                     <td>${money(item.valor_recaudo_real)}</td>
                     <td>${statusBadge(item.estado)}</td>
-                    <td>${money(item.valor_pago_mensajero)}</td>
+                    <td>${money(getMessengerPaymentValue(item))}</td>
                     <td>${boolBadge(item.mostrar_al_mensajero, 'Visible', 'Oculto')}</td>
                 </tr>
             `).join('');
@@ -1118,7 +1123,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="package-card-grid">
                 <div class="package-data">
                     <span class="package-label">Pago mensajero</span>
-                    <strong>${money(item.valor_pago_mensajero)}</strong>
+                    <strong>${money(getMessengerPaymentValue(item))}</strong>
                 </div>
                 <div class="package-data">
                     <span class="package-label">Servicio cliente</span>
@@ -1151,12 +1156,12 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             ${mode === 'admin' ? `
                 <div class="table-tools messenger-payment-tools">
-                    <input type="number" min="0" step="100" value="${Math.round(Number(item.valor_pago_mensajero || 0))}" data-role="payment-input" data-id="${item.paquete_id}">
+                    <input type="number" min="0" step="100" value="${Math.round(getMessengerPaymentValue(item))}" data-role="payment-input" data-id="${item.paquete_id}">
                     <label class="toggle-wrap">
                         <input type="checkbox" data-role="show-toggle" data-id="${item.paquete_id}" ${item.mostrar_al_mensajero ? 'checked' : ''}>
                         Mostrar
                     </label>
-                    <button class="fact-btn primary" data-role="save-payment" data-id="${item.paquete_id}">Guardar pago</button>
+                    <span class="facturacion-footnote" data-role="payment-status" data-id="${item.paquete_id}">Guardado automatico</span>
                 </div>
             ` : ''}
         </article>
@@ -1598,6 +1603,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.addEventListener('change', (event) => {
+            const paymentControl = event.target.closest('[data-role="payment-input"], [data-role="show-toggle"]');
+            if (paymentControl && mode === 'admin') {
+                const paqueteId = paymentControl.dataset.id;
+                const paymentInput = document.querySelector(`[data-role="payment-input"][data-id="${paqueteId}"]`);
+                const toggleInput = document.querySelector(`[data-role="show-toggle"][data-id="${paqueteId}"]`);
+                const statusEl = document.querySelector(`[data-role="payment-status"][data-id="${paqueteId}"]`);
+
+                if (paymentInput && Number(paymentInput.value || 0) <= 0) {
+                    paymentInput.value = '7000';
+                }
+
+                if (statusEl) {
+                    statusEl.textContent = 'Guardando...';
+                }
+                if (paymentInput) {
+                    paymentInput.disabled = true;
+                }
+                if (toggleInput) {
+                    toggleInput.disabled = true;
+                }
+
+                savePayment(paqueteId).catch((error) => {
+                    alert(error.message);
+                    if (statusEl) {
+                        statusEl.textContent = 'No se pudo guardar';
+                    }
+                    if (paymentInput) {
+                        paymentInput.disabled = false;
+                    }
+                    if (toggleInput) {
+                        toggleInput.disabled = false;
+                    }
+                });
+                return;
+            }
+
             const statusSelect = event.target.closest('[data-role="client-group-status"]');
             if (statusSelect) {
                 const previousClass = statusSelect.className;

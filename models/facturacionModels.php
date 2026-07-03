@@ -715,6 +715,9 @@ class FacturacionModels
             $fechaBase = substr((string) ($row['fecha_entrega'] ?: $row['fecha_creacion']), 0, 10);
 
             $valorPago = (float) $row['valor_pago_mensajero'];
+            if ($valorPago <= 0) {
+                $valorPago = 7000.00;
+            }
             $valorEnvio = (float) $row['costo_envio'];
             $recaudoEsperado = (float) $row['recaudo_esperado'];
             $recaudoReal = (float) $row['recaudo_real'];
