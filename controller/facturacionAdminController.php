@@ -104,6 +104,47 @@ try {
         exit;
     }
 
+    if ($method === 'POST' && $action === 'registrar_abono_mensajero') {
+        $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
+        $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+        $monto = parseMoneyInput($_POST['monto'] ?? 0);
+        $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
+        $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
+        $registradoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+
+        if ($mensajeroId <= 0) {
+            throw new InvalidArgumentException('Mensajero invalido.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+            throw new InvalidArgumentException('La fecha del abono no es valida.');
+        }
+
+        if ($monto <= 0) {
+            throw new InvalidArgumentException('El abono debe ser mayor a cero.');
+        }
+
+        if (!in_array($metodoPago, ['efectivo', 'transferencia'], true)) {
+            throw new InvalidArgumentException('Metodo de pago invalido.');
+        }
+
+        $model->registrarAbonoMensajero(
+            $mensajeroId,
+            $fechaGrupo,
+            $monto,
+            $metodoPago,
+            $observaciones !== '' ? $observaciones : null,
+            $registradoPor
+        );
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Abono registrado correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
     if ($method === 'POST' && $action === 'actualizar_costo_adicional_paquete') {
         $paqueteId = (int) ($_POST['paquete_id'] ?? 0);
         $monto = parseMoneyInput($_POST['monto'] ?? 0);
@@ -177,6 +218,34 @@ try {
         }
 
         $model->actualizarEstadoGrupoCliente($clienteId, $fechaGrupo, $estado, $actualizadoPor);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Estado actualizado correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
+    if ($method === 'POST' && $action === 'actualizar_estado_grupo_mensajero') {
+        $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
+        $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+        $estado = trim((string) ($_POST['estado'] ?? ''));
+        $actualizadoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+
+        if ($mensajeroId <= 0) {
+            throw new InvalidArgumentException('Mensajero invalido.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+            throw new InvalidArgumentException('La fecha del grupo no es valida.');
+        }
+
+        if (!in_array($estado, ['pendiente', 'pagado'], true)) {
+            throw new InvalidArgumentException('Estado invalido.');
+        }
+
+        $model->actualizarEstadoGrupoMensajero($mensajeroId, $fechaGrupo, $estado, $actualizadoPor);
 
         echo json_encode([
             'success' => true,

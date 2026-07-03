@@ -12,6 +12,8 @@ class FacturacionModels
         $this->ensureAbonosClienteTable();
         $this->ensureHiddenClientGroupsTable();
         $this->ensureClientGroupStatusTable();
+        $this->ensureAbonosMensajeroTable();
+        $this->ensureMessengerGroupStatusTable();
         $this->ensurePerformanceIndexes();
         $this->syncFacturacionRows();
     }
@@ -117,6 +119,41 @@ class FacturacionModels
                     FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
                     FOREIGN KEY (actualizado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
                     INDEX idx_estado_cliente_fecha (cliente_id, fecha_grupo)
+                )";
+        $this->conn->exec($sql);
+    }
+
+    private function ensureAbonosMensajeroTable(): void
+    {
+        $sql = "CREATE TABLE IF NOT EXISTS facturacion_abonos_mensajero (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    mensajero_id INT NOT NULL,
+                    fecha_grupo DATE NOT NULL,
+                    monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    metodo_pago ENUM('efectivo', 'transferencia') NOT NULL,
+                    observaciones TEXT NULL,
+                    registrado_por INT NULL,
+                    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id) ON DELETE CASCADE,
+                    FOREIGN KEY (registrado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+                    INDEX idx_abonos_mensajero_fecha (mensajero_id, fecha_grupo)
+                )";
+        $this->conn->exec($sql);
+    }
+
+    private function ensureMessengerGroupStatusTable(): void
+    {
+        $sql = "CREATE TABLE IF NOT EXISTS facturacion_estados_mensajero (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    mensajero_id INT NOT NULL,
+                    fecha_grupo DATE NOT NULL,
+                    estado ENUM('pendiente', 'pagado') NOT NULL DEFAULT 'pendiente',
+                    actualizado_por INT NULL,
+                    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    UNIQUE KEY uniq_estado_mensajero_fecha (mensajero_id, fecha_grupo),
+                    FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id) ON DELETE CASCADE,
+                    FOREIGN KEY (actualizado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+                    INDEX idx_estado_mensajero_fecha (mensajero_id, fecha_grupo)
                 )";
         $this->conn->exec($sql);
     }
@@ -230,6 +267,30 @@ class FacturacionModels
         ]);
     }
 
+    public function registrarAbonoMensajero(
+        int $mensajeroId,
+        string $fechaGrupo,
+        float $monto,
+        string $metodoPago,
+        ?string $observaciones,
+        ?int $registradoPor
+    ): bool {
+        $sql = "INSERT INTO facturacion_abonos_mensajero (
+                    mensajero_id, fecha_grupo, monto, metodo_pago, observaciones, registrado_por
+                ) VALUES (
+                    :mensajero_id, :fecha_grupo, :monto, :metodo_pago, :observaciones, :registrado_por
+                )";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':mensajero_id' => $mensajeroId,
+            ':fecha_grupo' => $fechaGrupo,
+            ':monto' => $monto,
+            ':metodo_pago' => $metodoPago,
+            ':observaciones' => $observaciones,
+            ':registrado_por' => $registradoPor,
+        ]);
+    }
+
     public function actualizarCostoAdicionalPaquete(int $paqueteId, float $monto, ?string $descripcion): bool
     {
         $sql = "UPDATE facturacion
@@ -278,6 +339,29 @@ class FacturacionModels
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
             ':cliente_id' => $clienteId,
+            ':fecha_grupo' => $fechaGrupo,
+            ':estado' => $estado,
+            ':actualizado_por' => $actualizadoPor,
+        ]);
+    }
+
+    public function actualizarEstadoGrupoMensajero(int $mensajeroId, string $fechaGrupo, string $estado, ?int $actualizadoPor): bool
+    {
+        if (!in_array($estado, ['pendiente', 'pagado'], true)) {
+            throw new InvalidArgumentException('Estado de facturacion invalido.');
+        }
+
+        $sql = "INSERT INTO facturacion_estados_mensajero (
+                    mensajero_id, fecha_grupo, estado, actualizado_por
+                ) VALUES (
+                    :mensajero_id, :fecha_grupo, :estado, :actualizado_por
+                )
+                ON DUPLICATE KEY UPDATE
+                    estado = VALUES(estado),
+                    actualizado_por = VALUES(actualizado_por)";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':mensajero_id' => $mensajeroId,
             ':fecha_grupo' => $fechaGrupo,
             ':estado' => $estado,
             ':actualizado_por' => $actualizadoPor,
@@ -361,6 +445,69 @@ class FacturacionModels
         }, $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
+    private function obtenerEstadosMensajero(?int $mensajeroId = null): array
+    {
+        $params = [];
+        $where = '';
+
+        if ($mensajeroId !== null) {
+            $where = 'WHERE mensajero_id = :mensajero_id';
+            $params[':mensajero_id'] = $mensajeroId;
+        }
+
+        $sql = "SELECT mensajero_id, fecha_grupo, estado FROM facturacion_estados_mensajero {$where}";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+
+        return array_map(static function ($row) {
+            return [
+                'mensajero_id' => (int) ($row['mensajero_id'] ?? 0),
+                'fecha_grupo' => (string) ($row['fecha_grupo'] ?? ''),
+                'estado' => (string) ($row['estado'] ?? 'pendiente'),
+            ];
+        }, $stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    private function obtenerAbonosMensajero(?int $mensajeroId = null): array
+    {
+        $params = [];
+        $where = '';
+
+        if ($mensajeroId !== null) {
+            $where = 'WHERE a.mensajero_id = :mensajero_id';
+            $params[':mensajero_id'] = $mensajeroId;
+        }
+
+        $sql = "SELECT
+                    a.id,
+                    a.mensajero_id,
+                    a.fecha_grupo,
+                    a.monto,
+                    a.metodo_pago,
+                    a.observaciones,
+                    a.fecha_registro,
+                    CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, '')) AS registrado_por_nombre
+                FROM facturacion_abonos_mensajero a
+                LEFT JOIN usuarios u ON u.id = a.registrado_por
+                {$where}
+                ORDER BY a.fecha_grupo DESC, a.fecha_registro DESC, a.id DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+
+        return array_map(function ($row) {
+            return [
+                'id' => (int) $row['id'],
+                'mensajero_id' => (int) $row['mensajero_id'],
+                'fecha_grupo' => $row['fecha_grupo'],
+                'monto' => (float) $row['monto'],
+                'metodo_pago' => $row['metodo_pago'],
+                'observaciones' => $row['observaciones'],
+                'fecha_registro' => $row['fecha_registro'],
+                'registrado_por_nombre' => trim((string) $row['registrado_por_nombre']),
+            ];
+        }, $stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
     private function obtenerResumenClientes(?int $clienteId = null, bool $aplicarOcultos = true, ?string $fechaDesde = null): array
     {
         $params = [];
@@ -413,7 +560,7 @@ class FacturacionModels
 
     private function obtenerResumenMensajeros(bool $soloVisibles, ?int $mensajeroId = null): array
     {
-        $conditions = [];
+        $conditions = ["p.estado = 'entregado'"];
         $params = [];
 
         if ($soloVisibles) {
@@ -456,7 +603,7 @@ class FacturacionModels
         $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return $this->mapearResumenMensajeros($rows);
+        return $this->mapearResumenMensajeros($rows, $mensajeroId);
     }
 
     private function mapearResumenClientes(array $rows, ?int $clienteId = null, bool $aplicarOcultos = true): array
@@ -544,7 +691,7 @@ class FacturacionModels
         ];
     }
 
-    private function mapearResumenMensajeros(array $rows): array
+    private function mapearResumenMensajeros(array $rows, ?int $mensajeroId = null): array
     {
         $items = [];
         $totales = [
@@ -605,6 +752,8 @@ class FacturacionModels
         return [
             'summary' => $this->normalizarResumen($totales),
             'items' => $items,
+            'abonos' => $this->obtenerAbonosMensajero($mensajeroId),
+            'estados' => $this->obtenerEstadosMensajero($mensajeroId),
         ];
     }
 

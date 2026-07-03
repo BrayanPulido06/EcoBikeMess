@@ -109,7 +109,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                     <div class="facturacion-filters">
                         <div class="facturacion-field">
                             <label>Buscar</label>
-                            <input type="text" placeholder="Guia, cliente o mensajero" data-panel-filter="mensajero" data-filter-field="q">
+                            <input type="text" placeholder="Mensajero, guia o cliente" data-panel-filter="mensajero" data-filter-field="q">
                         </div>
                         <div class="facturacion-field">
                             <label>Estado</label>
@@ -137,28 +137,27 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                     </div>
 
                     <div class="facturacion-table-wrap">
-                        <table class="facturacion-table">
+                        <table class="facturacion-table facturacion-table-mensajeros">
                             <thead>
                                 <tr>
-                                    <th>Numero guia</th>
                                     <th>Mensajero</th>
-                                    <th>Cliente</th>
-                                    <th>Paquetes por dia</th>
-                                    <th>Valor envio</th>
-                                    <th>Agregado al recaudo</th>
-                                    <th>Valor recaudo</th>
-                                    <th>Recaudo real</th>
+                                    <th>Fecha</th>
+                                    <th>Entregas</th>
+                                    <th>Total pago</th>
+                                    <th>Total recaudado</th>
+                                    <th>Abono</th>
                                     <th>Estado</th>
-                                    <th>Pago mensajero</th>
-                                    <th>Configurar pago / mostrar</th>
+                                    <th>Saldo</th>
+                                    <th>Total</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="table-body-mensajero" data-loading>
-                                <tr><td colspan="11" class="loading-state">Cargando informacion...</td></tr>
+                                <tr><td colspan="10" class="loading-state">Cargando informacion...</td></tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="facturacion-footnote">El valor a pagar al mensajero arranca en $7.000 y puede modificarse por paquete. El boton "Mostrar" habilita su visualizacion para el mensajero.</div>
+                    <div class="facturacion-footnote">Facturacion agrupada por fecha y mensajero. El pago arranca en $7.000 por entrega y puede modificarse por paquete desde el detalle.</div>
                     <div class="facturacion-footnote" id="count-mensajero">0 registros</div>
                 </div>
             </section>

@@ -16,7 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
         clienteGroups: [],
         selectedClienteGroups: new Set(),
         selectedClienteGroupKey: null,
-        activeClientModalView: 'detail'
+        selectedMensajeroGroupKey: null,
+        activeClientModalView: 'detail',
+        activeMensajeroModalView: 'detail',
+        mensajeroGroups: []
     };
     const formatCurrencyNumber = (value) => {
         const amount = Math.round(Number(value || 0));
@@ -67,6 +70,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const getGroupEstadoManual = (clienteId, fechaGrupo) => {
         const estado = getClienteEstados()
             .find((item) => Number(item.cliente_id) === Number(clienteId) && String(item.fecha_grupo) === String(fechaGrupo));
+        return estado?.estado || '';
+    };
+
+    const getMensajeroAbonos = () => {
+        const abonos = state.rawData?.mensajero?.abonos;
+        return Array.isArray(abonos) ? abonos : [];
+    };
+
+    const getMensajeroGroupAbonos = (mensajeroId, fechaGrupo) => getMensajeroAbonos()
+        .filter((abono) => Number(abono.mensajero_id) === Number(mensajeroId) && String(abono.fecha_grupo) === String(fechaGrupo));
+
+    const getMensajeroEstados = () => {
+        const estados = state.rawData?.mensajero?.estados;
+        return Array.isArray(estados) ? estados : [];
+    };
+
+    const getMensajeroGroupEstadoManual = (mensajeroId, fechaGrupo) => {
+        const estado = getMensajeroEstados()
+            .find((item) => Number(item.mensajero_id) === Number(mensajeroId) && String(item.fecha_grupo) === String(fechaGrupo));
         return estado?.estado || '';
     };
 
@@ -149,10 +171,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const isAdminMessengerPanel = mode === 'admin' && panel === 'mensajero';
         const saldoLabel = panel === 'mensajero' ? 'Total a pagar' : 'Saldo actual';
-        const saldoNote = panel === 'mensajero'
-            ? 'Suma de valores configurados para el mensajero.'
-            : 'Recaudos reales menos costo de envios.';
+        const saldoNote = isAdminMessengerPanel
+            ? 'Pendiente acumulado por pagar a mensajeros.'
+            : panel === 'mensajero'
+                ? 'Suma de valores configurados para el mensajero.'
+                : 'Recaudos reales menos costo de envios.';
+        const totalEnviosLabel = isAdminMessengerPanel ? 'Total pagos' : 'Total valor envios';
+        const totalEnviosNote = isAdminMessengerPanel
+            ? 'Suma de valores configurados por entrega.'
+            : 'Costo acumulado de los paquetes filtrables.';
 
         el.innerHTML = `
             <div class="summary-card">
@@ -161,9 +190,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="summary-note">${saldoNote}</div>
             </div>
             <div class="summary-card">
-                <span class="summary-label">Total valor envios</span>
+                <span class="summary-label">${totalEnviosLabel}</span>
                 <div class="summary-value">${money(summary.total_envios)}</div>
-                <div class="summary-note">Costo acumulado de los paquetes filtrables.</div>
+                <div class="summary-note">${totalEnviosNote}</div>
             </div>
             <div class="summary-card">
                 <span class="summary-label">Total recaudos</span>
@@ -201,6 +230,33 @@ document.addEventListener('DOMContentLoaded', () => {
         return {
             saldo_actual: Array.from(totalsByClient.values()).reduce((sum, value) => sum + value, 0),
             total_envios: totalEnvios,
+            total_recaudos: totalRecaudos,
+            cantidad_paquetes: cantidadPaquetes,
+            paquetes_entregados: paquetesEntregados
+        };
+    };
+
+    const buildMensajeroSummaryFromGroups = (groups) => {
+        const totalsByMessenger = new Map();
+
+        let totalPagos = 0;
+        let totalRecaudos = 0;
+        let cantidadPaquetes = 0;
+        let paquetesEntregados = 0;
+
+        groups.forEach((group) => {
+            if (!totalsByMessenger.has(group.messengerKey)) {
+                totalsByMessenger.set(group.messengerKey, Number(group.totalAcumulado || 0));
+            }
+            totalPagos += Number(group.totalPago || 0);
+            totalRecaudos += Number(group.totalRecaudado || 0);
+            cantidadPaquetes += Array.isArray(group.packages) ? group.packages.length : 0;
+            paquetesEntregados += Number(group.entregas || 0);
+        });
+
+        return {
+            saldo_actual: Array.from(totalsByMessenger.values()).reduce((sum, value) => sum + value, 0),
+            total_envios: totalPagos,
             total_recaudos: totalRecaudos,
             cantidad_paquetes: cantidadPaquetes,
             paquetes_entregados: paquetesEntregados
@@ -317,6 +373,94 @@ document.addEventListener('DOMContentLoaded', () => {
         return groups;
     };
 
+    const buildMensajeroGroups = (items) => {
+        const filtered = items.filter((item) => matchesFilter(item, 'mensajero'));
+        const groupsMap = new Map();
+
+        filtered.forEach((item) => {
+            const baseDate = item.fecha_entrega || item.fecha_ingreso;
+            const dateKey = dateKeyFromValue(baseDate);
+            const messengerId = Number(item.mensajero_id || 0);
+            const messengerName = String(item.mensajero_nombre || 'Sin asignar').trim() || 'Sin asignar';
+            const messengerKey = messengerId > 0 ? `id-${messengerId}` : normalizeText(messengerName);
+            const groupKey = `${dateKey}__${messengerKey}`;
+
+            if (!groupsMap.has(groupKey)) {
+                groupsMap.set(groupKey, {
+                    key: groupKey,
+                    dateKey,
+                    messengerKey,
+                    fechaLabel: shortDate(baseDate),
+                    mensajeroId: messengerId,
+                    mensajeroNombre: messengerName,
+                    entregas: 0,
+                    totalPago: 0,
+                    totalRecaudado: 0,
+                    abono: 0,
+                    saldo: 0,
+                    balance: 0,
+                    totalAcumulado: 0,
+                    packages: [],
+                    statuses: new Set()
+                });
+            }
+
+            const group = groupsMap.get(groupKey);
+            if (item.estado === 'entregado') {
+                group.entregas += 1;
+                group.totalPago += Number(item.valor_pago_mensajero || 0);
+                group.totalRecaudado += getRecaudoRealValue(item);
+                group.packages.push(item);
+            }
+            group.statuses.add(item.estado || 'pendiente');
+        });
+
+        const groups = Array.from(groupsMap.values())
+            .filter((group) => group.entregas > 0)
+            .map((group) => {
+                const abonos = getMensajeroGroupAbonos(group.mensajeroId, group.dateKey);
+                const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
+                const saldoCalculado = Number(group.totalPago || 0) - abono;
+                const estadoManual = getMensajeroGroupEstadoManual(group.mensajeroId, group.dateKey);
+                const saldo = estadoManual === 'pagado' ? 0 : saldoCalculado;
+                const balance = estadoManual === 'pagado' ? 0 : saldo;
+                return {
+                    ...group,
+                    abonos,
+                    abono,
+                    balance,
+                    saldo,
+                    saldoCalculado,
+                    estado: estadoManual || groupStatusFromBalance(balance)
+                };
+            })
+            .sort((a, b) => {
+                if (a.dateKey === b.dateKey) {
+                    return a.mensajeroNombre.localeCompare(b.mensajeroNombre, 'es', { sensitivity: 'base' });
+                }
+                return b.dateKey.localeCompare(a.dateKey);
+            });
+
+        const runningTotalsByMessenger = new Map();
+        const groupsAsc = [...groups].sort((a, b) => {
+            if (a.messengerKey === b.messengerKey) {
+                if (a.dateKey === b.dateKey) return a.key.localeCompare(b.key, 'es', { sensitivity: 'base' });
+                return a.dateKey.localeCompare(b.dateKey);
+            }
+            return a.messengerKey.localeCompare(b.messengerKey, 'es', { sensitivity: 'base' });
+        });
+
+        groupsAsc.forEach((group) => {
+            const previous = Number(runningTotalsByMessenger.get(group.messengerKey) || 0);
+            const current = previous + Number(group.balance || 0);
+            runningTotalsByMessenger.set(group.messengerKey, current);
+            group.totalAcumulado = current;
+            group.totalAcumuladoEstado = groupStatusFromBalance(current);
+        });
+
+        return groups;
+    };
+
     const clientGroupStatusBadge = (status) => {
         if (status === 'pagado') {
             return '<span class="status-chip paid">Pagado</span>';
@@ -336,6 +480,18 @@ document.addEventListener('DOMContentLoaded', () => {
         </select>
     `;
 
+    const messengerGroupStatusSelect = (group) => `
+        <select
+            class="status-select ${group.estado === 'pagado' ? 'paid' : 'pending'}"
+            data-role="messenger-group-status"
+            data-group-key="${escapeHtml(group.key)}"
+            aria-label="Estado de pago ${escapeHtml(group.mensajeroNombre)} ${escapeHtml(group.fechaLabel)}"
+        >
+            <option value="pendiente" ${group.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
+            <option value="pagado" ${group.estado === 'pagado' ? 'selected' : ''}>Pagado</option>
+        </select>
+    `;
+
     const amountCellClass = (status) => {
         if (status === 'pagado') return 'is-paid';
         return 'is-pending';
@@ -346,6 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const groupStatusFromBalance = (value) => Math.round(Number(value || 0)) === 0 ? 'pagado' : 'pendiente';
 
     const clienteTableColspan = () => mode === 'admin' ? 11 : 8;
+    const mensajeroTableColspan = () => mode === 'admin' ? 10 : 11;
 
     const renderClienteTable = (items) => {
         const tbody = document.getElementById('table-body-cliente');
@@ -452,31 +609,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.getElementById('table-body-mensajero');
         if (!tbody) return [];
 
-        const filtered = items.filter((item) => matchesFilter(item, 'mensajero'));
-        document.getElementById('count-mensajero').textContent = `${filtered.length} registros`;
+        if (mode !== 'admin') {
+            const filtered = items.filter((item) => matchesFilter(item, 'mensajero'));
+            document.getElementById('count-mensajero').textContent = `${filtered.length} registros`;
 
-        if (!filtered.length) {
-            tbody.innerHTML = '<tr><td colspan="11" class="empty-state">No hay registros con los filtros actuales.</td></tr>';
-            return filtered;
-        }
+            if (!filtered.length) {
+                tbody.innerHTML = `<tr><td colspan="${mensajeroTableColspan()}" class="empty-state">No hay registros con los filtros actuales.</td></tr>`;
+                return filtered;
+            }
 
-        tbody.innerHTML = filtered.map((item) => {
-            const editCell = mode === 'admin'
-                ? `
-                    <td>
-                        <div class="table-tools">
-                            <input type="number" min="0" step="100" value="${Math.round(item.valor_pago_mensajero)}" data-role="payment-input" data-id="${item.paquete_id}">
-                            <label class="toggle-wrap">
-                                <input type="checkbox" data-role="show-toggle" data-id="${item.paquete_id}" ${item.mostrar_al_mensajero ? 'checked' : ''}>
-                                Mostrar
-                            </label>
-                            <button class="fact-btn primary" data-role="save-payment" data-id="${item.paquete_id}">Guardar</button>
-                        </div>
-                    </td>
-                `
-                : `<td>${boolBadge(item.mostrar_al_mensajero, 'Visible', 'Oculto')}</td>`;
-
-            return `
+            tbody.innerHTML = filtered.map((item) => `
                 <tr>
                     <td class="mono">${escapeHtml(item.numero_guia)}</td>
                     <td>${escapeHtml(item.mensajero_nombre)}</td>
@@ -488,12 +630,57 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${money(item.valor_recaudo_real)}</td>
                     <td>${statusBadge(item.estado)}</td>
                     <td>${money(item.valor_pago_mensajero)}</td>
-                    ${editCell}
+                    <td>${boolBadge(item.mostrar_al_mensajero, 'Visible', 'Oculto')}</td>
                 </tr>
-            `;
-        }).join('');
+            `).join('');
 
-        return filtered;
+            return filtered;
+        }
+
+        const groups = buildMensajeroGroups(items);
+        state.mensajeroGroups = groups;
+        document.getElementById('count-mensajero').textContent = `${groups.length} registros`;
+
+        if (!groups.length) {
+            tbody.innerHTML = `<tr><td colspan="${mensajeroTableColspan()}" class="empty-state">No hay registros con los filtros actuales.</td></tr>`;
+            return groups;
+        }
+
+        tbody.innerHTML = groups.map((group) => `
+                <tr>
+                    <td>${escapeHtml(group.mensajeroNombre)}</td>
+                    <td>${group.fechaLabel}</td>
+                    <td>${group.entregas}</td>
+                    <td>${money(group.totalPago)}</td>
+                    <td>${money(group.totalRecaudado)}</td>
+                    <td>${money(group.abono)}</td>
+                    <td>${messengerGroupStatusSelect(group)}</td>
+                    <td class="amount-cell ${balanceCellClass(group.saldo)}">${moneyAbs(group.saldo)}</td>
+                    <td class="amount-cell ${balanceCellClass(group.totalAcumulado)}">${moneyAbs(group.totalAcumulado)}</td>
+                    <td>
+                        <div class="table-tools">
+                            <button
+                                type="button"
+                                class="fact-btn tertiary detail-trigger"
+                                data-role="open-messenger-detail"
+                                data-group-key="${escapeHtml(group.key)}"
+                            >
+                                Ver entregas
+                            </button>
+                            <button
+                                type="button"
+                                class="fact-btn secondary detail-trigger"
+                                data-role="open-messenger-abono"
+                                data-group-key="${escapeHtml(group.key)}"
+                            >
+                                Registrar abono
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+        return groups;
     };
 
     const render = () => {
@@ -505,8 +692,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (state.rawData.mensajero) {
-            const visibleMensajeroItems = renderMensajeroTable(state.rawData.mensajero.items);
-            renderSummary(buildMensajeroSummaryFromItems(visibleMensajeroItems), 'mensajero');
+            const visibleMensajeroData = renderMensajeroTable(state.rawData.mensajero.items);
+            renderSummary(
+                mode === 'admin'
+                    ? buildMensajeroSummaryFromGroups(state.mensajeroGroups)
+                    : buildMensajeroSummaryFromItems(visibleMensajeroData),
+                'mensajero'
+            );
         }
     };
 
@@ -525,7 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
             : document.querySelectorAll('[data-loading]');
 
         loaders.forEach((el) => {
-            const colspan = el.id === 'table-body-cliente' ? clienteTableColspan() : 11;
+            const colspan = el.id === 'table-body-cliente' ? clienteTableColspan() : mensajeroTableColspan();
             el.innerHTML = `<tr><td colspan="${colspan}" class="loading-state">${message}</td></tr>`;
         });
     };
@@ -602,7 +794,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (!el) {
                             return;
                         }
-                        const colspan = panel === 'cliente' ? clienteTableColspan() : 11;
+                        const colspan = panel === 'cliente' ? clienteTableColspan() : mensajeroTableColspan();
                         el.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">${error.message}</td></tr>`;
                     });
                 }
@@ -633,6 +825,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         state.rawData = result.data;
         render();
+        if (state.selectedMensajeroGroupKey && state.activeMensajeroModalView === 'detail') {
+            openMessengerDetailModal(state.selectedMensajeroGroupKey);
+        }
     };
 
     const saveClientGroupStatus = async (groupKey, estado) => {
@@ -644,6 +839,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append('action', 'actualizar_estado_grupo_cliente');
         formData.append('cliente_id', String(group.clienteId));
+        formData.append('fecha_grupo', group.dateKey);
+        formData.append('estado', estado);
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.message || 'No se pudo actualizar el estado.');
+        }
+
+        state.rawData = result.data;
+        render();
+    };
+
+    const getMensajeroGroupByKey = (groupKey) => state.mensajeroGroups.find((group) => group.key === groupKey) || null;
+
+    const saveMessengerGroupStatus = async (groupKey, estado) => {
+        const group = getMensajeroGroupByKey(groupKey);
+        if (!group || mode !== 'admin') {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('action', 'actualizar_estado_grupo_mensajero');
+        formData.append('mensajero_id', String(group.mensajeroId));
         formData.append('fecha_grupo', group.dateKey);
         formData.append('estado', estado);
 
@@ -686,6 +910,33 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
         if (state.selectedClienteGroupKey) {
             openClientAbonoModal(state.selectedClienteGroupKey);
+        }
+    };
+
+    const saveMessengerAbono = async (form) => {
+        const formData = new FormData();
+        formData.append('action', 'registrar_abono_mensajero');
+        formData.append('mensajero_id', form.mensajero_id.value);
+        formData.append('fecha_grupo', form.fecha_grupo.value);
+        formData.append('monto', form.monto.value);
+        formData.append('metodo_pago', form.metodo_pago.value);
+        formData.append('observaciones', form.observaciones.value || '');
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.message || 'No se pudo registrar el abono.');
+        }
+
+        state.rawData = result.data;
+        render();
+        if (state.selectedMensajeroGroupKey) {
+            openMessengerAbonoModal(state.selectedMensajeroGroupKey);
         }
     };
 
@@ -853,6 +1104,166 @@ document.addEventListener('DOMContentLoaded', () => {
                 `).join('')}
             </div>
         `;
+    };
+
+    const renderMessengerPackageCard = (item) => `
+        <article class="package-card">
+            <div class="package-card-head">
+                <div>
+                    <h3>${escapeHtml(item.numero_guia)}</h3>
+                    <p>${escapeHtml(item.cliente_nombre || 'Sin cliente')} | ${escapeHtml(item.destinatario_nombre || 'Sin destinatario')}</p>
+                </div>
+                ${statusBadge(item.estado)}
+            </div>
+            <div class="package-card-grid">
+                <div class="package-data">
+                    <span class="package-label">Pago mensajero</span>
+                    <strong>${money(item.valor_pago_mensajero)}</strong>
+                </div>
+                <div class="package-data">
+                    <span class="package-label">Servicio cliente</span>
+                    <strong>${money(item.valor_envio)}</strong>
+                </div>
+                <div class="package-data">
+                    <span class="package-label">Contraentrega</span>
+                    <strong>${item.agregado_al_recaudo ? 'Si' : 'No'}</strong>
+                </div>
+                <div class="package-data">
+                    <span class="package-label">Recaudo esperado</span>
+                    <strong>${money(item.valor_recaudo)}</strong>
+                </div>
+                <div class="package-data">
+                    <span class="package-label">Recaudo real</span>
+                    <strong>${money(item.valor_recaudo_real)}</strong>
+                </div>
+                <div class="package-data">
+                    <span class="package-label">Visible al mensajero</span>
+                    <strong>${item.mostrar_al_mensajero ? 'Si' : 'No'}</strong>
+                </div>
+                <div class="package-data">
+                    <span class="package-label">Fecha</span>
+                    <strong>${shortDate(item.fecha_entrega || item.fecha_ingreso)}</strong>
+                </div>
+                <div class="package-data package-full">
+                    <span class="package-label">Observaciones entrega</span>
+                    <strong>${escapeHtml(item.observaciones || 'Sin observaciones')}</strong>
+                </div>
+            </div>
+            ${mode === 'admin' ? `
+                <div class="table-tools messenger-payment-tools">
+                    <input type="number" min="0" step="100" value="${Math.round(Number(item.valor_pago_mensajero || 0))}" data-role="payment-input" data-id="${item.paquete_id}">
+                    <label class="toggle-wrap">
+                        <input type="checkbox" data-role="show-toggle" data-id="${item.paquete_id}" ${item.mostrar_al_mensajero ? 'checked' : ''}>
+                        Mostrar
+                    </label>
+                    <button class="fact-btn primary" data-role="save-payment" data-id="${item.paquete_id}">Guardar pago</button>
+                </div>
+            ` : ''}
+        </article>
+    `;
+
+    const openMessengerDetailModal = (groupKey) => {
+        const group = getMensajeroGroupByKey(groupKey);
+        const modal = document.getElementById('facturacionDetailModal');
+        const title = document.getElementById('facturacionDetailTitle');
+        const subtitle = document.getElementById('facturacionDetailSubtitle');
+        const body = document.getElementById('facturacionDetailBody');
+
+        if (!group || !modal || !title || !subtitle || !body) {
+            return;
+        }
+
+        state.selectedMensajeroGroupKey = groupKey;
+        state.activeMensajeroModalView = 'detail';
+        title.textContent = `${group.mensajeroNombre} - ${group.fechaLabel}`;
+        subtitle.textContent = `${group.entregas} entrega(s) | Pago ${money(group.totalPago)} | Recaudo ${money(group.totalRecaudado)} | Abono ${money(group.abono)} | Saldo ${moneyAbs(group.saldo)}`;
+
+        body.innerHTML = `
+            <div class="detail-summary-strip">
+                <div><span>Entregas</span><strong>${group.entregas}</strong></div>
+                <div><span>Total pago</span><strong>${money(group.totalPago)}</strong></div>
+                <div><span>Total recaudado</span><strong>${money(group.totalRecaudado)}</strong></div>
+                <div><span>Abono</span><strong>${money(group.abono)}</strong></div>
+                <div><span>Estado</span><strong>${group.estado === 'pagado' ? 'Pagado' : 'Pendiente'}</strong></div>
+                <div><span>Saldo del dia</span><strong>${moneyAbs(group.saldo)}</strong></div>
+                <div><span>Total acumulado</span><strong>${moneyAbs(group.totalAcumulado)}</strong></div>
+            </div>
+            <div class="facturacion-abono-actions">
+                <button
+                    type="button"
+                    class="fact-btn secondary"
+                    data-role="open-messenger-abono"
+                    data-group-key="${escapeHtml(group.key)}"
+                >
+                    Registrar abono
+                </button>
+            </div>
+            <div class="package-list">
+                ${group.packages.map(renderMessengerPackageCard).join('')}
+            </div>
+        `;
+
+        modal.classList.remove('modal-hidden');
+        modal.setAttribute('aria-hidden', 'false');
+    };
+
+    const openMessengerAbonoModal = (groupKey) => {
+        const group = getMensajeroGroupByKey(groupKey);
+        const modal = document.getElementById('facturacionDetailModal');
+        const title = document.getElementById('facturacionDetailTitle');
+        const subtitle = document.getElementById('facturacionDetailSubtitle');
+        const body = document.getElementById('facturacionDetailBody');
+
+        if (!group || !modal || !title || !subtitle || !body) {
+            return;
+        }
+
+        state.selectedMensajeroGroupKey = groupKey;
+        state.activeMensajeroModalView = 'abono';
+        title.textContent = `Registrar abono - ${group.mensajeroNombre}`;
+        subtitle.textContent = `Fecha ${group.fechaLabel} | Pago ${money(group.totalPago)} | Abonado ${money(group.abono)} | Total pendiente ${moneyAbs(group.totalAcumulado)}`;
+
+        body.innerHTML = `
+            <div class="detail-summary-strip">
+                <div><span>Entregas</span><strong>${group.entregas}</strong></div>
+                <div><span>Total pago</span><strong>${money(group.totalPago)}</strong></div>
+                <div><span>Total recaudado</span><strong>${money(group.totalRecaudado)}</strong></div>
+                <div><span>Abonado</span><strong>${money(group.abono)}</strong></div>
+                <div><span>Saldo del dia</span><strong>${moneyAbs(group.saldo)}</strong></div>
+                <div><span>Total acumulado</span><strong>${moneyAbs(group.totalAcumulado)}</strong></div>
+            </div>
+            <form id="mensajeroAbonoForm" class="facturacion-abono-form">
+                <input type="hidden" name="mensajero_id" value="${group.mensajeroId}">
+                <input type="hidden" name="fecha_grupo" value="${escapeHtml(group.dateKey)}">
+                <div class="facturacion-abono-grid">
+                    <label class="facturacion-field">
+                        <span>Monto del abono</span>
+                        <input type="hidden" name="monto" value="" required>
+                        <input type="text" name="monto_display" inputmode="numeric" autocomplete="off" placeholder="$ 49.000" required>
+                    </label>
+                    <label class="facturacion-field">
+                        <span>Metodo de pago</span>
+                        <select name="metodo_pago" required>
+                            <option value="efectivo">Efectivo</option>
+                            <option value="transferencia">Transferencia</option>
+                        </select>
+                    </label>
+                    <label class="facturacion-field facturacion-field-full">
+                        <span>Observaciones</span>
+                        <textarea name="observaciones" rows="3" placeholder="Detalle del pago al mensajero"></textarea>
+                    </label>
+                </div>
+                <div class="facturacion-abono-actions">
+                    <button type="submit" class="fact-btn primary" data-role="submit-messenger-abono">Guardar abono</button>
+                    <button type="button" class="fact-btn tertiary" data-role="open-messenger-detail" data-group-key="${escapeHtml(group.key)}">Ver entregas</button>
+                </div>
+            </form>
+            <div class="facturacion-footnote">Historial de abonos registrados para este mensajero en esta fecha.</div>
+            ${renderAbonoHistory(group)}
+        `;
+
+        modal.classList.remove('modal-hidden');
+        modal.setAttribute('aria-hidden', 'false');
     };
 
     const openClientDetailModal = (groupKey) => {
@@ -1024,6 +1435,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.classList.add('modal-hidden');
         modal.setAttribute('aria-hidden', 'true');
         state.selectedClienteGroupKey = null;
+        state.selectedMensajeroGroupKey = null;
     };
 
     const hideClienteGroup = async (group) => {
@@ -1118,6 +1530,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const messengerDetailButton = event.target.closest('[data-role="open-messenger-detail"]');
+            if (messengerDetailButton) {
+                openMessengerDetailModal(messengerDetailButton.dataset.groupKey);
+                return;
+            }
+
+            const messengerAbonoButton = event.target.closest('[data-role="open-messenger-abono"]');
+            if (messengerAbonoButton) {
+                openMessengerAbonoModal(messengerAbonoButton.dataset.groupKey);
+                return;
+            }
+
             const packageAdditionalCostButton = event.target.closest('[data-role="open-package-additional-cost"]');
             if (packageAdditionalCostButton) {
                 openPackageAdditionalCostModal(packageAdditionalCostButton.dataset.packageId);
@@ -1186,6 +1610,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const messengerStatusSelect = event.target.closest('[data-role="messenger-group-status"]');
+            if (messengerStatusSelect) {
+                const previousClass = messengerStatusSelect.className;
+                messengerStatusSelect.disabled = true;
+                saveMessengerGroupStatus(messengerStatusSelect.dataset.groupKey, messengerStatusSelect.value).catch((error) => {
+                    alert(error.message);
+                    messengerStatusSelect.disabled = false;
+                    messengerStatusSelect.className = previousClass;
+                });
+                return;
+            }
+
             const rowCheckbox = event.target.closest('[data-role="select-client-group"]');
             if (rowCheckbox) {
                 const groupKey = rowCheckbox.dataset.groupKey;
@@ -1235,6 +1671,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 await saveClientAbono(form);
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                if (submitButton) {
+                    submitButton.textContent = originalText;
+                    submitButton.disabled = false;
+                }
+            }
+        });
+
+        document.addEventListener('submit', async (event) => {
+            const form = event.target.closest('#mensajeroAbonoForm');
+            if (!form) return;
+
+            event.preventDefault();
+            const amountDisplayInput = form.querySelector('input[name="monto_display"]');
+            if (amountDisplayInput) {
+                syncCurrencyInput(amountDisplayInput);
+            }
+
+            if (!form.monto.value || Number(form.monto.value) <= 0) {
+                alert('Ingresa un monto de abono valido.');
+                return;
+            }
+
+            const submitButton = form.querySelector('[data-role="submit-messenger-abono"]');
+            const originalText = submitButton ? submitButton.textContent : 'Guardar abono';
+            if (submitButton) {
+                submitButton.textContent = 'Guardando...';
+                submitButton.disabled = true;
+            }
+
+            try {
+                await saveMessengerAbono(form);
             } catch (error) {
                 alert(error.message);
             } finally {
@@ -1332,7 +1802,7 @@ document.addEventListener('DOMContentLoaded', () => {
             : document.querySelectorAll('[data-loading]');
 
         loaders.forEach((el) => {
-            const colspan = el.id === 'table-body-cliente' ? clienteTableColspan() : 11;
+            const colspan = el.id === 'table-body-cliente' ? clienteTableColspan() : mensajeroTableColspan();
             el.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">${error.message}</td></tr>`;
         });
     });

@@ -368,6 +368,21 @@ CREATE TABLE IF NOT EXISTS facturacion_abonos_cliente (
 
 CREATE INDEX idx_abonos_cliente_fecha ON facturacion_abonos_cliente(cliente_id, fecha_grupo);
 
+CREATE TABLE IF NOT EXISTS facturacion_abonos_mensajero (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    mensajero_id INT NOT NULL,
+    fecha_grupo DATE NOT NULL,
+    monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    metodo_pago ENUM('efectivo', 'transferencia') NOT NULL,
+    observaciones TEXT,
+    registrado_por INT NULL,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id) ON DELETE CASCADE,
+    FOREIGN KEY (registrado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_abonos_mensajero_fecha ON facturacion_abonos_mensajero(mensajero_id, fecha_grupo);
+
 CREATE TABLE IF NOT EXISTS facturacion_grupos_cliente_ocultos (
     id INT PRIMARY KEY AUTO_INCREMENT,
     cliente_id INT NOT NULL,
@@ -394,6 +409,20 @@ CREATE TABLE IF NOT EXISTS facturacion_estados_cliente (
 );
 
 CREATE INDEX idx_estado_cliente_fecha ON facturacion_estados_cliente(cliente_id, fecha_grupo);
+
+CREATE TABLE IF NOT EXISTS facturacion_estados_mensajero (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    mensajero_id INT NOT NULL,
+    fecha_grupo DATE NOT NULL,
+    estado ENUM('pendiente', 'pagado') NOT NULL DEFAULT 'pendiente',
+    actualizado_por INT NULL,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_estado_mensajero_fecha (mensajero_id, fecha_grupo),
+    FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id) ON DELETE CASCADE,
+    FOREIGN KEY (actualizado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_estado_mensajero_fecha ON facturacion_estados_mensajero(mensajero_id, fecha_grupo);
 
 CREATE TABLE IF NOT EXISTS pagos (
     id INT PRIMARY KEY AUTO_INCREMENT,
