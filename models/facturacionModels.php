@@ -148,8 +148,10 @@ class FacturacionModels
 
     public function obtenerVistaCliente(int $clienteId): array
     {
+        $fechaInicioFacturacionCliente = date('Y-m-d');
+
         return [
-            'cliente' => $this->obtenerResumenClientes($clienteId, false),
+            'cliente' => $this->obtenerResumenClientes($clienteId, false, $fechaInicioFacturacionCliente),
         ];
     }
 
@@ -329,15 +331,22 @@ class FacturacionModels
         }, $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
-    private function obtenerResumenClientes(?int $clienteId = null, bool $aplicarOcultos = true): array
+    private function obtenerResumenClientes(?int $clienteId = null, bool $aplicarOcultos = true, ?string $fechaDesde = null): array
     {
         $params = [];
-        $where = '';
+        $conditions = [];
 
         if ($clienteId !== null) {
-            $where = 'WHERE p.cliente_id = :cliente_id';
+            $conditions[] = 'p.cliente_id = :cliente_id';
             $params[':cliente_id'] = $clienteId;
         }
+
+        if ($fechaDesde !== null) {
+            $conditions[] = 'DATE(COALESCE(p.fecha_entrega, p.fecha_creacion)) >= :fecha_desde';
+            $params[':fecha_desde'] = $fechaDesde;
+        }
+
+        $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
         $sql = "SELECT
                     p.id AS paquete_id,
