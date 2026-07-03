@@ -276,15 +276,17 @@ document.addEventListener('DOMContentLoaded', () => {
             .map((group) => {
                 const abonos = getGroupAbonos(group.clienteId, group.dateKey);
                 const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
-                const saldo = Number(group.totalRecaudado || 0) - Number(group.totalServicio || 0);
-                const balance = saldo + abono;
+                const saldoCalculado = Number(group.totalRecaudado || 0) - Number(group.totalServicio || 0);
                 const estadoManual = getGroupEstadoManual(group.clienteId, group.dateKey);
+                const saldo = estadoManual === 'pagado' ? 0 : saldoCalculado;
+                const balance = estadoManual === 'pagado' ? 0 : saldo + abono;
                 return {
                     ...group,
                     abonos,
                     abono,
                     balance,
                     saldo,
+                    saldoCalculado,
                     estado: estadoManual || groupStatusFromBalance(balance)
                 };
             })
@@ -306,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         groupsAsc.forEach((group) => {
             const previous = Number(runningTotalsByClient.get(group.clientKey) || 0);
-            const current = previous + Number(group.saldo || 0) + Number(group.abono || 0);
+            const current = previous + Number(group.balance || 0);
             runningTotalsByClient.set(group.clientKey, current);
             group.totalAcumulado = current;
             group.totalAcumuladoEstado = groupStatusFromBalance(current);

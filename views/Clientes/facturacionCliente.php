@@ -79,6 +79,19 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
         </section>
     </main>
 
+    <div id="facturacionDetailModal" class="facturacion-modal-backdrop modal-hidden" aria-hidden="true">
+        <div class="facturacion-modal">
+            <div class="facturacion-modal-head">
+                <div>
+                    <h2 id="facturacionDetailTitle">Detalle de paquetes</h2>
+                    <p id="facturacionDetailSubtitle">Consulta la información del grupo seleccionado.</p>
+                </div>
+                <button type="button" class="facturacion-modal-close" data-close-detail-modal>&times;</button>
+            </div>
+            <div class="facturacion-modal-body" id="facturacionDetailBody"></div>
+        </div>
+    </div>
+
     <script src="../../public/js/facturacionPanel.js?v=<?php echo $facturacionPanelJsVersion; ?>"></script>
 </body>
 </html>
