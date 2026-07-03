@@ -420,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .map((group) => {
                 const abonos = getMensajeroGroupAbonos(group.mensajeroId, group.dateKey);
                 const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
-                const saldoCalculado = Number(group.totalPago || 0) - abono;
+                const saldoCalculado = Number(group.totalPago || 0) - Number(group.totalRecaudado || 0) - abono;
                 const estadoManual = getMensajeroGroupEstadoManual(group.mensajeroId, group.dateKey);
                 const saldo = estadoManual === 'pagado' ? 0 : saldoCalculado;
                 const balance = estadoManual === 'pagado' ? 0 : saldo;
@@ -1176,13 +1176,13 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedMensajeroGroupKey = groupKey;
         state.activeMensajeroModalView = 'detail';
         title.textContent = `${group.mensajeroNombre} - ${group.fechaLabel}`;
-        subtitle.textContent = `${group.entregas} entrega(s) | Pago ${money(group.totalPago)} | Recaudo ${money(group.totalRecaudado)} | Abono ${money(group.abono)} | Saldo ${moneyAbs(group.saldo)}`;
+        subtitle.textContent = `${group.entregas} entrega(s) | Pago ${money(group.totalPago)} | Recaudo descontado ${money(group.totalRecaudado)} | Abono ${money(group.abono)} | Saldo ${moneyAbs(group.saldo)}`;
 
         body.innerHTML = `
             <div class="detail-summary-strip">
                 <div><span>Entregas</span><strong>${group.entregas}</strong></div>
                 <div><span>Total pago</span><strong>${money(group.totalPago)}</strong></div>
-                <div><span>Total recaudado</span><strong>${money(group.totalRecaudado)}</strong></div>
+                <div><span>Recaudo descontado</span><strong>${money(group.totalRecaudado)}</strong></div>
                 <div><span>Abono</span><strong>${money(group.abono)}</strong></div>
                 <div><span>Estado</span><strong>${group.estado === 'pagado' ? 'Pagado' : 'Pendiente'}</strong></div>
                 <div><span>Saldo del dia</span><strong>${moneyAbs(group.saldo)}</strong></div>
@@ -1221,13 +1221,13 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedMensajeroGroupKey = groupKey;
         state.activeMensajeroModalView = 'abono';
         title.textContent = `Registrar abono - ${group.mensajeroNombre}`;
-        subtitle.textContent = `Fecha ${group.fechaLabel} | Pago ${money(group.totalPago)} | Abonado ${money(group.abono)} | Total pendiente ${moneyAbs(group.totalAcumulado)}`;
+        subtitle.textContent = `Fecha ${group.fechaLabel} | Pago ${money(group.totalPago)} | Recaudo descontado ${money(group.totalRecaudado)} | Abonado ${money(group.abono)} | Total pendiente ${moneyAbs(group.totalAcumulado)}`;
 
         body.innerHTML = `
             <div class="detail-summary-strip">
                 <div><span>Entregas</span><strong>${group.entregas}</strong></div>
                 <div><span>Total pago</span><strong>${money(group.totalPago)}</strong></div>
-                <div><span>Total recaudado</span><strong>${money(group.totalRecaudado)}</strong></div>
+                <div><span>Recaudo descontado</span><strong>${money(group.totalRecaudado)}</strong></div>
                 <div><span>Abonado</span><strong>${money(group.abono)}</strong></div>
                 <div><span>Saldo del dia</span><strong>${moneyAbs(group.saldo)}</strong></div>
                 <div><span>Total acumulado</span><strong>${moneyAbs(group.totalAcumulado)}</strong></div>
