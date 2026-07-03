@@ -484,6 +484,9 @@ CREATE INDEX idx_entregas_mensajero_fecha ON entregas(mensajero_id, fecha_entreg
 CREATE INDEX idx_numero_guia ON paquetes(numero_guia);
 CREATE INDEX idx_estado ON paquetes(estado);
 CREATE INDEX idx_fecha_creacion ON paquetes(fecha_creacion);
+CREATE INDEX idx_paquetes_facturacion_cliente_estado_fecha ON paquetes(cliente_id, estado, fecha_entrega, fecha_creacion);
+CREATE INDEX idx_paquetes_facturacion_mensajero_fecha ON paquetes(mensajero_id, fecha_entrega, fecha_creacion);
+CREATE INDEX idx_entregas_paquete ON entregas(paquete_id);
 CREATE INDEX idx_logs_usuario_tipo ON logs_actividad(usuario_id, tipo_actividad);
 
 -- Índices para colaboradores

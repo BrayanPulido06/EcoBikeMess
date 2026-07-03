@@ -510,24 +510,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const setLoading = (message = 'Cargando informacion...') => {
-        const loaders = document.querySelectorAll('[data-loading]');
+    const buildEndpointUrl = (panel = '') => {
+        if (!panel || mode !== 'admin') {
+            return endpoint;
+        }
+
+        const separator = endpoint.includes('?') ? '&' : '?';
+        return `${endpoint}${separator}panel=${encodeURIComponent(panel)}`;
+    };
+
+    const setLoading = (message = 'Cargando informacion...', panel = '') => {
+        const loaders = panel
+            ? [document.getElementById(`table-body-${panel}`)].filter(Boolean)
+            : document.querySelectorAll('[data-loading]');
+
         loaders.forEach((el) => {
             const colspan = el.id === 'table-body-cliente' ? clienteTableColspan() : 11;
             el.innerHTML = `<tr><td colspan="${colspan}" class="loading-state">${message}</td></tr>`;
         });
     };
 
-    const fetchData = async () => {
-        setLoading();
-        const response = await fetch(endpoint, { credentials: 'same-origin' });
+    const fetchData = async (panel = '') => {
+        setLoading('Cargando informacion...', panel);
+        const response = await fetch(buildEndpointUrl(panel), { credentials: 'same-origin' });
         const result = await response.json();
 
         if (!result.success) {
             throw new Error(result.message || 'No fue posible cargar la facturacion.');
         }
 
-        state.rawData = result.data;
+        state.rawData = {
+            ...(state.rawData || {}),
+            ...(result.data || {})
+        };
         render();
     };
 
@@ -540,18 +555,28 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const bindFilters = () => {
+        let filterRenderTimer = null;
+        const scheduleRender = () => {
+            window.clearTimeout(filterRenderTimer);
+            filterRenderTimer = window.setTimeout(render, 180);
+        };
+
         document.querySelectorAll('[data-panel-filter]').forEach((input) => {
             input.addEventListener('input', () => {
+                if (input.type === 'date') {
+                    return;
+                }
                 const panel = input.dataset.panelFilter;
                 const field = input.dataset.filterField;
                 state.filters[panel][field] = input.value;
-                render();
+                scheduleRender();
             });
 
             input.addEventListener('change', () => {
                 const panel = input.dataset.panelFilter;
                 const field = input.dataset.filterField;
                 state.filters[panel][field] = input.value;
+                window.clearTimeout(filterRenderTimer);
                 render();
             });
         });
@@ -570,6 +595,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('[data-panel]').forEach((item) => item.classList.add('panel-hidden'));
                 btn.classList.add('active');
                 document.querySelector(`[data-panel="${panel}"]`).classList.remove('panel-hidden');
+
+                if (mode === 'admin' && !state.rawData?.[panel]) {
+                    fetchData(panel).catch((error) => {
+                        const el = document.getElementById(`table-body-${panel}`);
+                        if (!el) {
+                            return;
+                        }
+                        const colspan = panel === 'cliente' ? clienteTableColspan() : 11;
+                        el.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">${error.message}</td></tr>`;
+                    });
+                }
             });
         });
     };
@@ -1290,8 +1326,12 @@ document.addEventListener('DOMContentLoaded', () => {
     bindFilters();
     bindTabs();
     bindAdminActions();
-    fetchData().catch((error) => {
-        document.querySelectorAll('[data-loading]').forEach((el) => {
+    fetchData(mode === 'admin' ? 'cliente' : '').catch((error) => {
+        const loaders = mode === 'admin'
+            ? [document.getElementById('table-body-cliente')].filter(Boolean)
+            : document.querySelectorAll('[data-loading]');
+
+        loaders.forEach((el) => {
             const colspan = el.id === 'table-body-cliente' ? clienteTableColspan() : 11;
             el.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">${error.message}</td></tr>`;
         });

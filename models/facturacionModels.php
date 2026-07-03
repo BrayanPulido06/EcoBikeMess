@@ -12,6 +12,7 @@ class FacturacionModels
         $this->ensureAbonosClienteTable();
         $this->ensureHiddenClientGroupsTable();
         $this->ensureClientGroupStatusTable();
+        $this->ensurePerformanceIndexes();
         $this->syncFacturacionRows();
     }
 
@@ -120,6 +121,23 @@ class FacturacionModels
         $this->conn->exec($sql);
     }
 
+    private function ensurePerformanceIndexes(): void
+    {
+        $indexes = [
+            ['paquetes', 'idx_paquetes_facturacion_cliente_estado_fecha', 'CREATE INDEX idx_paquetes_facturacion_cliente_estado_fecha ON paquetes (cliente_id, estado, fecha_entrega, fecha_creacion)'],
+            ['paquetes', 'idx_paquetes_facturacion_mensajero_fecha', 'CREATE INDEX idx_paquetes_facturacion_mensajero_fecha ON paquetes (mensajero_id, fecha_entrega, fecha_creacion)'],
+            ['entregas', 'idx_entregas_paquete', 'CREATE INDEX idx_entregas_paquete ON entregas (paquete_id)'],
+        ];
+
+        foreach ($indexes as [$table, $indexName, $sql]) {
+            $stmt = $this->conn->prepare("SHOW INDEX FROM {$table} WHERE Key_name = :index_name");
+            $stmt->execute([':index_name' => $indexName]);
+            if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+                $this->conn->exec($sql);
+            }
+        }
+    }
+
     public function obtenerClienteIdPorUsuario(int $usuarioId): ?int
     {
         $sql = "SELECT id FROM clientes WHERE usuario_id = :usuario_id LIMIT 1";
@@ -138,8 +156,20 @@ class FacturacionModels
         return $row ? (int) $row['id'] : null;
     }
 
-    public function obtenerVistaAdmin(): array
+    public function obtenerVistaAdmin(?string $panel = null): array
     {
+        if ($panel === 'cliente') {
+            return [
+                'cliente' => $this->obtenerResumenClientes(),
+            ];
+        }
+
+        if ($panel === 'mensajero') {
+            return [
+                'mensajero' => $this->obtenerResumenMensajeros(false),
+            ];
+        }
+
         return [
             'cliente' => $this->obtenerResumenClientes(),
             'mensajero' => $this->obtenerResumenMensajeros(false),
@@ -334,7 +364,7 @@ class FacturacionModels
     private function obtenerResumenClientes(?int $clienteId = null, bool $aplicarOcultos = true, ?string $fechaDesde = null): array
     {
         $params = [];
-        $conditions = [];
+        $conditions = ["p.estado = 'entregado'"];
 
         if ($clienteId !== null) {
             $conditions[] = 'p.cliente_id = :cliente_id';
@@ -342,8 +372,8 @@ class FacturacionModels
         }
 
         if ($fechaDesde !== null) {
-            $conditions[] = 'DATE(COALESCE(p.fecha_entrega, p.fecha_creacion)) >= :fecha_desde';
-            $params[':fecha_desde'] = $fechaDesde;
+            $conditions[] = '(p.fecha_entrega >= :fecha_desde OR (p.fecha_entrega IS NULL AND p.fecha_creacion >= :fecha_desde))';
+            $params[':fecha_desde'] = $fechaDesde . ' 00:00:00';
         }
 
         $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';

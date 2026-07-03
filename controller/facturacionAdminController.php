@@ -28,9 +28,14 @@ function parseMoneyInput($value): float
 
 try {
     if ($method === 'GET') {
+        $panel = isset($_GET['panel']) ? trim((string) $_GET['panel']) : null;
+        if ($panel !== null && !in_array($panel, ['cliente', 'mensajero'], true)) {
+            $panel = null;
+        }
+
         echo json_encode([
             'success' => true,
-            'data' => $model->obtenerVistaAdmin(),
+            'data' => $model->obtenerVistaAdmin($panel),
         ]);
         exit;
     }
