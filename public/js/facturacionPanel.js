@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         clienteGroups: [],
         selectedClienteGroups: new Set(),
+        selectedMensajeroGroups: new Set(),
         selectedClienteGroupKey: null,
         selectedMensajeroGroupKey: null,
         activeClientModalView: 'detail',
@@ -507,7 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const groupStatusFromBalance = (value) => Math.round(Number(value || 0)) === 0 ? 'pagado' : 'pendiente';
 
     const clienteTableColspan = () => mode === 'admin' ? 11 : 8;
-    const mensajeroTableColspan = () => mode === 'admin' ? 10 : 11;
+    const mensajeroTableColspan = () => mode === 'admin' ? 11 : 11;
 
     const renderClienteTable = (items) => {
         const tbody = document.getElementById('table-body-cliente');
@@ -644,15 +645,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const groups = buildMensajeroGroups(items);
         state.mensajeroGroups = groups;
+        const visibleKeys = new Set(groups.map((group) => group.key));
+        state.selectedMensajeroGroups.forEach((key) => {
+            if (!visibleKeys.has(key)) {
+                state.selectedMensajeroGroups.delete(key);
+            }
+        });
         document.getElementById('count-mensajero').textContent = `${groups.length} registros`;
 
         if (!groups.length) {
             tbody.innerHTML = `<tr><td colspan="${mensajeroTableColspan()}" class="empty-state">No hay registros con los filtros actuales.</td></tr>`;
+            syncMensajeroSelectionControls();
             return groups;
         }
 
         tbody.innerHTML = groups.map((group) => `
                 <tr>
+                    <td class="select-col">
+                        <input
+                            type="checkbox"
+                            data-role="select-messenger-group"
+                            data-group-key="${escapeHtml(group.key)}"
+                            aria-label="Seleccionar ${escapeHtml(group.mensajeroNombre)} del ${escapeHtml(group.fechaLabel)}"
+                            ${state.selectedMensajeroGroups.has(group.key) ? 'checked' : ''}
+                        >
+                    </td>
                     <td>${escapeHtml(group.mensajeroNombre)}</td>
                     <td>${group.fechaLabel}</td>
                     <td>${group.entregas}</td>
@@ -680,11 +697,22 @@ document.addEventListener('DOMContentLoaded', () => {
                             >
                                 Registrar abono
                             </button>
+                            <button
+                                type="button"
+                                class="fact-btn danger detail-trigger"
+                                data-role="hide-messenger-group"
+                                data-group-key="${escapeHtml(group.key)}"
+                                data-messenger-name="${escapeHtml(group.mensajeroNombre)}"
+                                data-date-label="${escapeHtml(group.fechaLabel)}"
+                            >
+                                Eliminar del dia
+                            </button>
                         </div>
                     </td>
                 </tr>
             `).join('');
 
+        syncMensajeroSelectionControls();
         return groups;
     };
 
@@ -990,6 +1018,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const bulkButton = document.querySelector('[data-role="hide-selected-client-groups"]');
         const visibleKeys = state.clienteGroups.map((group) => group.key);
         const selectedVisible = visibleKeys.filter((key) => state.selectedClienteGroups.has(key));
+
+        if (selectAll) {
+            selectAll.checked = visibleKeys.length > 0 && selectedVisible.length === visibleKeys.length;
+            selectAll.indeterminate = selectedVisible.length > 0 && selectedVisible.length < visibleKeys.length;
+            selectAll.disabled = visibleKeys.length === 0;
+        }
+
+        if (bulkButton) {
+            bulkButton.disabled = selectedVisible.length === 0;
+            bulkButton.textContent = selectedVisible.length > 0
+                ? `Eliminar seleccionados (${selectedVisible.length})`
+                : 'Eliminar seleccionados';
+        }
+    };
+
+    const syncMensajeroSelectionControls = () => {
+        const selectAll = document.querySelector('[data-role="select-all-messenger-groups"]');
+        const bulkButton = document.querySelector('[data-role="hide-selected-messenger-groups"]');
+        const visibleKeys = state.mensajeroGroups.map((group) => group.key);
+        const selectedVisible = visibleKeys.filter((key) => state.selectedMensajeroGroups.has(key));
 
         if (selectAll) {
             selectAll.checked = visibleKeys.length > 0 && selectedVisible.length === visibleKeys.length;
@@ -1464,6 +1512,27 @@ document.addEventListener('DOMContentLoaded', () => {
         return result;
     };
 
+    const hideMensajeroGroup = async (group) => {
+        const formData = new FormData();
+        formData.append('action', 'ocultar_grupo_mensajero');
+        formData.append('mensajero_id', String(group.mensajeroId));
+        formData.append('fecha_grupo', group.dateKey);
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.message || 'No se pudo ocultar la cuenta del dia.');
+        }
+
+        state.rawData = result.data;
+        return result;
+    };
+
     const handleHideClientGroup = async (button) => {
         const groupKey = button?.dataset.groupKey;
         const clientName = button?.dataset.clientName || 'este cliente';
@@ -1481,6 +1550,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         await hideClienteGroup(group);
         state.selectedClienteGroups.delete(group.key);
+        closeClientDetailModal();
+        render();
+    };
+
+    const handleHideMessengerGroup = async (button) => {
+        const groupKey = button?.dataset.groupKey;
+        const messengerName = button?.dataset.messengerName || 'este mensajero';
+        const dateLabel = button?.dataset.dateLabel || 'la fecha seleccionada';
+        const group = getMensajeroGroupByKey(groupKey);
+
+        if (!groupKey || !group || mode !== 'admin') {
+            return;
+        }
+
+        const confirmed = window.confirm(`Se ocultara de la vista la cuenta de ${messengerName} del ${dateLabel}. Esta accion no elimina nada de la base de datos. Deseas continuar?`);
+        if (!confirmed) {
+            return;
+        }
+
+        await hideMensajeroGroup(group);
+        state.selectedMensajeroGroups.delete(group.key);
         closeClientDetailModal();
         render();
     };
@@ -1517,6 +1607,42 @@ document.addEventListener('DOMContentLoaded', () => {
             if (button) {
                 button.textContent = originalText;
                 syncClienteSelectionControls();
+            }
+        }
+    };
+
+    const handleHideSelectedMessengerGroups = async (button) => {
+        if (mode !== 'admin') {
+            return;
+        }
+
+        const groups = state.mensajeroGroups.filter((group) => state.selectedMensajeroGroups.has(group.key));
+        if (!groups.length) {
+            return;
+        }
+
+        const confirmed = window.confirm(`Se ocultaran ${groups.length} cuenta(s) seleccionada(s) de la vista. Esta accion no elimina nada de la base de datos. Deseas continuar?`);
+        if (!confirmed) {
+            return;
+        }
+
+        const originalText = button?.textContent || 'Eliminar seleccionados';
+        if (button) {
+            button.disabled = true;
+            button.textContent = 'Eliminando...';
+        }
+
+        try {
+            for (const group of groups) {
+                await hideMensajeroGroup(group);
+                state.selectedMensajeroGroups.delete(group.key);
+            }
+            closeClientDetailModal();
+            render();
+        } finally {
+            if (button) {
+                button.textContent = originalText;
+                syncMensajeroSelectionControls();
             }
         }
     };
@@ -1561,11 +1687,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const hideMessengerButton = event.target.closest('[data-role="hide-messenger-group"]');
+            if (hideMessengerButton) {
+                handleHideMessengerGroup(hideMessengerButton).catch((error) => {
+                    alert(error.message);
+                });
+                return;
+            }
+
             const bulkHideButton = event.target.closest('[data-role="hide-selected-client-groups"]');
             if (bulkHideButton) {
                 handleHideSelectedClientGroups(bulkHideButton).catch((error) => {
                     alert(error.message);
                     syncClienteSelectionControls();
+                });
+                return;
+            }
+
+            const bulkHideMessengerButton = event.target.closest('[data-role="hide-selected-messenger-groups"]');
+            if (bulkHideMessengerButton) {
+                handleHideSelectedMessengerGroups(bulkHideMessengerButton).catch((error) => {
+                    alert(error.message);
+                    syncMensajeroSelectionControls();
                 });
                 return;
             }
@@ -1685,6 +1828,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 renderClienteTable(state.rawData?.cliente?.items || []);
+            }
+
+            const messengerRowCheckbox = event.target.closest('[data-role="select-messenger-group"]');
+            if (messengerRowCheckbox) {
+                const groupKey = messengerRowCheckbox.dataset.groupKey;
+                if (messengerRowCheckbox.checked) {
+                    state.selectedMensajeroGroups.add(groupKey);
+                } else {
+                    state.selectedMensajeroGroups.delete(groupKey);
+                }
+                syncMensajeroSelectionControls();
+                return;
+            }
+
+            const selectAllMessengers = event.target.closest('[data-role="select-all-messenger-groups"]');
+            if (selectAllMessengers) {
+                state.mensajeroGroups.forEach((group) => {
+                    if (selectAllMessengers.checked) {
+                        state.selectedMensajeroGroups.add(group.key);
+                    } else {
+                        state.selectedMensajeroGroups.delete(group.key);
+                    }
+                });
+                renderMensajeroTable(state.rawData?.mensajero?.items || []);
             }
         });
 

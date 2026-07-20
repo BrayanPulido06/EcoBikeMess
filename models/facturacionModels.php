@@ -11,6 +11,7 @@ class FacturacionModels
         $this->ensureFacturacionTable();
         $this->ensureAbonosClienteTable();
         $this->ensureHiddenClientGroupsTable();
+        $this->ensureHiddenMessengerGroupsTable();
         $this->ensureClientGroupStatusTable();
         $this->ensureAbonosMensajeroTable();
         $this->ensureMessengerGroupStatusTable();
@@ -102,6 +103,22 @@ class FacturacionModels
                     FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
                     FOREIGN KEY (ocultado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
                     INDEX idx_ocultos_fecha (fecha_grupo)
+                )";
+        $this->conn->exec($sql);
+    }
+
+    private function ensureHiddenMessengerGroupsTable(): void
+    {
+        $sql = "CREATE TABLE IF NOT EXISTS facturacion_grupos_mensajero_ocultos (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    mensajero_id INT NOT NULL,
+                    fecha_grupo DATE NOT NULL,
+                    ocultado_por INT NULL,
+                    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE KEY uniq_mensajero_fecha (mensajero_id, fecha_grupo),
+                    FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id) ON DELETE CASCADE,
+                    FOREIGN KEY (ocultado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+                    INDEX idx_ocultos_mensajero_fecha (fecha_grupo)
                 )";
         $this->conn->exec($sql);
     }
@@ -203,13 +220,13 @@ class FacturacionModels
 
         if ($panel === 'mensajero') {
             return [
-                'mensajero' => $this->obtenerResumenMensajeros(false),
+                'mensajero' => $this->obtenerResumenMensajeros(false, null, true, date('Y-m-d')),
             ];
         }
 
         return [
             'cliente' => $this->obtenerResumenClientes(),
-            'mensajero' => $this->obtenerResumenMensajeros(false),
+            'mensajero' => $this->obtenerResumenMensajeros(false, null, true, date('Y-m-d')),
         ];
     }
 
@@ -225,7 +242,7 @@ class FacturacionModels
     public function obtenerVistaMensajero(int $mensajeroId): array
     {
         return [
-            'mensajero' => $this->obtenerResumenMensajeros(true, $mensajeroId),
+            'mensajero' => $this->obtenerResumenMensajeros(true, $mensajeroId, false),
         ];
     }
 
@@ -322,6 +339,23 @@ class FacturacionModels
         ]);
     }
 
+    public function ocultarGrupoMensajero(int $mensajeroId, string $fechaGrupo, ?int $ocultadoPor): bool
+    {
+        $sql = "INSERT INTO facturacion_grupos_mensajero_ocultos (
+                    mensajero_id, fecha_grupo, ocultado_por
+                ) VALUES (
+                    :mensajero_id, :fecha_grupo, :ocultado_por
+                )
+                ON DUPLICATE KEY UPDATE
+                    ocultado_por = VALUES(ocultado_por)";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':mensajero_id' => $mensajeroId,
+            ':fecha_grupo' => $fechaGrupo,
+            ':ocultado_por' => $ocultadoPor,
+        ]);
+    }
+
     public function actualizarEstadoGrupoCliente(int $clienteId, string $fechaGrupo, string $estado, ?int $actualizadoPor): bool
     {
         if (!in_array($estado, ['pendiente', 'pagado'], true)) {
@@ -377,6 +411,20 @@ class FacturacionModels
         return array_map(static function ($row) {
             return [
                 'cliente_id' => (int) ($row['cliente_id'] ?? 0),
+                'fecha_grupo' => (string) ($row['fecha_grupo'] ?? ''),
+            ];
+        }, $rows);
+    }
+
+    private function obtenerGruposMensajeroOcultos(): array
+    {
+        $sql = "SELECT mensajero_id, fecha_grupo FROM facturacion_grupos_mensajero_ocultos";
+        $stmt = $this->conn->query($sql);
+        $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+
+        return array_map(static function ($row) {
+            return [
+                'mensajero_id' => (int) ($row['mensajero_id'] ?? 0),
                 'fecha_grupo' => (string) ($row['fecha_grupo'] ?? ''),
             ];
         }, $rows);
@@ -558,7 +606,7 @@ class FacturacionModels
         return $this->mapearResumenClientes($rows, $clienteId, $aplicarOcultos);
     }
 
-    private function obtenerResumenMensajeros(bool $soloVisibles, ?int $mensajeroId = null): array
+    private function obtenerResumenMensajeros(bool $soloVisibles, ?int $mensajeroId = null, bool $aplicarOcultos = true, ?string $fechaDesde = null): array
     {
         $conditions = ["p.estado = 'entregado'"];
         $params = [];
@@ -569,6 +617,10 @@ class FacturacionModels
         if ($mensajeroId !== null) {
             $conditions[] = 'p.mensajero_id = :mensajero_id';
             $params[':mensajero_id'] = $mensajeroId;
+        }
+        if ($fechaDesde !== null) {
+            $conditions[] = '(p.fecha_entrega >= :fecha_desde OR (p.fecha_entrega IS NULL AND p.fecha_creacion >= :fecha_desde))';
+            $params[':fecha_desde'] = $fechaDesde . ' 00:00:00';
         }
 
         $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
@@ -603,7 +655,7 @@ class FacturacionModels
         $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return $this->mapearResumenMensajeros($rows, $mensajeroId);
+        return $this->mapearResumenMensajeros($rows, $mensajeroId, $aplicarOcultos);
     }
 
     private function mapearResumenClientes(array $rows, ?int $clienteId = null, bool $aplicarOcultos = true): array
@@ -691,7 +743,7 @@ class FacturacionModels
         ];
     }
 
-    private function mapearResumenMensajeros(array $rows, ?int $mensajeroId = null): array
+    private function mapearResumenMensajeros(array $rows, ?int $mensajeroId = null, bool $aplicarOcultos = true): array
     {
         $items = [];
         $totales = [
@@ -711,8 +763,20 @@ class FacturacionModels
             $diario[$fechaBase]++;
         }
 
+        $hiddenMap = [];
+        if ($aplicarOcultos) {
+            $hiddenGroups = $this->obtenerGruposMensajeroOcultos();
+            foreach ($hiddenGroups as $hiddenGroup) {
+                $hiddenMap[(int) $hiddenGroup['mensajero_id'] . '__' . (string) $hiddenGroup['fecha_grupo']] = true;
+            }
+        }
+
         foreach ($rows as $row) {
             $fechaBase = substr((string) ($row['fecha_entrega'] ?: $row['fecha_creacion']), 0, 10);
+            $hiddenKey = (int) ($row['mensajero_id'] ?? 0) . '__' . $fechaBase;
+            if (isset($hiddenMap[$hiddenKey])) {
+                continue;
+            }
 
             $valorPago = (float) $row['valor_pago_mensajero'];
             if ($valorPago <= 0) {

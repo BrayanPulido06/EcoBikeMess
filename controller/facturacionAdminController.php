@@ -199,6 +199,29 @@ try {
         exit;
     }
 
+    if ($method === 'POST' && $action === 'ocultar_grupo_mensajero') {
+        $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
+        $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+        $ocultadoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+
+        if ($mensajeroId <= 0) {
+            throw new InvalidArgumentException('Mensajero invalido.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+            throw new InvalidArgumentException('La fecha del grupo no es valida.');
+        }
+
+        $model->ocultarGrupoMensajero($mensajeroId, $fechaGrupo, $ocultadoPor);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'La cuenta del dia fue ocultada correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
     if ($method === 'POST' && $action === 'actualizar_estado_grupo_cliente') {
         $clienteId = (int) ($_POST['cliente_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
