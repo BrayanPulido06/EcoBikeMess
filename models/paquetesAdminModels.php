@@ -1048,6 +1048,18 @@ class PaquetesAdminModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function getNovedadFotoById($novedadId) {
+        $hasFotoAdicional = $this->columnExists('novedades_entrega', 'foto_adicional');
+        $selectFotoAdicional = $hasFotoAdicional ? ', foto_adicional' : ", NULL as foto_adicional";
+        $sql = "SELECT id, foto_evidencia{$selectFotoAdicional}
+                FROM novedades_entrega
+                WHERE id = :id
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':id' => $novedadId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     public function deletePaqueteImagen($imageId) {
         $sql = "DELETE FROM paquete_imagenes WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
