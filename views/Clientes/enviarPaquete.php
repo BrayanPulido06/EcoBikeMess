@@ -61,7 +61,7 @@ $remitente_data = [
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
-    <link rel="stylesheet" href="../../public/css/enviarPaquete.css">
+    <link rel="stylesheet" href="../../public/css/enviarPaquete.css?v=20260721-1">
     <link rel="stylesheet" href="../../public/css/clientesTheme.css">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <style>
@@ -126,28 +126,49 @@ $remitente_data = [
         .confirmation-note {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             gap: 0.85rem;
             margin-bottom: 1.5rem;
-            padding: 1.2rem 1.4rem;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #fff8db 0%, #ffe9a8 100%);
-            border: 3px solid #f0ad00;
-            color: #1f2d3d;
-            font-size: 1.15rem;
-            font-weight: 800;
+            padding: 1rem 1.2rem;
+            border-radius: 12px;
+            background: #f1fbf4;
+            border: 1px solid #bfe8c9;
+            color: #235b34;
+            font-size: 0.98rem;
+            font-weight: 600;
             line-height: 1.35;
-            text-align: center;
-            box-shadow: 0 8px 22px rgba(240, 173, 0, 0.22);
-            text-transform: uppercase;
+            text-align: left;
         }
         .confirmation-note-icon {
             flex: 0 0 auto;
-            font-size: 1.75rem;
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #45b75a;
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 800;
             line-height: 1;
         }
         .confirmation-note strong {
             color: #0f7d32;
+        }
+        .confirmation-actions {
+            display: none;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 1.25rem;
+        }
+        .confirmation-actions.visible {
+            display: flex;
+        }
+        .confirmation-actions .btn-primary,
+        .confirmation-actions .btn-secondary {
+            text-decoration: none;
         }
         #rotuloPreview .rotulo-scale .rotulo-card p {
             margin: 2px 0;
@@ -624,8 +645,8 @@ $remitente_data = [
                         </div>
                         <div class="card-body">
                             <div class="confirmation-note">
-                                <span class="confirmation-note-icon">⚠️</span>
-                                <span>Tu envío ya fue confirmado. Esta es la guía del paquete.</span>
+                                <span class="confirmation-note-icon">✓</span>
+                                <span>Listo, tu envío quedó confirmado. Puedes descargar o consultar la guía del paquete.</span>
                             </div>
                             <div id="rotuloPreview" style="background: white; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333;">
                                 <div class="rotulo-scale">
@@ -690,6 +711,10 @@ $remitente_data = [
                                         </tr>
                                     </table>
                                 </div>
+                            </div>
+                            <div class="confirmation-actions" id="confirmationActions">
+                                <a href="inicioCliente.php" class="btn-secondary">Volver al inicio</a>
+                                <button type="button" class="btn-primary" id="btnNewShipment">Enviar otro paquete</button>
                             </div>
                         </div>
                     </div>

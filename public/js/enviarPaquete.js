@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnNext = document.getElementById('btnNext');
     const btnPrevious = document.getElementById('btnPrevious');
     const btnSubmit = document.getElementById('btnSubmit');
+    const btnNewShipment = document.getElementById('btnNewShipment');
+    const confirmationActions = document.getElementById('confirmationActions');
 
     // Evitar que el formulario se envíe al presionar Enter
     if (form) {
@@ -231,6 +233,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    if (btnNewShipment) {
+        btnNewShipment.addEventListener('click', () => {
+            window.location.href = window.location.pathname;
+        });
+    }
+
     if (form) {
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -311,6 +319,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (currentStep === 4) {
             populateConfirmation(guiaConfirmada);
+            if (confirmationActions) {
+                confirmationActions.classList.add('visible');
+            }
+        } else if (confirmationActions) {
+            confirmationActions.classList.remove('visible');
         }
     }
 

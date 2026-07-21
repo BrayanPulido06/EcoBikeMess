@@ -181,6 +181,55 @@
     padding: 2rem;
 }
 
+.confirmation-note {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.2rem;
+    border-radius: 12px;
+    background: #f1fbf4;
+    border: 1px solid #bfe8c9;
+    color: #235b34;
+    font-size: 0.98rem;
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: left;
+}
+
+.confirmation-note-icon {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #45b75a;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.confirmation-actions {
+    display: none;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 1.25rem;
+}
+
+.confirmation-actions.visible {
+    display: flex;
+}
+
+.confirmation-actions .btn-primary,
+.confirmation-actions .btn-secondary {
+    text-decoration: none;
+}
+
 /* Form Elements */
 .form-row {
     display: grid;

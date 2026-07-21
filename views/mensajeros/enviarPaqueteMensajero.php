@@ -54,7 +54,7 @@ $remitente_data = [
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css?v=20260528-1">
-    <link rel="stylesheet" href="../../public/css/enviarPaqueteMensajero.css">
+    <link rel="stylesheet" href="../../public/css/enviarPaqueteMensajero.css?v=20260721-1">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <style>
         .guia-section {
@@ -612,6 +612,10 @@ $remitente_data = [
                             </button>
                         </div>
                         <div class="card-body">
+                            <div class="confirmation-note">
+                                <span class="confirmation-note-icon">✓</span>
+                                <span>Listo, el paquete quedó confirmado. Puedes descargar o consultar la guía.</span>
+                            </div>
                             <div id="rotuloPreview" style="background: white; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333;">
                                 <div class="rotulo-scale">
                                     <table style="width: 100%; border-bottom: 2px solid #5cb85c; padding-bottom: 6px;">
@@ -675,6 +679,10 @@ $remitente_data = [
                                         </tr>
                                     </table>
                                 </div>
+                            </div>
+                            <div class="confirmation-actions" id="confirmationActions">
+                                <a href="inicioMensajero.php" class="btn-secondary">Volver al inicio</a>
+                                <button type="button" class="btn-primary" id="btnNewShipment">Enviar otro paquete</button>
                             </div>
                         </div>
                     </div>
