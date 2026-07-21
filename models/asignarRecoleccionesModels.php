@@ -75,6 +75,8 @@ class AsignarRecoleccionesModel {
     public function listarRecolecciones($filtros) {
                 $sql = "SELECT 
                     p.direccion_origen,
+                    GROUP_CONCAT(DISTINCT NULLIF(TRIM(p.remitente_nombre), '') SEPARATOR ' | ') as remitente_nombre,
+                    GROUP_CONCAT(DISTINCT NULLIF(TRIM(p.remitente_telefono), '') SEPARATOR ' | ') as remitente_telefono,
                     GROUP_CONCAT(DISTINCT NULLIF(TRIM(p.observaciones_recoleccion), '') SEPARATOR ' | ') as observaciones_recoleccion,
                     p.estado as estado_paquete,
                     MAX(r.estado) as estado_recoleccion,
@@ -154,7 +156,15 @@ class AsignarRecoleccionesModel {
         try {
             $this->conn->beginTransaction();
 
-            $sqlInfo = "SELECT p.cliente_id, p.direccion_origen, c.nombre_emprendimiento, u.nombres, u.apellidos, u.telefono
+            $sqlInfo = "SELECT
+                            p.cliente_id,
+                            p.direccion_origen,
+                            p.remitente_nombre,
+                            p.remitente_telefono,
+                            c.nombre_emprendimiento,
+                            u.nombres,
+                            u.apellidos,
+                            u.telefono
                         FROM paquetes p
                         LEFT JOIN clientes c ON p.cliente_id = c.id
                         LEFT JOIN usuarios u ON c.usuario_id = u.id
@@ -181,7 +191,14 @@ class AsignarRecoleccionesModel {
             $recoleccionExistenteId = $stmtRecoleccionExistente->fetchColumn();
 
             $numeroOrden = 'REC-' . date('ymd') . '-' . rand(1000, 9999);
-            $contacto = !empty($info['nombre_emprendimiento']) ? $info['nombre_emprendimiento'] : ($info['nombres'] . ' ' . $info['apellidos']);
+            $contacto = trim((string) ($info['remitente_nombre'] ?? ''));
+            if ($contacto === '') {
+                $contacto = !empty($info['nombre_emprendimiento']) ? $info['nombre_emprendimiento'] : ($info['nombres'] . ' ' . $info['apellidos']);
+            }
+            $telefonoContacto = trim((string) ($info['remitente_telefono'] ?? ''));
+            if ($telefonoContacto === '') {
+                $telefonoContacto = trim((string) ($info['telefono'] ?? ''));
+            }
             $cantidad = count(array_filter(explode(',', $ids)));
 
             if ($recoleccionExistenteId) {
@@ -200,7 +217,7 @@ class AsignarRecoleccionesModel {
                     ':mensajero' => $mensajeroId,
                     ':direccion' => $info['direccion_origen'],
                     ':contacto' => $contacto,
-                    ':telefono' => $info['telefono'],
+                    ':telefono' => $telefonoContacto,
                     ':cantidad' => $cantidad,
                     ':observaciones_recoleccion' => $observacionesRecoleccion !== '' ? $observacionesRecoleccion : null,
                     ':recoleccion_id' => $recoleccionExistenteId
@@ -219,7 +236,7 @@ class AsignarRecoleccionesModel {
                     ':mensajero' => $mensajeroId,
                     ':direccion' => $info['direccion_origen'],
                     ':contacto' => $contacto,
-                    ':telefono' => $info['telefono'],
+                    ':telefono' => $telefonoContacto,
                     ':cantidad' => $cantidad,
                     ':observaciones_recoleccion' => $observacionesRecoleccion !== '' ? $observacionesRecoleccion : null,
                     ':creada_por' => $creadoPor

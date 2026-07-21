@@ -1095,11 +1095,34 @@ function verDetalle(id, options = {}) {
                     imageId: img.id
                 }));
 
+                const buildImageUrl = (path) => {
+                    const raw = String(path || '').trim();
+                    if (!raw) return '';
+                    if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
+
+                    let normalized = raw.replace(/\\/g, '/');
+                    const uploadsIndex = normalized.toLowerCase().lastIndexOf('/uploads/');
+                    if (uploadsIndex >= 0) {
+                        normalized = normalized.slice(uploadsIndex + 1);
+                    }
+
+                    normalized = normalized
+                        .replace(/^(\.\.\/)+/, '')
+                        .replace(/^(\.\/)+/, '')
+                        .replace(/^\/+/, '');
+
+                    if (normalized.toLowerCase().startsWith('uploads/')) {
+                        return `../../${normalized}`;
+                    }
+
+                    return normalized;
+                };
+
                 const renderEvidenciaCard = (item) => {
                     const rutaRaw = item.ruta || item.ruta_archivo;
                     const hasImage = Boolean(rutaRaw);
-                    const ruta = hasImage ? String(rutaRaw).replace(/^\/+/, '') : '';
-                    const fullPath = hasImage ? `../../${ruta}` : '';
+                    const fullPath = hasImage ? buildImageUrl(rutaRaw) : '';
+                    const safeFullPath = escapeHtml(fullPath);
 
                     const canDelete = (item.allowDelete !== false) && (item.imageId || item.target);
                     const deleteAttrs = item.imageId
@@ -1126,8 +1149,8 @@ function verDetalle(id, options = {}) {
                     return `
                         <div class="evidencia-card">
                             ${hasImage ? `
-                                <a href="${fullPath}" class="js-image-lightbox" data-lightbox-src="${fullPath}" data-lightbox-alt="${escapeHtml(item.label)}" aria-label="${escapeHtml(item.label)}">
-                                    <img src="${fullPath}" alt="${escapeHtml(item.label)}">
+                                <a href="${safeFullPath}" class="js-image-lightbox" data-lightbox-src="${safeFullPath}" data-lightbox-alt="${escapeHtml(item.label)}" aria-label="${escapeHtml(item.label)}">
+                                    <img src="${safeFullPath}" alt="${escapeHtml(item.label)}" loading="lazy">
                                 </a>
                             ` : `
                                 <div style="height: 180px; display:flex; align-items:center; justify-content:center; background:#f8f9fb; color:#7a8699; border:1px dashed #cbd5e1; border-radius:10px; text-align:center; padding:12px;">
@@ -1153,12 +1176,12 @@ function verDetalle(id, options = {}) {
                     if (fotos.length === 0) return '<span class="text-muted">Sin fotos</span>';
 
                     return fotos.map(f => {
-                        const ruta = String(f.ruta).replace(/^\/+/, '');
-                        const fullPath = `../../${ruta}`;
+                        const fullPath = buildImageUrl(f.ruta);
+                        const safeFullPath = escapeHtml(fullPath);
                         const alt = `${cap(n.tipo)} - ${f.label}`;
                         return `
-                            <a href="${fullPath}" class="js-image-lightbox" data-lightbox-src="${fullPath}" data-lightbox-alt="${escapeHtml(alt)}" aria-label="${escapeHtml(alt)}" style="display:inline-block;width:120px;height:120px;border:1px solid #ddd;border-radius:10px;overflow:hidden;margin-right:10px;">
-                                <img src="${fullPath}" alt="${escapeHtml(alt)}" style="width:100%;height:100%;object-fit:cover;display:block;">
+                            <a href="${safeFullPath}" class="js-image-lightbox" data-lightbox-src="${safeFullPath}" data-lightbox-alt="${escapeHtml(alt)}" aria-label="${escapeHtml(alt)}" style="display:inline-block;width:120px;height:120px;border:1px solid #ddd;border-radius:10px;overflow:hidden;margin-right:10px;">
+                                <img src="${safeFullPath}" alt="${escapeHtml(alt)}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">
                             </a>
                         `;
                     }).join('');

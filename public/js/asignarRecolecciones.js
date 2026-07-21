@@ -197,6 +197,29 @@ function buildRecollectionDataHtml(recoleccionData) {
     `;
 }
 
+function buildRequestedPickupDataHtml(paquete, recoleccionData = null) {
+    const nombre = String(recoleccionData?.nombre_contacto || paquete?.remitente_nombre || '').trim();
+    const direccion = String(recoleccionData?.direccion_recoleccion || paquete?.direccion_origen || '').trim();
+    const telefono = String(recoleccionData?.telefono_contacto || paquete?.remitente_telefono || '').trim();
+
+    return `
+        <div class="detalle-grid">
+            <div class="detalle-item">
+                <div class="detalle-label">Nombre</div>
+                <div class="detalle-value">${escapeHtml(nombre || 'Sin nombre registrado')}</div>
+            </div>
+            <div class="detalle-item">
+                <div class="detalle-label">Direccion</div>
+                <div class="detalle-value">${escapeHtml(direccion || 'Sin direccion registrada')}</div>
+            </div>
+            <div class="detalle-item">
+                <div class="detalle-label">Telefono</div>
+                <div class="detalle-value">${escapeHtml(telefono || 'Sin telefono registrado')}</div>
+            </div>
+        </div>
+    `;
+}
+
 function getClientPickupObservations(paquetes, recoleccionData) {
     const observacionesPaquetes = (Array.isArray(paquetes) ? paquetes : [])
         .map(paquete => String(paquete.observaciones_recoleccion ?? '').trim())
@@ -244,6 +267,8 @@ function renderAccionesRecoleccion(rec) {
     const ids = escapeHtml(rec.ids);
     const direccion = escapeHtml(rec.direccion_origen);
     const cliente = escapeHtml(rec.cliente_nombre);
+    const contacto = escapeHtml(rec.remitente_nombre || '');
+    const telefono = escapeHtml(rec.remitente_telefono || '');
     const observaciones = escapeHtml(rec.observaciones_recoleccion || '');
     const esPendiente = rec.estado === 'pendiente';
 
@@ -258,7 +283,7 @@ function renderAccionesRecoleccion(rec) {
     return `
         <div class="actions">
             <button class="btn btn-sm btn-info btn-ver-detalles" title="Ver Paquetes" data-ids="${ids}">Ver</button>
-            <button class="btn btn-sm ${esPendiente ? 'btn-warning' : 'btn-secondary'} btn-asignar-recoleccion" title="${esPendiente ? 'Asignar Recoleccion' : 'Reasignar'}" data-ids="${ids}" data-direccion="${direccion}" data-cliente="${cliente}" data-observaciones="${observaciones}">${esPendiente ? 'Asignar' : 'Reasignar'}</button>
+            <button class="btn btn-sm ${esPendiente ? 'btn-warning' : 'btn-secondary'} btn-asignar-recoleccion" title="${esPendiente ? 'Asignar Recoleccion' : 'Reasignar'}" data-ids="${ids}" data-direccion="${direccion}" data-cliente="${cliente}" data-contacto="${contacto}" data-telefono="${telefono}" data-observaciones="${observaciones}">${esPendiente ? 'Asignar' : 'Reasignar'}</button>
             <button class="btn btn-sm btn-danger btn-cancelar-recoleccion" title="Cancelar" data-ids="${ids}">Cancelar</button>
         </div>
     `;
@@ -337,7 +362,9 @@ function manejarClickTabla(event) {
             btnAsignar.dataset.ids || '',
             btnAsignar.dataset.direccion || '',
             btnAsignar.dataset.cliente || '',
-            btnAsignar.dataset.observaciones || ''
+            btnAsignar.dataset.observaciones || '',
+            btnAsignar.dataset.contacto || '',
+            btnAsignar.dataset.telefono || ''
         );
         return;
     }
@@ -433,6 +460,8 @@ function applyFilters() {
         const coincideBusqueda = !busqueda ||
             rec.cliente_nombre.toLowerCase().includes(busqueda) ||
             rec.direccion_origen.toLowerCase().includes(busqueda) ||
+            (rec.remitente_nombre || '').toLowerCase().includes(busqueda) ||
+            (rec.remitente_telefono || '').toLowerCase().includes(busqueda) ||
             (rec.mensajero_nombre || '').toLowerCase().includes(busqueda);
 
         const coincideEstado = !estado || getEstadoFiltro(rec.estado) === estado;
@@ -476,21 +505,24 @@ function capitalize(s) {
 function buildRows(items) {
     return items.map(rec => `
         <tr class="prioridad-${rec.color_prioridad || 'verde'}">
-            <td>${rec.direccion_origen}</td>
-            <td>${rec.cliente_nombre}</td>
-            <td>${rec.mensajero_nombre}</td>
             <td>
-                <span class="badge estado-${rec.estado}">
-                    ${formatEstadoLabel(rec.estado)}
+                ${escapeHtml(rec.direccion_origen || '')}
+                <br><small>${escapeHtml(rec.remitente_nombre || 'Sin contacto')} | ${escapeHtml(rec.remitente_telefono || 'Sin telefono')}</small>
+            </td>
+            <td>${escapeHtml(rec.cliente_nombre || '')}</td>
+            <td>${escapeHtml(rec.mensajero_nombre || '')}</td>
+            <td>
+                <span class="badge estado-${escapeHtml(rec.estado || '')}">
+                    ${escapeHtml(formatEstadoLabel(rec.estado))}
                 </span>
             </td>
             <td>
                 <span class="badge badge-info" style="font-size: 1em; background-color: #17a2b8;">
-                    ${rec.cantidad} Paquetes
+                    ${escapeHtml(rec.cantidad || 0)} Paquetes
                 </span>
             </td>
-            <td><small>${rec.guias ? rec.guias.substring(0, 50) + (rec.guias.length > 50 ? '...' : '') : ''}</small></td>
-            <td>${new Date(rec.fecha_creacion).toLocaleString()}</td>
+            <td><small>${escapeHtml(rec.guias ? rec.guias.substring(0, 50) + (rec.guias.length > 50 ? '...' : '') : '')}</small></td>
+            <td>${escapeHtml(new Date(rec.fecha_creacion).toLocaleString())}</td>
             <td>${renderAccionesRecoleccion(rec)}</td>
         </tr>
     `).join('');
@@ -524,6 +556,7 @@ window.verDetallesPaquetes = async function(ids) {
                 const clienteNombre = primerPaquete.nombre_emprendimiento || (primerPaquete.cli_nombres + ' ' + primerPaquete.cli_apellidos);
 
                 const datosRecoleccionHtml = buildRecollectionDataHtml(recoleccionData);
+                const datosSolicitadosHtml = buildRequestedPickupDataHtml(primerPaquete, recoleccionData);
                 const observacionesSolicitadas = getClientPickupObservations(paquetesDetalleActual, recoleccionData);
                 let recoleccionInfoHtml = '<p>No se encontraron detalles de la recoleccion en la tabla `recolecciones`.</p>';
                 if (recoleccionData) {
@@ -566,9 +599,8 @@ window.verDetallesPaquetes = async function(ids) {
                     <div class="detalle-section">
                         <h3 style="margin-bottom: 15px;">Informacion General</h3>
                         <div class="detalle-grid">
-                            <div class="detalle-item"><div class="detalle-label">Cliente</div><div class="detalle-value">${clienteNombre}</div></div>
-                            <div class="detalle-item"><div class="detalle-label">Direccion</div><div class="detalle-value">${primerPaquete.direccion_origen}</div></div>
-                            <div class="detalle-item"><div class="detalle-label">Telefono</div><div class="detalle-value">${primerPaquete.cli_telefono || 'N/A'}</div></div>
+                            <div class="detalle-item"><div class="detalle-label">Cliente solicitante</div><div class="detalle-value">${escapeHtml(clienteNombre)}</div></div>
+                            <div class="detalle-item"><div class="detalle-label">Telefono cliente</div><div class="detalle-value">${escapeHtml(primerPaquete.cli_telefono || 'N/A')}</div></div>
                         </div>
                         <div style="margin-top: 12px;">
                             <div class="detalle-label">Observaciones de recoleccion solicitadas</div>
@@ -577,6 +609,10 @@ window.verDetallesPaquetes = async function(ids) {
                     </div>
                     <div class="detalle-section">
                         <h3 style="margin-top: 20px;">Datos de recoleccion</h3>
+                        ${datosSolicitadosHtml}
+                    </div>
+                    <div class="detalle-section">
+                        <h3 style="margin-top: 20px;">Registro del mensajero</h3>
                         ${datosRecoleccionHtml}
                     </div>
                     <div class="detalle-section">
@@ -668,7 +704,7 @@ async function descargarRotuloActual() {
     }
 }
 
-window.asignarRecoleccion = function(ids, direccion, cliente, observaciones = '') {
+window.asignarRecoleccion = function(ids, direccion, cliente, observaciones = '', contacto = '', telefono = '') {
     const modal = document.getElementById('modalAsignarRapido');
     if (modal) {
         const infoContainer = document.getElementById('infoRecoleccionAsignar');
@@ -676,9 +712,11 @@ window.asignarRecoleccion = function(ids, direccion, cliente, observaciones = ''
             if (direccion && cliente) {
                 infoContainer.innerHTML = `
                     <p style="margin:0; font-size: 0.9em; color: #6c757d;">Asignando recoleccion para:</p>
-                    <p style="margin:2px 0 0; font-weight: 600;"><strong>Cliente:</strong> ${cliente}</p>
-                    <p style="margin:2px 0 0; font-weight: 600;"><strong>Direccion:</strong> ${direccion}</p>
-                    <p style="margin:6px 0 0; font-weight: 600;"><strong>Observaciones:</strong> ${observaciones || 'Sin observaciones de recoleccion.'}</p>`;
+                    <p style="margin:2px 0 0; font-weight: 600;"><strong>Cliente solicitante:</strong> ${escapeHtml(cliente)}</p>
+                    <p style="margin:6px 0 0; font-weight: 600;"><strong>Nombre recoleccion:</strong> ${escapeHtml(contacto || 'Sin nombre registrado')}</p>
+                    <p style="margin:2px 0 0; font-weight: 600;"><strong>Direccion recoleccion:</strong> ${escapeHtml(direccion)}</p>
+                    <p style="margin:2px 0 0; font-weight: 600;"><strong>Telefono recoleccion:</strong> ${escapeHtml(telefono || 'Sin telefono registrado')}</p>
+                    <p style="margin:6px 0 0; font-weight: 600;"><strong>Observaciones:</strong> ${escapeHtml(observaciones || 'Sin observaciones de recoleccion.')}</p>`;
             } else {
                 infoContainer.innerHTML = '<p>Informacion de recoleccion no disponible.</p>';
             }
