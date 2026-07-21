@@ -41,6 +41,34 @@ document.addEventListener('DOMContentLoaded', function() {
         recaudo: document.getElementById('filtroRecaudo')
     };
 
+    const getDefaultDateRange = () => {
+        const today = new Date();
+        const twoMonthsAgo = new Date(today);
+        twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+
+        const toDateInputValue = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        return {
+            desde: toDateInputValue(twoMonthsAgo),
+            hasta: toDateInputValue(today)
+        };
+    };
+
+    const aplicarRangoFechasPorDefecto = () => {
+        const rango = getDefaultDateRange();
+        if (inputs.fechaDesde && !inputs.fechaDesde.value) {
+            inputs.fechaDesde.value = rango.desde;
+        }
+        if (inputs.fechaHasta && !inputs.fechaHasta.value) {
+            inputs.fechaHasta.value = rango.hasta;
+        }
+    };
+
     // Referencias a Modales
     const modals = {
         detalles: document.getElementById('modalDetalles'),
@@ -50,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // --- INICIALIZACIÓN ---
+    aplicarRangoFechasPorDefecto();
     listarPaquetes(); // Carga la tabla inicial
     setupModalClosers(); // Configura los botones de cerrar modales
 
@@ -119,6 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             if (filtroClienteInput) filtroClienteInput.value = '';
             if (filtroMensajeroInput) filtroMensajeroInput.value = '';
+            aplicarRangoFechasPorDefecto();
             if (typeof window.listarPaquetes === 'function') {
                 window.listarPaquetes();
             }

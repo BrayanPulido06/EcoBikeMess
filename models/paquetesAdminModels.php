@@ -340,6 +340,17 @@ class PaquetesAdminModel {
         }
         $usarFechaEntrega = !empty($filters['estado']) && $filters['estado'] === 'entregado';
         $campoFechaFiltro = $usarFechaEntrega ? 'e.fecha_entrega' : 'p.fecha_creacion';
+        $sinFechas = empty($filters['fechaDesde']) && empty($filters['fechaHasta']);
+        $sinFiltrosDeBusqueda = empty($filters['search'])
+            && empty($filters['cliente'])
+            && empty($filters['estado'])
+            && empty($filters['mensajero'])
+            && empty($filters['recaudo'])
+            && empty($filters['tipo']);
+
+        if ($sinFechas && $sinFiltrosDeBusqueda) {
+            $sql .= " AND {$campoFechaFiltro} >= DATE_SUB(NOW(), INTERVAL 2 MONTH)";
+        }
 
         if (!empty($filters['fechaDesde'])) {
             $sql .= " AND DATE({$campoFechaFiltro}) >= :fechaDesde";
