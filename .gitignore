@@ -1,0 +1,9 @@
+# Archivos subidos por usuarios: no deben versionarse.
+uploads/**
+
+# Mantener la estructura de carpetas y reglas de seguridad.
+!uploads/
+!uploads/**/
+!uploads/**/.gitkeep
+!uploads/.htaccess
+!uploads/**/.htaccess
