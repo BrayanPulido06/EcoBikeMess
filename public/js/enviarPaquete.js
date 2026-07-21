@@ -1312,7 +1312,12 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         document.getElementById('confirm_destinatario_observaciones').textContent = document.getElementById('instrucciones_entrega').value || 'Sin observaciones';
 
         const recogerCambios = document.getElementById('recoger_cambios').checked;
-        document.getElementById('confirm_recoger_cambios').textContent = recogerCambios ? 'Sí' : 'No';
+        const confirmRecogerCambios = document.getElementById('confirm_recoger_cambios');
+        if (confirmRecogerCambios) {
+            const cambiosRow = confirmRecogerCambios.closest('p');
+            confirmRecogerCambios.textContent = recogerCambios ? 'Si' : '';
+            if (cambiosRow) cambiosRow.style.display = recogerCambios ? '' : 'none';
+        }
 
 
         // --- CÁLCULO DE TOTALES A COBRAR ---
@@ -1490,11 +1495,11 @@ ${qrFinanciero}
                                     <td style="width: 60%; vertical-align: top; font-size: 12px;">
                                         <div style="border: 1px solid #eee; padding: 6px; border-radius: 8px;">
                                             <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 Detalles del Paquete</h3>
-                                            <p style="margin: 2px 0; line-height: 1.05;"><strong>Cambios por recoger:</strong> <span style="font-size: 15px; font-weight: 700;">${recogerCambiosChecked ? 'Sí' : 'No'}</span></p>
+                                            ${recogerCambiosChecked ? '<p style="margin: 2px 0; line-height: 1.05;"><strong>Cambios por recoger:</strong> <span style="font-size: 15px; font-weight: 800;">Si</span></p>' : ''}
                                         </div>
                                         <div style="margin-top: 6px;">
                                             <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 800;">💰 Total a Cobrar</h3>
-                                            <p style="margin: 2px 0; font-size: 42px; font-weight: 900; color: #28a745; line-height: 1; text-align: center;">${totalCobrarTexto}</p>
+                                            <p style="margin: 2px 0; font-size: 58px; font-weight: 900; color: #1f8f3a; line-height: 0.9; text-align: center;">${totalCobrarTexto}</p>
                                         </div>
                                     </td>
                                     <td style="width: 40%; text-align: right; vertical-align: top;">

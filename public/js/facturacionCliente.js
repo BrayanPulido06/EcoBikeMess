@@ -227,6 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.verDetalle = function(id) {
         const pedido = pedidos.find(p => p.id === id);
         if (!pedido) return;
+
         
         // Guía y estado
         document.getElementById('modal_guia').textContent = pedido.guia;
@@ -575,6 +576,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const rotuloModal = document.getElementById('rotuloModal');
     const closeRotuloModal = document.getElementById('closeRotuloModal');
     const btnDownloadRotulo = document.getElementById('btnDownloadRotulo');
+    let currentRotuloData = null;
 
     if (closeRotuloModal) {
         closeRotuloModal.addEventListener('click', () => {
@@ -594,6 +596,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const pedido = pedidos.find(p => p.id === id);
         if (!pedido) return;
 
+        const totalCobrar = pedido.comprobante?.recaudo > 0 ? Number(pedido.comprobante.recaudo) : 0;
+        currentRotuloData = {
+            guia: pedido.guia,
+            tienda_nombre: pedido.remitente.nombre_tienda || pedido.remitente.tienda_nombre || pedido.remitente.nombre,
+            destinatario_nombre: pedido.destinatario.nombre,
+            destinatario_direccion: pedido.destinatario.direccion,
+            destinatario_telefono: pedido.destinatario.telefono,
+            destinatario_observaciones: pedido.instrucciones_entrega || 'Sin observaciones',
+            cambios: pedido.recoger_cambios ? 'Si' : 'No',
+            recaudo: totalCobrar
+        };
+
+        const preview = document.getElementById('rotuloPreview');
+        if (preview && window.RotuloEcoBike) {
+            window.RotuloEcoBike.mountPreview(preview, currentRotuloData).then(() => {
+                rotuloModal.style.display = 'flex';
+            });
+            return;
+        }
+
         // Llenar datos del rótulo
         document.getElementById('rotulo_guia_num').textContent = pedido.guia;
         document.getElementById('rotulo_remitente').textContent = pedido.remitente.nombre_tienda || pedido.remitente.tienda_nombre || pedido.remitente.nombre;
@@ -603,11 +625,13 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('rotulo_tel_destinatario').textContent = pedido.destinatario.telefono;
         document.getElementById('rotulo_observaciones').textContent = pedido.instrucciones_entrega || 'Sin observaciones';
 
-        document.getElementById('rotulo_cambios').textContent = 'No';
+        const cambiosEl = document.getElementById('rotulo_cambios');
+        const cambiosRow = cambiosEl?.closest('p');
+        if (cambiosEl) cambiosEl.textContent = currentRotuloData.cambios === 'Si' ? 'Si' : '';
+        if (cambiosRow) cambiosRow.style.display = currentRotuloData.cambios === 'Si' ? '' : 'none';
 
-        const totalCobrar = pedido.comprobante?.recaudo > 0 ? Number(pedido.comprobante.recaudo) : 0;
         const totalTexto = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(totalCobrar);
-        document.getElementById('rotulo_financiero').innerHTML = `<p class="rotulo-total">${totalTexto}</p>`;
+        document.getElementById('rotulo_financiero').innerHTML = `<p class="rotulo-total" style="font-size:58px;font-weight:900;color:#1f8f3a;line-height:0.9;text-align:center;">${totalTexto}</p>`;
 
         // Generar QR
         const qrContainer = document.getElementById('rotulo_qr_code');
@@ -633,6 +657,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (btnDownloadRotulo) {
         btnDownloadRotulo.addEventListener('click', async () => {
+            if (currentRotuloData && window.RotuloEcoBike) {
+                try {
+                    await window.RotuloEcoBike.downloadPdf(currentRotuloData, { filePrefix: 'Rotulo' });
+                    return;
+                } catch (error) {
+                    console.error('Error al generar PDF:', error);
+                    alert('Hubo un error al generar el PDF.');
+                    return;
+                }
+            }
+
             const element = document.getElementById('rotuloPreview');
             const guia = document.getElementById('rotulo_guia_num').textContent;
             

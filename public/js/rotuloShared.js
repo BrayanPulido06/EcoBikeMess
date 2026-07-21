@@ -41,6 +41,8 @@
     }
 
     function normalizeData(raw = {}, options = {}) {
+        const cambios = normalizeYesNo(raw.cambios ?? raw.recoger_cambios, 'No');
+
         const tiendaNombre = firstNonEmpty(
             raw.tienda_nombre,
             raw.nombre_tienda,
@@ -62,7 +64,8 @@
                 raw.instrucciones_entrega,
                 'Sin observaciones'
             ),
-            cambios: normalizeYesNo(raw.cambios ?? raw.recoger_cambios, 'No'),
+            cambios,
+            tieneCambios: cambios === 'Si',
             recaudo: Number(raw.recaudo ?? raw.total_cobrar ?? raw.valor_recaudo ?? 0) || 0,
             contactPhone: firstNonEmpty(options.contactPhone, raw.contactPhone, DEFAULTS.contactPhone),
             logoSrc: firstNonEmpty(options.logoSrc, raw.logoSrc, DEFAULTS.logoSrc)
@@ -85,20 +88,27 @@
     function buildInnerHtml(data) {
         const totalText = formatMoney(data.recaudo);
         const totalLength = totalText.length;
-        let totalFontSize = 58;
-        if (totalLength >= 11) totalFontSize = 42;
-        else if (totalLength >= 10) totalFontSize = 46;
-        else if (totalLength >= 9) totalFontSize = 50;
+        let totalFontSize = 66;
+        if (totalLength >= 12) totalFontSize = 46;
+        else if (totalLength >= 11) totalFontSize = 50;
+        else if (totalLength >= 10) totalFontSize = 54;
+        else if (totalLength >= 9) totalFontSize = 60;
+        const cambiosHtml = data.tieneCambios
+            ? `<div style="border:1px solid #bfe8c9;background:#f1fbf4;padding:4px 6px;border-radius:8px;margin-bottom:4px;">
+                    <h3 style="margin:0 0 4px;font-size:17px;font-weight:800;color:#235b34;">Cambios por recoger</h3>
+                    <p style="margin:0;line-height:1.02;overflow-wrap:anywhere;"><span style="font-size:15px;font-weight:800;color:#1f2a37;">${escapeHtml(data.cambios)}</span></p>
+                </div>`
+            : '';
 
         return `
             <div class="rotulo-scale" style="transform:scale(0.72);transform-origin:top left;width:139mm;height:139mm;">
-                <table style="width:100%;border-bottom:2px solid #64c46a;padding-bottom:6px;border-collapse:collapse;">
+                <table style="width:100%;border-bottom:2px solid #45b75a;padding-bottom:6px;border-collapse:collapse;">
                     <tr>
                         <td colspan="2">
                             <div style="display:flex;align-items:center;justify-content:center;gap:18px;text-align:left;">
                                 <img src="${escapeHtml(data.logoSrc)}" alt="EcoBikeMess" style="width:96px;height:96px;object-fit:contain;">
                                 <div>
-                                    <div style="font-size:26px;font-weight:800;color:#56bb5d;line-height:1;">EcoBikeMess</div>
+                                    <div style="font-size:26px;font-weight:800;color:#45b75a;line-height:1;">EcoBikeMess</div>
                                     <div style="margin-top:4px;font-size:15px;font-weight:700;color:#28a745;">Contactanos: ${escapeHtml(data.contactPhone)}</div>
                                 </div>
                             </div>
@@ -132,13 +142,10 @@
 
                 <div style="display:flex;align-items:flex-start;width:100%;margin-top:4px;">
                     <div style="flex:1 1 auto;min-width:0;max-width:calc(100% - 140px);position:relative;padding-right:2px;">
-                        <div style="border:1px solid #ececec;padding:4px 6px;border-radius:8px;">
-                            <h3 style="margin:0 0 6px;font-size:17px;font-weight:800;color:#30363d;">Detalles del Paquete</h3>
-                            <p style="margin:1px 0;line-height:1.02;overflow-wrap:anywhere;"><strong style="font-size:14px;font-weight:800;">Cambios por recoger:</strong> <span style="font-size:14px;font-weight:700;">${escapeHtml(data.cambios)}</span></p>
-                        </div>
+                        ${cambiosHtml}
                         <div style="margin-top:4px;">
-                            <h3 style="margin:0 0 6px;font-size:17px;font-weight:800;color:#30363d;">Total a Cobrar</h3>
-                            <p style="margin:0;font-size:${totalFontSize}px;font-weight:900;color:#28a745;line-height:0.9;text-align:center;letter-spacing:0.5px;">${escapeHtml(totalText)}</p>
+                            <h3 style="margin:0 0 4px;font-size:18px;font-weight:900;color:#30363d;">Total a Cobrar</h3>
+                            <p style="margin:0;font-size:${totalFontSize}px;font-weight:900;color:#1f8f3a;line-height:0.86;text-align:center;letter-spacing:0;">${escapeHtml(totalText)}</p>
                         </div>
                     </div>
                     <div style="flex:0 0 132px;display:flex;justify-content:flex-start;align-items:flex-start;padding-top:0;margin-left:-12mm;">

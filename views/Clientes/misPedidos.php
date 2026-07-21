@@ -184,11 +184,11 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
         /* Total a cobrar (estilo compacto como rótulo final) */
         #rotuloPreview .rotulo-scale .rotulo-total {
             margin: 2px 0;
-            font-size: 26px !important;
-            font-weight: 800;
-            color: #28a745;
-            text-align: left;
-            line-height: 1.1;
+            font-size: 58px !important;
+            font-weight: 900;
+            color: #1f8f3a;
+            text-align: center;
+            line-height: 0.9;
         }
         /* Compactar textos para no mover el QR */
         #rotuloPreview .rotulo-scale .rotulo-card p {
@@ -530,7 +530,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
 
     <!-- Enlace al script JS recién creado -->
     <script src="../../public/js/imageLightbox.js"></script>
-    <script src="../../public/js/rotuloShared.js"></script>
+    <script src="../../public/js/rotuloShared.js?v=20260721-2"></script>
     <script src="../../public/js/misPedidos.js"></script>
     
     <!-- Script para manejar el Rótulo -->
@@ -558,7 +558,11 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
             document.getElementById('rotulo_tel_destinatario').textContent = datos.destinatario_telefono || '';
             document.getElementById('rotulo_observaciones').textContent = datos.destinatario_observaciones || 'Sin observaciones';
             
-            document.getElementById('rotulo_cambios').textContent = datos.cambios || 'No';
+            const cambiosEl = document.getElementById('rotulo_cambios');
+            const cambiosRow = cambiosEl?.closest('p');
+            const tieneCambios = ['si', 'sí', 'sÃ­', 'true', '1'].includes(String(datos.cambios || '').trim().toLowerCase());
+            if (cambiosEl) cambiosEl.textContent = tieneCambios ? 'Si' : '';
+            if (cambiosRow) cambiosRow.style.display = tieneCambios ? '' : 'none';
 
             // Total a Cobrar
             const formatMoney = (val) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val);

@@ -231,9 +231,9 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         /* Total a cobrar grande y centrado (override de tamaños generales) */
         #rotuloPreview .rotulo-scale .rotulo-total {
             margin: 2px 0;
-            font-size: 30px !important;
-            font-weight: 800;
-            color: #28a745;
+            font-size: 58px !important;
+            font-weight: 900;
+            color: #1f8f3a;
             text-align: center;
             line-height: 0.9;
         }
@@ -731,7 +731,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
     </div>
 
     <script src="../../public/js/imageLightbox.js"></script>
-    <script src="../../public/js/rotuloShared.js"></script>
+    <script src="../../public/js/rotuloShared.js?v=20260721-2"></script>
     <script src="../../public/js/paquetesAdmin.js?v=20260721-6"></script>
     <script>
         window.abrirModalAsignacionMasiva = async function() {
@@ -851,7 +851,11 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             document.getElementById('rotulo_dir_destinatario').textContent = truncarRotulo(datos.destinatario_direccion || '', 82);
             document.getElementById('rotulo_tel_destinatario').textContent = truncarRotulo(datos.destinatario_telefono || '', 18);
             document.getElementById('rotulo_observaciones').textContent = truncarRotulo(datos.destinatario_observaciones || 'Sin observaciones', 52);
-            document.getElementById('rotulo_cambios').textContent = truncarRotulo(datos.cambios || 'No', 24);
+            const cambiosEl = document.getElementById('rotulo_cambios');
+            const cambiosRow = cambiosEl?.closest('p');
+            const tieneCambios = ['si', 'sí', 'sÃ­', 'true', '1'].includes(String(datos.cambios || '').trim().toLowerCase());
+            if (cambiosEl) cambiosEl.textContent = tieneCambios ? 'Si' : '';
+            if (cambiosRow) cambiosRow.style.display = tieneCambios ? '' : 'none';
 
             const formatMoney = (val) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val);
             const totalCobrar = datos.recaudo > 0 ? Number(datos.recaudo) : 0;
