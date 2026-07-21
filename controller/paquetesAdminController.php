@@ -41,6 +41,7 @@ try {
         case 'detalle':
             $id = $_REQUEST['id'] ?? 0;
             $data = $model->getPaqueteDetails($id);
+            adjuntarDataUrisEvidencia($data);
             echo json_encode($data);
             break;
 
@@ -68,7 +69,7 @@ try {
             }
 
             servirImagenGuardada($ruta);
-            break;
+            exit;
             
         case 'asignar':
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -637,6 +638,24 @@ function resolverRutaUpload($ruta): ?string
 
 function servirImagenGuardada($ruta): void
 {
+    $raw = trim((string) $ruta);
+    if (preg_match('#^https?://#i', $raw)) {
+        header('Location: ' . $raw, true, 302);
+        return;
+    }
+
+    if (preg_match('#^data:(image/(?:jpeg|png|webp));base64,#i', $raw, $matches)) {
+        $payload = substr($raw, strpos($raw, 'base64,') + 7);
+        $binary = base64_decode($payload, true);
+        if ($binary !== false) {
+            header('Content-Type: ' . strtolower($matches[1]));
+            header('Content-Length: ' . strlen($binary));
+            header('Cache-Control: private, max-age=300');
+            echo $binary;
+            return;
+        }
+    }
+
     $archivo = resolverRutaUpload($ruta);
     if (!$archivo) {
         http_response_code(404);
@@ -657,6 +676,62 @@ function servirImagenGuardada($ruta): void
     header('Content-Length: ' . filesize($archivo));
     header('Cache-Control: private, max-age=300');
     readfile($archivo);
+}
+
+function dataUriImagenGuardada($ruta): string
+{
+    $archivo = resolverRutaUpload($ruta);
+    if (!$archivo) {
+        return '';
+    }
+
+    $mime = detectMimeFromFile($archivo) ?: '';
+    if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+        return '';
+    }
+
+    $contenido = file_get_contents($archivo);
+    if ($contenido === false) {
+        return '';
+    }
+
+    return 'data:' . $mime . ';base64,' . base64_encode($contenido);
+}
+
+function adjuntarDataUrisEvidencia(array &$data): void
+{
+    if (!empty($data['info']['infoEntrega']['fotoPrincipal'])) {
+        $data['info']['infoEntrega']['fotoPrincipalData'] = dataUriImagenGuardada($data['info']['infoEntrega']['fotoPrincipal']);
+    }
+
+    if (!empty($data['info']['infoEntrega']['fotoAdicional'])) {
+        $data['info']['infoEntrega']['fotoAdicionalData'] = dataUriImagenGuardada($data['info']['infoEntrega']['fotoAdicional']);
+    }
+
+    if (!empty($data['info']['infoCancelacion']['foto'])) {
+        $data['info']['infoCancelacion']['fotoData'] = dataUriImagenGuardada($data['info']['infoCancelacion']['foto']);
+    }
+
+    if (!empty($data['novedades']) && is_array($data['novedades'])) {
+        foreach ($data['novedades'] as &$novedad) {
+            if (!empty($novedad['foto_evidencia'])) {
+                $novedad['foto_evidencia_data'] = dataUriImagenGuardada($novedad['foto_evidencia']);
+            }
+            if (!empty($novedad['foto_adicional'])) {
+                $novedad['foto_adicional_data'] = dataUriImagenGuardada($novedad['foto_adicional']);
+            }
+        }
+        unset($novedad);
+    }
+
+    if (!empty($data['imagenes']) && is_array($data['imagenes'])) {
+        foreach ($data['imagenes'] as &$imagen) {
+            if (!empty($imagen['ruta_archivo'])) {
+                $imagen['ruta_archivo_data'] = dataUriImagenGuardada($imagen['ruta_archivo']);
+            }
+        }
+        unset($imagen);
+    }
 }
 ?>
 

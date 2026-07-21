@@ -1045,6 +1045,7 @@ function verDetalle(id, options = {}) {
                         tipo: 'entrega',
                         label: 'Entrega principal',
                         ruta: info.infoEntrega.fotoPrincipal || '',
+                        dataUrl: info.infoEntrega.fotoPrincipalData || '',
                         target: 'entrega_principal',
                         allowDelete: true,
                         empty: !info.infoEntrega.fotoPrincipal
@@ -1053,6 +1054,7 @@ function verDetalle(id, options = {}) {
                         tipo: 'entrega',
                         label: 'Entrega adicional',
                         ruta: info.infoEntrega.fotoAdicional || '',
+                        dataUrl: info.infoEntrega.fotoAdicionalData || '',
                         target: 'entrega_adicional',
                         allowDelete: true,
                         empty: !info.infoEntrega.fotoAdicional
@@ -1063,6 +1065,7 @@ function verDetalle(id, options = {}) {
                         tipo: 'cancelacion',
                         label: 'Cancelación',
                         ruta: info.infoCancelacion.foto,
+                        dataUrl: info.infoCancelacion.fotoData || '',
                         target: 'cancelacion',
                         allowDelete: true
                     });
@@ -1075,6 +1078,7 @@ function verDetalle(id, options = {}) {
                             tipo: n.tipo || 'novedad',
                             label: `${cap(n.tipo)} (${n.fecha_registro || ''})`,
                             ruta: n.foto_evidencia,
+                            dataUrl: n.foto_evidencia_data || '',
                             novedadId: n.id,
                             target: 'novedad_principal',
                             allowDelete: false
@@ -1085,6 +1089,7 @@ function verDetalle(id, options = {}) {
                             tipo: n.tipo || 'novedad',
                             label: `${cap(n.tipo)} adicional (${n.fecha_registro || ''})`,
                             ruta: n.foto_adicional,
+                            dataUrl: n.foto_adicional_data || '',
                             novedadId: n.id,
                             target: 'novedad_adicional',
                             allowDelete: false
@@ -1096,6 +1101,7 @@ function verDetalle(id, options = {}) {
                     tipo: img.tipo || 'general',
                     label: `Imagen ${img.tipo || 'general'}`,
                     ruta: img.ruta_archivo,
+                    dataUrl: img.ruta_archivo_data || '',
                     imageId: img.id
                 }));
 
@@ -1123,6 +1129,10 @@ function verDetalle(id, options = {}) {
                 };
 
                 const buildEvidenceUrl = (item) => {
+                    if (item.dataUrl) {
+                        return item.dataUrl;
+                    }
+
                     const params = new URLSearchParams({ action: 'imagen_ver' });
                     if (item.imageId) {
                         params.set('image_id', item.imageId);
@@ -1194,14 +1204,14 @@ function verDetalle(id, options = {}) {
 
                 const renderNovedadFotos = (n) => {
                     const fotos = [];
-                    if (n?.foto_evidencia) fotos.push({ ruta: n.foto_evidencia, label: 'Evidencia', target: 'novedad_principal' });
-                    if (n?.foto_adicional) fotos.push({ ruta: n.foto_adicional, label: 'Adicional', target: 'novedad_adicional' });
+                    if (n?.foto_evidencia) fotos.push({ ruta: n.foto_evidencia, dataUrl: n.foto_evidencia_data || '', label: 'Evidencia', target: 'novedad_principal' });
+                    if (n?.foto_adicional) fotos.push({ ruta: n.foto_adicional, dataUrl: n.foto_adicional_data || '', label: 'Adicional', target: 'novedad_adicional' });
                     if (fotos.length === 0) return '<span class="text-muted">Sin fotos</span>';
 
                     return fotos.map(f => {
-                        const fullPath = n?.id
+                        const fullPath = f.dataUrl || (n?.id
                             ? `../../controller/paquetesAdminController.php?action=imagen_ver&novedad_id=${encodeURIComponent(n.id)}&target=${encodeURIComponent(f.target)}`
-                            : buildImageUrl(f.ruta);
+                            : buildImageUrl(f.ruta));
                         const safeFullPath = escapeHtml(fullPath);
                         const alt = `${cap(n.tipo)} - ${f.label}`;
                         return `
