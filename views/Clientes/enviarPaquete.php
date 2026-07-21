@@ -713,7 +713,6 @@ $remitente_data = [
                                 </div>
                             </div>
                             <div class="confirmation-actions" id="confirmationActions">
-                                <a href="inicioCliente.php" class="btn-secondary">Volver al inicio</a>
                                 <button type="button" class="btn-primary" id="btnNewShipment">Enviar otro paquete</button>
                             </div>
                         </div>
