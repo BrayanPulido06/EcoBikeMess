@@ -4,6 +4,9 @@ AddCharset UTF-8 .php .html .css .js .json
 
 # Forzar HTTPS en Hostinger
 RewriteEngine On
+
+# Bloquear ejecucion de scripts dentro de archivos subidos
+RewriteRule ^uploads/.*\.(php|phtml|phar|pl|py|jsp|asp|sh|cgi)$ - [F,L,NC]
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
