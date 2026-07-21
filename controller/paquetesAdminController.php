@@ -43,6 +43,32 @@ try {
             $data = $model->getPaqueteDetails($id);
             echo json_encode($data);
             break;
+
+        case 'imagen_ver':
+            $ruta = '';
+            $paqueteId = (int) ($_GET['paquete_id'] ?? 0);
+            $imageId = (int) ($_GET['image_id'] ?? 0);
+            $novedadId = (int) ($_GET['novedad_id'] ?? 0);
+            $target = trim((string) ($_GET['target'] ?? ''));
+
+            if ($imageId > 0) {
+                $imagen = $model->getPaqueteImagenById($imageId);
+                $ruta = (string) ($imagen['ruta_archivo'] ?? '');
+            } elseif ($novedadId > 0) {
+                $novedad = $model->getNovedadFotoById($novedadId);
+                $campo = $target === 'novedad_adicional' ? 'foto_adicional' : 'foto_evidencia';
+                $ruta = (string) ($novedad[$campo] ?? '');
+            } elseif ($paqueteId > 0 && ($target === 'entrega_principal' || $target === 'entrega_adicional')) {
+                $fotos = $model->getEntregaFotos($paqueteId);
+                $campo = $target === 'entrega_principal' ? 'foto_entrega' : 'foto_adicional';
+                $ruta = (string) ($fotos[$campo] ?? '');
+            } elseif ($paqueteId > 0 && $target === 'cancelacion') {
+                $foto = $model->getCancelacionFoto($paqueteId);
+                $ruta = (string) ($foto['foto_evidencia'] ?? '');
+            }
+
+            servirImagenGuardada($ruta);
+            break;
             
         case 'asignar':
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -567,6 +593,70 @@ function eliminarArchivoSiExiste($ruta)
     if ($rutaFisica && is_file($rutaFisica)) {
         @unlink($rutaFisica);
     }
+}
+
+function resolverRutaUpload($ruta): ?string
+{
+    $raw = trim((string) $ruta);
+    if ($raw === '') {
+        return null;
+    }
+
+    $normalized = str_replace('\\', '/', $raw);
+    $uploadsPos = stripos($normalized, '/uploads/');
+    if ($uploadsPos !== false) {
+        $normalized = substr($normalized, $uploadsPos + 1);
+    }
+
+    $normalized = preg_replace('#^(\.\./)+#', '', $normalized);
+    $normalized = preg_replace('#^(\./)+#', '', $normalized);
+    $normalized = ltrim((string) $normalized, '/');
+
+    if (stripos($normalized, 'uploads/') !== 0) {
+        return null;
+    }
+
+    $baseUploads = realpath(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'uploads');
+    if (!$baseUploads) {
+        return null;
+    }
+
+    $relative = substr($normalized, strlen('uploads/'));
+    $candidate = realpath($baseUploads . DIRECTORY_SEPARATOR . $relative);
+    if (!$candidate || !is_file($candidate)) {
+        return null;
+    }
+
+    $basePrefix = rtrim($baseUploads, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    if (strpos($candidate, $basePrefix) !== 0) {
+        return null;
+    }
+
+    return $candidate;
+}
+
+function servirImagenGuardada($ruta): void
+{
+    $archivo = resolverRutaUpload($ruta);
+    if (!$archivo) {
+        http_response_code(404);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo 'Imagen no encontrada';
+        return;
+    }
+
+    $mime = detectMimeFromFile($archivo) ?: 'application/octet-stream';
+    if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+        http_response_code(415);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo 'Tipo de imagen no permitido';
+        return;
+    }
+
+    header('Content-Type: ' . $mime);
+    header('Content-Length: ' . filesize($archivo));
+    header('Cache-Control: private, max-age=300');
+    readfile($archivo);
 }
 ?>
 

@@ -721,7 +721,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
 
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/rotuloShared.js"></script>
-    <script src="../../public/js/paquetesAdmin.js?v=20260721-1"></script>
+    <script src="../../public/js/paquetesAdmin.js?v=20260721-2"></script>
     <script>
         window.abrirModalAsignacionMasiva = async function() {
             const seleccionados = Array.from(document.querySelectorAll('.paquete-checkbox:checked')).map((checkbox) => ({

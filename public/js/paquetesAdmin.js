@@ -1075,6 +1075,8 @@ function verDetalle(id, options = {}) {
                             tipo: n.tipo || 'novedad',
                             label: `${cap(n.tipo)} (${n.fecha_registro || ''})`,
                             ruta: n.foto_evidencia,
+                            novedadId: n.id,
+                            target: 'novedad_principal',
                             allowDelete: false
                         });
                     }
@@ -1083,6 +1085,8 @@ function verDetalle(id, options = {}) {
                             tipo: n.tipo || 'novedad',
                             label: `${cap(n.tipo)} adicional (${n.fecha_registro || ''})`,
                             ruta: n.foto_adicional,
+                            novedadId: n.id,
+                            target: 'novedad_adicional',
                             allowDelete: false
                         });
                     }
@@ -1118,10 +1122,29 @@ function verDetalle(id, options = {}) {
                     return normalized;
                 };
 
+                const buildEvidenceUrl = (item) => {
+                    const params = new URLSearchParams({ action: 'imagen_ver' });
+                    if (item.imageId) {
+                        params.set('image_id', item.imageId);
+                        return `../../controller/paquetesAdminController.php?${params.toString()}`;
+                    }
+                    if (item.novedadId) {
+                        params.set('novedad_id', item.novedadId);
+                        params.set('target', item.target || 'novedad_principal');
+                        return `../../controller/paquetesAdminController.php?${params.toString()}`;
+                    }
+                    if (item.target) {
+                        params.set('paquete_id', info.paquete_id || id);
+                        params.set('target', item.target);
+                        return `../../controller/paquetesAdminController.php?${params.toString()}`;
+                    }
+                    return buildImageUrl(item.ruta || item.ruta_archivo);
+                };
+
                 const renderEvidenciaCard = (item) => {
                     const rutaRaw = item.ruta || item.ruta_archivo;
                     const hasImage = Boolean(rutaRaw);
-                    const fullPath = hasImage ? buildImageUrl(rutaRaw) : '';
+                    const fullPath = hasImage ? buildEvidenceUrl(item) : '';
                     const safeFullPath = escapeHtml(fullPath);
 
                     const canDelete = (item.allowDelete !== false) && (item.imageId || item.target);
@@ -1171,12 +1194,14 @@ function verDetalle(id, options = {}) {
 
                 const renderNovedadFotos = (n) => {
                     const fotos = [];
-                    if (n?.foto_evidencia) fotos.push({ ruta: n.foto_evidencia, label: 'Evidencia' });
-                    if (n?.foto_adicional) fotos.push({ ruta: n.foto_adicional, label: 'Adicional' });
+                    if (n?.foto_evidencia) fotos.push({ ruta: n.foto_evidencia, label: 'Evidencia', target: 'novedad_principal' });
+                    if (n?.foto_adicional) fotos.push({ ruta: n.foto_adicional, label: 'Adicional', target: 'novedad_adicional' });
                     if (fotos.length === 0) return '<span class="text-muted">Sin fotos</span>';
 
                     return fotos.map(f => {
-                        const fullPath = buildImageUrl(f.ruta);
+                        const fullPath = n?.id
+                            ? `../../controller/paquetesAdminController.php?action=imagen_ver&novedad_id=${encodeURIComponent(n.id)}&target=${encodeURIComponent(f.target)}`
+                            : buildImageUrl(f.ruta);
                         const safeFullPath = escapeHtml(fullPath);
                         const alt = `${cap(n.tipo)} - ${f.label}`;
                         return `
