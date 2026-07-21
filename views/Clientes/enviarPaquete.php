@@ -396,7 +396,7 @@ $remitente_data = [
                 <div class="step-line"></div>
                 <div class="step" data-step="4">
                     <div class="step-number">4</div>
-                    <div class="step-label">Confirmar</div>
+                    <div class="step-label">Guía</div>
                 </div>
             </div>
 
@@ -620,12 +620,12 @@ $remitente_data = [
                 <div class="form-step" data-step="4">
                     <div class="card confirmation-card">
                         <div class="card-header">
-                            <h2>✓ Confirmar Envío</h2>
+                            <h2>Guía generada</h2>
                         </div>
                         <div class="card-body">
                             <div class="confirmation-note">
                                 <span class="confirmation-note-icon">⚠️</span>
-                                <span>Para agendar tu pedido, debes dar click en el botón <strong>"confirmar envío"</strong></span>
+                                <span>Tu envío ya fue confirmado. Esta es la guía del paquete.</span>
                             </div>
                             <div id="rotuloPreview" style="background: white; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif; color: #333;">
                                 <div class="rotulo-scale">
@@ -705,7 +705,7 @@ $remitente_data = [
                         Siguiente →
                     </button>
                     <button type="submit" class="btn-success" id="btnSubmit" style="display: none;">
-                        ✓ Confirmar Envío
+                        Confirmar paquete
                     </button>
                 </div>
             </form>
@@ -771,6 +771,6 @@ $remitente_data = [
 
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/rotuloShared.js"></script>
-    <script src="../../public/js/enviarPaquete.js?v=20260514-2"></script>
+    <script src="../../public/js/enviarPaquete.js?v=20260721-1"></script>
 </body>
 </html>

@@ -41,6 +41,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let destinatarioTelefonoPrevio = '';
     let qrCodeStylingInstance = null; // Para la instancia del nuevo QR
     let currentPreviewRotuloData = null;
+    let envioConfirmado = false;
+    let guiaConfirmada = '';
     let baseRecaudo = 0; // Variable para almacenar el valor base del recaudo (sin envío)
 
     const getBaseRecaudoValue = () => {
@@ -217,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- NAVEGACIÓN ENTRE PASOS ---
     btnNext.addEventListener('click', () => {
         if (validateStep(currentStep)) {
-            if (currentStep < 4) {
+            if (currentStep < 3) {
                 goToStep(currentStep + 1);
             }
         }
@@ -228,6 +230,60 @@ document.addEventListener('DOMContentLoaded', function() {
             goToStep(currentStep - 1);
         }
     });
+
+    if (form) {
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            if (envioConfirmado) return;
+
+            for (let stepNumber = 1; stepNumber <= 3; stepNumber += 1) {
+                if (!validateStep(stepNumber)) {
+                    goToStep(stepNumber);
+                    return;
+                }
+            }
+
+            const numeroGuia = generarNumeroGuia();
+            if (numeroGuiaHiddenInput) {
+                numeroGuiaHiddenInput.value = numeroGuia;
+            }
+
+            const originalText = btnSubmit.textContent;
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = 'Guardando envio...';
+
+            try {
+                const formData = new FormData(form);
+                formData.set('ajax', '1');
+                formData.set('numero_guia', numeroGuia);
+
+                const response = await fetch(formAction, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'No se pudo confirmar el envio.');
+                }
+
+                guiaConfirmada = result.guia || numeroGuia;
+                if (numeroGuiaHiddenInput) {
+                    numeroGuiaHiddenInput.value = guiaConfirmada;
+                }
+
+                envioConfirmado = true;
+                goToStep(4);
+            } catch (error) {
+                console.error(error);
+                alert(error.message || 'No se pudo confirmar el envio. Intenta nuevamente.');
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = originalText;
+            }
+        });
+    }
 
     function goToStep(stepNumber) {
         currentStep = stepNumber;
@@ -249,12 +305,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        btnPrevious.style.display = currentStep > 1 ? 'inline-block' : 'none';
-        btnNext.style.display = currentStep < 4 ? 'inline-block' : 'none';
-        btnSubmit.style.display = currentStep === 4 ? 'inline-block' : 'none';
+        btnPrevious.style.display = currentStep > 1 && !envioConfirmado ? 'inline-block' : 'none';
+        btnNext.style.display = currentStep < 3 && !envioConfirmado ? 'inline-block' : 'none';
+        btnSubmit.style.display = currentStep === 3 && !envioConfirmado ? 'inline-block' : 'none';
 
         if (currentStep === 4) {
-            populateConfirmation();
+            populateConfirmation(guiaConfirmada);
         }
     }
 
@@ -1196,7 +1252,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         console.warn('No se pudo inicializar el cálculo automático', e);
     }
 
-    function populateConfirmation() {
+    function populateConfirmation(numeroGuiaConfirmado = '') {
         if (window.RotuloEcoBike) {
             const costoEnvioNum = parseFloat(document.getElementById('costoTotalHidden').value) || 0;
             const baseRecaudoNum = getBaseRecaudoValue() || 0;
@@ -1207,7 +1263,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
             const totalCobrar = (tieneRecaudo || baseRecaudoNum > 0 || cobrarEnvio)
                 ? baseRecaudoNum + (cobrarEnvio ? costoEnvioNum : 0)
                 : 0;
-            const numeroGuia = generarNumeroGuia();
+            const numeroGuia = String(numeroGuiaConfirmado || guiaConfirmada || numeroGuiaHiddenInput?.value || '').trim();
 
             if (numeroGuiaHiddenInput) {
                 numeroGuiaHiddenInput.value = numeroGuia;
@@ -1274,7 +1330,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         const totalCobrarTexto = `$${totalCobrar.toLocaleString('es-CO')}`;
         document.getElementById('confirm_total_cobrar').textContent = totalCobrarTexto;
 
-        const numeroGuia = generarNumeroGuia();
+        const numeroGuia = String(numeroGuiaConfirmado || guiaConfirmada || numeroGuiaHiddenInput?.value || '').trim();
         document.getElementById('numeroGuia').textContent = numeroGuia;
         // Guardar la guía en el input oculto para enviarla al backend
         if (numeroGuiaHiddenInput) {

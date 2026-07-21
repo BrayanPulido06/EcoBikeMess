@@ -382,7 +382,7 @@ $remitente_data = [
                 <div class="step-line"></div>
                 <div class="step" data-step="4">
                     <div class="step-number">4</div>
-                    <div class="step-label">Confirmar</div>
+                    <div class="step-label">Guia</div>
                 </div>
             </div>
 
@@ -606,7 +606,7 @@ $remitente_data = [
                 <div class="form-step" data-step="4">
                     <div class="card confirmation-card">
                         <div class="card-header">
-                            <h2>Confirmar Envio</h2>
+                            <h2>Guia generada</h2>
                             <button type="button" class="btn-secondary" id="btnDownloadPDF">
                                 Descargar Guia (PDF)
                             </button>
@@ -690,7 +690,7 @@ $remitente_data = [
                         Siguiente
                     </button>
                     <button type="submit" class="btn-success" id="btnSubmit" style="display: none;">
-                        Confirmar Envio
+                        Confirmar paquete
                     </button>
                 </div>
             </form>
@@ -758,7 +758,7 @@ $remitente_data = [
 
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/rotuloShared.js"></script>
-    <script src="../../public/js/enviarPaquete.js?v=20260615-2"></script>
+    <script src="../../public/js/enviarPaquete.js?v=20260721-1"></script>
     <script src="../../public/js/enviarPaqueteMensajero.js?v=20260615-2"></script>
     <script src="../../public/js/mensajeroLayout.js?v=20260528-1"></script>
     <script src="../../public/js/mensajeroBackGuard.js?v=20260615-1"></script>
