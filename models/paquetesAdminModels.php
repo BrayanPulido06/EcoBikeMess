@@ -340,17 +340,6 @@ class PaquetesAdminModel {
         }
         $usarFechaEntrega = !empty($filters['estado']) && $filters['estado'] === 'entregado';
         $campoFechaFiltro = $usarFechaEntrega ? 'e.fecha_entrega' : 'p.fecha_creacion';
-        $sinFechas = empty($filters['fechaDesde']) && empty($filters['fechaHasta']);
-        $sinFiltrosDeBusqueda = empty($filters['search'])
-            && empty($filters['cliente'])
-            && empty($filters['estado'])
-            && empty($filters['mensajero'])
-            && empty($filters['recaudo'])
-            && empty($filters['tipo']);
-
-        if ($sinFechas && $sinFiltrosDeBusqueda) {
-            $sql .= " AND {$campoFechaFiltro} >= DATE_SUB(NOW(), INTERVAL 2 MONTH)";
-        }
 
         if (!empty($filters['fechaDesde'])) {
             $sql .= " AND DATE({$campoFechaFiltro}) >= :fechaDesde";
@@ -407,6 +396,16 @@ class PaquetesAdminModel {
         }
 
         $sql .= " ORDER BY p.fecha_creacion DESC";
+
+        $limit = $filters['limit'] ?? 300;
+        if ($limit !== 'all') {
+            $limit = (int) $limit;
+            $allowedLimits = [300, 500, 1000, 2000];
+            if (!in_array($limit, $allowedLimits, true)) {
+                $limit = 300;
+            }
+            $sql .= " LIMIT {$limit}";
+        }
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);

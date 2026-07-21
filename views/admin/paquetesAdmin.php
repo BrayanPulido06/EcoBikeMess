@@ -394,6 +394,17 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             <!-- Paginación -->
             <div class="pagination-container">
                 <div class="pagination-size">
+                    <label>Cargar ultimos:</label>
+                    <select id="resultLimit">
+                        <option value="300" selected>300</option>
+                        <option value="500">500</option>
+                        <option value="1000">1000</option>
+                        <option value="2000">2000</option>
+                        <option value="all">Todos</option>
+                    </select>
+                    <span>paquetes</span>
+                </div>
+                <div class="pagination-size">
                     <label>Mostrar:</label>
                     <select id="pageSize">
                         <option value="10">10</option>
@@ -721,7 +732,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
 
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/rotuloShared.js"></script>
-    <script src="../../public/js/paquetesAdmin.js?v=20260721-5"></script>
+    <script src="../../public/js/paquetesAdmin.js?v=20260721-6"></script>
     <script>
         window.abrirModalAsignacionMasiva = async function() {
             const seleccionados = Array.from(document.querySelectorAll('.paquete-checkbox:checked')).map((checkbox) => ({

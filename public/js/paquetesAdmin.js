@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const filtroClienteOpciones = document.getElementById('filtroClienteOpciones');
     const filtroMensajeroInput = document.getElementById('filtroMensajeroInput');
     const filtroMensajeroOpciones = document.getElementById('filtroMensajeroOpciones');
+    const resultLimitSelect = document.getElementById('resultLimit');
     
     // Referencias a los filtros (Asegúrate de que los IDs en tu HTML coincidan)
     const inputs = {
@@ -41,34 +42,6 @@ document.addEventListener('DOMContentLoaded', function() {
         recaudo: document.getElementById('filtroRecaudo')
     };
 
-    const getDefaultDateRange = () => {
-        const today = new Date();
-        const twoMonthsAgo = new Date(today);
-        twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-
-        const toDateInputValue = (date) => {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        };
-
-        return {
-            desde: toDateInputValue(twoMonthsAgo),
-            hasta: toDateInputValue(today)
-        };
-    };
-
-    const aplicarRangoFechasPorDefecto = () => {
-        const rango = getDefaultDateRange();
-        if (inputs.fechaDesde && !inputs.fechaDesde.value) {
-            inputs.fechaDesde.value = rango.desde;
-        }
-        if (inputs.fechaHasta && !inputs.fechaHasta.value) {
-            inputs.fechaHasta.value = rango.hasta;
-        }
-    };
-
     // Referencias a Modales
     const modals = {
         detalles: document.getElementById('modalDetalles'),
@@ -78,7 +51,6 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // --- INICIALIZACIÓN ---
-    aplicarRangoFechasPorDefecto();
     listarPaquetes(); // Carga la tabla inicial
     setupModalClosers(); // Configura los botones de cerrar modales
 
@@ -89,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
             input.addEventListener('change', listarPaquetes);
         }
     });
+    resultLimitSelect?.addEventListener('change', listarPaquetes);
 
     const listarPaquetesDebounced = debounce(listarPaquetes, 250);
     filtroClienteInput?.addEventListener('input', listarPaquetesDebounced);
@@ -148,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             if (filtroClienteInput) filtroClienteInput.value = '';
             if (filtroMensajeroInput) filtroMensajeroInput.value = '';
-            aplicarRangoFechasPorDefecto();
+            if (resultLimitSelect) resultLimitSelect.value = '300';
             if (typeof window.listarPaquetes === 'function') {
                 window.listarPaquetes();
             }
@@ -267,6 +240,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (input && input.value) {
                 params.append(key, input.value);
             }
+        }
+        if (resultLimitSelect && resultLimitSelect.value) {
+            params.append('limit', resultLimitSelect.value);
         }
 
         // Petición AJAX al controlador

@@ -23,7 +23,8 @@ try {
                 'zona' => $_REQUEST['zona'] ?? '',
                 'mensajero' => $_REQUEST['mensajero'] ?? '',
                 'recaudo' => $_REQUEST['recaudo'] ?? '',
-                'tipo' => $_REQUEST['tipo'] ?? ''
+                'tipo' => $_REQUEST['tipo'] ?? '',
+                'limit' => $_REQUEST['limit'] ?? '300'
             ];
             
             $data = $model->getPaquetes($filters);
