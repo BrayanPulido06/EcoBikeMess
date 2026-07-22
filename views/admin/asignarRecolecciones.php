@@ -434,7 +434,7 @@ $recolecciones = $model->listarRecolecciones([]);
         </div>
     </div>
 
-    <script src="../../public/js/rotuloShared.js?v=20260721-3"></script>
+    <script src="../../public/js/rotuloShared.js?v=20260721-4"></script>
     <script src="../../public/js/asignarRecolecciones.js?v=20260720-1"></script>
 </body>
 </html>

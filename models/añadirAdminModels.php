@@ -136,10 +136,19 @@ class AñadirAdminModel {
     // --- MENSAJEROS ---
 
     public function getMensajeros() {
-        $sql = "SELECT m.id, CONCAT(u.nombres, ' ', u.apellidos) as nombre, 
+        $sql = "SELECT m.id, m.usuario_id,
+                       CONCAT(u.nombres, ' ', u.apellidos) as nombre,
+                       u.nombres, u.apellidos,
                        u.telefono, u.correo as email, u.estado,
+                       m.tipo_documento, m.numDocumento, m.foto,
+                       m.tipo_sangre, m.direccion_residencia,
+                       m.tipo_transporte, m.placa_vehiculo,
+                       m.licencia_conducir, m.soat, m.tecnomecanica,
+                       m.estado_aprobacion, m.total_entregas,
+                       m.nombre_emergencia1, m.apellido_emergencia1, m.telefono_emergencia1,
+                       m.nombre_emergencia2, m.apellido_emergencia2, m.telefono_emergencia2,
                        m.ubicacion_actual_lat, m.ubicacion_actual_lng,
-                       m.total_entregas, m.calificacion_promedio as rendimiento,
+                       m.calificacion_promedio as rendimiento,
                        u.fecha_creacion as fechaRegistro,
                        (SELECT COUNT(*) FROM paquetes p WHERE p.mensajero_id = m.id AND p.estado IN ('asignado', 'en_transito', 'en_ruta')) as paquetesAsignados,
                        (SELECT COUNT(*) FROM entregas e WHERE e.mensajero_id = m.id AND DATE(e.fecha_entrega) = CURDATE()) as entregasHoy

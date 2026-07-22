@@ -14,7 +14,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
-    <link rel="stylesheet" href="../../public/css/añadirAdmin.css">
+    <link rel="stylesheet" href="../../public/css/añadirAdmin.css?v=20260721-1">
     <link rel="stylesheet" href="../../public/css/responsive.css">
 </head>
 <body>
@@ -472,8 +472,8 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             nombre: '<?php echo $_SESSION['user_name'] ?? 'Usuario'; ?>'
         };
     </script>
-    <script src="../../public/js/añadirAdmin.js"></script>
-    <script>
+    <script src="../../public/js/añadirAdmin.js?v=20260721-1"></script>
+    <script type="text/plain" data-disabled="cliente-detail-legacy">
         (function() {
             function escapeHtml(value) {
                 return String(value ?? '')

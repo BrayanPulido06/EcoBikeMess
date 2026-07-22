@@ -109,7 +109,7 @@ $remitente_data = [
         #rotuloPreview .rotulo-scale p strong { font-weight: 800 !important; }
         #rotuloPreview .rotulo-scale .rotulo-total {
             margin: 2px 0;
-            font-size: 44px !important;
+            font-size: 38px !important;
             font-weight: 900;
             color: #1f8f3a;
             text-align: center;
@@ -764,7 +764,7 @@ $remitente_data = [
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 
     <script src="../../public/js/imageLightbox.js"></script>
-    <script src="../../public/js/rotuloShared.js?v=20260721-3"></script>
+    <script src="../../public/js/rotuloShared.js?v=20260721-4"></script>
     <script src="../../public/js/enviarPaquete.js?v=20260721-1"></script>
     <script src="../../public/js/enviarPaqueteMensajero.js?v=20260615-2"></script>
     <script src="../../public/js/mensajeroLayout.js?v=20260528-1"></script>

@@ -88,11 +88,11 @@
     function buildInnerHtml(data) {
         const totalText = formatMoney(data.recaudo);
         const totalLength = totalText.length;
-        let totalFontSize = 44;
-        if (totalLength >= 12) totalFontSize = 34;
-        else if (totalLength >= 11) totalFontSize = 36;
-        else if (totalLength >= 10) totalFontSize = 38;
-        else if (totalLength >= 9) totalFontSize = 40;
+        let totalFontSize = 38;
+        if (totalLength >= 12) totalFontSize = 30;
+        else if (totalLength >= 11) totalFontSize = 32;
+        else if (totalLength >= 10) totalFontSize = 34;
+        else if (totalLength >= 9) totalFontSize = 36;
         const cambiosHtml = data.tieneCambios
             ? `<div style="border:1px solid #bfe8c9;background:#f1fbf4;padding:4px 6px;border-radius:8px;margin-bottom:4px;">
                     <h3 style="margin:0 0 4px;font-size:17px;font-weight:800;color:#235b34;">Cambios por recoger</h3>

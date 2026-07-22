@@ -184,7 +184,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
         /* Total a cobrar (estilo compacto como rótulo final) */
         #rotuloPreview .rotulo-scale .rotulo-total {
             margin: 2px 0;
-            font-size: 44px !important;
+            font-size: 38px !important;
             font-weight: 900;
             color: #1f8f3a;
             text-align: center;
@@ -520,7 +520,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
 
     <!-- Enlace al script JS recién creado -->
     <script src="../../public/js/imageLightbox.js"></script>
-    <script src="../../public/js/rotuloShared.js?v=20260721-3"></script>
+    <script src="../../public/js/rotuloShared.js?v=20260721-4"></script>
     <script src="../../public/js/misPedidos.js"></script>
     
     <!-- Script para manejar el Rótulo -->

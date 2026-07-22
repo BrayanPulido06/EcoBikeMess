@@ -626,6 +626,18 @@ tbody tr:hover {
     font-size: 1em;
     color: #333;
     font-weight: 600;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.detail-value a {
+    color: #667eea;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.detail-value a:hover {
+    text-decoration: underline;
 }
 
 /* Modal */

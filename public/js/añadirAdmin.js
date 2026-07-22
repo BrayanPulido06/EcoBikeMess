@@ -62,6 +62,7 @@ function setupEventListeners() {
     document.getElementById('btnReporteMensajeros').addEventListener('click', generarReporteMensajeros);
     document.getElementById('searchMensajero').addEventListener('input', filtrarMensajeros);
     document.getElementById('filtroEstadoMensajero').addEventListener('change', filtrarMensajeros);
+    document.getElementById('tablaMensajerosBody')?.addEventListener('click', manejarClickTablaMensajeros);
     document.getElementById('btnCerrarModalMensajero').addEventListener('click', () => closeModal('modalMensajero'));
     document.getElementById('btnCerrarModalCliente').addEventListener('click', () => closeModal('modalCliente'));
     document.getElementById('btnCerrarModalSolicitudes').addEventListener('click', () => closeModal('modalSolicitudes'));
@@ -240,8 +241,8 @@ function renderAdministradores() {
     `).join('');
 }
 
-// Renderizar mensajeros
-function renderMensajeros() {
+// Renderizar mensajeros - version anterior conservada como referencia
+function renderMensajerosLegacy() {
     const tbody = document.getElementById('tablaMensajerosBody');
     
     if (mensajeros.length === 0) {
@@ -281,8 +282,8 @@ function renderMensajeros() {
     `).join('');
 }
 
-// Renderizar clientes
-function renderClientes() {
+// Renderizar clientes - version anterior conservada como referencia
+function renderClientesLegacy() {
     const tbody = document.getElementById('tablaClientesBody');
     if (!tbody) return;
 
@@ -523,8 +524,8 @@ function confirmarResetPassword() {
     userToReset = null;
 }
 
-// Ver detalles mensajero
-function verDetallesMensajero(id) {
+// Ver detalles mensajero - version anterior conservada como referencia
+function verDetallesMensajeroLegacy(id) {
     const mensajero = mensajeros.find(m => m.id === id);
     if (!mensajero) return;
     
@@ -588,7 +589,7 @@ function verDetallesMensajero(id) {
     openModal('modalMensajero');
 }
 
-function verDetallesCliente(id) {
+function verDetallesClienteLegacy(id) {
     const cliente = clientes.find(c => c.id === id);
     if (!cliente) return;
 
@@ -915,6 +916,250 @@ function showNotification(message, type = 'info') {
     document.body.appendChild(notification);
     
     setTimeout(() => notification.remove(), 4000);
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function displayValue(value, fallback = 'No registrado') {
+    const text = String(value ?? '').trim();
+    return escapeHtml(text || fallback);
+}
+
+function formatDocumentType(value) {
+    const labels = {
+        cedula: 'Cedula de ciudadania',
+        tarjeta_identidad: 'Tarjeta de identidad',
+        pasaporte: 'Pasaporte',
+        cedula_extranjeria: 'Cedula de extranjeria'
+    };
+    return labels[value] || displayValue(value);
+}
+
+function formatTransportType(value) {
+    const labels = {
+        moto: 'Moto',
+        bicicleta: 'Bicicleta',
+        a_pie: 'A pie',
+        Carro: 'Carro',
+        vehiculo: 'Vehiculo'
+    };
+    return labels[value] || displayValue(value);
+}
+
+function renderDetailItem(label, value, options = {}) {
+    const span = options.span ? ` style="grid-column: span ${options.span};"` : '';
+    return `
+        <div class="detail-item"${span}>
+            <div class="detail-label">${escapeHtml(label)}</div>
+            <div class="detail-value">${value}</div>
+        </div>
+    `;
+}
+
+function renderDocumentLink(label, path) {
+    const text = String(path ?? '').trim();
+    if (!text) return renderDetailItem(label, 'No registrado');
+    return renderDetailItem(label, `<a href="${escapeHtml(text)}" target="_blank" rel="noopener">Ver archivo</a>`);
+}
+
+function manejarClickTablaMensajeros(event) {
+    const button = event.target.closest('.btn-ver-mensajero');
+    if (!button) return;
+
+    const mensajeroId = Number(button.dataset.mensajeroId || 0);
+    if (!mensajeroId) return;
+
+    verDetallesMensajero(mensajeroId);
+}
+
+function renderMensajeros() {
+    const tbody = document.getElementById('tablaMensajerosBody');
+    if (!tbody) return;
+
+    if (mensajeros.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px;">No hay mensajeros registrados</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = mensajeros.map(m => {
+        const rendimiento = Number(m.rendimiento || 0);
+        return `
+            <tr>
+                <td><strong>M${String(m.id).padStart(3, '0')}</strong></td>
+                <td>${displayValue(m.nombre || 'Sin nombre')}</td>
+                <td>${displayValue(m.telefono)}</td>
+                <td><span class="status-badge status-${escapeHtml(m.estado || 'inactivo')}">${formatEstadoMensajero(m.estado)}</span></td>
+                <td>${displayValue(m.ubicacionActual, 'No disponible')}</td>
+                <td><strong>${Number(m.paquetesAsignados || 0)}</strong></td>
+                <td><strong>${Number(m.entregasHoy || 0)}</strong></td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 60px; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
+                            <div style="width: ${Math.max(0, Math.min(100, rendimiento))}%; height: 100%; background: ${rendimiento > 80 ? '#28a745' : rendimiento > 60 ? '#ffc107' : '#dc3545'};"></div>
+                        </div>
+                        <span>${rendimiento}%</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-info btn-ver-mensajero" data-mensajero-id="${m.id}" type="button" title="Ver detalles">Ver</button>
+                        <button class="btn btn-sm btn-warning" onclick="toggleEstadoMensajero(${m.id})" type="button">${m.estado === 'activo' || m.estado === 'en_ruta' ? 'Pausar' : 'Activar'}</button>
+                        ${currentUser.rol === 'super_admin' ? `<button class="btn btn-sm btn-danger" onclick="eliminarMensajero(${m.id})" type="button">Eliminar</button>` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderClientes() {
+    const tbody = document.getElementById('tablaClientesBody');
+    if (!tbody) return;
+
+    if (clientes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">No hay clientes registrados</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = clientes.map(c => `
+        <tr>
+            <td><strong>C${String(c.id).padStart(3, '0')}</strong></td>
+            <td>${displayValue(c.emprendimiento)}</td>
+            <td>${displayValue(c.nombreContacto)}</td>
+            <td>${displayValue(c.telefono)}</td>
+            <td>${displayValue(c.direccion, 'No registrada')}</td>
+            <td><span class="status-badge status-${escapeHtml(c.estado || 'inactivo')}">${c.estado === 'activo' ? 'Activo' : 'Inactivo'}</span></td>
+            <td>${formatDate(c.fechaRegistro)}</td>
+            <td>
+                <button class="btn btn-sm btn-info btn-ver-cliente" data-cliente-id="${c.id}" type="button" title="Ver detalles">Ver</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function verDetallesMensajero(id) {
+    const mensajero = mensajeros.find(m => Number(m.id) === Number(id));
+    if (!mensajero) return;
+
+    const emergencia1 = [mensajero.nombre_emergencia1, mensajero.apellido_emergencia1].filter(Boolean).join(' ');
+    const emergencia2 = [mensajero.nombre_emergencia2, mensajero.apellido_emergencia2].filter(Boolean).join(' ');
+    const ubicacion = mensajero.ubicacionActual || 'No disponible';
+
+    const html = `
+        <div class="mensajero-detail-section">
+            <h3>Informacion personal</h3>
+            <div class="detail-grid">
+                ${renderDetailItem('ID mensajero', `M${String(mensajero.id).padStart(3, '0')}`)}
+                ${renderDetailItem('Usuario ID', displayValue(mensajero.usuario_id))}
+                ${renderDetailItem('Nombre', displayValue(mensajero.nombre, 'Sin nombre'))}
+                ${renderDetailItem('Correo', displayValue(mensajero.email))}
+                ${renderDetailItem('Telefono', displayValue(mensajero.telefono))}
+                ${renderDetailItem('Fecha registro', formatDate(mensajero.fechaRegistro))}
+                ${renderDetailItem('Tipo documento', formatDocumentType(mensajero.tipo_documento))}
+                ${renderDetailItem('Numero documento', displayValue(mensajero.numDocumento))}
+                ${renderDetailItem('Tipo de sangre', displayValue(mensajero.tipo_sangre))}
+                ${renderDetailItem('Direccion residencia', displayValue(mensajero.direccion_residencia, 'No registrada'), { span: 2 })}
+            </div>
+        </div>
+
+        <div class="mensajero-detail-section">
+            <h3>Operacion</h3>
+            <div class="detail-grid">
+                ${renderDetailItem('Estado usuario', `<span class="status-badge status-${escapeHtml(mensajero.estado || 'inactivo')}">${formatEstadoMensajero(mensajero.estado)}</span>`)}
+                ${renderDetailItem('Estado aprobacion', displayValue(mensajero.estado_aprobacion))}
+                ${renderDetailItem('Ubicacion actual', displayValue(ubicacion, 'No disponible'))}
+                ${renderDetailItem('Paquetes asignados', Number(mensajero.paquetesAsignados || 0))}
+                ${renderDetailItem('Entregas hoy', Number(mensajero.entregasHoy || 0))}
+                ${renderDetailItem('Total entregas', Number(mensajero.total_entregas || 0))}
+                ${renderDetailItem('Rendimiento', `${Number(mensajero.rendimiento || 0)}%`)}
+            </div>
+        </div>
+
+        <div class="mensajero-detail-section">
+            <h3>Transporte</h3>
+            <div class="detail-grid">
+                ${renderDetailItem('Tipo transporte', formatTransportType(mensajero.tipo_transporte))}
+                ${renderDetailItem('Placa vehiculo', displayValue(mensajero.placa_vehiculo))}
+                ${renderDocumentLink('Foto', mensajero.foto)}
+                ${renderDocumentLink('Licencia conducir', mensajero.licencia_conducir)}
+                ${renderDocumentLink('SOAT', mensajero.soat)}
+                ${renderDocumentLink('Tecnomecanica', mensajero.tecnomecanica)}
+            </div>
+        </div>
+
+        <div class="mensajero-detail-section">
+            <h3>Contactos de emergencia</h3>
+            <div class="detail-grid">
+                ${renderDetailItem('Contacto 1', displayValue(emergencia1))}
+                ${renderDetailItem('Telefono contacto 1', displayValue(mensajero.telefono_emergencia1))}
+                ${renderDetailItem('Contacto 2', displayValue(emergencia2))}
+                ${renderDetailItem('Telefono contacto 2', displayValue(mensajero.telefono_emergencia2))}
+            </div>
+        </div>
+    `;
+
+    document.getElementById('detallesMensajero').innerHTML = html;
+    openModal('modalMensajero');
+}
+
+async function verDetallesCliente(id) {
+    let cliente = clientes.find(c => Number(c.id) === Number(id));
+    if (!cliente) return;
+
+    try {
+        const response = await fetch(`${getAdminControllerUrl()}?action=detalle_cliente&id=${encodeURIComponent(id)}`);
+        const result = await response.json();
+        if (result.success && result.data) {
+            cliente = { ...cliente, ...result.data };
+        }
+    } catch (error) {
+        console.warn('No se pudo cargar detalle completo del cliente:', error);
+    }
+
+    const html = `
+        <div class="mensajero-detail-section">
+            <h3>Informacion del cliente</h3>
+            <div class="detail-grid">
+                ${renderDetailItem('ID cliente', `C${String(cliente.id).padStart(3, '0')}`)}
+                ${renderDetailItem('Usuario ID', displayValue(cliente.usuario_id))}
+                ${renderDetailItem('Emprendimiento', displayValue(cliente.emprendimiento))}
+                ${renderDetailItem('Tipo producto', displayValue(cliente.tipoProducto))}
+                ${renderDetailItem('Instagram', displayValue(cliente.instagram))}
+                ${renderDetailItem('Estado', `<span class="status-badge status-${escapeHtml(cliente.estado || 'inactivo')}">${cliente.estado === 'activo' ? 'Activo' : 'Inactivo'}</span>`)}
+                ${renderDetailItem('Fecha registro', formatDate(cliente.fechaRegistro))}
+            </div>
+        </div>
+
+        <div class="mensajero-detail-section">
+            <h3>Contacto</h3>
+            <div class="detail-grid">
+                ${renderDetailItem('Nombre contacto', displayValue(cliente.nombreContacto))}
+                ${renderDetailItem('Nombres', displayValue(cliente.nombres))}
+                ${renderDetailItem('Apellidos', displayValue(cliente.apellidos))}
+                ${renderDetailItem('Telefono', displayValue(cliente.telefono))}
+                ${renderDetailItem('Correo', displayValue(cliente.email))}
+                ${renderDetailItem('Direccion', displayValue(cliente.direccion, 'No registrada'), { span: 2 })}
+            </div>
+        </div>
+
+        <div class="mensajero-detail-section">
+            <h3>Facturacion y credito</h3>
+            <div class="detail-grid">
+                ${renderDetailItem('Saldo pendiente', formatCurrency(Number(cliente.saldoPendiente || 0)))}
+                ${renderDetailItem('Limite credito', formatCurrency(Number(cliente.limiteCredito || 0)))}
+            </div>
+        </div>
+    `;
+
+    document.getElementById('detallesCliente').innerHTML = html;
+    openModal('modalCliente');
 }
 
 function getAdminControllerUrl() {

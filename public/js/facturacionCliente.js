@@ -631,7 +631,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (cambiosRow) cambiosRow.style.display = currentRotuloData.cambios === 'Si' ? '' : 'none';
 
         const totalTexto = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(totalCobrar);
-        document.getElementById('rotulo_financiero').innerHTML = `<p class="rotulo-total" style="font-size:44px;font-weight:900;color:#1f8f3a;line-height:0.95;text-align:center;">${totalTexto}</p>`;
+        document.getElementById('rotulo_financiero').innerHTML = `<p class="rotulo-total" style="font-size:38px;font-weight:900;color:#1f8f3a;line-height:0.95;text-align:center;">${totalTexto}</p>`;
 
         // Generar QR
         const qrContainer = document.getElementById('rotulo_qr_code');
