@@ -88,11 +88,11 @@
     function buildInnerHtml(data) {
         const totalText = formatMoney(data.recaudo);
         const totalLength = totalText.length;
-        let totalFontSize = 66;
-        if (totalLength >= 12) totalFontSize = 46;
-        else if (totalLength >= 11) totalFontSize = 50;
-        else if (totalLength >= 10) totalFontSize = 54;
-        else if (totalLength >= 9) totalFontSize = 60;
+        let totalFontSize = 44;
+        if (totalLength >= 12) totalFontSize = 34;
+        else if (totalLength >= 11) totalFontSize = 36;
+        else if (totalLength >= 10) totalFontSize = 38;
+        else if (totalLength >= 9) totalFontSize = 40;
         const cambiosHtml = data.tieneCambios
             ? `<div style="border:1px solid #bfe8c9;background:#f1fbf4;padding:4px 6px;border-radius:8px;margin-bottom:4px;">
                     <h3 style="margin:0 0 4px;font-size:17px;font-weight:800;color:#235b34;">Cambios por recoger</h3>
@@ -145,7 +145,7 @@
                         ${cambiosHtml}
                         <div style="margin-top:4px;">
                             <h3 style="margin:0 0 4px;font-size:18px;font-weight:900;color:#30363d;">Total a Cobrar</h3>
-                            <p style="margin:0;font-size:${totalFontSize}px;font-weight:900;color:#1f8f3a;line-height:0.86;text-align:center;letter-spacing:0;">${escapeHtml(totalText)}</p>
+                            <p class="rotulo-total" style="margin:0;font-size:${totalFontSize}px;font-weight:900;color:#1f8f3a;line-height:0.9;text-align:center;letter-spacing:0;">${escapeHtml(totalText)}</p>
                         </div>
                     </div>
                     <div style="flex:0 0 132px;display:flex;justify-content:flex-start;align-items:flex-start;padding-top:0;margin-left:-12mm;">

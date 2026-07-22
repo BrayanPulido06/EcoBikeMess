@@ -231,7 +231,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
         /* Total a cobrar grande y centrado (override de tamaños generales) */
         #rotuloPreview .rotulo-scale .rotulo-total {
             margin: 2px 0;
-            font-size: 58px !important;
+            font-size: 44px !important;
             font-weight: 900;
             color: #1f8f3a;
             text-align: center;
@@ -403,16 +403,6 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                         <option value="all">Todos</option>
                     </select>
                     <span>paquetes</span>
-                </div>
-                <div class="pagination-size">
-                    <label>Mostrar:</label>
-                    <select id="pageSize">
-                        <option value="10">10</option>
-                        <option value="25" selected>25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                    <span>por página</span>
                 </div>
                 <div class="pagination-controls" id="paginationControls">
                     <!-- Se genera dinámicamente -->
@@ -731,7 +721,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
     </div>
 
     <script src="../../public/js/imageLightbox.js"></script>
-    <script src="../../public/js/rotuloShared.js?v=20260721-2"></script>
+    <script src="../../public/js/rotuloShared.js?v=20260721-3"></script>
     <script src="../../public/js/paquetesAdmin.js?v=20260721-6"></script>
     <script>
         window.abrirModalAsignacionMasiva = async function() {

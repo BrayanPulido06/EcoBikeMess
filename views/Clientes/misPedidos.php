@@ -184,11 +184,11 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
         /* Total a cobrar (estilo compacto como rótulo final) */
         #rotuloPreview .rotulo-scale .rotulo-total {
             margin: 2px 0;
-            font-size: 58px !important;
+            font-size: 44px !important;
             font-weight: 900;
             color: #1f8f3a;
             text-align: center;
-            line-height: 0.9;
+            line-height: 0.95;
         }
         /* Compactar textos para no mover el QR */
         #rotuloPreview .rotulo-scale .rotulo-card p {
@@ -290,16 +290,6 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
 
             <!-- Paginación -->
             <div class="pagination-container">
-                <div class="pagination-size">
-                    <label>Mostrar:</label>
-                    <select id="pageSize">
-                        <option value="10">10</option>
-                        <option value="25" selected>25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                    <span>por página</span>
-                </div>
                 <div class="pagination-controls" id="paginationControls">
                     <!-- Se genera dinámicamente -->
                 </div>
@@ -530,7 +520,7 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
 
     <!-- Enlace al script JS recién creado -->
     <script src="../../public/js/imageLightbox.js"></script>
-    <script src="../../public/js/rotuloShared.js?v=20260721-2"></script>
+    <script src="../../public/js/rotuloShared.js?v=20260721-3"></script>
     <script src="../../public/js/misPedidos.js"></script>
     
     <!-- Script para manejar el Rótulo -->
