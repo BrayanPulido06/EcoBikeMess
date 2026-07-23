@@ -357,6 +357,24 @@ body.sidebar-collapsed .facturacion-shell,
     border-color: #cde8d4;
 }
 
+.additional-cell {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 150px;
+    max-width: 220px;
+}
+
+.additional-cell strong {
+    color: var(--fact-text);
+}
+
+.additional-cell span {
+    color: var(--fact-muted);
+    font-size: 0.78rem;
+    line-height: 1.35;
+    white-space: normal;
+}
+
 .table-tools {
     display: flex;
     align-items: center;

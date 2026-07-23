@@ -370,6 +370,22 @@ CREATE TABLE IF NOT EXISTS facturacion_abonos_cliente (
 
 CREATE INDEX idx_abonos_cliente_fecha ON facturacion_abonos_cliente(cliente_id, fecha_grupo);
 
+CREATE TABLE IF NOT EXISTS facturacion_adicionales_cliente (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cliente_id INT NOT NULL,
+    fecha_grupo DATE NOT NULL,
+    monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    descripcion TEXT,
+    registrado_por INT NULL,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_adicional_cliente_fecha (cliente_id, fecha_grupo),
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+    FOREIGN KEY (registrado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_adicional_cliente_fecha ON facturacion_adicionales_cliente(cliente_id, fecha_grupo);
+
 CREATE TABLE IF NOT EXISTS facturacion_abonos_mensajero (
     id INT PRIMARY KEY AUTO_INCREMENT,
     mensajero_id INT NOT NULL,
@@ -384,6 +400,22 @@ CREATE TABLE IF NOT EXISTS facturacion_abonos_mensajero (
 );
 
 CREATE INDEX idx_abonos_mensajero_fecha ON facturacion_abonos_mensajero(mensajero_id, fecha_grupo);
+
+CREATE TABLE IF NOT EXISTS facturacion_adicionales_mensajero (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    mensajero_id INT NOT NULL,
+    fecha_grupo DATE NOT NULL,
+    monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    descripcion TEXT,
+    registrado_por INT NULL,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_adicional_mensajero_fecha (mensajero_id, fecha_grupo),
+    FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id) ON DELETE CASCADE,
+    FOREIGN KEY (registrado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_adicional_mensajero_fecha ON facturacion_adicionales_mensajero(mensajero_id, fecha_grupo);
 
 CREATE TABLE IF NOT EXISTS facturacion_grupos_cliente_ocultos (
     id INT PRIMARY KEY AUTO_INCREMENT,

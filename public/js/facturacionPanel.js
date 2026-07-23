@@ -74,6 +74,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const getGroupAbonoTotal = (clienteId, fechaGrupo) => getGroupAbonos(clienteId, fechaGrupo)
         .reduce((sum, abono) => sum + Number(abono.monto || 0), 0);
 
+    const getClienteAdicionales = () => {
+        const adicionales = state.rawData?.cliente?.adicionales;
+        return Array.isArray(adicionales) ? adicionales : [];
+    };
+
+    const getClienteGroupAdicional = (clienteId, fechaGrupo) => getClienteAdicionales()
+        .find((adicional) => Number(adicional.cliente_id) === Number(clienteId) && String(adicional.fecha_grupo) === String(fechaGrupo)) || null;
+
     const getClienteEstados = () => {
         const estados = state.rawData?.cliente?.estados;
         return Array.isArray(estados) ? estados : [];
@@ -92,6 +100,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const getMensajeroGroupAbonos = (mensajeroId, fechaGrupo) => getMensajeroAbonos()
         .filter((abono) => Number(abono.mensajero_id) === Number(mensajeroId) && String(abono.fecha_grupo) === String(fechaGrupo));
+
+    const getMensajeroAdicionales = () => {
+        const adicionales = state.rawData?.mensajero?.adicionales;
+        return Array.isArray(adicionales) ? adicionales : [];
+    };
+
+    const getMensajeroGroupAdicional = (mensajeroId, fechaGrupo) => getMensajeroAdicionales()
+        .find((adicional) => Number(adicional.mensajero_id) === Number(mensajeroId) && String(adicional.fecha_grupo) === String(fechaGrupo)) || null;
 
     const getMensajeroEstados = () => {
         const estados = state.rawData?.mensajero?.estados;
@@ -133,6 +149,29 @@ document.addEventListener('DOMContentLoaded', () => {
         value
             ? `<span class="badge green">${yesText}</span>`
             : `<span class="badge red">${noText}</span>`;
+
+    const adicionalCell = (monto, descripcion) => {
+        const text = String(descripcion || '').trim();
+        return `
+            <div class="additional-cell">
+                <strong>${money(monto)}</strong>
+                <span>${escapeHtml(text || 'Sin observacion')}</span>
+            </div>
+        `;
+    };
+
+    const packageAdditionalSummary = (packages, field) => {
+        const notes = (Array.isArray(packages) ? packages : [])
+            .map((item) => String(item?.[field] || '').trim())
+            .filter(Boolean);
+
+        if (!notes.length) {
+            return '';
+        }
+
+        const uniqueNotes = Array.from(new Set(notes));
+        return uniqueNotes.slice(0, 2).join(' | ') + (uniqueNotes.length > 2 ? ` +${uniqueNotes.length - 2} mas` : '');
+    };
 
     const escapeHtml = (value) => String(value || '')
         .replace(/&/g, '&amp;')
@@ -314,7 +353,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     paquetesEntregados: 0,
                     totalServicio: 0,
                     subtotalServicio: 0,
+                    totalAdicionalesPaquetes: 0,
+                    adicionalGeneral: null,
                     totalAdicionales: 0,
+                    adicionalObservacion: '',
                     totalRecaudado: 0,
                     abono: 0,
                     saldo: 0,
@@ -331,6 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const adicional = Number(item.costo_adicional_servicio || 0);
                 group.paquetesEntregados += 1;
                 group.subtotalServicio += valorBase;
+                group.totalAdicionalesPaquetes += adicional;
                 group.totalAdicionales += adicional;
                 group.totalServicio += valorBase + adicional;
                 group.totalRecaudado += getRecaudoRealValue(item);
@@ -344,12 +387,23 @@ document.addEventListener('DOMContentLoaded', () => {
             .map((group) => {
                 const abonos = getGroupAbonos(group.clienteId, group.dateKey);
                 const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
-                const saldoCalculado = Number(group.totalRecaudado || 0) - Number(group.totalServicio || 0);
+                const adicionalGeneral = getClienteGroupAdicional(group.clienteId, group.dateKey);
+                const montoAdicionalGeneral = Number(adicionalGeneral?.monto || 0);
+                const descripcionAdicionalGeneral = String(adicionalGeneral?.descripcion || '').trim();
+                const totalAdicionales = Number(group.totalAdicionalesPaquetes || 0) + montoAdicionalGeneral;
+                const totalServicio = Number(group.subtotalServicio || 0) + totalAdicionales;
+                const saldoCalculado = Number(group.totalRecaudado || 0) - totalServicio;
                 const estadoManual = getGroupEstadoManual(group.clienteId, group.dateKey);
                 const saldo = estadoManual === 'pagado' ? 0 : saldoCalculado;
                 const balance = estadoManual === 'pagado' ? 0 : saldo + abono;
                 return {
                     ...group,
+                    adicionalGeneral,
+                    adicionalGeneralMonto: montoAdicionalGeneral,
+                    adicionalGeneralDescripcion: descripcionAdicionalGeneral,
+                    totalAdicionales,
+                    totalServicio,
+                    adicionalObservacion: descripcionAdicionalGeneral || packageAdditionalSummary(group.packages, 'observaciones_admin'),
                     abonos,
                     abono,
                     balance,
@@ -407,7 +461,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     mensajeroNombre: messengerName,
                     entregas: 0,
                     totalPago: 0,
+                    totalPagoBase: 0,
+                    totalAdicionalesPaquetes: 0,
+                    adicionalGeneral: null,
                     totalAdicionales: 0,
+                    adicionalObservacion: '',
                     totalRecaudado: 0,
                     abono: 0,
                     saldo: 0,
@@ -420,9 +478,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const group = groupsMap.get(groupKey);
             if (item.estado === 'entregado') {
+                const pagoBase = getMessengerBasePaymentValue(item);
+                const adicionalPaquete = Number(item.adicional_pago_mensajero || 0);
                 group.entregas += 1;
-                group.totalAdicionales += Number(item.adicional_pago_mensajero || 0);
-                group.totalPago += getMessengerPaymentValue(item);
+                group.totalPagoBase += pagoBase;
+                group.totalAdicionalesPaquetes += adicionalPaquete;
+                group.totalAdicionales += adicionalPaquete;
+                group.totalPago += pagoBase + adicionalPaquete;
                 group.totalRecaudado += getRecaudoRealValue(item);
                 group.packages.push(item);
             }
@@ -434,12 +496,23 @@ document.addEventListener('DOMContentLoaded', () => {
             .map((group) => {
                 const abonos = getMensajeroGroupAbonos(group.mensajeroId, group.dateKey);
                 const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
-                const saldoCalculado = Number(group.totalPago || 0) - Number(group.totalRecaudado || 0) - abono;
+                const adicionalGeneral = getMensajeroGroupAdicional(group.mensajeroId, group.dateKey);
+                const montoAdicionalGeneral = Number(adicionalGeneral?.monto || 0);
+                const descripcionAdicionalGeneral = String(adicionalGeneral?.descripcion || '').trim();
+                const totalAdicionales = Number(group.totalAdicionalesPaquetes || 0) + montoAdicionalGeneral;
+                const totalPago = Number(group.totalPagoBase || 0) + totalAdicionales;
+                const saldoCalculado = totalPago - Number(group.totalRecaudado || 0) - abono;
                 const estadoManual = getMensajeroGroupEstadoManual(group.mensajeroId, group.dateKey);
                 const saldo = estadoManual === 'pagado' ? 0 : saldoCalculado;
                 const balance = estadoManual === 'pagado' ? 0 : saldo;
                 return {
                     ...group,
+                    adicionalGeneral,
+                    adicionalGeneralMonto: montoAdicionalGeneral,
+                    adicionalGeneralDescripcion: descripcionAdicionalGeneral,
+                    totalAdicionales,
+                    totalPago,
+                    adicionalObservacion: descripcionAdicionalGeneral || packageAdditionalSummary(group.packages, 'observaciones_mensajero'),
                     abonos,
                     abono,
                     balance,
@@ -578,7 +651,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${group.fechaLabel}</td>
                     <td>${group.paquetesEntregados}</td>
                     <td>${money(group.totalServicio)}</td>
-                    <td>${money(group.totalAdicionales)}</td>
+                    <td>${adicionalCell(group.totalAdicionales, group.adicionalObservacion)}</td>
                     <td>${money(group.totalRecaudado)}</td>
                     <td>${money(group.abono)}</td>
                     <td>${clientGroupStatusSelect(group)}</td>
@@ -593,6 +666,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                 data-group-key="${escapeHtml(group.key)}"
                             >
                                 Ver paquetes
+                            </button>
+                            <button
+                                type="button"
+                                class="fact-btn secondary detail-trigger"
+                                data-role="open-client-additional"
+                                data-group-key="${escapeHtml(group.key)}"
+                            >
+                                Adicionales
                             </button>
                             <button
                                 type="button"
@@ -683,7 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${group.fechaLabel}</td>
                     <td>${group.entregas}</td>
                     <td>${money(group.totalPago)}</td>
-                    <td>${money(group.totalAdicionales)}</td>
+                    <td>${adicionalCell(group.totalAdicionales, group.adicionalObservacion)}</td>
                     <td>${money(group.totalRecaudado)}</td>
                     <td>${money(group.abono)}</td>
                     <td>${messengerGroupStatusSelect(group)}</td>
@@ -698,6 +779,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                 data-group-key="${escapeHtml(group.key)}"
                             >
                                 Ver entregas
+                            </button>
+                            <button
+                                type="button"
+                                class="fact-btn secondary detail-trigger"
+                                data-role="open-messenger-additional"
+                                data-group-key="${escapeHtml(group.key)}"
+                            >
+                                Adicionales
                             </button>
                             <button
                                 type="button"
@@ -956,6 +1045,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const saveClientGroupAdditional = async (form) => {
+        const formData = new FormData();
+        formData.append('action', 'guardar_adicional_cliente_grupo');
+        formData.append('cliente_id', form.cliente_id.value);
+        formData.append('fecha_grupo', form.fecha_grupo.value);
+        formData.append('monto', form.monto.value || '0');
+        formData.append('descripcion', form.descripcion.value || '');
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.message || 'No se pudo guardar el adicional.');
+        }
+
+        state.rawData = result.data;
+        render();
+        if (state.selectedClienteGroupKey) {
+            openClientAdditionalModal(state.selectedClienteGroupKey);
+        }
+    };
+
     const saveMessengerAbono = async (form) => {
         const formData = new FormData();
         formData.append('action', 'registrar_abono_mensajero');
@@ -980,6 +1095,32 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
         if (state.selectedMensajeroGroupKey) {
             openMessengerAbonoModal(state.selectedMensajeroGroupKey);
+        }
+    };
+
+    const saveMessengerGroupAdditional = async (form) => {
+        const formData = new FormData();
+        formData.append('action', 'guardar_adicional_mensajero_grupo');
+        formData.append('mensajero_id', form.mensajero_id.value);
+        formData.append('fecha_grupo', form.fecha_grupo.value);
+        formData.append('monto', form.monto.value || '0');
+        formData.append('descripcion', form.descripcion.value || '');
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.message || 'No se pudo guardar el adicional.');
+        }
+
+        state.rawData = result.data;
+        render();
+        if (state.selectedMensajeroGroupKey) {
+            openMessengerAdditionalModal(state.selectedMensajeroGroupKey);
         }
     };
 
@@ -1381,6 +1522,59 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.setAttribute('aria-hidden', 'false');
     };
 
+    const openMessengerAdditionalModal = (groupKey) => {
+        const group = getMensajeroGroupByKey(groupKey);
+        const modal = document.getElementById('facturacionDetailModal');
+        const title = document.getElementById('facturacionDetailTitle');
+        const subtitle = document.getElementById('facturacionDetailSubtitle');
+        const body = document.getElementById('facturacionDetailBody');
+
+        if (!group || !modal || !title || !subtitle || !body) {
+            return;
+        }
+
+        const adicional = group.adicionalGeneral || {};
+        const monto = Number(adicional.monto || 0);
+
+        state.selectedMensajeroGroupKey = groupKey;
+        state.activeMensajeroModalView = 'additional';
+        title.textContent = `Adicionales - ${group.mensajeroNombre}`;
+        subtitle.textContent = `Fecha ${group.fechaLabel} | Adicional general ${money(monto)} | Total adicionales ${money(group.totalAdicionales)} | Total pago ${money(group.totalPago)}`;
+
+        body.innerHTML = `
+            <div class="detail-summary-strip">
+                <div><span>Entregas</span><strong>${group.entregas}</strong></div>
+                <div><span>Adicional general</span><strong>${money(monto)}</strong></div>
+                <div><span>Adicionales por paquete</span><strong>${money(Number(group.totalAdicionalesPaquetes || 0))}</strong></div>
+                <div><span>Total adicionales</span><strong>${money(group.totalAdicionales)}</strong></div>
+                <div><span>Total pago</span><strong>${money(group.totalPago)}</strong></div>
+            </div>
+            <form id="mensajeroAdicionalGrupoForm" class="facturacion-abono-form">
+                <input type="hidden" name="mensajero_id" value="${group.mensajeroId}">
+                <input type="hidden" name="fecha_grupo" value="${escapeHtml(group.dateKey)}">
+                <div class="facturacion-abono-grid">
+                    <label class="facturacion-field">
+                        <span>Valor adicional general</span>
+                        <input type="hidden" name="monto" value="${monto > 0 ? monto : ''}">
+                        <input type="text" name="monto_display" inputmode="numeric" autocomplete="off" placeholder="$ 3.000" value="${monto > 0 ? money(monto) : ''}">
+                    </label>
+                    <label class="facturacion-field facturacion-field-full">
+                        <span>Observacion</span>
+                        <textarea name="descripcion" rows="3" placeholder="Ej: jugo, parqueadero, espera adicional">${escapeHtml(adicional.descripcion || '')}</textarea>
+                    </label>
+                </div>
+                <div class="facturacion-abono-actions">
+                    <button type="submit" class="fact-btn primary" data-role="submit-messenger-group-additional">Guardar adicional</button>
+                    <button type="button" class="fact-btn tertiary" data-role="open-messenger-detail" data-group-key="${escapeHtml(group.key)}">Ver entregas</button>
+                </div>
+                <div class="facturacion-footnote">Para quitar el adicional general, deja el valor en cero o vacio y guarda. Los adicionales por paquete se editan desde cada entrega.</div>
+            </form>
+        `;
+
+        modal.classList.remove('modal-hidden');
+        modal.setAttribute('aria-hidden', 'false');
+    };
+
     const openClientDetailModal = (groupKey) => {
         const group = getClienteGroupByKey(groupKey);
         const modal = document.getElementById('facturacionDetailModal');
@@ -1485,6 +1679,59 @@ document.addEventListener('DOMContentLoaded', () => {
             </form>
             <div class="facturacion-footnote">Historial de abonos registrados para este cliente en esta fecha.</div>
             ${renderAbonoHistory(group)}
+        `;
+
+        modal.classList.remove('modal-hidden');
+        modal.setAttribute('aria-hidden', 'false');
+    };
+
+    const openClientAdditionalModal = (groupKey) => {
+        const group = getClienteGroupByKey(groupKey);
+        const modal = document.getElementById('facturacionDetailModal');
+        const title = document.getElementById('facturacionDetailTitle');
+        const subtitle = document.getElementById('facturacionDetailSubtitle');
+        const body = document.getElementById('facturacionDetailBody');
+
+        if (!group || !modal || !title || !subtitle || !body) {
+            return;
+        }
+
+        const adicional = group.adicionalGeneral || {};
+        const monto = Number(adicional.monto || 0);
+
+        state.selectedClienteGroupKey = groupKey;
+        state.activeClientModalView = 'additional';
+        title.textContent = `Adicionales - ${group.clienteNombre}`;
+        subtitle.textContent = `Fecha ${group.fechaLabel} | Adicional general ${money(monto)} | Total adicionales ${money(group.totalAdicionales)} | Total servicio ${money(group.totalServicio)}`;
+
+        body.innerHTML = `
+            <div class="detail-summary-strip">
+                <div><span>Entregados</span><strong>${group.paquetesEntregados}</strong></div>
+                <div><span>Adicional general</span><strong>${money(monto)}</strong></div>
+                <div><span>Adicionales por paquete</span><strong>${money(Number(group.totalAdicionalesPaquetes || 0))}</strong></div>
+                <div><span>Total adicionales</span><strong>${money(group.totalAdicionales)}</strong></div>
+                <div><span>Total servicio</span><strong>${money(group.totalServicio)}</strong></div>
+            </div>
+            <form id="clienteAdicionalGrupoForm" class="facturacion-abono-form">
+                <input type="hidden" name="cliente_id" value="${group.clienteId}">
+                <input type="hidden" name="fecha_grupo" value="${escapeHtml(group.dateKey)}">
+                <div class="facturacion-abono-grid">
+                    <label class="facturacion-field">
+                        <span>Valor adicional general</span>
+                        <input type="hidden" name="monto" value="${monto > 0 ? monto : ''}">
+                        <input type="text" name="monto_display" inputmode="numeric" autocomplete="off" placeholder="$ 2.000" value="${monto > 0 ? money(monto) : ''}">
+                    </label>
+                    <label class="facturacion-field facturacion-field-full">
+                        <span>Observacion</span>
+                        <textarea name="descripcion" rows="3" placeholder="Ej: tiempo de espera, parqueadero, gestion adicional">${escapeHtml(adicional.descripcion || '')}</textarea>
+                    </label>
+                </div>
+                <div class="facturacion-abono-actions">
+                    <button type="submit" class="fact-btn primary" data-role="submit-client-group-additional">Guardar adicional</button>
+                    <button type="button" class="fact-btn tertiary" data-role="open-client-detail" data-group-key="${escapeHtml(group.key)}">Ver paquetes</button>
+                </div>
+                <div class="facturacion-footnote">Para quitar el adicional general, deja el valor en cero o vacio y guarda. Los adicionales por paquete se editan dentro de cada paquete.</div>
+            </form>
         `;
 
         modal.classList.remove('modal-hidden');
@@ -1775,6 +2022,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const clientAdditionalButton = event.target.closest('[data-role="open-client-additional"]');
+            if (clientAdditionalButton) {
+                openClientAdditionalModal(clientAdditionalButton.dataset.groupKey);
+                return;
+            }
+
             const messengerDetailButton = event.target.closest('[data-role="open-messenger-detail"]');
             if (messengerDetailButton) {
                 openMessengerDetailModal(messengerDetailButton.dataset.groupKey);
@@ -1784,6 +2037,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const messengerAbonoButton = event.target.closest('[data-role="open-messenger-abono"]');
             if (messengerAbonoButton) {
                 openMessengerAbonoModal(messengerAbonoButton.dataset.groupKey);
+                return;
+            }
+
+            const messengerAdditionalButton = event.target.closest('[data-role="open-messenger-additional"]');
+            if (messengerAdditionalButton) {
+                openMessengerAdditionalModal(messengerAdditionalButton.dataset.groupKey);
                 return;
             }
 
@@ -2033,6 +2292,76 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 await saveMessengerAbono(form);
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                if (submitButton) {
+                    submitButton.textContent = originalText;
+                    submitButton.disabled = false;
+                }
+            }
+        });
+
+        document.addEventListener('submit', async (event) => {
+            const form = event.target.closest('#clienteAdicionalGrupoForm');
+            if (!form) return;
+
+            event.preventDefault();
+            const amountDisplayInput = form.querySelector('input[name="monto_display"]');
+            if (amountDisplayInput) {
+                syncCurrencyInput(amountDisplayInput);
+            }
+
+            const monto = Number(form.monto.value || 0);
+            if (monto > 0 && !String(form.descripcion.value || '').trim()) {
+                alert('Ingresa la observacion del adicional.');
+                return;
+            }
+
+            const submitButton = form.querySelector('[data-role="submit-client-group-additional"]');
+            const originalText = submitButton ? submitButton.textContent : 'Guardar adicional';
+            if (submitButton) {
+                submitButton.textContent = 'Guardando...';
+                submitButton.disabled = true;
+            }
+
+            try {
+                await saveClientGroupAdditional(form);
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                if (submitButton) {
+                    submitButton.textContent = originalText;
+                    submitButton.disabled = false;
+                }
+            }
+        });
+
+        document.addEventListener('submit', async (event) => {
+            const form = event.target.closest('#mensajeroAdicionalGrupoForm');
+            if (!form) return;
+
+            event.preventDefault();
+            const amountDisplayInput = form.querySelector('input[name="monto_display"]');
+            if (amountDisplayInput) {
+                syncCurrencyInput(amountDisplayInput);
+            }
+
+            const monto = Number(form.monto.value || 0);
+            if (monto > 0 && !String(form.descripcion.value || '').trim()) {
+                alert('Ingresa la observacion del adicional.');
+                return;
+            }
+
+            const submitButton = form.querySelector('[data-role="submit-messenger-group-additional"]');
+            const originalText = submitButton ? submitButton.textContent : 'Guardar adicional';
+            if (submitButton) {
+                submitButton.textContent = 'Guardando...';
+                submitButton.disabled = true;
+            }
+
+            try {
+                await saveMessengerGroupAdditional(form);
             } catch (error) {
                 alert(error.message);
             } finally {

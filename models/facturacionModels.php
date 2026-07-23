@@ -10,10 +10,12 @@ class FacturacionModels
         $this->conn = conexionDB();
         $this->ensureFacturacionTable();
         $this->ensureAbonosClienteTable();
+        $this->ensureAdicionalesClienteTable();
         $this->ensureHiddenClientGroupsTable();
         $this->ensureHiddenMessengerGroupsTable();
         $this->ensureClientGroupStatusTable();
         $this->ensureAbonosMensajeroTable();
+        $this->ensureAdicionalesMensajeroTable();
         $this->ensureMessengerGroupStatusTable();
         $this->ensurePerformanceIndexes();
         $this->syncFacturacionRows();
@@ -111,6 +113,25 @@ class FacturacionModels
         $this->conn->exec($sql);
     }
 
+    private function ensureAdicionalesClienteTable(): void
+    {
+        $sql = "CREATE TABLE IF NOT EXISTS facturacion_adicionales_cliente (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    cliente_id INT NOT NULL,
+                    fecha_grupo DATE NOT NULL,
+                    monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    descripcion TEXT NULL,
+                    registrado_por INT NULL,
+                    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    UNIQUE KEY uniq_adicional_cliente_fecha (cliente_id, fecha_grupo),
+                    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+                    FOREIGN KEY (registrado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+                    INDEX idx_adicional_cliente_fecha (cliente_id, fecha_grupo)
+                )";
+        $this->conn->exec($sql);
+    }
+
     private function ensureHiddenMessengerGroupsTable(): void
     {
         $sql = "CREATE TABLE IF NOT EXISTS facturacion_grupos_mensajero_ocultos (
@@ -158,6 +179,25 @@ class FacturacionModels
                     FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id) ON DELETE CASCADE,
                     FOREIGN KEY (registrado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
                     INDEX idx_abonos_mensajero_fecha (mensajero_id, fecha_grupo)
+                )";
+        $this->conn->exec($sql);
+    }
+
+    private function ensureAdicionalesMensajeroTable(): void
+    {
+        $sql = "CREATE TABLE IF NOT EXISTS facturacion_adicionales_mensajero (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    mensajero_id INT NOT NULL,
+                    fecha_grupo DATE NOT NULL,
+                    monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    descripcion TEXT NULL,
+                    registrado_por INT NULL,
+                    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    UNIQUE KEY uniq_adicional_mensajero_fecha (mensajero_id, fecha_grupo),
+                    FOREIGN KEY (mensajero_id) REFERENCES mensajeros(id) ON DELETE CASCADE,
+                    FOREIGN KEY (registrado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+                    INDEX idx_adicional_mensajero_fecha (mensajero_id, fecha_grupo)
                 )";
         $this->conn->exec($sql);
     }
@@ -308,6 +348,74 @@ class FacturacionModels
             ':monto' => $monto,
             ':metodo_pago' => $metodoPago,
             ':observaciones' => $observaciones,
+            ':registrado_por' => $registradoPor,
+        ]);
+    }
+
+    public function guardarAdicionalClienteGrupo(
+        int $clienteId,
+        string $fechaGrupo,
+        float $monto,
+        ?string $descripcion,
+        ?int $registradoPor
+    ): bool {
+        if ($monto <= 0) {
+            $stmt = $this->conn->prepare("DELETE FROM facturacion_adicionales_cliente WHERE cliente_id = :cliente_id AND fecha_grupo = :fecha_grupo");
+            return $stmt->execute([
+                ':cliente_id' => $clienteId,
+                ':fecha_grupo' => $fechaGrupo,
+            ]);
+        }
+
+        $sql = "INSERT INTO facturacion_adicionales_cliente (
+                    cliente_id, fecha_grupo, monto, descripcion, registrado_por
+                ) VALUES (
+                    :cliente_id, :fecha_grupo, :monto, :descripcion, :registrado_por
+                )
+                ON DUPLICATE KEY UPDATE
+                    monto = VALUES(monto),
+                    descripcion = VALUES(descripcion),
+                    registrado_por = VALUES(registrado_por)";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':cliente_id' => $clienteId,
+            ':fecha_grupo' => $fechaGrupo,
+            ':monto' => $monto,
+            ':descripcion' => $descripcion,
+            ':registrado_por' => $registradoPor,
+        ]);
+    }
+
+    public function guardarAdicionalMensajeroGrupo(
+        int $mensajeroId,
+        string $fechaGrupo,
+        float $monto,
+        ?string $descripcion,
+        ?int $registradoPor
+    ): bool {
+        if ($monto <= 0) {
+            $stmt = $this->conn->prepare("DELETE FROM facturacion_adicionales_mensajero WHERE mensajero_id = :mensajero_id AND fecha_grupo = :fecha_grupo");
+            return $stmt->execute([
+                ':mensajero_id' => $mensajeroId,
+                ':fecha_grupo' => $fechaGrupo,
+            ]);
+        }
+
+        $sql = "INSERT INTO facturacion_adicionales_mensajero (
+                    mensajero_id, fecha_grupo, monto, descripcion, registrado_por
+                ) VALUES (
+                    :mensajero_id, :fecha_grupo, :monto, :descripcion, :registrado_por
+                )
+                ON DUPLICATE KEY UPDATE
+                    monto = VALUES(monto),
+                    descripcion = VALUES(descripcion),
+                    registrado_por = VALUES(registrado_por)";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':mensajero_id' => $mensajeroId,
+            ':fecha_grupo' => $fechaGrupo,
+            ':monto' => $monto,
+            ':descripcion' => $descripcion,
             ':registrado_por' => $registradoPor,
         ]);
     }
@@ -511,6 +619,44 @@ class FacturacionModels
         }, $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
+    private function obtenerAdicionalesCliente(?int $clienteId = null): array
+    {
+        $params = [];
+        $where = '';
+
+        if ($clienteId !== null) {
+            $where = 'WHERE a.cliente_id = :cliente_id';
+            $params[':cliente_id'] = $clienteId;
+        }
+
+        $sql = "SELECT
+                    a.id,
+                    a.cliente_id,
+                    a.fecha_grupo,
+                    a.monto,
+                    a.descripcion,
+                    a.fecha_registro,
+                    CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, '')) AS registrado_por_nombre
+                FROM facturacion_adicionales_cliente a
+                LEFT JOIN usuarios u ON u.id = a.registrado_por
+                {$where}
+                ORDER BY a.fecha_grupo DESC, a.fecha_registro DESC, a.id DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+
+        return array_map(static function ($row) {
+            return [
+                'id' => (int) $row['id'],
+                'cliente_id' => (int) $row['cliente_id'],
+                'fecha_grupo' => $row['fecha_grupo'],
+                'monto' => (float) $row['monto'],
+                'descripcion' => $row['descripcion'],
+                'fecha_registro' => $row['fecha_registro'],
+                'registrado_por_nombre' => trim((string) $row['registrado_por_nombre']),
+            ];
+        }, $stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
     private function obtenerEstadosMensajero(?int $mensajeroId = null): array
     {
         $params = [];
@@ -568,6 +714,44 @@ class FacturacionModels
                 'monto' => (float) $row['monto'],
                 'metodo_pago' => $row['metodo_pago'],
                 'observaciones' => $row['observaciones'],
+                'fecha_registro' => $row['fecha_registro'],
+                'registrado_por_nombre' => trim((string) $row['registrado_por_nombre']),
+            ];
+        }, $stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    private function obtenerAdicionalesMensajero(?int $mensajeroId = null): array
+    {
+        $params = [];
+        $where = '';
+
+        if ($mensajeroId !== null) {
+            $where = 'WHERE a.mensajero_id = :mensajero_id';
+            $params[':mensajero_id'] = $mensajeroId;
+        }
+
+        $sql = "SELECT
+                    a.id,
+                    a.mensajero_id,
+                    a.fecha_grupo,
+                    a.monto,
+                    a.descripcion,
+                    a.fecha_registro,
+                    CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, '')) AS registrado_por_nombre
+                FROM facturacion_adicionales_mensajero a
+                LEFT JOIN usuarios u ON u.id = a.registrado_por
+                {$where}
+                ORDER BY a.fecha_grupo DESC, a.fecha_registro DESC, a.id DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+
+        return array_map(static function ($row) {
+            return [
+                'id' => (int) $row['id'],
+                'mensajero_id' => (int) $row['mensajero_id'],
+                'fecha_grupo' => $row['fecha_grupo'],
+                'monto' => (float) $row['monto'],
+                'descripcion' => $row['descripcion'],
                 'fecha_registro' => $row['fecha_registro'],
                 'registrado_por_nombre' => trim((string) $row['registrado_por_nombre']),
             ];
@@ -759,6 +943,7 @@ class FacturacionModels
             'summary' => $this->normalizarResumen($totales),
             'items' => $items,
             'abonos' => $this->obtenerAbonosCliente($clienteId),
+            'adicionales' => $this->obtenerAdicionalesCliente($clienteId),
             'estados' => $this->obtenerEstadosCliente($clienteId),
         ];
     }
@@ -845,6 +1030,7 @@ class FacturacionModels
             'summary' => $this->normalizarResumen($totales),
             'items' => $items,
             'abonos' => $this->obtenerAbonosMensajero($mensajeroId),
+            'adicionales' => $this->obtenerAdicionalesMensajero($mensajeroId),
             'estados' => $this->obtenerEstadosMensajero($mensajeroId),
         ];
     }

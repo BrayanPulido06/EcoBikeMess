@@ -145,6 +145,84 @@ try {
         exit;
     }
 
+    if ($method === 'POST' && $action === 'guardar_adicional_cliente_grupo') {
+        $clienteId = (int) ($_POST['cliente_id'] ?? 0);
+        $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+        $monto = parseMoneyInput($_POST['monto'] ?? 0);
+        $descripcion = trim((string) ($_POST['descripcion'] ?? ''));
+        $registradoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+
+        if ($clienteId <= 0) {
+            throw new InvalidArgumentException('Cliente invalido.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+            throw new InvalidArgumentException('La fecha del adicional no es valida.');
+        }
+
+        if ($monto < 0) {
+            throw new InvalidArgumentException('El adicional no puede ser negativo.');
+        }
+
+        if ($monto > 0 && $descripcion === '') {
+            throw new InvalidArgumentException('Debes ingresar la observacion del adicional.');
+        }
+
+        $model->guardarAdicionalClienteGrupo(
+            $clienteId,
+            $fechaGrupo,
+            $monto,
+            $monto > 0 ? $descripcion : null,
+            $registradoPor
+        );
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Adicional registrado correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
+    if ($method === 'POST' && $action === 'guardar_adicional_mensajero_grupo') {
+        $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
+        $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+        $monto = parseMoneyInput($_POST['monto'] ?? 0);
+        $descripcion = trim((string) ($_POST['descripcion'] ?? ''));
+        $registradoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+
+        if ($mensajeroId <= 0) {
+            throw new InvalidArgumentException('Mensajero invalido.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+            throw new InvalidArgumentException('La fecha del adicional no es valida.');
+        }
+
+        if ($monto < 0) {
+            throw new InvalidArgumentException('El adicional no puede ser negativo.');
+        }
+
+        if ($monto > 0 && $descripcion === '') {
+            throw new InvalidArgumentException('Debes ingresar la observacion del adicional.');
+        }
+
+        $model->guardarAdicionalMensajeroGrupo(
+            $mensajeroId,
+            $fechaGrupo,
+            $monto,
+            $monto > 0 ? $descripcion : null,
+            $registradoPor
+        );
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Adicional registrado correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
     if ($method === 'POST' && $action === 'actualizar_costo_adicional_paquete') {
         $paqueteId = (int) ($_POST['paquete_id'] ?? 0);
         $monto = parseMoneyInput($_POST['monto'] ?? 0);
