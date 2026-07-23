@@ -342,6 +342,8 @@ CREATE TABLE IF NOT EXISTS detalle_facturas (
         mostrar_al_mensajero BOOLEAN NOT NULL DEFAULT FALSE,
         costo_adicional_servicio DECIMAL(10,2) NOT NULL DEFAULT 0.00,
         observaciones_admin TEXT NULL,
+        adicional_pago_mensajero DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        observaciones_mensajero TEXT NULL,
         fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (paquete_id) REFERENCES paquetes(id) ON DELETE CASCADE,

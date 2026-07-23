@@ -31,13 +31,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         require_once __DIR__ . '/../includes/upload.php';
 
         $model = new UsuarioModel();
+
+        $normalizarTexto = function ($value) {
+            return preg_replace('/\s+/', ' ', trim((string) $value));
+        };
+
+        $pareceDocumento = function ($value) {
+            $texto = trim((string) $value);
+            $soloDigitos = preg_replace('/[\s\.\-]+/', '', $texto);
+            return preg_match('/^[\d\s\.\-]+$/', $texto) && preg_match('/^\d{6,15}$/', $soloDigitos);
+        };
+
+        $validarNombrePersona = function ($value, $campo) use ($normalizarTexto, $pareceDocumento) {
+            $texto = $normalizarTexto($value);
+            if ($texto === '') {
+                throw new Exception("El campo {$campo} es obligatorio.");
+            }
+
+            if ($pareceDocumento($texto)) {
+                throw new Exception("El campo {$campo} debe contener el nombre real, no el numero de documento.");
+            }
+
+            if (!preg_match('/\p{L}/u', $texto)) {
+                throw new Exception("El campo {$campo} debe contener letras.");
+            }
+
+            return $texto;
+        };
         
         // Recoger datos comunes
         $tipo_usuario = $_POST['tipo_usuario'] ?? '';
-        $nombres = trim($_POST['nombres'] ?? '');
-        $apellidos = trim($_POST['apellidos'] ?? '');
-        $correo = trim($_POST['correo'] ?? '');
-        $telefono = trim($_POST['telefono'] ?? '');
+        $nombres = $validarNombrePersona($_POST['nombres'] ?? '', 'nombres');
+        $apellidos = $validarNombrePersona($_POST['apellidos'] ?? '', 'apellidos');
+        $correo = $normalizarTexto($_POST['correo'] ?? '');
+        $telefono = $normalizarTexto($_POST['telefono'] ?? '');
         $password = $_POST['password'] ?? '';
         $confirm_password = $_POST['confirm_password'] ?? '';
 

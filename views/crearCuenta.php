@@ -75,12 +75,12 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="nombres">Nombres *</label>
-                    <input type="text" id="nombres" name="nombres" required>
+                    <input type="text" id="nombres" name="nombres" autocomplete="given-name" data-person-name required>
                     <span class="error-message"></span>
                 </div>
                 <div class="form-group">
                     <label for="apellidos">Apellidos *</label>
-                    <input type="text" id="apellidos" name="apellidos" required>
+                    <input type="text" id="apellidos" name="apellidos" autocomplete="family-name" data-person-name required>
                     <span class="error-message"></span>
                 </div>
             </div>
@@ -88,12 +88,12 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="correo">Correo Electrónico *</label>
-                    <input type="email" id="correo" name="correo" required>
+                    <input type="email" id="correo" name="correo" autocomplete="email" required>
                     <span class="error-message"></span>
                 </div>
                 <div class="form-group">
                     <label for="telefono">Teléfono *</label>
-                    <input type="tel" id="telefono" name="telefono" placeholder="300 123 4567" required>
+                    <input type="tel" id="telefono" name="telefono" placeholder="300 123 4567" autocomplete="tel" required>
                     <span class="error-message"></span>
                 </div>
             </div>
@@ -102,7 +102,7 @@
                 <div class="form-group">
                     <label for="password">Contraseña *</label>
                     <div class="password-input">
-                        <input type="password" id="password" name="password" required>
+                        <input type="password" id="password" name="password" autocomplete="new-password" required>
                         <button type="button" class="toggle-password" data-target="password">
                             <span class="eye-icon">👁️</span>
                         </button>
@@ -113,7 +113,7 @@
                 <div class="form-group">
                     <label for="confirm_password">Confirmar Contraseña *</label>
                     <div class="password-input">
-                        <input type="password" id="confirm_password" name="confirm_password" required>
+                        <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" required>
                         <button type="button" class="toggle-password" data-target="confirm_password">
                             <span class="eye-icon">👁️</span>
                         </button>
@@ -185,7 +185,7 @@
                     </div>
                     <div class="form-group">
                         <label for="mensajero_numDocumento">Número de Documento *</label>
-                        <input type="text" id="mensajero_numDocumento" name="numDocumento">
+                        <input type="text" id="mensajero_numDocumento" name="numDocumento" autocomplete="off" inputmode="numeric">
                         <span class="error-message"></span>
                     </div>
                 </div>
@@ -382,6 +382,6 @@
         </div>
     </div>
 
-    <script src="../public/js/crearCuenta.js?v=20260418-3"></script>
+    <script src="../public/js/crearCuenta.js?v=20260721-1"></script>
 </body>
 </html>

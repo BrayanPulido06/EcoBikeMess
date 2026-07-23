@@ -105,15 +105,15 @@ if ($rol === 'cliente') {
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Nombres</label>
-                            <input type="text" name="nombres" value="<?php echo htmlspecialchars($usuario['nombres']); ?>" required>
+                            <input type="text" name="nombres" value="<?php echo htmlspecialchars($usuario['nombres']); ?>" autocomplete="given-name" required>
                         </div>
                         <div class="form-group">
                             <label>Apellidos</label>
-                            <input type="text" name="apellidos" value="<?php echo htmlspecialchars($usuario['apellidos']); ?>" required>
+                            <input type="text" name="apellidos" value="<?php echo htmlspecialchars($usuario['apellidos']); ?>" autocomplete="family-name" required>
                         </div>
                         <div class="form-group">
                             <label>Teléfono</label>
-                            <input type="tel" name="telefono" value="<?php echo htmlspecialchars($usuario['telefono']); ?>" required>
+                            <input type="tel" name="telefono" value="<?php echo htmlspecialchars($usuario['telefono']); ?>" autocomplete="tel" required>
                         </div>
                         <div class="form-group">
                             <label>Correo Electrónico</label>

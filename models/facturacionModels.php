@@ -30,6 +30,8 @@ class FacturacionModels
                     mostrar_al_mensajero BOOLEAN NOT NULL DEFAULT FALSE,
                     costo_adicional_servicio DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                     observaciones_admin TEXT NULL,
+                    adicional_pago_mensajero DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    observaciones_mensajero TEXT NULL,
                     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                     FOREIGN KEY (paquete_id) REFERENCES paquetes(id) ON DELETE CASCADE,
@@ -42,6 +44,8 @@ class FacturacionModels
         $this->conn->exec($sql);
         $this->ensureFacturacionColumn('costo_adicional_servicio', "ALTER TABLE facturacion ADD COLUMN costo_adicional_servicio DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER mostrar_al_mensajero");
         $this->ensureFacturacionColumn('observaciones_admin', "ALTER TABLE facturacion ADD COLUMN observaciones_admin TEXT NULL AFTER costo_adicional_servicio");
+        $this->ensureFacturacionColumn('adicional_pago_mensajero', "ALTER TABLE facturacion ADD COLUMN adicional_pago_mensajero DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER observaciones_admin");
+        $this->ensureFacturacionColumn('observaciones_mensajero', "ALTER TABLE facturacion ADD COLUMN observaciones_mensajero TEXT NULL AFTER adicional_pago_mensajero");
     }
 
     private function ensureFacturacionColumn(string $column, string $alterSql): void
@@ -313,6 +317,20 @@ class FacturacionModels
         $sql = "UPDATE facturacion
                 SET costo_adicional_servicio = :monto,
                     observaciones_admin = :descripcion
+                WHERE paquete_id = :paquete_id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':paquete_id' => $paqueteId,
+            ':monto' => $monto,
+            ':descripcion' => $descripcion,
+        ]);
+    }
+
+    public function actualizarAdicionalMensajeroPaquete(int $paqueteId, float $monto, ?string $descripcion): bool
+    {
+        $sql = "UPDATE facturacion
+                SET adicional_pago_mensajero = :monto,
+                    observaciones_mensajero = :descripcion
                 WHERE paquete_id = :paquete_id";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
@@ -641,7 +659,9 @@ class FacturacionModels
                     m.id AS mensajero_id,
                     CONCAT(COALESCE(um.nombres, ''), ' ', COALESCE(um.apellidos, '')) AS mensajero_nombre,
                     f.valor_pago_mensajero,
-                    f.mostrar_al_mensajero
+                    f.mostrar_al_mensajero,
+                    COALESCE(f.adicional_pago_mensajero, 0) AS adicional_pago_mensajero,
+                    COALESCE(f.observaciones_mensajero, '') AS observaciones_mensajero
                 FROM paquetes p
                 INNER JOIN facturacion f ON f.paquete_id = p.id
                 LEFT JOIN entregas e ON e.paquete_id = p.id
@@ -782,12 +802,14 @@ class FacturacionModels
             if ($valorPago <= 0) {
                 $valorPago = 7000.00;
             }
+            $adicionalMensajero = (float) ($row['adicional_pago_mensajero'] ?? 0);
+            $valorPagoTotal = $valorPago + $adicionalMensajero;
             $valorEnvio = (float) $row['costo_envio'];
             $recaudoEsperado = (float) $row['recaudo_esperado'];
             $recaudoReal = (float) $row['recaudo_real'];
             $agregadoRecaudo = ($row['envio_destinatario'] ?? 'no') === 'si';
 
-            $totales['saldo_actual'] += $valorPago;
+            $totales['saldo_actual'] += $valorPagoTotal;
             $totales['total_envios'] += $valorEnvio;
             $totales['total_recaudos'] += $recaudoReal;
             $totales['cantidad_paquetes']++;
@@ -811,6 +833,9 @@ class FacturacionModels
                 'valor_recaudo_real' => $recaudoReal,
                 'cantidad_paquetes_dia' => $diario[$fechaBase],
                 'valor_pago_mensajero' => $valorPago,
+                'adicional_pago_mensajero' => $adicionalMensajero,
+                'observaciones_mensajero' => $row['observaciones_mensajero'],
+                'valor_pago_mensajero_total' => $valorPagoTotal,
                 'mostrar_al_mensajero' => (bool) $row['mostrar_al_mensajero'],
                 'observaciones' => $row['observaciones'],
             ];

@@ -220,7 +220,7 @@ body.sidebar-collapsed .facturacion-shell,
 .facturacion-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 1080px;
+    min-width: 1160px;
 }
 
 .facturacion-table-cliente-resumen {

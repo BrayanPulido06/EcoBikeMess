@@ -53,6 +53,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const getRecaudoRealValue = (item) => Number(item?.valor_recaudo_real || 0);
 
     const getMessengerPaymentValue = (item) => {
+        const base = getMessengerBasePaymentValue(item);
+        const adicional = Number(item?.adicional_pago_mensajero || 0);
+        return base + adicional;
+    };
+
+    const getMessengerBasePaymentValue = (item) => {
         const value = Number(item?.valor_pago_mensajero || 0);
         return value > 0 ? value : 7000;
     };
@@ -401,6 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     mensajeroNombre: messengerName,
                     entregas: 0,
                     totalPago: 0,
+                    totalAdicionales: 0,
                     totalRecaudado: 0,
                     abono: 0,
                     saldo: 0,
@@ -414,6 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const group = groupsMap.get(groupKey);
             if (item.estado === 'entregado') {
                 group.entregas += 1;
+                group.totalAdicionales += Number(item.adicional_pago_mensajero || 0);
                 group.totalPago += getMessengerPaymentValue(item);
                 group.totalRecaudado += getRecaudoRealValue(item);
                 group.packages.push(item);
@@ -507,8 +515,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const groupStatusFromBalance = (value) => Math.round(Number(value || 0)) === 0 ? 'pagado' : 'pendiente';
 
-    const clienteTableColspan = () => mode === 'admin' ? 11 : 8;
-    const mensajeroTableColspan = () => mode === 'admin' ? 11 : 11;
+    const clienteTableColspan = () => mode === 'admin' ? 12 : 8;
+    const mensajeroTableColspan = () => mode === 'admin' ? 12 : 11;
 
     const renderClienteTable = (items) => {
         const tbody = document.getElementById('table-body-cliente');
@@ -570,6 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${group.fechaLabel}</td>
                     <td>${group.paquetesEntregados}</td>
                     <td>${money(group.totalServicio)}</td>
+                    <td>${money(group.totalAdicionales)}</td>
                     <td>${money(group.totalRecaudado)}</td>
                     <td>${money(group.abono)}</td>
                     <td>${clientGroupStatusSelect(group)}</td>
@@ -674,6 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${group.fechaLabel}</td>
                     <td>${group.entregas}</td>
                     <td>${money(group.totalPago)}</td>
+                    <td>${money(group.totalAdicionales)}</td>
                     <td>${money(group.totalRecaudado)}</td>
                     <td>${money(group.abono)}</td>
                     <td>${messengerGroupStatusSelect(group)}</td>
@@ -998,6 +1008,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const saveMessengerAdditionalCost = async (form) => {
+        const formData = new FormData();
+        formData.append('action', 'actualizar_adicional_mensajero_paquete');
+        formData.append('paquete_id', form.paquete_id.value);
+        formData.append('monto', form.monto.value || '0');
+        formData.append('descripcion', form.descripcion.value || '');
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.message || 'No se pudo actualizar el adicional del mensajero.');
+        }
+
+        state.rawData = result.data;
+        render();
+        if (state.selectedMensajeroGroupKey) {
+            openMessengerDetailModal(state.selectedMensajeroGroupKey);
+        }
+    };
+
     const syncCurrencyInput = (input) => {
         if (!input) return;
 
@@ -1159,61 +1194,86 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
-    const renderMessengerPackageCard = (item) => `
-        <article class="package-card">
-            <div class="package-card-head">
-                <div>
-                    <h3>${escapeHtml(item.numero_guia)}</h3>
-                    <p>${escapeHtml(item.cliente_nombre || 'Sin cliente')} | ${escapeHtml(item.destinatario_nombre || 'Sin destinatario')}</p>
+    const renderMessengerPackageCard = (item) => {
+        const pagoBase = getMessengerBasePaymentValue(item);
+        const adicional = Number(item.adicional_pago_mensajero || 0);
+        const pagoTotal = getMessengerPaymentValue(item);
+        return `
+            <article class="package-card">
+                <div class="package-card-head">
+                    <div>
+                        <h3>${escapeHtml(item.numero_guia)}</h3>
+                        <p>${escapeHtml(item.cliente_nombre || 'Sin cliente')} | ${escapeHtml(item.destinatario_nombre || 'Sin destinatario')}</p>
+                    </div>
+                    ${statusBadge(item.estado)}
                 </div>
-                ${statusBadge(item.estado)}
-            </div>
-            <div class="package-card-grid">
-                <div class="package-data">
-                    <span class="package-label">Pago mensajero</span>
-                    <strong>${money(getMessengerPaymentValue(item))}</strong>
+                <div class="package-card-grid">
+                    <div class="package-data">
+                        <span class="package-label">Pago base</span>
+                        <strong>${money(pagoBase)}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Adicional mensajero</span>
+                        <strong>${money(adicional)}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Total pago</span>
+                        <strong>${money(pagoTotal)}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Servicio cliente</span>
+                        <strong>${money(item.valor_envio)}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Contraentrega</span>
+                        <strong>${item.agregado_al_recaudo ? 'Si' : 'No'}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Recaudo esperado</span>
+                        <strong>${money(item.valor_recaudo)}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Recaudo real</span>
+                        <strong>${money(item.valor_recaudo_real)}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Visible al mensajero</span>
+                        <strong>${item.mostrar_al_mensajero ? 'Si' : 'No'}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Fecha</span>
+                        <strong>${shortDate(item.fecha_entrega || item.fecha_ingreso)}</strong>
+                    </div>
+                    <div class="package-data package-full">
+                        <span class="package-label">Motivo adicional mensajero</span>
+                        <strong>${escapeHtml(item.observaciones_mensajero || 'Sin adicional')}</strong>
+                    </div>
+                    <div class="package-data package-full">
+                        <span class="package-label">Observaciones entrega</span>
+                        <strong>${escapeHtml(item.observaciones || 'Sin observaciones')}</strong>
+                    </div>
                 </div>
-                <div class="package-data">
-                    <span class="package-label">Servicio cliente</span>
-                    <strong>${money(item.valor_envio)}</strong>
-                </div>
-                <div class="package-data">
-                    <span class="package-label">Contraentrega</span>
-                    <strong>${item.agregado_al_recaudo ? 'Si' : 'No'}</strong>
-                </div>
-                <div class="package-data">
-                    <span class="package-label">Recaudo esperado</span>
-                    <strong>${money(item.valor_recaudo)}</strong>
-                </div>
-                <div class="package-data">
-                    <span class="package-label">Recaudo real</span>
-                    <strong>${money(item.valor_recaudo_real)}</strong>
-                </div>
-                <div class="package-data">
-                    <span class="package-label">Visible al mensajero</span>
-                    <strong>${item.mostrar_al_mensajero ? 'Si' : 'No'}</strong>
-                </div>
-                <div class="package-data">
-                    <span class="package-label">Fecha</span>
-                    <strong>${shortDate(item.fecha_entrega || item.fecha_ingreso)}</strong>
-                </div>
-                <div class="package-data package-full">
-                    <span class="package-label">Observaciones entrega</span>
-                    <strong>${escapeHtml(item.observaciones || 'Sin observaciones')}</strong>
-                </div>
-            </div>
-            ${mode === 'admin' ? `
-                <div class="table-tools messenger-payment-tools">
-                    <input type="number" min="0" step="100" value="${Math.round(getMessengerPaymentValue(item))}" data-role="payment-input" data-id="${item.paquete_id}">
-                    <label class="toggle-wrap">
-                        <input type="checkbox" data-role="show-toggle" data-id="${item.paquete_id}" ${item.mostrar_al_mensajero ? 'checked' : ''}>
-                        Mostrar
-                    </label>
-                    <span class="facturacion-footnote" data-role="payment-status" data-id="${item.paquete_id}">Guardado automatico</span>
-                </div>
-            ` : ''}
-        </article>
-    `;
+                ${mode === 'admin' ? `
+                    <div class="table-tools messenger-payment-tools">
+                        <input type="number" min="0" step="100" value="${Math.round(pagoBase)}" data-role="payment-input" data-id="${item.paquete_id}">
+                        <label class="toggle-wrap">
+                            <input type="checkbox" data-role="show-toggle" data-id="${item.paquete_id}" ${item.mostrar_al_mensajero ? 'checked' : ''}>
+                            Mostrar
+                        </label>
+                        <button
+                            type="button"
+                            class="fact-btn secondary"
+                            data-role="open-messenger-additional-cost"
+                            data-package-id="${item.paquete_id}"
+                        >
+                            Editar adicional
+                        </button>
+                        <span class="facturacion-footnote" data-role="payment-status" data-id="${item.paquete_id}">Guardado automatico</span>
+                    </div>
+                ` : ''}
+            </article>
+        `;
+    };
 
     const openMessengerDetailModal = (groupKey) => {
         const group = getMensajeroGroupByKey(groupKey);
@@ -1229,12 +1289,13 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedMensajeroGroupKey = groupKey;
         state.activeMensajeroModalView = 'detail';
         title.textContent = `${group.mensajeroNombre} - ${group.fechaLabel}`;
-        subtitle.textContent = `${group.entregas} entrega(s) | Pago ${money(group.totalPago)} | Recaudo descontado ${money(group.totalRecaudado)} | Abono ${money(group.abono)} | Saldo ${moneyAbs(group.saldo)}`;
+        subtitle.textContent = `${group.entregas} entrega(s) | Pago ${money(group.totalPago)} | Adicionales ${money(group.totalAdicionales)} | Recaudo descontado ${money(group.totalRecaudado)} | Abono ${money(group.abono)} | Saldo ${moneyAbs(group.saldo)}`;
 
         body.innerHTML = `
             <div class="detail-summary-strip">
                 <div><span>Entregas</span><strong>${group.entregas}</strong></div>
                 <div><span>Total pago</span><strong>${money(group.totalPago)}</strong></div>
+                <div><span>Adicionales</span><strong>${money(group.totalAdicionales)}</strong></div>
                 <div><span>Recaudo descontado</span><strong>${money(group.totalRecaudado)}</strong></div>
                 <div><span>Abono</span><strong>${money(group.abono)}</strong></div>
                 <div><span>Estado</span><strong>${group.estado === 'pagado' ? 'Pagado' : 'Pendiente'}</strong></div>
@@ -1274,12 +1335,13 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedMensajeroGroupKey = groupKey;
         state.activeMensajeroModalView = 'abono';
         title.textContent = `Registrar abono - ${group.mensajeroNombre}`;
-        subtitle.textContent = `Fecha ${group.fechaLabel} | Pago ${money(group.totalPago)} | Recaudo descontado ${money(group.totalRecaudado)} | Abonado ${money(group.abono)} | Total pendiente ${moneyAbs(group.totalAcumulado)}`;
+        subtitle.textContent = `Fecha ${group.fechaLabel} | Pago ${money(group.totalPago)} | Adicionales ${money(group.totalAdicionales)} | Recaudo descontado ${money(group.totalRecaudado)} | Abonado ${money(group.abono)} | Total pendiente ${moneyAbs(group.totalAcumulado)}`;
 
         body.innerHTML = `
             <div class="detail-summary-strip">
                 <div><span>Entregas</span><strong>${group.entregas}</strong></div>
                 <div><span>Total pago</span><strong>${money(group.totalPago)}</strong></div>
+                <div><span>Adicionales</span><strong>${money(group.totalAdicionales)}</strong></div>
                 <div><span>Recaudo descontado</span><strong>${money(group.totalRecaudado)}</strong></div>
                 <div><span>Abonado</span><strong>${money(group.abono)}</strong></div>
                 <div><span>Saldo del dia</span><strong>${moneyAbs(group.saldo)}</strong></div>
@@ -1472,6 +1534,58 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="facturacion-abono-actions">
                     <button type="submit" class="fact-btn primary" data-role="submit-package-additional-cost">Guardar adicional</button>
                     <button type="button" class="fact-btn tertiary" data-role="open-client-detail" data-group-key="${escapeHtml(group.key)}">Volver al dia</button>
+                </div>
+                <div class="facturacion-footnote">Para quitar el adicional, deja el valor en cero o vacio y guarda.</div>
+            </form>
+        `;
+
+        modal.classList.remove('modal-hidden');
+        modal.setAttribute('aria-hidden', 'false');
+    };
+
+    const openMessengerAdditionalCostModal = (paqueteId) => {
+        const group = getMensajeroGroupByKey(state.selectedMensajeroGroupKey);
+        const item = group?.packages.find((pkg) => Number(pkg.paquete_id) === Number(paqueteId));
+        const modal = document.getElementById('facturacionDetailModal');
+        const title = document.getElementById('facturacionDetailTitle');
+        const subtitle = document.getElementById('facturacionDetailSubtitle');
+        const body = document.getElementById('facturacionDetailBody');
+
+        if (!group || !item || !modal || !title || !subtitle || !body) {
+            return;
+        }
+
+        const pagoBase = getMessengerBasePaymentValue(item);
+        const adicional = Number(item.adicional_pago_mensajero || 0);
+
+        state.activeMensajeroModalView = 'additional-cost';
+        title.textContent = `Adicional mensajero ${item.numero_guia}`;
+        subtitle.textContent = `${group.mensajeroNombre} | ${group.fechaLabel} | Pago base ${money(pagoBase)} | Adicional ${money(adicional)}`;
+
+        body.innerHTML = `
+            <div class="detail-summary-strip">
+                <div><span>Guia</span><strong>${escapeHtml(item.numero_guia)}</strong></div>
+                <div><span>Mensajero</span><strong>${escapeHtml(group.mensajeroNombre)}</strong></div>
+                <div><span>Pago base</span><strong>${money(pagoBase)}</strong></div>
+                <div><span>Adicional actual</span><strong>${money(adicional)}</strong></div>
+                <div><span>Total pago</span><strong>${money(getMessengerPaymentValue(item))}</strong></div>
+            </div>
+            <form id="mensajeroCostoAdicionalForm" class="facturacion-abono-form">
+                <input type="hidden" name="paquete_id" value="${item.paquete_id}">
+                <div class="facturacion-abono-grid">
+                    <label class="facturacion-field">
+                        <span>Valor adicional</span>
+                        <input type="hidden" name="monto" value="${adicional > 0 ? adicional : ''}">
+                        <input type="text" name="monto_display" inputmode="numeric" autocomplete="off" placeholder="$ 3.000" value="${adicional > 0 ? money(adicional) : ''}">
+                    </label>
+                    <label class="facturacion-field facturacion-field-full">
+                        <span>Descripcion</span>
+                        <textarea name="descripcion" rows="3" placeholder="Ej: jugo, parqueadero, espera adicional">${escapeHtml(item.observaciones_mensajero || '')}</textarea>
+                    </label>
+                </div>
+                <div class="facturacion-abono-actions">
+                    <button type="submit" class="fact-btn primary" data-role="submit-messenger-additional-cost">Guardar adicional</button>
+                    <button type="button" class="fact-btn tertiary" data-role="open-messenger-detail" data-group-key="${escapeHtml(group.key)}">Volver al dia</button>
                 </div>
                 <div class="facturacion-footnote">Para quitar el adicional, deja el valor en cero o vacio y guarda.</div>
             </form>
@@ -1676,6 +1790,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const packageAdditionalCostButton = event.target.closest('[data-role="open-package-additional-cost"]');
             if (packageAdditionalCostButton) {
                 openPackageAdditionalCostModal(packageAdditionalCostButton.dataset.packageId);
+                return;
+            }
+
+            const messengerAdditionalCostButton = event.target.closest('[data-role="open-messenger-additional-cost"]');
+            if (messengerAdditionalCostButton) {
+                openMessengerAdditionalCostModal(messengerAdditionalCostButton.dataset.packageId);
                 return;
             }
 
@@ -1948,6 +2068,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 await savePackageAdditionalCost(form);
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                if (submitButton) {
+                    submitButton.textContent = originalText;
+                    submitButton.disabled = false;
+                }
+            }
+        });
+
+        document.addEventListener('submit', async (event) => {
+            const form = event.target.closest('#mensajeroCostoAdicionalForm');
+            if (!form) return;
+
+            event.preventDefault();
+            const amountDisplayInput = form.querySelector('input[name="monto_display"]');
+            if (amountDisplayInput) {
+                syncCurrencyInput(amountDisplayInput);
+            }
+
+            const monto = Number(form.monto.value || 0);
+            if (monto > 0 && !String(form.descripcion.value || '').trim()) {
+                alert('Ingresa la descripcion del adicional del mensajero.');
+                return;
+            }
+
+            const submitButton = form.querySelector('[data-role="submit-messenger-additional-cost"]');
+            const originalText = submitButton ? submitButton.textContent : 'Guardar adicional';
+            if (submitButton) {
+                submitButton.textContent = 'Guardando...';
+                submitButton.disabled = true;
+            }
+
+            try {
+                await saveMessengerAdditionalCost(form);
             } catch (error) {
                 alert(error.message);
             } finally {

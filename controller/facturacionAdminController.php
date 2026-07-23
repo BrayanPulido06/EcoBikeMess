@@ -176,6 +176,37 @@ try {
         exit;
     }
 
+    if ($method === 'POST' && $action === 'actualizar_adicional_mensajero_paquete') {
+        $paqueteId = (int) ($_POST['paquete_id'] ?? 0);
+        $monto = parseMoneyInput($_POST['monto'] ?? 0);
+        $descripcion = trim((string) ($_POST['descripcion'] ?? ''));
+
+        if ($paqueteId <= 0) {
+            throw new InvalidArgumentException('Paquete invalido.');
+        }
+
+        if ($monto < 0) {
+            throw new InvalidArgumentException('El adicional del mensajero no puede ser negativo.');
+        }
+
+        if ($monto > 0 && $descripcion === '') {
+            throw new InvalidArgumentException('Debes ingresar la descripcion del adicional.');
+        }
+
+        $model->actualizarAdicionalMensajeroPaquete(
+            $paqueteId,
+            $monto,
+            $monto > 0 ? $descripcion : null
+        );
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Adicional del mensajero actualizado correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
     if ($method === 'POST' && $action === 'ocultar_grupo_cliente') {
         $clienteId = (int) ($_POST['cliente_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));

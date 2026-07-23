@@ -163,8 +163,9 @@ class AñadirAdminModel {
     // --- CLIENTES ---
 
     public function getClientes() {
-        $sql = "SELECT c.id, c.nombre_emprendimiento as emprendimiento, 
+        $sql = "SELECT c.id, c.usuario_id, c.nombre_emprendimiento as emprendimiento,
                        CONCAT(u.nombres, ' ', u.apellidos) as nombreContacto,
+                       u.nombres, u.apellidos,
                        u.telefono, u.correo as email, c.direccion_principal as direccion,
                        c.tipo_producto as tipoProducto, c.instagram,
                        c.saldo_pendiente as saldoPendiente,
@@ -198,6 +199,22 @@ class AñadirAdminModel {
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function actualizarClienteDatosPersonales($clienteId, $datos) {
+        $sql = "UPDATE usuarios u
+                INNER JOIN clientes c ON c.usuario_id = u.id
+                SET u.nombres = :nombres,
+                    u.apellidos = :apellidos,
+                    u.telefono = :telefono
+                WHERE c.id = :cliente_id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':nombres' => $datos['nombres'],
+            ':apellidos' => $datos['apellidos'],
+            ':telefono' => $datos['telefono'],
+            ':cliente_id' => $clienteId
+        ]);
     }
 }
 ?>

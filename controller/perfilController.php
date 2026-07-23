@@ -96,6 +96,36 @@ function eliminarArchivoPerfilAnterior(?string $storedPath): void
     }
 }
 
+function normalizarTextoPerfil($value): string
+{
+    return preg_replace('/\s+/', ' ', trim((string) $value));
+}
+
+function pareceDocumentoPerfil(string $value): bool
+{
+    $texto = trim($value);
+    $soloDigitos = preg_replace('/[\s\.\-]+/', '', $texto);
+    return preg_match('/^[\d\s\.\-]+$/', $texto) && preg_match('/^\d{6,15}$/', $soloDigitos);
+}
+
+function validarNombrePerfil($value, string $campo): string
+{
+    $texto = normalizarTextoPerfil($value);
+    if ($texto === '') {
+        throw new Exception("El campo {$campo} es obligatorio.");
+    }
+
+    if (pareceDocumentoPerfil($texto)) {
+        throw new Exception("El campo {$campo} debe contener el nombre real, no el numero de documento.");
+    }
+
+    if (!preg_match('/\p{L}/u', $texto)) {
+        throw new Exception("El campo {$campo} debe contener letras.");
+    }
+
+    return $texto;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['action'])) {
     $role = $_SESSION['user_role'] ?? 'cliente';
     redirectPerfil($role);
@@ -121,9 +151,9 @@ try {
     $conn = conexionDB();
     $conn->beginTransaction();
 
-    $nombres = trim((string) ($_POST['nombres'] ?? ''));
-    $apellidos = trim((string) ($_POST['apellidos'] ?? ''));
-    $telefono = trim((string) ($_POST['telefono'] ?? ''));
+    $nombres = validarNombrePerfil($_POST['nombres'] ?? '', 'nombres');
+    $apellidos = validarNombrePerfil($_POST['apellidos'] ?? '', 'apellidos');
+    $telefono = normalizarTextoPerfil($_POST['telefono'] ?? '');
 
     if ($nombres === '' || $apellidos === '' || $telefono === '') {
         throw new Exception('Debes completar nombres, apellidos y telefono.');

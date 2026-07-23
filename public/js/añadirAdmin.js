@@ -87,6 +87,7 @@ function setupEventListeners() {
     document.getElementById('searchCliente')?.addEventListener('input', filtrarClientes);
     document.getElementById('btnReporteClientes')?.addEventListener('click', () => alert('Funcionalidad de reporte en desarrollo'));
     document.getElementById('tablaClientesBody')?.addEventListener('click', manejarClickTablaClientes);
+    document.getElementById('detallesCliente')?.addEventListener('submit', manejarGuardarClientePersonal);
 
     // Reset Password
     document.getElementById('btnCerrarModalReset').addEventListener('click', () => closeModal('modalResetPassword'));
@@ -979,6 +980,17 @@ function manejarClickTablaMensajeros(event) {
     verDetallesMensajero(mensajeroId);
 }
 
+function looksLikeDocumentNumber(value) {
+    const text = String(value || '').trim();
+    const onlyDigits = text.replace(/[\s.-]+/g, '');
+    return /^[\d\s.-]+$/.test(text) && /^\d{6,15}$/.test(onlyDigits);
+}
+
+function validatePersonName(value) {
+    const text = String(value || '').trim();
+    return text.length > 0 && /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(text) && !looksLikeDocumentNumber(text);
+}
+
 function renderMensajeros() {
     const tbody = document.getElementById('tablaMensajerosBody');
     if (!tbody) return;
@@ -1149,6 +1161,27 @@ async function verDetallesCliente(id) {
             </div>
         </div>
 
+        <form class="mensajero-detail-section" id="formClientePersonal" data-cliente-id="${cliente.id}">
+            <h3>Corregir datos personales</h3>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Nombres</div>
+                    <input class="form-control" type="text" name="nombres" value="${escapeHtml(cliente.nombres || '')}" autocomplete="given-name" required>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Apellidos</div>
+                    <input class="form-control" type="text" name="apellidos" value="${escapeHtml(cliente.apellidos || '')}" autocomplete="family-name" required>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Telefono</div>
+                    <input class="form-control" type="tel" name="telefono" value="${escapeHtml(cliente.telefono || '')}" autocomplete="tel" required>
+                </div>
+            </div>
+            <div class="form-actions" style="justify-content: flex-start; margin-top: 15px;">
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            </div>
+        </form>
+
         <div class="mensajero-detail-section">
             <h3>Facturacion y credito</h3>
             <div class="detail-grid">
@@ -1177,6 +1210,78 @@ function manejarClickTablaClientes(event) {
 }
 
 // Reemplazo defensivo para evitar errores de carga por nombres de archivo con "ñ"
+async function manejarGuardarClientePersonal(event) {
+    const form = event.target.closest('#formClientePersonal');
+    if (!form) return;
+
+    event.preventDefault();
+
+    const clienteId = Number(form.dataset.clienteId || 0);
+    const nombres = form.elements.nombres?.value || '';
+    const apellidos = form.elements.apellidos?.value || '';
+    const telefono = form.elements.telefono?.value || '';
+
+    if (!validatePersonName(nombres)) {
+        showNotification('Ingresa nombres reales, no un numero de documento', 'warning');
+        return;
+    }
+
+    if (!validatePersonName(apellidos)) {
+        showNotification('Ingresa apellidos reales, no un numero de documento', 'warning');
+        return;
+    }
+
+    const button = form.querySelector('button[type="submit"]');
+    if (button) {
+        button.disabled = true;
+        button.textContent = 'Guardando...';
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('action', 'actualizar_cliente_personal');
+        formData.append('id', String(clienteId));
+        formData.append('nombres', nombres);
+        formData.append('apellidos', apellidos);
+        formData.append('telefono', telefono);
+
+        const response = await fetch(getAdminControllerUrl(), {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.message || 'No se pudo actualizar el cliente');
+        }
+
+        if (result.data) {
+            const index = clientes.findIndex(c => Number(c.id) === clienteId);
+            const actualizado = {
+                ...(index >= 0 ? clientes[index] : {}),
+                ...result.data,
+                nombreContacto: `${result.data.nombres || ''} ${result.data.apellidos || ''}`.trim()
+            };
+
+            if (index >= 0) {
+                clientes[index] = actualizado;
+            }
+        }
+
+        renderClientes();
+        actualizarEstadisticas();
+        showNotification('Cliente actualizado correctamente', 'success');
+        verDetallesCliente(clienteId);
+    } catch (error) {
+        showNotification(error.message || 'Error al actualizar el cliente', 'error');
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = 'Guardar cambios';
+        }
+    }
+}
+
 loadInitialData = async function() {
     try {
         const controllerUrl = getAdminControllerUrl();

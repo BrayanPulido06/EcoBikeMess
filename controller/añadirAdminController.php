@@ -1,4 +1,31 @@
 <?php
+function normalizarTextoAdmin($value) {
+    return preg_replace('/\s+/', ' ', trim((string) $value));
+}
+
+function pareceDocumentoAdmin($value) {
+    $texto = trim((string) $value);
+    $soloDigitos = preg_replace('/[\s\.\-]+/', '', $texto);
+    return preg_match('/^[\d\s\.\-]+$/', $texto) && preg_match('/^\d{6,15}$/', $soloDigitos);
+}
+
+function validarNombreAdmin($value, $campo) {
+    $texto = normalizarTextoAdmin($value);
+    if ($texto === '') {
+        throw new Exception("El campo {$campo} es obligatorio.");
+    }
+
+    if (pareceDocumentoAdmin($texto)) {
+        throw new Exception("El campo {$campo} debe contener el nombre real, no el numero de documento.");
+    }
+
+    if (!preg_match('/\p{L}/u', $texto)) {
+        throw new Exception("El campo {$campo} debe contener letras.");
+    }
+
+    return $texto;
+}
+
 require_once __DIR__ . '/../includes/auth.php';
 requireApiAuth(['administrador', 'admin'], 'Acceso denegado');
 require_once '../models/añadirAdminModels.php';
@@ -68,6 +95,31 @@ try {
             }
 
             echo json_encode(['success' => true, 'data' => $cliente]);
+            break;
+
+        case 'actualizar_cliente_personal':
+            $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+            if ($id <= 0) {
+                throw new Exception("ID de cliente invalido");
+            }
+
+            $datos = [
+                'nombres' => validarNombreAdmin($_POST['nombres'] ?? '', 'nombres'),
+                'apellidos' => validarNombreAdmin($_POST['apellidos'] ?? '', 'apellidos'),
+                'telefono' => normalizarTextoAdmin($_POST['telefono'] ?? '')
+            ];
+
+            if ($datos['telefono'] === '') {
+                throw new Exception("El telefono es obligatorio.");
+            }
+
+            $res = $model->actualizarClienteDatosPersonales($id, $datos);
+            $cliente = $model->getClienteById($id);
+            echo json_encode([
+                'success' => $res,
+                'message' => 'Cliente actualizado correctamente',
+                'data' => $cliente
+            ]);
             break;
 
         // --- ACCIONES ADMINISTRADOR ---

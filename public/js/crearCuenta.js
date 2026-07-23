@@ -181,6 +181,17 @@
         return /^[0-9]{7,10}$/.test((phone || '').replace(/\s/g, ''));
     }
 
+    function looksLikeDocumentNumber(value) {
+        const text = String(value || '').trim();
+        const onlyDigits = text.replace(/[\s.-]+/g, '');
+        return /^[\d\s.-]+$/.test(text) && /^\d{6,15}$/.test(onlyDigits);
+    }
+
+    function validatePersonName(value) {
+        const text = String(value || '').trim();
+        return text.length > 0 && /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(text) && !looksLikeDocumentNumber(text);
+    }
+
     function validatePassword(password) {
         return (password || '').length >= 8;
     }
@@ -302,6 +313,18 @@
             const password = formData.get('password');
             const confirmPassword = formData.get('confirm_password');
             const terms = document.getElementById('terms').checked;
+            const nombres = formData.get('nombres');
+            const apellidos = formData.get('apellidos');
+
+            if (!validatePersonName(nombres)) {
+                showError(document.getElementById('nombres'), 'Ingresa tus nombres reales, no un numero de documento');
+                isValid = false;
+            }
+
+            if (!validatePersonName(apellidos)) {
+                showError(document.getElementById('apellidos'), 'Ingresa tus apellidos reales, no un numero de documento');
+                isValid = false;
+            }
 
             if (!validateEmail(email)) {
                 showError(document.getElementById('correo'), 'Email no válido');
