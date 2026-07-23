@@ -38,6 +38,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
             <div class="facturacion-tabs">
                 <button class="facturacion-tab active" data-switch-panel="cliente">Clientes</button>
                 <button class="facturacion-tab" data-switch-panel="mensajero">Mensajeros</button>
+                <button class="facturacion-tab" data-switch-panel="ecobikemess">EcoBikeMess</button>
             </div>
 
             <section data-panel="cliente">
@@ -165,6 +166,51 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                     </div>
                     <div class="facturacion-footnote">Facturacion agrupada por fecha y mensajero. El pago arranca en $7.000 por entrega y puede modificarse por paquete desde el detalle.</div>
                     <div class="facturacion-footnote" id="count-mensajero">0 registros</div>
+                </div>
+            </section>
+
+            <section data-panel="ecobikemess" class="panel-hidden">
+                <div id="summary-ecobikemess" class="facturacion-summary"></div>
+                <div class="facturacion-card">
+                    <div class="facturacion-filters">
+                        <div class="facturacion-field">
+                            <label>Buscar</label>
+                            <input type="text" placeholder="Guia, cliente o mensajero" data-panel-filter="ecobikemess" data-filter-field="q">
+                        </div>
+                        <div class="facturacion-field">
+                            <label>Desde</label>
+                            <input type="date" data-panel-filter="ecobikemess" data-filter-field="desde">
+                        </div>
+                        <div class="facturacion-field">
+                            <label>Hasta</label>
+                            <input type="date" data-panel-filter="ecobikemess" data-filter-field="hasta">
+                        </div>
+                        <div class="facturacion-actions">
+                            <button class="fact-btn secondary" type="button" data-reset-panel="ecobikemess">Limpiar filtros</button>
+                        </div>
+                    </div>
+
+                    <div class="facturacion-table-wrap">
+                        <table class="facturacion-table facturacion-table-ecobikemess">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Entregas</th>
+                                    <th>Cobrado clientes</th>
+                                    <th>Pago mensajeros</th>
+                                    <th>Adicionales clientes</th>
+                                    <th>Ajustes mensajeros</th>
+                                    <th>Ganancia EcoBikeMess</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-ecobikemess" data-loading>
+                                <tr><td colspan="8" class="loading-state">Cargando informacion...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="facturacion-footnote">Ganancia agrupada por fecha: cobrado al cliente menos pago al mensajero, incluyendo ajustes generales registrados.</div>
+                    <div class="facturacion-footnote" id="count-ecobikemess">0 registros</div>
                 </div>
             </section>
         </section>

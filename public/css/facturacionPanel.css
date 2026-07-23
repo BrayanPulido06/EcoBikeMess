@@ -223,6 +223,10 @@ body.sidebar-collapsed .facturacion-shell,
     min-width: 1160px;
 }
 
+.facturacion-table-ecobikemess {
+    min-width: 980px;
+}
+
 .facturacion-table-cliente-resumen {
     min-width: 760px;
 }
@@ -359,28 +363,36 @@ body.sidebar-collapsed .facturacion-shell,
 
 .additional-cell {
     display: grid;
-    gap: 0.25rem;
+    gap: 0.32rem;
     min-width: 150px;
     max-width: 220px;
-}
-
-.additional-cell strong {
     color: var(--fact-text);
+    font-weight: 400;
 }
 
-.additional-cell .additional-positive {
-    color: var(--fact-primary);
+.additional-line {
+    display: grid;
+    gap: 0.14rem;
 }
 
-.additional-cell .additional-negative {
-    color: #d63d4a;
+.additional-line span {
+    font-weight: 400;
 }
 
-.additional-cell span {
+.additional-line small,
+.additional-cell small {
     color: var(--fact-muted);
     font-size: 0.78rem;
     line-height: 1.35;
     white-space: normal;
+}
+
+.additional-cell .additional-positive span {
+    color: var(--fact-primary);
+}
+
+.additional-cell .additional-negative span {
+    color: #d63d4a;
 }
 
 .table-tools {

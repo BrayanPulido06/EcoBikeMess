@@ -59,6 +59,15 @@ class FacturacionModels
         }
     }
 
+    private function ensureColumn(string $table, string $column, string $alterSql): void
+    {
+        $stmt = $this->conn->prepare("SHOW COLUMNS FROM {$table} LIKE :column_name");
+        $stmt->execute([':column_name' => $column]);
+        if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+            $this->conn->exec($alterSql);
+        }
+    }
+
     private function syncFacturacionRows(): void
     {
         $sql = "INSERT INTO facturacion (paquete_id, cliente_id, mensajero_id, valor_pago_mensajero)
@@ -121,6 +130,10 @@ class FacturacionModels
                     fecha_grupo DATE NOT NULL,
                     monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                     descripcion TEXT NULL,
+                    monto_positivo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    descripcion_positiva TEXT NULL,
+                    monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    descripcion_negativa TEXT NULL,
                     registrado_por INT NULL,
                     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -130,6 +143,16 @@ class FacturacionModels
                     INDEX idx_adicional_cliente_fecha (cliente_id, fecha_grupo)
                 )";
         $this->conn->exec($sql);
+        $this->ensureColumn('facturacion_adicionales_cliente', 'monto_positivo', "ALTER TABLE facturacion_adicionales_cliente ADD COLUMN monto_positivo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER descripcion");
+        $this->ensureColumn('facturacion_adicionales_cliente', 'descripcion_positiva', "ALTER TABLE facturacion_adicionales_cliente ADD COLUMN descripcion_positiva TEXT NULL AFTER monto_positivo");
+        $this->ensureColumn('facturacion_adicionales_cliente', 'monto_negativo', "ALTER TABLE facturacion_adicionales_cliente ADD COLUMN monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER descripcion_positiva");
+        $this->ensureColumn('facturacion_adicionales_cliente', 'descripcion_negativa', "ALTER TABLE facturacion_adicionales_cliente ADD COLUMN descripcion_negativa TEXT NULL AFTER monto_negativo");
+        $this->conn->exec("UPDATE facturacion_adicionales_cliente
+                           SET monto_positivo = monto,
+                               descripcion_positiva = descripcion
+                           WHERE monto > 0
+                             AND monto_positivo = 0
+                             AND monto_negativo = 0");
     }
 
     private function ensureHiddenMessengerGroupsTable(): void
@@ -191,6 +214,10 @@ class FacturacionModels
                     fecha_grupo DATE NOT NULL,
                     monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                     descripcion TEXT NULL,
+                    monto_positivo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    descripcion_positiva TEXT NULL,
+                    monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    descripcion_negativa TEXT NULL,
                     registrado_por INT NULL,
                     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -200,6 +227,16 @@ class FacturacionModels
                     INDEX idx_adicional_mensajero_fecha (mensajero_id, fecha_grupo)
                 )";
         $this->conn->exec($sql);
+        $this->ensureColumn('facturacion_adicionales_mensajero', 'monto_positivo', "ALTER TABLE facturacion_adicionales_mensajero ADD COLUMN monto_positivo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER descripcion");
+        $this->ensureColumn('facturacion_adicionales_mensajero', 'descripcion_positiva', "ALTER TABLE facturacion_adicionales_mensajero ADD COLUMN descripcion_positiva TEXT NULL AFTER monto_positivo");
+        $this->ensureColumn('facturacion_adicionales_mensajero', 'monto_negativo', "ALTER TABLE facturacion_adicionales_mensajero ADD COLUMN monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER descripcion_positiva");
+        $this->ensureColumn('facturacion_adicionales_mensajero', 'descripcion_negativa', "ALTER TABLE facturacion_adicionales_mensajero ADD COLUMN descripcion_negativa TEXT NULL AFTER monto_negativo");
+        $this->conn->exec("UPDATE facturacion_adicionales_mensajero
+                           SET monto_negativo = monto,
+                               descripcion_negativa = descripcion
+                           WHERE monto > 0
+                             AND monto_positivo = 0
+                             AND monto_negativo = 0");
     }
 
     private function ensureMessengerGroupStatusTable(): void
@@ -268,9 +305,16 @@ class FacturacionModels
             ];
         }
 
+        if ($panel === 'ecobikemess') {
+            return [
+                'ecobikemess' => $this->obtenerResumenEcoBikeMess(),
+            ];
+        }
+
         return [
             'cliente' => $this->obtenerResumenClientes(),
             'mensajero' => $this->obtenerResumenMensajeros(false, null, true, date('Y-m-d')),
+            'ecobikemess' => $this->obtenerResumenEcoBikeMess(),
         ];
     }
 
@@ -355,11 +399,13 @@ class FacturacionModels
     public function guardarAdicionalClienteGrupo(
         int $clienteId,
         string $fechaGrupo,
-        float $monto,
-        ?string $descripcion,
+        float $montoPositivo,
+        ?string $descripcionPositiva,
+        float $montoNegativo,
+        ?string $descripcionNegativa,
         ?int $registradoPor
     ): bool {
-        if ($monto <= 0) {
+        if ($montoPositivo <= 0 && $montoNegativo <= 0) {
             $stmt = $this->conn->prepare("DELETE FROM facturacion_adicionales_cliente WHERE cliente_id = :cliente_id AND fecha_grupo = :fecha_grupo");
             return $stmt->execute([
                 ':cliente_id' => $clienteId,
@@ -368,20 +414,37 @@ class FacturacionModels
         }
 
         $sql = "INSERT INTO facturacion_adicionales_cliente (
-                    cliente_id, fecha_grupo, monto, descripcion, registrado_por
+                    cliente_id, fecha_grupo, monto, descripcion,
+                    monto_positivo, descripcion_positiva, monto_negativo, descripcion_negativa,
+                    registrado_por
                 ) VALUES (
-                    :cliente_id, :fecha_grupo, :monto, :descripcion, :registrado_por
+                    :cliente_id, :fecha_grupo, :monto, :descripcion,
+                    :monto_positivo, :descripcion_positiva, :monto_negativo, :descripcion_negativa,
+                    :registrado_por
                 )
                 ON DUPLICATE KEY UPDATE
                     monto = VALUES(monto),
                     descripcion = VALUES(descripcion),
+                    monto_positivo = VALUES(monto_positivo),
+                    descripcion_positiva = VALUES(descripcion_positiva),
+                    monto_negativo = VALUES(monto_negativo),
+                    descripcion_negativa = VALUES(descripcion_negativa),
                     registrado_por = VALUES(registrado_por)";
         $stmt = $this->conn->prepare($sql);
+        $montoNeto = $montoPositivo - $montoNegativo;
+        $descripcion = trim(implode(' | ', array_filter([
+            $descripcionPositiva ? 'Positivo: ' . $descripcionPositiva : '',
+            $descripcionNegativa ? 'Negativo: ' . $descripcionNegativa : '',
+        ])));
         return $stmt->execute([
             ':cliente_id' => $clienteId,
             ':fecha_grupo' => $fechaGrupo,
-            ':monto' => $monto,
-            ':descripcion' => $descripcion,
+            ':monto' => $montoNeto,
+            ':descripcion' => $descripcion !== '' ? $descripcion : null,
+            ':monto_positivo' => $montoPositivo,
+            ':descripcion_positiva' => $descripcionPositiva,
+            ':monto_negativo' => $montoNegativo,
+            ':descripcion_negativa' => $descripcionNegativa,
             ':registrado_por' => $registradoPor,
         ]);
     }
@@ -389,11 +452,13 @@ class FacturacionModels
     public function guardarAdicionalMensajeroGrupo(
         int $mensajeroId,
         string $fechaGrupo,
-        float $monto,
-        ?string $descripcion,
+        float $montoPositivo,
+        ?string $descripcionPositiva,
+        float $montoNegativo,
+        ?string $descripcionNegativa,
         ?int $registradoPor
     ): bool {
-        if ($monto <= 0) {
+        if ($montoPositivo <= 0 && $montoNegativo <= 0) {
             $stmt = $this->conn->prepare("DELETE FROM facturacion_adicionales_mensajero WHERE mensajero_id = :mensajero_id AND fecha_grupo = :fecha_grupo");
             return $stmt->execute([
                 ':mensajero_id' => $mensajeroId,
@@ -402,20 +467,37 @@ class FacturacionModels
         }
 
         $sql = "INSERT INTO facturacion_adicionales_mensajero (
-                    mensajero_id, fecha_grupo, monto, descripcion, registrado_por
+                    mensajero_id, fecha_grupo, monto, descripcion,
+                    monto_positivo, descripcion_positiva, monto_negativo, descripcion_negativa,
+                    registrado_por
                 ) VALUES (
-                    :mensajero_id, :fecha_grupo, :monto, :descripcion, :registrado_por
+                    :mensajero_id, :fecha_grupo, :monto, :descripcion,
+                    :monto_positivo, :descripcion_positiva, :monto_negativo, :descripcion_negativa,
+                    :registrado_por
                 )
                 ON DUPLICATE KEY UPDATE
                     monto = VALUES(monto),
                     descripcion = VALUES(descripcion),
+                    monto_positivo = VALUES(monto_positivo),
+                    descripcion_positiva = VALUES(descripcion_positiva),
+                    monto_negativo = VALUES(monto_negativo),
+                    descripcion_negativa = VALUES(descripcion_negativa),
                     registrado_por = VALUES(registrado_por)";
         $stmt = $this->conn->prepare($sql);
+        $montoNeto = $montoPositivo - $montoNegativo;
+        $descripcion = trim(implode(' | ', array_filter([
+            $descripcionPositiva ? 'Positivo: ' . $descripcionPositiva : '',
+            $descripcionNegativa ? 'Negativo: ' . $descripcionNegativa : '',
+        ])));
         return $stmt->execute([
             ':mensajero_id' => $mensajeroId,
             ':fecha_grupo' => $fechaGrupo,
-            ':monto' => $monto,
-            ':descripcion' => $descripcion,
+            ':monto' => $montoNeto,
+            ':descripcion' => $descripcion !== '' ? $descripcion : null,
+            ':monto_positivo' => $montoPositivo,
+            ':descripcion_positiva' => $descripcionPositiva,
+            ':monto_negativo' => $montoNegativo,
+            ':descripcion_negativa' => $descripcionNegativa,
             ':registrado_por' => $registradoPor,
         ]);
     }
@@ -635,6 +717,10 @@ class FacturacionModels
                     a.fecha_grupo,
                     a.monto,
                     a.descripcion,
+                    a.monto_positivo,
+                    a.descripcion_positiva,
+                    a.monto_negativo,
+                    a.descripcion_negativa,
                     a.fecha_registro,
                     CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, '')) AS registrado_por_nombre
                 FROM facturacion_adicionales_cliente a
@@ -651,6 +737,10 @@ class FacturacionModels
                 'fecha_grupo' => $row['fecha_grupo'],
                 'monto' => (float) $row['monto'],
                 'descripcion' => $row['descripcion'],
+                'monto_positivo' => (float) ($row['monto_positivo'] ?? 0),
+                'descripcion_positiva' => $row['descripcion_positiva'] ?? null,
+                'monto_negativo' => (float) ($row['monto_negativo'] ?? 0),
+                'descripcion_negativa' => $row['descripcion_negativa'] ?? null,
                 'fecha_registro' => $row['fecha_registro'],
                 'registrado_por_nombre' => trim((string) $row['registrado_por_nombre']),
             ];
@@ -736,6 +826,10 @@ class FacturacionModels
                     a.fecha_grupo,
                     a.monto,
                     a.descripcion,
+                    a.monto_positivo,
+                    a.descripcion_positiva,
+                    a.monto_negativo,
+                    a.descripcion_negativa,
                     a.fecha_registro,
                     CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, '')) AS registrado_por_nombre
                 FROM facturacion_adicionales_mensajero a
@@ -752,6 +846,10 @@ class FacturacionModels
                 'fecha_grupo' => $row['fecha_grupo'],
                 'monto' => (float) $row['monto'],
                 'descripcion' => $row['descripcion'],
+                'monto_positivo' => (float) ($row['monto_positivo'] ?? 0),
+                'descripcion_positiva' => $row['descripcion_positiva'] ?? null,
+                'monto_negativo' => (float) ($row['monto_negativo'] ?? 0),
+                'descripcion_negativa' => $row['descripcion_negativa'] ?? null,
                 'fecha_registro' => $row['fecha_registro'],
                 'registrado_por_nombre' => trim((string) $row['registrado_por_nombre']),
             ];
@@ -860,6 +958,40 @@ class FacturacionModels
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return $this->mapearResumenMensajeros($rows, $mensajeroId, $aplicarOcultos);
+    }
+
+    private function obtenerResumenEcoBikeMess(): array
+    {
+        $sql = "SELECT
+                    p.id AS paquete_id,
+                    p.numero_guia,
+                    p.fecha_creacion,
+                    p.fecha_entrega,
+                    p.estado,
+                    p.destinatario_nombre,
+                    p.costo_envio,
+                    COALESCE(f.costo_adicional_servicio, 0) AS costo_adicional_servicio,
+                    COALESCE(f.observaciones_admin, '') AS observaciones_admin,
+                    f.valor_pago_mensajero,
+                    COALESCE(f.adicional_pago_mensajero, 0) AS adicional_pago_mensajero,
+                    COALESCE(f.observaciones_mensajero, '') AS observaciones_mensajero,
+                    c.nombre_emprendimiento AS cliente_nombre,
+                    CONCAT(COALESCE(uc.nombres, ''), ' ', COALESCE(uc.apellidos, '')) AS cliente_contacto,
+                    CONCAT(COALESCE(um.nombres, ''), ' ', COALESCE(um.apellidos, '')) AS mensajero_nombre
+                FROM paquetes p
+                INNER JOIN facturacion f ON f.paquete_id = p.id
+                LEFT JOIN clientes c ON c.id = p.cliente_id
+                LEFT JOIN usuarios uc ON uc.id = c.usuario_id
+                LEFT JOIN mensajeros m ON m.id = p.mensajero_id
+                LEFT JOIN usuarios um ON um.id = m.usuario_id
+                WHERE p.estado = 'entregado'
+                ORDER BY COALESCE(p.fecha_entrega, p.fecha_creacion) DESC, p.id DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return $this->mapearResumenEcoBikeMess($rows);
     }
 
     private function mapearResumenClientes(array $rows, ?int $clienteId = null, bool $aplicarOcultos = true): array
@@ -1032,6 +1164,94 @@ class FacturacionModels
             'abonos' => $this->obtenerAbonosMensajero($mensajeroId),
             'adicionales' => $this->obtenerAdicionalesMensajero($mensajeroId),
             'estados' => $this->obtenerEstadosMensajero($mensajeroId),
+        ];
+    }
+
+    private function mapearResumenEcoBikeMess(array $rows): array
+    {
+        $items = [];
+        $totales = [
+            'saldo_actual' => 0.0,
+            'total_envios' => 0.0,
+            'total_recaudos' => 0.0,
+            'cantidad_paquetes' => 0,
+            'paquetes_entregados' => 0,
+        ];
+        $adicionalesClientePorFecha = [];
+        $descuentosMensajeroPorFecha = [];
+
+        foreach ($this->obtenerAdicionalesCliente() as $adicional) {
+            $fecha = (string) ($adicional['fecha_grupo'] ?? '');
+            if ($fecha === '') {
+                continue;
+            }
+            $montoNeto = (float) ($adicional['monto_positivo'] ?? 0) - (float) ($adicional['monto_negativo'] ?? 0);
+            $adicionalesClientePorFecha[$fecha] = ($adicionalesClientePorFecha[$fecha] ?? 0) + $montoNeto;
+        }
+
+        foreach ($this->obtenerAdicionalesMensajero() as $adicional) {
+            $fecha = (string) ($adicional['fecha_grupo'] ?? '');
+            if ($fecha === '') {
+                continue;
+            }
+            $montoNeto = (float) ($adicional['monto_positivo'] ?? 0) - (float) ($adicional['monto_negativo'] ?? 0);
+            $descuentosMensajeroPorFecha[$fecha] = ($descuentosMensajeroPorFecha[$fecha] ?? 0) + $montoNeto;
+        }
+
+        foreach ($rows as $row) {
+            $fechaBase = (string) ($row['fecha_entrega'] ?: $row['fecha_creacion']);
+            $fechaDia = substr($fechaBase, 0, 10);
+            $valorEnvioBase = (float) ($row['costo_envio'] ?? 0);
+            $adicionalClientePaquete = (float) ($row['costo_adicional_servicio'] ?? 0);
+            $totalCobradoPaquete = $valorEnvioBase + $adicionalClientePaquete;
+            $pagoMensajeroBase = (float) ($row['valor_pago_mensajero'] ?? 0);
+            if ($pagoMensajeroBase <= 0) {
+                $pagoMensajeroBase = 7000.00;
+            }
+            $adicionalMensajeroPaquete = (float) ($row['adicional_pago_mensajero'] ?? 0);
+            $totalPagoMensajeroPaquete = $pagoMensajeroBase + $adicionalMensajeroPaquete;
+            $gananciaPaquete = $totalCobradoPaquete - $totalPagoMensajeroPaquete;
+
+            $totales['saldo_actual'] += $gananciaPaquete;
+            $totales['total_envios'] += $totalCobradoPaquete;
+            $totales['total_recaudos'] += $totalPagoMensajeroPaquete;
+            $totales['cantidad_paquetes']++;
+            $totales['paquetes_entregados']++;
+
+            $items[] = [
+                'paquete_id' => (int) ($row['paquete_id'] ?? 0),
+                'numero_guia' => $row['numero_guia'],
+                'fecha_ingreso' => $row['fecha_creacion'],
+                'fecha_entrega' => $row['fecha_entrega'],
+                'fecha_grupo' => $fechaDia,
+                'estado' => $row['estado'],
+                'cliente_nombre' => trim((string) ($row['cliente_nombre'] ?? '')),
+                'cliente_contacto' => trim((string) ($row['cliente_contacto'] ?? '')),
+                'mensajero_nombre' => trim((string) ($row['mensajero_nombre'] ?? '')) !== '' ? trim((string) $row['mensajero_nombre']) : 'Sin asignar',
+                'destinatario_nombre' => $row['destinatario_nombre'],
+                'valor_envio_base' => $valorEnvioBase,
+                'adicional_cliente_paquete' => $adicionalClientePaquete,
+                'observaciones_admin' => $row['observaciones_admin'],
+                'total_cobrado_paquete' => $totalCobradoPaquete,
+                'pago_mensajero_base' => $pagoMensajeroBase,
+                'adicional_mensajero_paquete' => $adicionalMensajeroPaquete,
+                'observaciones_mensajero' => $row['observaciones_mensajero'],
+                'total_pago_mensajero_paquete' => $totalPagoMensajeroPaquete,
+                'ganancia_paquete' => $gananciaPaquete,
+                'adicional_cliente_general_dia' => (float) ($adicionalesClientePorFecha[$fechaDia] ?? 0),
+                'descuento_mensajero_general_dia' => (float) ($descuentosMensajeroPorFecha[$fechaDia] ?? 0),
+            ];
+        }
+
+        $totales['saldo_actual'] += array_sum($adicionalesClientePorFecha) - array_sum($descuentosMensajeroPorFecha);
+        $totales['total_envios'] += array_sum($adicionalesClientePorFecha);
+        $totales['total_recaudos'] += array_sum($descuentosMensajeroPorFecha);
+
+        return [
+            'summary' => $this->normalizarResumen($totales),
+            'items' => $items,
+            'adicionales_cliente' => $this->obtenerAdicionalesCliente(),
+            'descuentos_mensajero' => $this->obtenerAdicionalesMensajero(),
         ];
     }
 

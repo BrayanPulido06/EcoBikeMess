@@ -29,7 +29,7 @@ function parseMoneyInput($value): float
 try {
     if ($method === 'GET') {
         $panel = isset($_GET['panel']) ? trim((string) $_GET['panel']) : null;
-        if ($panel !== null && !in_array($panel, ['cliente', 'mensajero'], true)) {
+        if ($panel !== null && !in_array($panel, ['cliente', 'mensajero', 'ecobikemess'], true)) {
             $panel = null;
         }
 
@@ -148,8 +148,10 @@ try {
     if ($method === 'POST' && $action === 'guardar_adicional_cliente_grupo') {
         $clienteId = (int) ($_POST['cliente_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
-        $monto = parseMoneyInput($_POST['monto'] ?? 0);
-        $descripcion = trim((string) ($_POST['descripcion'] ?? ''));
+        $montoPositivo = parseMoneyInput($_POST['monto_positivo'] ?? 0);
+        $descripcionPositiva = trim((string) ($_POST['descripcion_positiva'] ?? ''));
+        $montoNegativo = parseMoneyInput($_POST['monto_negativo'] ?? 0);
+        $descripcionNegativa = trim((string) ($_POST['descripcion_negativa'] ?? ''));
         $registradoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
         if ($clienteId <= 0) {
@@ -160,19 +162,25 @@ try {
             throw new InvalidArgumentException('La fecha del adicional no es valida.');
         }
 
-        if ($monto < 0) {
+        if ($montoPositivo < 0 || $montoNegativo < 0) {
             throw new InvalidArgumentException('El adicional no puede ser negativo.');
         }
 
-        if ($monto > 0 && $descripcion === '') {
-            throw new InvalidArgumentException('Debes ingresar la observacion del adicional.');
+        if ($montoPositivo > 0 && $descripcionPositiva === '') {
+            throw new InvalidArgumentException('Debes ingresar la observacion del adicional positivo.');
+        }
+
+        if ($montoNegativo > 0 && $descripcionNegativa === '') {
+            throw new InvalidArgumentException('Debes ingresar la observacion del adicional negativo.');
         }
 
         $model->guardarAdicionalClienteGrupo(
             $clienteId,
             $fechaGrupo,
-            $monto,
-            $monto > 0 ? $descripcion : null,
+            $montoPositivo,
+            $montoPositivo > 0 ? $descripcionPositiva : null,
+            $montoNegativo,
+            $montoNegativo > 0 ? $descripcionNegativa : null,
             $registradoPor
         );
 
@@ -187,8 +195,10 @@ try {
     if ($method === 'POST' && $action === 'guardar_adicional_mensajero_grupo') {
         $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
-        $monto = parseMoneyInput($_POST['monto'] ?? 0);
-        $descripcion = trim((string) ($_POST['descripcion'] ?? ''));
+        $montoPositivo = parseMoneyInput($_POST['monto_positivo'] ?? 0);
+        $descripcionPositiva = trim((string) ($_POST['descripcion_positiva'] ?? ''));
+        $montoNegativo = parseMoneyInput($_POST['monto_negativo'] ?? 0);
+        $descripcionNegativa = trim((string) ($_POST['descripcion_negativa'] ?? ''));
         $registradoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
         if ($mensajeroId <= 0) {
@@ -199,19 +209,25 @@ try {
             throw new InvalidArgumentException('La fecha del adicional no es valida.');
         }
 
-        if ($monto < 0) {
+        if ($montoPositivo < 0 || $montoNegativo < 0) {
             throw new InvalidArgumentException('El adicional no puede ser negativo.');
         }
 
-        if ($monto > 0 && $descripcion === '') {
-            throw new InvalidArgumentException('Debes ingresar la observacion del adicional.');
+        if ($montoPositivo > 0 && $descripcionPositiva === '') {
+            throw new InvalidArgumentException('Debes ingresar la observacion del adicional positivo.');
+        }
+
+        if ($montoNegativo > 0 && $descripcionNegativa === '') {
+            throw new InvalidArgumentException('Debes ingresar la observacion del adicional negativo.');
         }
 
         $model->guardarAdicionalMensajeroGrupo(
             $mensajeroId,
             $fechaGrupo,
-            $monto,
-            $monto > 0 ? $descripcion : null,
+            $montoPositivo,
+            $montoPositivo > 0 ? $descripcionPositiva : null,
+            $montoNegativo,
+            $montoNegativo > 0 ? $descripcionNegativa : null,
             $registradoPor
         );
 

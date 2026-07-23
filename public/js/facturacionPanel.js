@@ -11,16 +11,19 @@ document.addEventListener('DOMContentLoaded', () => {
         activePanel: mode === 'admin' ? 'cliente' : mode,
         filters: {
             cliente: { q: '', estado: '', desde: '', hasta: '' },
-            mensajero: { q: '', estado: '', desde: '', hasta: '' }
+            mensajero: { q: '', estado: '', desde: '', hasta: '' },
+            ecobikemess: { q: '', estado: '', desde: '', hasta: '' }
         },
         clienteGroups: [],
         selectedClienteGroups: new Set(),
         selectedMensajeroGroups: new Set(),
         selectedClienteGroupKey: null,
         selectedMensajeroGroupKey: null,
+        selectedEcoBikeGroupKey: null,
         activeClientModalView: 'detail',
         activeMensajeroModalView: 'detail',
-        mensajeroGroups: []
+        mensajeroGroups: [],
+        ecobikemessGroups: []
     };
     const formatCurrencyNumber = (value) => {
         const amount = Math.round(Number(value || 0));
@@ -150,32 +153,57 @@ document.addEventListener('DOMContentLoaded', () => {
             ? `<span class="badge green">${yesText}</span>`
             : `<span class="badge red">${noText}</span>`;
 
-    const adicionalCell = (monto, descripcion) => {
-        const text = String(descripcion || '').trim();
+    const getPositiveAdditionalAmount = (adicional) => Number(adicional?.monto_positivo ?? Math.max(Number(adicional?.monto || 0), 0));
+    const getNegativeAdditionalAmount = (adicional) => Number(adicional?.monto_negativo || 0);
+    const getPositiveAdditionalDescription = (adicional) => String(adicional?.descripcion_positiva || (getPositiveAdditionalAmount(adicional) > 0 ? adicional?.descripcion || '' : '')).trim();
+    const getNegativeAdditionalDescription = (adicional) => String(adicional?.descripcion_negativa || '').trim();
+
+    const adicionalLine = (className, prefix, monto, descripcion) => `
+        <div class="additional-line ${className}">
+            <span>${prefix} ${money(monto)}</span>
+            ${descripcion ? `<small>${escapeHtml(descripcion)}</small>` : ''}
+        </div>
+    `;
+
+    const adicionalesCell = (positivo, descripcionPositiva, negativo, descripcionNegativa) => {
+        const positiveAmount = Number(positivo || 0);
+        const negativeAmount = Number(negativo || 0);
+        if (positiveAmount <= 0 && negativeAmount <= 0) {
+            return `
+                <div class="additional-cell">
+                    <span>$ 0</span>
+                    <small>Sin observacion</small>
+                </div>
+            `;
+        }
+
         return `
             <div class="additional-cell">
-                <strong>${money(monto)}</strong>
-                <span>${escapeHtml(text || 'Sin observacion')}</span>
+                ${positiveAmount > 0 ? adicionalLine('additional-positive', '+', positiveAmount, descripcionPositiva) : ''}
+                ${negativeAmount > 0 ? adicionalLine('additional-negative', '-', negativeAmount, descripcionNegativa) : ''}
             </div>
         `;
     };
 
+    const adicionalCell = (monto, descripcion) => adicionalesCell(monto, descripcion, 0, '');
+
     const messengerAdditionalCell = (group) => {
         const packageAmount = Number(group.totalAdicionalesPaquetes || 0);
-        const discountAmount = Number(group.adicionalGeneralMonto || 0);
+        const positiveGeneral = Number(group.adicionalGeneralPositivo || 0);
+        const negativeGeneral = Number(group.adicionalGeneralNegativo || 0);
         const packageText = packageAdditionalSummary(group.packages, 'observaciones_mensajero');
-        const discountText = String(group.adicionalGeneralDescripcion || '').trim();
+        const positiveText = String(group.adicionalGeneralDescripcionPositiva || '').trim();
+        const negativeText = String(group.adicionalGeneralDescripcionNegativa || '').trim();
 
-        if (packageAmount <= 0 && discountAmount <= 0) {
+        if (packageAmount <= 0 && positiveGeneral <= 0 && negativeGeneral <= 0) {
             return adicionalCell(0, '');
         }
 
         return `
             <div class="additional-cell">
-                ${packageAmount > 0 ? `<strong class="additional-positive">+ ${money(packageAmount)}</strong>` : ''}
-                ${packageText ? `<span>${escapeHtml(packageText)}</span>` : ''}
-                ${discountAmount > 0 ? `<strong class="additional-negative">- ${money(discountAmount)}</strong>` : ''}
-                ${discountText ? `<span>${escapeHtml(discountText)}</span>` : ''}
+                ${packageAmount > 0 ? adicionalLine('additional-positive', '+', packageAmount, packageText) : ''}
+                ${positiveGeneral > 0 ? adicionalLine('additional-positive', '+', positiveGeneral, positiveText) : ''}
+                ${negativeGeneral > 0 ? adicionalLine('additional-negative', '-', negativeGeneral, negativeText) : ''}
             </div>
         `;
     };
@@ -210,7 +238,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.cliente_contacto,
                 item.destinatario_nombre
             ].join(' ').toLowerCase()
-            : [
+            : panel === 'ecobikemess'
+                ? [
+                    item.numero_guia,
+                    item.cliente_nombre,
+                    item.cliente_contacto,
+                    item.mensajero_nombre,
+                    item.destinatario_nombre
+                ].join(' ').toLowerCase()
+                : [
                 item.numero_guia,
                 item.destinatario_nombre,
                 item.cliente_nombre,
@@ -225,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return false;
         }
 
-        const baseDate = item.fecha_entrega || item.fecha_ingreso;
+        const baseDate = item.fecha_entrega || item.fecha_ingreso || item.fecha_grupo;
         if (filter.desde && (!baseDate || baseDate.slice(0, 10) < filter.desde)) {
             return false;
         }
@@ -243,16 +279,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const isAdminMessengerPanel = mode === 'admin' && panel === 'mensajero';
-        const saldoLabel = panel === 'mensajero' ? 'Total a pagar' : 'Saldo actual';
+        const isEcoBikePanel = panel === 'ecobikemess';
+        const saldoLabel = isEcoBikePanel ? 'Ganancia total' : panel === 'mensajero' ? 'Total a pagar' : 'Saldo actual';
         const saldoNote = isAdminMessengerPanel
             ? 'Pendiente acumulado por pagar a mensajeros.'
+            : isEcoBikePanel
+                ? 'Cobrado a clientes menos pagos a mensajeros.'
             : panel === 'mensajero'
                 ? 'Suma de valores configurados para el mensajero.'
                 : 'Recaudos reales menos costo de envios.';
-        const totalEnviosLabel = isAdminMessengerPanel ? 'Total pagos' : 'Total valor envios';
+        const totalEnviosLabel = isEcoBikePanel ? 'Cobrado a clientes' : isAdminMessengerPanel ? 'Total pagos' : 'Total valor envios';
         const totalEnviosNote = isAdminMessengerPanel
             ? 'Suma de valores configurados por entrega.'
+            : isEcoBikePanel
+                ? 'Servicios y adicionales cobrados.'
             : 'Costo acumulado de los paquetes filtrables.';
+        const totalRecaudosLabel = isEcoBikePanel ? 'Pago a mensajeros' : 'Total recaudos';
+        const totalRecaudosNote = isEcoBikePanel ? 'Pagos por entrega despues de descuentos generales.' : 'Valor real reportado en entregas.';
 
         el.innerHTML = `
             <div class="summary-card">
@@ -266,9 +309,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="summary-note">${totalEnviosNote}</div>
             </div>
             <div class="summary-card">
-                <span class="summary-label">Total recaudos</span>
+                <span class="summary-label">${totalRecaudosLabel}</span>
                 <div class="summary-value">${money(summary.total_recaudos)}</div>
-                <div class="summary-note">Valor real reportado en entregas.</div>
+                <div class="summary-note">${totalRecaudosNote}</div>
             </div>
             <div class="summary-card">
                 <span class="summary-label">Paquetes / entregados</span>
@@ -351,6 +394,46 @@ document.addEventListener('DOMContentLoaded', () => {
         paquetes_entregados: 0
     });
 
+    const buildEcoBikeSummaryFromGroups = (groups) => groups.reduce((summary, group) => {
+        summary.saldo_actual += Number(group.gananciaTotal || 0);
+        summary.total_envios += Number(group.totalCobrado || 0);
+        summary.total_recaudos += Number(group.totalPagoMensajeros || 0);
+        summary.cantidad_paquetes += Array.isArray(group.packages) ? group.packages.length : 0;
+        summary.paquetes_entregados += Number(group.entregas || 0);
+        return summary;
+    }, {
+        saldo_actual: 0,
+        total_envios: 0,
+        total_recaudos: 0,
+        cantidad_paquetes: 0,
+        paquetes_entregados: 0
+    });
+
+    const sumByDate = (items, dateField, amountField) => {
+        const totals = new Map();
+        (Array.isArray(items) ? items : []).forEach((item) => {
+            const dateKey = String(item?.[dateField] || '');
+            if (!dateKey) {
+                return;
+            }
+            totals.set(dateKey, Number(totals.get(dateKey) || 0) + Number(item?.[amountField] || 0));
+        });
+        return totals;
+    };
+
+    const sumNetAdditionalByDate = (items, dateField) => {
+        const totals = new Map();
+        (Array.isArray(items) ? items : []).forEach((item) => {
+            const dateKey = String(item?.[dateField] || '');
+            if (!dateKey) {
+                return;
+            }
+            const netAmount = getPositiveAdditionalAmount(item) - getNegativeAdditionalAmount(item);
+            totals.set(dateKey, Number(totals.get(dateKey) || 0) + netAmount);
+        });
+        return totals;
+    };
+
     const buildClienteGroups = (items) => {
         const filtered = items.filter((item) => matchesFilter(item, 'cliente'));
         const groupsMap = new Map();
@@ -408,9 +491,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const abonos = getGroupAbonos(group.clienteId, group.dateKey);
                 const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
                 const adicionalGeneral = getClienteGroupAdicional(group.clienteId, group.dateKey);
-                const montoAdicionalGeneral = Number(adicionalGeneral?.monto || 0);
-                const descripcionAdicionalGeneral = String(adicionalGeneral?.descripcion || '').trim();
-                const totalAdicionales = Number(group.totalAdicionalesPaquetes || 0) + montoAdicionalGeneral;
+                const montoAdicionalGeneralPositivo = getPositiveAdditionalAmount(adicionalGeneral);
+                const montoAdicionalGeneralNegativo = getNegativeAdditionalAmount(adicionalGeneral);
+                const descripcionAdicionalGeneralPositiva = getPositiveAdditionalDescription(adicionalGeneral);
+                const descripcionAdicionalGeneralNegativa = getNegativeAdditionalDescription(adicionalGeneral);
+                const totalAdicionales = Number(group.totalAdicionalesPaquetes || 0) + montoAdicionalGeneralPositivo - montoAdicionalGeneralNegativo;
                 const totalServicio = Number(group.subtotalServicio || 0) + totalAdicionales;
                 const saldoCalculado = Number(group.totalRecaudado || 0) - totalServicio;
                 const estadoManual = getGroupEstadoManual(group.clienteId, group.dateKey);
@@ -419,11 +504,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 return {
                     ...group,
                     adicionalGeneral,
-                    adicionalGeneralMonto: montoAdicionalGeneral,
-                    adicionalGeneralDescripcion: descripcionAdicionalGeneral,
+                    adicionalGeneralMonto: montoAdicionalGeneralPositivo - montoAdicionalGeneralNegativo,
+                    adicionalGeneralPositivo: montoAdicionalGeneralPositivo,
+                    adicionalGeneralNegativo: montoAdicionalGeneralNegativo,
+                    adicionalGeneralDescripcionPositiva: descripcionAdicionalGeneralPositiva,
+                    adicionalGeneralDescripcionNegativa: descripcionAdicionalGeneralNegativa,
                     totalAdicionales,
                     totalServicio,
-                    adicionalObservacion: descripcionAdicionalGeneral || packageAdditionalSummary(group.packages, 'observaciones_admin'),
+                    adicionalObservacion: descripcionAdicionalGeneralPositiva || descripcionAdicionalGeneralNegativa || packageAdditionalSummary(group.packages, 'observaciones_admin'),
                     abonos,
                     abono,
                     balance,
@@ -517,10 +605,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const abonos = getMensajeroGroupAbonos(group.mensajeroId, group.dateKey);
                 const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
                 const adicionalGeneral = getMensajeroGroupAdicional(group.mensajeroId, group.dateKey);
-                const montoAdicionalGeneral = Number(adicionalGeneral?.monto || 0);
-                const descripcionAdicionalGeneral = String(adicionalGeneral?.descripcion || '').trim();
-                const totalAdicionales = Number(group.totalAdicionalesPaquetes || 0);
-                const totalPago = Number(group.totalPagoBase || 0) + totalAdicionales - montoAdicionalGeneral;
+                const montoAdicionalGeneralPositivo = getPositiveAdditionalAmount(adicionalGeneral);
+                const montoAdicionalGeneralNegativo = getNegativeAdditionalAmount(adicionalGeneral);
+                const descripcionAdicionalGeneralPositiva = getPositiveAdditionalDescription(adicionalGeneral);
+                const descripcionAdicionalGeneralNegativa = getNegativeAdditionalDescription(adicionalGeneral);
+                const totalAdicionales = Number(group.totalAdicionalesPaquetes || 0) + montoAdicionalGeneralPositivo;
+                const totalPago = Number(group.totalPagoBase || 0) + totalAdicionales - montoAdicionalGeneralNegativo;
                 const saldoCalculado = totalPago - Number(group.totalRecaudado || 0) - abono;
                 const estadoManual = getMensajeroGroupEstadoManual(group.mensajeroId, group.dateKey);
                 const saldo = estadoManual === 'pagado' ? 0 : saldoCalculado;
@@ -528,12 +618,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 return {
                     ...group,
                     adicionalGeneral,
-                    adicionalGeneralMonto: montoAdicionalGeneral,
-                    adicionalGeneralDescripcion: descripcionAdicionalGeneral,
-                    descuentoGeneral: montoAdicionalGeneral,
+                    adicionalGeneralMonto: montoAdicionalGeneralPositivo - montoAdicionalGeneralNegativo,
+                    adicionalGeneralPositivo: montoAdicionalGeneralPositivo,
+                    adicionalGeneralNegativo: montoAdicionalGeneralNegativo,
+                    adicionalGeneralDescripcionPositiva: descripcionAdicionalGeneralPositiva,
+                    adicionalGeneralDescripcionNegativa: descripcionAdicionalGeneralNegativa,
+                    descuentoGeneral: montoAdicionalGeneralNegativo,
                     totalAdicionales,
                     totalPago,
-                    adicionalObservacion: descripcionAdicionalGeneral || packageAdditionalSummary(group.packages, 'observaciones_mensajero'),
+                    adicionalObservacion: descripcionAdicionalGeneralPositiva || descripcionAdicionalGeneralNegativa || packageAdditionalSummary(group.packages, 'observaciones_mensajero'),
                     abonos,
                     abono,
                     balance,
@@ -567,6 +660,60 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         return groups;
+    };
+
+    const buildEcoBikeGroups = (items) => {
+        const filtered = items.filter((item) => matchesFilter(item, 'ecobikemess'));
+        const groupsMap = new Map();
+        const adicionalesClientePorFecha = sumNetAdditionalByDate(state.rawData?.ecobikemess?.adicionales_cliente, 'fecha_grupo');
+        const ajustesMensajeroPorFecha = sumNetAdditionalByDate(state.rawData?.ecobikemess?.descuentos_mensajero, 'fecha_grupo');
+
+        filtered.forEach((item) => {
+            const baseDate = item.fecha_entrega || item.fecha_ingreso || item.fecha_grupo;
+            const dateKey = dateKeyFromValue(baseDate);
+
+            if (!groupsMap.has(dateKey)) {
+                groupsMap.set(dateKey, {
+                    key: dateKey,
+                    dateKey,
+                    fechaLabel: shortDate(baseDate),
+                    entregas: 0,
+                    totalCobradoPaquetes: 0,
+                    totalCobrado: 0,
+                    totalPagoMensajerosPaquetes: 0,
+                    totalPagoMensajeros: 0,
+                    adicionalesClienteGeneral: Number(adicionalesClientePorFecha.get(dateKey) || 0),
+                    ajustesMensajeroGeneral: Number(ajustesMensajeroPorFecha.get(dateKey) || 0),
+                    gananciaPaquetes: 0,
+                    gananciaTotal: 0,
+                    packages: []
+                });
+            }
+
+            const group = groupsMap.get(dateKey);
+            const totalCobradoPaquete = Number(item.total_cobrado_paquete || 0);
+            const totalPagoMensajeroPaquete = Number(item.total_pago_mensajero_paquete || 0);
+            const gananciaPaquete = Number(item.ganancia_paquete || (totalCobradoPaquete - totalPagoMensajeroPaquete));
+
+            group.entregas += 1;
+            group.totalCobradoPaquetes += totalCobradoPaquete;
+            group.totalPagoMensajerosPaquetes += totalPagoMensajeroPaquete;
+            group.gananciaPaquetes += gananciaPaquete;
+            group.packages.push(item);
+        });
+
+        return Array.from(groupsMap.values())
+            .map((group) => {
+                const totalCobrado = Number(group.totalCobradoPaquetes || 0) + Number(group.adicionalesClienteGeneral || 0);
+                const totalPagoMensajeros = Number(group.totalPagoMensajerosPaquetes || 0) + Number(group.ajustesMensajeroGeneral || 0);
+                return {
+                    ...group,
+                    totalCobrado,
+                    totalPagoMensajeros,
+                    gananciaTotal: totalCobrado - totalPagoMensajeros
+                };
+            })
+            .sort((a, b) => b.dateKey.localeCompare(a.dateKey));
     };
 
     const clientGroupStatusBadge = (status) => {
@@ -611,6 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const clienteTableColspan = () => mode === 'admin' ? 12 : 8;
     const mensajeroTableColspan = () => mode === 'admin' ? 12 : 11;
+    const ecobikemessTableColspan = () => 8;
 
     const renderClienteTable = (items) => {
         const tbody = document.getElementById('table-body-cliente');
@@ -672,7 +820,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${group.fechaLabel}</td>
                     <td>${group.paquetesEntregados}</td>
                     <td>${money(group.totalServicio)}</td>
-                    <td>${adicionalCell(group.totalAdicionales, group.adicionalObservacion)}</td>
+                    <td>${adicionalesCell(
+                        Number(group.totalAdicionalesPaquetes || 0) + Number(group.adicionalGeneralPositivo || 0),
+                        group.adicionalGeneralDescripcionPositiva || packageAdditionalSummary(group.packages, 'observaciones_admin'),
+                        group.adicionalGeneralNegativo,
+                        group.adicionalGeneralDescripcionNegativa
+                    )}</td>
                     <td>${money(group.totalRecaudado)}</td>
                     <td>${money(group.abono)}</td>
                     <td>${clientGroupStatusSelect(group)}</td>
@@ -836,6 +989,46 @@ document.addEventListener('DOMContentLoaded', () => {
         return groups;
     };
 
+    const renderEcoBikeTable = (items) => {
+        const tbody = document.getElementById('table-body-ecobikemess');
+        if (!tbody) return [];
+
+        const groups = buildEcoBikeGroups(items);
+        state.ecobikemessGroups = groups;
+        document.getElementById('count-ecobikemess').textContent = `${groups.length} registros`;
+
+        if (!groups.length) {
+            tbody.innerHTML = `<tr><td colspan="${ecobikemessTableColspan()}" class="empty-state">No hay registros con los filtros actuales.</td></tr>`;
+            return groups;
+        }
+
+        tbody.innerHTML = groups.map((group) => `
+            <tr>
+                <td>${group.fechaLabel}</td>
+                <td>${group.entregas}</td>
+                <td>${money(group.totalCobrado)}</td>
+                <td>${money(group.totalPagoMensajeros)}</td>
+                <td>${money(group.adicionalesClienteGeneral)}</td>
+                <td>${money(group.ajustesMensajeroGeneral)}</td>
+                <td class="amount-cell ${balanceCellClass(group.gananciaTotal)}">${money(group.gananciaTotal)}</td>
+                <td>
+                    <div class="table-tools">
+                        <button
+                            type="button"
+                            class="fact-btn tertiary detail-trigger"
+                            data-role="open-ecobike-detail"
+                            data-group-key="${escapeHtml(group.key)}"
+                        >
+                            Ver detalle
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        return groups;
+    };
+
     const render = () => {
         if (!state.rawData) return;
 
@@ -853,6 +1046,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 'mensajero'
             );
         }
+
+        if (state.rawData.ecobikemess) {
+            renderEcoBikeTable(state.rawData.ecobikemess.items || []);
+            renderSummary(buildEcoBikeSummaryFromGroups(state.ecobikemessGroups), 'ecobikemess');
+        }
     };
 
     const buildEndpointUrl = (panel = '') => {
@@ -864,13 +1062,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${endpoint}${separator}panel=${encodeURIComponent(panel)}`;
     };
 
+    const tableColspanForPanel = (panel) => {
+        if (panel === 'cliente') return clienteTableColspan();
+        if (panel === 'mensajero') return mensajeroTableColspan();
+        if (panel === 'ecobikemess') return ecobikemessTableColspan();
+        return mensajeroTableColspan();
+    };
+
     const setLoading = (message = 'Cargando informacion...', panel = '') => {
         const loaders = panel
             ? [document.getElementById(`table-body-${panel}`)].filter(Boolean)
             : document.querySelectorAll('[data-loading]');
 
         loaders.forEach((el) => {
-            const colspan = el.id === 'table-body-cliente' ? clienteTableColspan() : mensajeroTableColspan();
+            const panelName = String(el.id || '').replace('table-body-', '');
+            const colspan = tableColspanForPanel(panelName);
             el.innerHTML = `<tr><td colspan="${colspan}" class="loading-state">${message}</td></tr>`;
         });
     };
@@ -947,7 +1153,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (!el) {
                             return;
                         }
-                        const colspan = panel === 'cliente' ? clienteTableColspan() : mensajeroTableColspan();
+                        const colspan = tableColspanForPanel(panel);
                         el.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">${error.message}</td></tr>`;
                     });
                 }
@@ -1011,6 +1217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const getMensajeroGroupByKey = (groupKey) => state.mensajeroGroups.find((group) => group.key === groupKey) || null;
+    const getEcoBikeGroupByKey = (groupKey) => state.ecobikemessGroups.find((group) => group.key === groupKey) || null;
 
     const saveMessengerGroupStatus = async (groupKey, estado) => {
         const group = getMensajeroGroupByKey(groupKey);
@@ -1071,8 +1278,10 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('action', 'guardar_adicional_cliente_grupo');
         formData.append('cliente_id', form.cliente_id.value);
         formData.append('fecha_grupo', form.fecha_grupo.value);
-        formData.append('monto', form.monto.value || '0');
-        formData.append('descripcion', form.descripcion.value || '');
+        formData.append('monto_positivo', form.monto_positivo.value || '0');
+        formData.append('descripcion_positiva', form.descripcion_positiva.value || '');
+        formData.append('monto_negativo', form.monto_negativo.value || '0');
+        formData.append('descripcion_negativa', form.descripcion_negativa.value || '');
 
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -1124,8 +1333,10 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('action', 'guardar_adicional_mensajero_grupo');
         formData.append('mensajero_id', form.mensajero_id.value);
         formData.append('fecha_grupo', form.fecha_grupo.value);
-        formData.append('monto', form.monto.value || '0');
-        formData.append('descripcion', form.descripcion.value || '');
+        formData.append('monto_positivo', form.monto_positivo.value || '0');
+        formData.append('descripcion_positiva', form.descripcion_positiva.value || '');
+        formData.append('monto_negativo', form.monto_negativo.value || '0');
+        formData.append('descripcion_negativa', form.descripcion_negativa.value || '');
 
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -1198,7 +1409,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const syncCurrencyInput = (input) => {
         if (!input) return;
 
-        const hiddenInput = input.form ? input.form.querySelector('input[name="monto"]') : null;
+        const hiddenName = input.name && input.name.endsWith('_display')
+            ? input.name.replace(/_display$/, '')
+            : 'monto';
+        const hiddenInput = input.form ? input.form.querySelector(`input[name="${hiddenName}"]`) : null;
         const amount = parseCurrencyInput(input.value);
 
         if (hiddenInput) {
@@ -1557,19 +1771,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const adicional = group.adicionalGeneral || {};
-        const monto = Number(adicional.monto || 0);
+        const montoPositivo = getPositiveAdditionalAmount(adicional);
+        const montoNegativo = getNegativeAdditionalAmount(adicional);
 
         state.selectedMensajeroGroupKey = groupKey;
         state.activeMensajeroModalView = 'additional';
         title.textContent = `Adicionales - ${group.mensajeroNombre}`;
-        subtitle.textContent = `Fecha ${group.fechaLabel} | Descuento general ${money(monto)} | Adicionales por paquete ${money(group.totalAdicionalesPaquetes)} | Total pago ${money(group.totalPago)}`;
+        subtitle.textContent = `Fecha ${group.fechaLabel} | Positivo ${money(montoPositivo)} | Negativo ${money(montoNegativo)} | Total pago ${money(group.totalPago)}`;
 
         body.innerHTML = `
             <div class="detail-summary-strip">
                 <div><span>Entregas</span><strong>${group.entregas}</strong></div>
-                <div><span>Descuento general</span><strong>${money(monto)}</strong></div>
+                <div><span>Adicional positivo</span><strong>${money(montoPositivo)}</strong></div>
+                <div><span>Adicional negativo</span><strong>${money(montoNegativo)}</strong></div>
                 <div><span>Adicionales por paquete</span><strong>${money(Number(group.totalAdicionalesPaquetes || 0))}</strong></div>
-                <div><span>Total descuentos</span><strong>${money(group.descuentoGeneral || 0)}</strong></div>
                 <div><span>Total pago</span><strong>${money(group.totalPago)}</strong></div>
             </div>
             <form id="mensajeroAdicionalGrupoForm" class="facturacion-abono-form">
@@ -1577,20 +1792,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="hidden" name="fecha_grupo" value="${escapeHtml(group.dateKey)}">
                 <div class="facturacion-abono-grid">
                     <label class="facturacion-field">
-                        <span>Valor a descontar</span>
-                        <input type="hidden" name="monto" value="${monto > 0 ? monto : ''}">
-                        <input type="text" name="monto_display" inputmode="numeric" autocomplete="off" placeholder="$ 3.000" value="${monto > 0 ? money(monto) : ''}">
+                        <span>Adicional positivo</span>
+                        <input type="hidden" name="monto_positivo" value="${montoPositivo > 0 ? montoPositivo : ''}">
+                        <input type="text" name="monto_positivo_display" inputmode="numeric" autocomplete="off" placeholder="$ 3.000" value="${montoPositivo > 0 ? money(montoPositivo) : ''}">
+                    </label>
+                    <label class="facturacion-field">
+                        <span>Adicional negativo</span>
+                        <input type="hidden" name="monto_negativo" value="${montoNegativo > 0 ? montoNegativo : ''}">
+                        <input type="text" name="monto_negativo_display" inputmode="numeric" autocomplete="off" placeholder="$ 4.000" value="${montoNegativo > 0 ? money(montoNegativo) : ''}">
                     </label>
                     <label class="facturacion-field facturacion-field-full">
-                        <span>Motivo del descuento</span>
-                        <textarea name="descripcion" rows="3" placeholder="Ej: jugo, parqueadero, espera adicional">${escapeHtml(adicional.descripcion || '')}</textarea>
+                        <span>Observacion adicional positivo</span>
+                        <textarea name="descripcion_positiva" rows="2" placeholder="Ej: entrega extra, tarifa especial">${escapeHtml(getPositiveAdditionalDescription(adicional))}</textarea>
+                    </label>
+                    <label class="facturacion-field facturacion-field-full">
+                        <span>Observacion adicional negativo</span>
+                        <textarea name="descripcion_negativa" rows="2" placeholder="Ej: jugo, parqueadero, descuento">${escapeHtml(getNegativeAdditionalDescription(adicional))}</textarea>
                     </label>
                 </div>
                 <div class="facturacion-abono-actions">
                     <button type="submit" class="fact-btn primary" data-role="submit-messenger-group-additional">Guardar adicional</button>
                     <button type="button" class="fact-btn tertiary" data-role="open-messenger-detail" data-group-key="${escapeHtml(group.key)}">Ver entregas</button>
                 </div>
-                <div class="facturacion-footnote">Este valor se descuenta del pago del mensajero. Para quitarlo, deja el valor en cero o vacio y guarda. Los adicionales por paquete se suman desde cada entrega.</div>
+                <div class="facturacion-footnote">El positivo suma al pago del mensajero y el negativo se descuenta. Para quitar un valor, dejalo en cero o vacio y guarda.</div>
             </form>
         `;
 
@@ -1720,17 +1944,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const adicional = group.adicionalGeneral || {};
-        const monto = Number(adicional.monto || 0);
+        const montoPositivo = getPositiveAdditionalAmount(adicional);
+        const montoNegativo = getNegativeAdditionalAmount(adicional);
 
         state.selectedClienteGroupKey = groupKey;
         state.activeClientModalView = 'additional';
         title.textContent = `Adicionales - ${group.clienteNombre}`;
-        subtitle.textContent = `Fecha ${group.fechaLabel} | Adicional general ${money(monto)} | Total adicionales ${money(group.totalAdicionales)} | Total servicio ${money(group.totalServicio)}`;
+        subtitle.textContent = `Fecha ${group.fechaLabel} | Positivo ${money(montoPositivo)} | Negativo ${money(montoNegativo)} | Total servicio ${money(group.totalServicio)}`;
 
         body.innerHTML = `
             <div class="detail-summary-strip">
                 <div><span>Entregados</span><strong>${group.paquetesEntregados}</strong></div>
-                <div><span>Adicional general</span><strong>${money(monto)}</strong></div>
+                <div><span>Adicional positivo</span><strong>${money(montoPositivo)}</strong></div>
+                <div><span>Adicional negativo</span><strong>${money(montoNegativo)}</strong></div>
                 <div><span>Adicionales por paquete</span><strong>${money(Number(group.totalAdicionalesPaquetes || 0))}</strong></div>
                 <div><span>Total adicionales</span><strong>${money(group.totalAdicionales)}</strong></div>
                 <div><span>Total servicio</span><strong>${money(group.totalServicio)}</strong></div>
@@ -1740,20 +1966,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="hidden" name="fecha_grupo" value="${escapeHtml(group.dateKey)}">
                 <div class="facturacion-abono-grid">
                     <label class="facturacion-field">
-                        <span>Valor adicional general</span>
-                        <input type="hidden" name="monto" value="${monto > 0 ? monto : ''}">
-                        <input type="text" name="monto_display" inputmode="numeric" autocomplete="off" placeholder="$ 2.000" value="${monto > 0 ? money(monto) : ''}">
+                        <span>Adicional positivo</span>
+                        <input type="hidden" name="monto_positivo" value="${montoPositivo > 0 ? montoPositivo : ''}">
+                        <input type="text" name="monto_positivo_display" inputmode="numeric" autocomplete="off" placeholder="$ 2.000" value="${montoPositivo > 0 ? money(montoPositivo) : ''}">
+                    </label>
+                    <label class="facturacion-field">
+                        <span>Adicional negativo</span>
+                        <input type="hidden" name="monto_negativo" value="${montoNegativo > 0 ? montoNegativo : ''}">
+                        <input type="text" name="monto_negativo_display" inputmode="numeric" autocomplete="off" placeholder="$ 2.000" value="${montoNegativo > 0 ? money(montoNegativo) : ''}">
                     </label>
                     <label class="facturacion-field facturacion-field-full">
-                        <span>Observacion</span>
-                        <textarea name="descripcion" rows="3" placeholder="Ej: tiempo de espera, parqueadero, gestion adicional">${escapeHtml(adicional.descripcion || '')}</textarea>
+                        <span>Observacion adicional positivo</span>
+                        <textarea name="descripcion_positiva" rows="2" placeholder="Ej: tiempo de espera, parqueadero, gestion adicional">${escapeHtml(getPositiveAdditionalDescription(adicional))}</textarea>
+                    </label>
+                    <label class="facturacion-field facturacion-field-full">
+                        <span>Observacion adicional negativo</span>
+                        <textarea name="descripcion_negativa" rows="2" placeholder="Ej: descuento, ajuste, novedad">${escapeHtml(getNegativeAdditionalDescription(adicional))}</textarea>
                     </label>
                 </div>
                 <div class="facturacion-abono-actions">
                     <button type="submit" class="fact-btn primary" data-role="submit-client-group-additional">Guardar adicional</button>
                     <button type="button" class="fact-btn tertiary" data-role="open-client-detail" data-group-key="${escapeHtml(group.key)}">Ver paquetes</button>
                 </div>
-                <div class="facturacion-footnote">Para quitar el adicional general, deja el valor en cero o vacio y guarda. Los adicionales por paquete se editan dentro de cada paquete.</div>
+                <div class="facturacion-footnote">El positivo suma al cobro del cliente y el negativo lo descuenta. Para quitar un valor, dejalo en cero o vacio y guarda.</div>
             </form>
         `;
 
@@ -1865,6 +2100,75 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.setAttribute('aria-hidden', 'false');
     };
 
+    const openEcoBikeDetailModal = (groupKey) => {
+        const group = getEcoBikeGroupByKey(groupKey);
+        const modal = document.getElementById('facturacionDetailModal');
+        const title = document.getElementById('facturacionDetailTitle');
+        const subtitle = document.getElementById('facturacionDetailSubtitle');
+        const body = document.getElementById('facturacionDetailBody');
+
+        if (!group || !modal || !title || !subtitle || !body) {
+            return;
+        }
+
+        state.selectedEcoBikeGroupKey = groupKey;
+        title.textContent = `Ganancia EcoBikeMess - ${group.fechaLabel}`;
+        subtitle.textContent = `${group.entregas} entrega(s) | Cobrado ${money(group.totalCobrado)} | Pagado ${money(group.totalPagoMensajeros)} | Ganancia ${money(group.gananciaTotal)}`;
+
+        body.innerHTML = `
+            <div class="detail-summary-strip">
+                <div><span>Entregas</span><strong>${group.entregas}</strong></div>
+                <div><span>Cobrado paquetes</span><strong>${money(group.totalCobradoPaquetes)}</strong></div>
+                <div><span>Adic. clientes</span><strong>${money(group.adicionalesClienteGeneral)}</strong></div>
+                <div><span>Pago paquetes</span><strong>${money(group.totalPagoMensajerosPaquetes)}</strong></div>
+                <div><span>Ajuste mensajeros</span><strong>${money(group.ajustesMensajeroGeneral)}</strong></div>
+                <div><span>Ganancia</span><strong>${money(group.gananciaTotal)}</strong></div>
+            </div>
+            <div class="package-list">
+                ${group.packages.map((item) => `
+                    <article class="package-card">
+                        <div class="package-card-head">
+                            <div>
+                                <span class="package-label">Guia</span>
+                                <strong>${escapeHtml(item.numero_guia)}</strong>
+                            </div>
+                            <span class="status-chip paid">Entregado</span>
+                        </div>
+                        <div class="package-grid">
+                            <div>
+                                <span class="package-label">Cliente</span>
+                                <strong>${escapeHtml(clientDisplayName(item))}</strong>
+                            </div>
+                            <div>
+                                <span class="package-label">Mensajero</span>
+                                <strong>${escapeHtml(item.mensajero_nombre || 'Sin asignar')}</strong>
+                            </div>
+                            <div>
+                                <span class="package-label">Cobrado cliente</span>
+                                <strong>${money(item.total_cobrado_paquete)}</strong>
+                            </div>
+                            <div>
+                                <span class="package-label">Pago mensajero</span>
+                                <strong>${money(item.total_pago_mensajero_paquete)}</strong>
+                            </div>
+                            <div>
+                                <span class="package-label">Ganancia paquete</span>
+                                <strong>${money(item.ganancia_paquete)}</strong>
+                            </div>
+                            <div>
+                                <span class="package-label">Destinatario</span>
+                                <strong>${escapeHtml(item.destinatario_nombre || 'Sin destinatario')}</strong>
+                            </div>
+                        </div>
+                    </article>
+                `).join('')}
+            </div>
+        `;
+
+        modal.classList.remove('modal-hidden');
+        modal.setAttribute('aria-hidden', 'false');
+    };
+
     const closeClientDetailModal = () => {
         const modal = document.getElementById('facturacionDetailModal');
         if (!modal) return;
@@ -1873,6 +2177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.setAttribute('aria-hidden', 'true');
         state.selectedClienteGroupKey = null;
         state.selectedMensajeroGroupKey = null;
+        state.selectedEcoBikeGroupKey = null;
     };
 
     const hideClienteGroup = async (group) => {
@@ -2078,6 +2383,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const messengerAdditionalCostButton = event.target.closest('[data-role="open-messenger-additional-cost"]');
             if (messengerAdditionalCostButton) {
                 openMessengerAdditionalCostModal(messengerAdditionalCostButton.dataset.packageId);
+                return;
+            }
+
+            const ecoBikeDetailButton = event.target.closest('[data-role="open-ecobike-detail"]');
+            if (ecoBikeDetailButton) {
+                openEcoBikeDetailModal(ecoBikeDetailButton.dataset.groupKey);
                 return;
             }
 
@@ -2330,14 +2641,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!form) return;
 
             event.preventDefault();
-            const amountDisplayInput = form.querySelector('input[name="monto_display"]');
-            if (amountDisplayInput) {
-                syncCurrencyInput(amountDisplayInput);
-            }
+            form.querySelectorAll('input[name$="_display"]').forEach(syncCurrencyInput);
 
-            const monto = Number(form.monto.value || 0);
-            if (monto > 0 && !String(form.descripcion.value || '').trim()) {
-                alert('Ingresa la observacion del adicional.');
+            const montoPositivo = Number(form.monto_positivo.value || 0);
+            const montoNegativo = Number(form.monto_negativo.value || 0);
+            if (montoPositivo > 0 && !String(form.descripcion_positiva.value || '').trim()) {
+                alert('Ingresa la observacion del adicional positivo.');
+                return;
+            }
+            if (montoNegativo > 0 && !String(form.descripcion_negativa.value || '').trim()) {
+                alert('Ingresa la observacion del adicional negativo.');
                 return;
             }
 
@@ -2365,14 +2678,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!form) return;
 
             event.preventDefault();
-            const amountDisplayInput = form.querySelector('input[name="monto_display"]');
-            if (amountDisplayInput) {
-                syncCurrencyInput(amountDisplayInput);
-            }
+            form.querySelectorAll('input[name$="_display"]').forEach(syncCurrencyInput);
 
-            const monto = Number(form.monto.value || 0);
-            if (monto > 0 && !String(form.descripcion.value || '').trim()) {
-                alert('Ingresa la observacion del adicional.');
+            const montoPositivo = Number(form.monto_positivo.value || 0);
+            const montoNegativo = Number(form.monto_negativo.value || 0);
+            if (montoPositivo > 0 && !String(form.descripcion_positiva.value || '').trim()) {
+                alert('Ingresa la observacion del adicional positivo.');
+                return;
+            }
+            if (montoNegativo > 0 && !String(form.descripcion_negativa.value || '').trim()) {
+                alert('Ingresa la observacion del adicional negativo.');
                 return;
             }
 
@@ -2475,10 +2790,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         document.addEventListener('input', (event) => {
-            const input = event.target.closest('input[name="monto_display"]');
+            const input = event.target.closest('input[name$="_display"]');
             if (!input) return;
 
-            const hiddenInput = input.form ? input.form.querySelector('input[name="monto"]') : null;
+            const hiddenName = input.name && input.name.endsWith('_display')
+                ? input.name.replace(/_display$/, '')
+                : 'monto';
+            const hiddenInput = input.form ? input.form.querySelector(`input[name="${hiddenName}"]`) : null;
             const amount = parseCurrencyInput(input.value);
 
             if (hiddenInput) {
@@ -2487,16 +2805,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.addEventListener('blur', (event) => {
-            const input = event.target.closest('input[name="monto_display"]');
+            const input = event.target.closest('input[name$="_display"]');
             if (!input) return;
             syncCurrencyInput(input);
         }, true);
 
         document.addEventListener('focus', (event) => {
-            const input = event.target.closest('input[name="monto_display"]');
+            const input = event.target.closest('input[name$="_display"]');
             if (!input) return;
 
-            const hiddenInput = input.form ? input.form.querySelector('input[name="monto"]') : null;
+            const hiddenName = input.name && input.name.endsWith('_display')
+                ? input.name.replace(/_display$/, '')
+                : 'monto';
+            const hiddenInput = input.form ? input.form.querySelector(`input[name="${hiddenName}"]`) : null;
             const amount = hiddenInput ? Number(hiddenInput.value || 0) : parseCurrencyInput(input.value);
             input.value = amount > 0 ? String(amount) : '';
         }, true);
@@ -2517,7 +2838,8 @@ document.addEventListener('DOMContentLoaded', () => {
             : document.querySelectorAll('[data-loading]');
 
         loaders.forEach((el) => {
-            const colspan = el.id === 'table-body-cliente' ? clienteTableColspan() : mensajeroTableColspan();
+            const panelName = String(el.id || '').replace('table-body-', '');
+            const colspan = tableColspanForPanel(panelName);
             el.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">${error.message}</td></tr>`;
         });
     });
