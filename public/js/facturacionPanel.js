@@ -160,6 +160,26 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
+    const messengerAdditionalCell = (group) => {
+        const packageAmount = Number(group.totalAdicionalesPaquetes || 0);
+        const discountAmount = Number(group.adicionalGeneralMonto || 0);
+        const packageText = packageAdditionalSummary(group.packages, 'observaciones_mensajero');
+        const discountText = String(group.adicionalGeneralDescripcion || '').trim();
+
+        if (packageAmount <= 0 && discountAmount <= 0) {
+            return adicionalCell(0, '');
+        }
+
+        return `
+            <div class="additional-cell">
+                ${packageAmount > 0 ? `<strong class="additional-positive">+ ${money(packageAmount)}</strong>` : ''}
+                ${packageText ? `<span>${escapeHtml(packageText)}</span>` : ''}
+                ${discountAmount > 0 ? `<strong class="additional-negative">- ${money(discountAmount)}</strong>` : ''}
+                ${discountText ? `<span>${escapeHtml(discountText)}</span>` : ''}
+            </div>
+        `;
+    };
+
     const packageAdditionalSummary = (packages, field) => {
         const notes = (Array.isArray(packages) ? packages : [])
             .map((item) => String(item?.[field] || '').trim())
@@ -499,8 +519,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const adicionalGeneral = getMensajeroGroupAdicional(group.mensajeroId, group.dateKey);
                 const montoAdicionalGeneral = Number(adicionalGeneral?.monto || 0);
                 const descripcionAdicionalGeneral = String(adicionalGeneral?.descripcion || '').trim();
-                const totalAdicionales = Number(group.totalAdicionalesPaquetes || 0) + montoAdicionalGeneral;
-                const totalPago = Number(group.totalPagoBase || 0) + totalAdicionales;
+                const totalAdicionales = Number(group.totalAdicionalesPaquetes || 0);
+                const totalPago = Number(group.totalPagoBase || 0) + totalAdicionales - montoAdicionalGeneral;
                 const saldoCalculado = totalPago - Number(group.totalRecaudado || 0) - abono;
                 const estadoManual = getMensajeroGroupEstadoManual(group.mensajeroId, group.dateKey);
                 const saldo = estadoManual === 'pagado' ? 0 : saldoCalculado;
@@ -510,6 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     adicionalGeneral,
                     adicionalGeneralMonto: montoAdicionalGeneral,
                     adicionalGeneralDescripcion: descripcionAdicionalGeneral,
+                    descuentoGeneral: montoAdicionalGeneral,
                     totalAdicionales,
                     totalPago,
                     adicionalObservacion: descripcionAdicionalGeneral || packageAdditionalSummary(group.packages, 'observaciones_mensajero'),
@@ -764,7 +785,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${group.fechaLabel}</td>
                     <td>${group.entregas}</td>
                     <td>${money(group.totalPago)}</td>
-                    <td>${adicionalCell(group.totalAdicionales, group.adicionalObservacion)}</td>
+                    <td>${messengerAdditionalCell(group)}</td>
                     <td>${money(group.totalRecaudado)}</td>
                     <td>${money(group.abono)}</td>
                     <td>${messengerGroupStatusSelect(group)}</td>
@@ -1430,13 +1451,14 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedMensajeroGroupKey = groupKey;
         state.activeMensajeroModalView = 'detail';
         title.textContent = `${group.mensajeroNombre} - ${group.fechaLabel}`;
-        subtitle.textContent = `${group.entregas} entrega(s) | Pago ${money(group.totalPago)} | Adicionales ${money(group.totalAdicionales)} | Recaudo descontado ${money(group.totalRecaudado)} | Abono ${money(group.abono)} | Saldo ${moneyAbs(group.saldo)}`;
+        subtitle.textContent = `${group.entregas} entrega(s) | Pago ${money(group.totalPago)} | Adicionales por paquete ${money(group.totalAdicionalesPaquetes)} | Descuento general ${money(group.descuentoGeneral || 0)} | Recaudo descontado ${money(group.totalRecaudado)} | Abono ${money(group.abono)} | Saldo ${moneyAbs(group.saldo)}`;
 
         body.innerHTML = `
             <div class="detail-summary-strip">
                 <div><span>Entregas</span><strong>${group.entregas}</strong></div>
                 <div><span>Total pago</span><strong>${money(group.totalPago)}</strong></div>
-                <div><span>Adicionales</span><strong>${money(group.totalAdicionales)}</strong></div>
+                <div><span>Adicionales por paquete</span><strong>${money(group.totalAdicionalesPaquetes)}</strong></div>
+                <div><span>Descuento general</span><strong>${money(group.descuentoGeneral || 0)}</strong></div>
                 <div><span>Recaudo descontado</span><strong>${money(group.totalRecaudado)}</strong></div>
                 <div><span>Abono</span><strong>${money(group.abono)}</strong></div>
                 <div><span>Estado</span><strong>${group.estado === 'pagado' ? 'Pagado' : 'Pendiente'}</strong></div>
@@ -1476,13 +1498,14 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedMensajeroGroupKey = groupKey;
         state.activeMensajeroModalView = 'abono';
         title.textContent = `Registrar abono - ${group.mensajeroNombre}`;
-        subtitle.textContent = `Fecha ${group.fechaLabel} | Pago ${money(group.totalPago)} | Adicionales ${money(group.totalAdicionales)} | Recaudo descontado ${money(group.totalRecaudado)} | Abonado ${money(group.abono)} | Total pendiente ${moneyAbs(group.totalAcumulado)}`;
+        subtitle.textContent = `Fecha ${group.fechaLabel} | Pago ${money(group.totalPago)} | Adicionales por paquete ${money(group.totalAdicionalesPaquetes)} | Descuento general ${money(group.descuentoGeneral || 0)} | Recaudo descontado ${money(group.totalRecaudado)} | Abonado ${money(group.abono)} | Total pendiente ${moneyAbs(group.totalAcumulado)}`;
 
         body.innerHTML = `
             <div class="detail-summary-strip">
                 <div><span>Entregas</span><strong>${group.entregas}</strong></div>
                 <div><span>Total pago</span><strong>${money(group.totalPago)}</strong></div>
-                <div><span>Adicionales</span><strong>${money(group.totalAdicionales)}</strong></div>
+                <div><span>Adicionales por paquete</span><strong>${money(group.totalAdicionalesPaquetes)}</strong></div>
+                <div><span>Descuento general</span><strong>${money(group.descuentoGeneral || 0)}</strong></div>
                 <div><span>Recaudo descontado</span><strong>${money(group.totalRecaudado)}</strong></div>
                 <div><span>Abonado</span><strong>${money(group.abono)}</strong></div>
                 <div><span>Saldo del dia</span><strong>${moneyAbs(group.saldo)}</strong></div>
@@ -1539,14 +1562,14 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedMensajeroGroupKey = groupKey;
         state.activeMensajeroModalView = 'additional';
         title.textContent = `Adicionales - ${group.mensajeroNombre}`;
-        subtitle.textContent = `Fecha ${group.fechaLabel} | Adicional general ${money(monto)} | Total adicionales ${money(group.totalAdicionales)} | Total pago ${money(group.totalPago)}`;
+        subtitle.textContent = `Fecha ${group.fechaLabel} | Descuento general ${money(monto)} | Adicionales por paquete ${money(group.totalAdicionalesPaquetes)} | Total pago ${money(group.totalPago)}`;
 
         body.innerHTML = `
             <div class="detail-summary-strip">
                 <div><span>Entregas</span><strong>${group.entregas}</strong></div>
-                <div><span>Adicional general</span><strong>${money(monto)}</strong></div>
+                <div><span>Descuento general</span><strong>${money(monto)}</strong></div>
                 <div><span>Adicionales por paquete</span><strong>${money(Number(group.totalAdicionalesPaquetes || 0))}</strong></div>
-                <div><span>Total adicionales</span><strong>${money(group.totalAdicionales)}</strong></div>
+                <div><span>Total descuentos</span><strong>${money(group.descuentoGeneral || 0)}</strong></div>
                 <div><span>Total pago</span><strong>${money(group.totalPago)}</strong></div>
             </div>
             <form id="mensajeroAdicionalGrupoForm" class="facturacion-abono-form">
@@ -1554,12 +1577,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="hidden" name="fecha_grupo" value="${escapeHtml(group.dateKey)}">
                 <div class="facturacion-abono-grid">
                     <label class="facturacion-field">
-                        <span>Valor adicional general</span>
+                        <span>Valor a descontar</span>
                         <input type="hidden" name="monto" value="${monto > 0 ? monto : ''}">
                         <input type="text" name="monto_display" inputmode="numeric" autocomplete="off" placeholder="$ 3.000" value="${monto > 0 ? money(monto) : ''}">
                     </label>
                     <label class="facturacion-field facturacion-field-full">
-                        <span>Observacion</span>
+                        <span>Motivo del descuento</span>
                         <textarea name="descripcion" rows="3" placeholder="Ej: jugo, parqueadero, espera adicional">${escapeHtml(adicional.descripcion || '')}</textarea>
                     </label>
                 </div>
@@ -1567,7 +1590,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button type="submit" class="fact-btn primary" data-role="submit-messenger-group-additional">Guardar adicional</button>
                     <button type="button" class="fact-btn tertiary" data-role="open-messenger-detail" data-group-key="${escapeHtml(group.key)}">Ver entregas</button>
                 </div>
-                <div class="facturacion-footnote">Para quitar el adicional general, deja el valor en cero o vacio y guarda. Los adicionales por paquete se editan desde cada entrega.</div>
+                <div class="facturacion-footnote">Este valor se descuenta del pago del mensajero. Para quitarlo, deja el valor en cero o vacio y guarda. Los adicionales por paquete se suman desde cada entrega.</div>
             </form>
         `;
 

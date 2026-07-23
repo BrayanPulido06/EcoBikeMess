@@ -368,6 +368,14 @@ body.sidebar-collapsed .facturacion-shell,
     color: var(--fact-text);
 }
 
+.additional-cell .additional-positive {
+    color: var(--fact-primary);
+}
+
+.additional-cell .additional-negative {
+    color: #d63d4a;
+}
+
 .additional-cell span {
     color: var(--fact-muted);
     font-size: 0.78rem;
