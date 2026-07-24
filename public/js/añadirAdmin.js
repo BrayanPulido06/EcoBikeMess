@@ -7,6 +7,7 @@ let solicitudesPendientes = [];
 let currentUser = window.serverUser || { rol: 'guest' }; // Obtener usuario de la vista
 let adminEnEdicion = null;
 let userToReset = null;
+let clienteDetalleActivoId = null;
 
 // Permisos por rol
 const PERMISOS_POR_ROL = {
@@ -885,6 +886,9 @@ function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
     modal.classList.remove('active');
+    if (modalId === 'modalCliente') {
+        clienteDetalleActivoId = null;
+    }
 
     const hayOtroModalAbierto = document.querySelector('.modal.active');
     document.body.style.overflow = hayOtroModalAbierto ? 'hidden' : '';
@@ -1131,20 +1135,16 @@ function verDetallesMensajero(id) {
     openModal('modalMensajero');
 }
 
-async function verDetallesCliente(id) {
+function verDetallesCliente(id) {
     let cliente = clientes.find(c => Number(c.id) === Number(id));
     if (!cliente) return;
 
-    try {
-        const response = await fetch(`${getAdminControllerUrl()}?action=detalle_cliente&id=${encodeURIComponent(id)}`);
-        const result = await response.json();
-        if (result.success && result.data) {
-            cliente = { ...cliente, ...result.data };
-        }
-    } catch (error) {
-        console.warn('No se pudo cargar detalle completo del cliente:', error);
-    }
+    clienteDetalleActivoId = Number(id);
+    pintarDetallesCliente(cliente);
+    cargarDetalleClienteActualizado(id);
+}
 
+function pintarDetallesCliente(cliente) {
     const html = `
         <div class="mensajero-detail-section">
             <h3>Informacion del cliente</h3>
@@ -1229,6 +1229,32 @@ async function verDetallesCliente(id) {
 
     document.getElementById('detallesCliente').innerHTML = html;
     openModal('modalCliente');
+}
+
+async function cargarDetalleClienteActualizado(id) {
+    try {
+        const response = await fetch(`${getAdminControllerUrl()}?action=detalle_cliente&id=${encodeURIComponent(id)}`);
+        const result = await response.json();
+        const modal = document.getElementById('modalCliente');
+        if (!result.success || !result.data || Number(clienteDetalleActivoId) !== Number(id) || !modal?.classList.contains('active')) {
+            return;
+        }
+
+        const index = clientes.findIndex(c => Number(c.id) === Number(id));
+        const actualizado = {
+            ...(index >= 0 ? clientes[index] : {}),
+            ...result.data,
+            nombreContacto: `${result.data.nombres || ''} ${result.data.apellidos || ''}`.trim() || result.data.nombreContacto
+        };
+
+        if (index >= 0) {
+            clientes[index] = actualizado;
+        }
+
+        pintarDetallesCliente(actualizado);
+    } catch (error) {
+        console.warn('No se pudo cargar detalle completo del cliente:', error);
+    }
 }
 
 function getAdminControllerUrl() {
