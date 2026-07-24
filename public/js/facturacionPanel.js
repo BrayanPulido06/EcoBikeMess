@@ -187,6 +187,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const adicionalCell = (monto, descripcion) => adicionalesCell(monto, descripcion, 0, '');
 
+    const renderClienteBankInfo = (group) => {
+        const accounts = [
+            ['Cuenta principal', group.cuentaBancariaPrincipal],
+            ['Cuenta adicional 1', group.cuentaBancariaOpcional1],
+            ['Cuenta adicional 2', group.cuentaBancariaOpcional2],
+            ['Cuenta adicional 3', group.cuentaBancariaOpcional3]
+        ].filter(([, value]) => String(value || '').trim() !== '');
+
+        if (!accounts.length) {
+            return `
+                <div class="bank-info-box">
+                    <h3>Datos bancarios</h3>
+                    <div class="empty-state">Este cliente aun no tiene cuentas bancarias registradas.</div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="bank-info-box">
+                <h3>Datos bancarios</h3>
+                <div class="bank-info-grid">
+                    ${accounts.map(([label, value]) => `
+                        <div class="package-data">
+                            <span class="package-label">${escapeHtml(label)}</span>
+                            <strong>${escapeHtml(value)}</strong>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    };
+
     const messengerAdditionalCell = (group) => {
         const packageAmount = Number(group.totalAdicionalesPaquetes || 0);
         const positiveGeneral = Number(group.adicionalGeneralPositivo || 0);
@@ -450,6 +482,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     fechaLabel: shortDate(baseDate),
                     clienteNombre: displayName,
                     clienteId: Number(item.cliente_id || 0),
+                    cuentaBancariaPrincipal: item.cuenta_bancaria_principal || '',
+                    cuentaBancariaOpcional1: item.cuenta_bancaria_opcional_1 || '',
+                    cuentaBancariaOpcional2: item.cuenta_bancaria_opcional_2 || '',
+                    cuentaBancariaOpcional3: item.cuenta_bancaria_opcional_3 || '',
                     paquetesEntregados: 0,
                     totalServicio: 0,
                     subtotalServicio: 0,
@@ -1245,7 +1281,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const saveClientAbono = async (form) => {
         const formData = new FormData();
-        formData.append('action', 'registrar_abono_cliente');
+        const abonoId = Number(form.abono_id?.value || 0);
+        formData.append('action', abonoId > 0 ? 'actualizar_abono_cliente' : 'registrar_abono_cliente');
+        if (abonoId > 0) {
+            formData.append('abono_id', String(abonoId));
+        }
         formData.append('cliente_id', form.cliente_id.value);
         formData.append('fecha_grupo', form.fecha_grupo.value);
         formData.append('monto', form.monto.value);
@@ -1300,7 +1340,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const saveMessengerAbono = async (form) => {
         const formData = new FormData();
-        formData.append('action', 'registrar_abono_mensajero');
+        const abonoId = Number(form.abono_id?.value || 0);
+        formData.append('action', abonoId > 0 ? 'actualizar_abono_mensajero' : 'registrar_abono_mensajero');
+        if (abonoId > 0) {
+            formData.append('abono_id', String(abonoId));
+        }
         formData.append('mensajero_id', form.mensajero_id.value);
         formData.append('fecha_grupo', form.fecha_grupo.value);
         formData.append('monto', form.monto.value);
@@ -1535,10 +1579,26 @@ document.addEventListener('DOMContentLoaded', () => {
             return '<div class="empty-state">Aun no hay abonos registrados para este dia.</div>';
         }
 
+        const abonoKind = group.clienteId ? 'cliente' : 'mensajero';
         return `
             <div class="package-list">
                 ${group.abonos.map((abono) => `
                     <article class="package-card">
+                        <div class="package-card-head">
+                            <div>
+                                <h3>${money(abono.monto)}</h3>
+                                <p>${escapeHtml(abono.metodo_pago)}</p>
+                            </div>
+                            <button
+                                type="button"
+                                class="fact-btn secondary"
+                                data-role="edit-abono"
+                                data-abono-kind="${abonoKind}"
+                                data-abono-id="${abono.id}"
+                            >
+                                Editar
+                            </button>
+                        </div>
                         <div class="package-card-grid">
                             <div class="package-data">
                                 <span class="package-label">Monto</span>
@@ -1565,6 +1625,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 `).join('')}
             </div>
         `;
+    };
+
+    const loadAbonoIntoForm = (kind, abonoId) => {
+        const group = kind === 'cliente'
+            ? getClienteGroupByKey(state.selectedClienteGroupKey)
+            : getMensajeroGroupByKey(state.selectedMensajeroGroupKey);
+        const form = document.getElementById(kind === 'cliente' ? 'clienteAbonoForm' : 'mensajeroAbonoForm');
+        const abono = group?.abonos.find((item) => Number(item.id) === Number(abonoId));
+
+        if (!group || !form || !abono) {
+            return;
+        }
+
+        form.abono_id.value = String(abono.id);
+        form.monto.value = String(Math.round(Number(abono.monto || 0)));
+        form.monto_display.value = money(abono.monto);
+        form.metodo_pago.value = abono.metodo_pago || 'efectivo';
+        form.observaciones.value = abono.observaciones || '';
+
+        const submitButton = form.querySelector(kind === 'cliente'
+            ? '[data-role="submit-client-abono"]'
+            : '[data-role="submit-messenger-abono"]');
+        if (submitButton) {
+            submitButton.textContent = 'Actualizar abono';
+        }
+
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     const renderMessengerPackageCard = (item) => {
@@ -1723,6 +1810,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><span>Total acumulado</span><strong>${moneyAbs(group.totalAcumulado)}</strong></div>
             </div>
             <form id="mensajeroAbonoForm" class="facturacion-abono-form">
+                <input type="hidden" name="abono_id" value="">
                 <input type="hidden" name="mensajero_id" value="${group.mensajeroId}">
                 <input type="hidden" name="fecha_grupo" value="${escapeHtml(group.dateKey)}">
                 <div class="facturacion-abono-grid">
@@ -1860,6 +1948,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>
                 </div>
             ` : ''}
+            ${renderClienteBankInfo(group)}
             <div class="package-list">
                 ${group.packages.map(renderPackageCard).join('')}
             </div>
@@ -1895,7 +1984,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><span>Saldo del dia</span><strong>${moneyAbs(group.saldo)}</strong></div>
                 <div><span>Total acumulado</span><strong>${moneyAbs(group.totalAcumulado)}</strong></div>
             </div>
+            ${renderClienteBankInfo(group)}
             <form id="clienteAbonoForm" class="facturacion-abono-form">
+                <input type="hidden" name="abono_id" value="">
                 <input type="hidden" name="cliente_id" value="${group.clienteId}">
                 <input type="hidden" name="fecha_grupo" value="${escapeHtml(group.dateKey)}">
                 <div class="facturacion-abono-grid">
@@ -2344,6 +2435,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const abonoButton = event.target.closest('[data-role="open-client-abono"]');
             if (abonoButton) {
                 openClientAbonoModal(abonoButton.dataset.groupKey);
+                return;
+            }
+
+            const editAbonoButton = event.target.closest('[data-role="edit-abono"]');
+            if (editAbonoButton) {
+                loadAbonoIntoForm(editAbonoButton.dataset.abonoKind, editAbonoButton.dataset.abonoId);
                 return;
             }
 

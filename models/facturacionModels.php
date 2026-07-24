@@ -17,6 +17,7 @@ class FacturacionModels
         $this->ensureAbonosMensajeroTable();
         $this->ensureAdicionalesMensajeroTable();
         $this->ensureMessengerGroupStatusTable();
+        $this->ensureClienteBankColumns();
         $this->ensurePerformanceIndexes();
         $this->syncFacturacionRows();
     }
@@ -66,6 +67,14 @@ class FacturacionModels
         if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
             $this->conn->exec($alterSql);
         }
+    }
+
+    private function ensureClienteBankColumns(): void
+    {
+        $this->ensureColumn('clientes', 'cuenta_bancaria_principal', "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_principal TEXT NULL AFTER direccion_principal");
+        $this->ensureColumn('clientes', 'cuenta_bancaria_opcional_1', "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_1 TEXT NULL AFTER cuenta_bancaria_principal");
+        $this->ensureColumn('clientes', 'cuenta_bancaria_opcional_2', "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_2 TEXT NULL AFTER cuenta_bancaria_opcional_1");
+        $this->ensureColumn('clientes', 'cuenta_bancaria_opcional_3', "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_3 TEXT NULL AFTER cuenta_bancaria_opcional_2");
     }
 
     private function syncFacturacionRows(): void
@@ -393,6 +402,58 @@ class FacturacionModels
             ':metodo_pago' => $metodoPago,
             ':observaciones' => $observaciones,
             ':registrado_por' => $registradoPor,
+        ]);
+    }
+
+    public function actualizarAbonoCliente(
+        int $abonoId,
+        int $clienteId,
+        string $fechaGrupo,
+        float $monto,
+        string $metodoPago,
+        ?string $observaciones
+    ): bool {
+        $sql = "UPDATE facturacion_abonos_cliente
+                SET monto = :monto,
+                    metodo_pago = :metodo_pago,
+                    observaciones = :observaciones
+                WHERE id = :id
+                  AND cliente_id = :cliente_id
+                  AND fecha_grupo = :fecha_grupo";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':id' => $abonoId,
+            ':cliente_id' => $clienteId,
+            ':fecha_grupo' => $fechaGrupo,
+            ':monto' => $monto,
+            ':metodo_pago' => $metodoPago,
+            ':observaciones' => $observaciones,
+        ]);
+    }
+
+    public function actualizarAbonoMensajero(
+        int $abonoId,
+        int $mensajeroId,
+        string $fechaGrupo,
+        float $monto,
+        string $metodoPago,
+        ?string $observaciones
+    ): bool {
+        $sql = "UPDATE facturacion_abonos_mensajero
+                SET monto = :monto,
+                    metodo_pago = :metodo_pago,
+                    observaciones = :observaciones
+                WHERE id = :id
+                  AND mensajero_id = :mensajero_id
+                  AND fecha_grupo = :fecha_grupo";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':id' => $abonoId,
+            ':mensajero_id' => $mensajeroId,
+            ':fecha_grupo' => $fechaGrupo,
+            ':monto' => $monto,
+            ':metodo_pago' => $metodoPago,
+            ':observaciones' => $observaciones,
         ]);
     }
 
@@ -890,6 +951,10 @@ class FacturacionModels
                     COALESCE(f.observaciones_admin, '') AS observaciones_admin,
                     c.id AS cliente_id,
                     c.nombre_emprendimiento AS cliente_nombre,
+                    c.cuenta_bancaria_principal,
+                    c.cuenta_bancaria_opcional_1,
+                    c.cuenta_bancaria_opcional_2,
+                    c.cuenta_bancaria_opcional_3,
                     CONCAT(COALESCE(uc.nombres, ''), ' ', COALESCE(uc.apellidos, '')) AS cliente_contacto
                 FROM paquetes p
                 INNER JOIN clientes c ON c.id = p.cliente_id
@@ -1056,6 +1121,10 @@ class FacturacionModels
                 'cliente_id' => (int) $row['cliente_id'],
                 'cliente_nombre' => trim((string) $row['cliente_nombre']),
                 'cliente_contacto' => trim((string) $row['cliente_contacto']),
+                'cuenta_bancaria_principal' => trim((string) ($row['cuenta_bancaria_principal'] ?? '')),
+                'cuenta_bancaria_opcional_1' => trim((string) ($row['cuenta_bancaria_opcional_1'] ?? '')),
+                'cuenta_bancaria_opcional_2' => trim((string) ($row['cuenta_bancaria_opcional_2'] ?? '')),
+                'cuenta_bancaria_opcional_3' => trim((string) ($row['cuenta_bancaria_opcional_3'] ?? '')),
                 'destinatario_nombre' => $row['destinatario_nombre'],
                 'direccion_destino' => $row['direccion_destino'],
                 'instrucciones_entrega' => $row['instrucciones_entrega'],

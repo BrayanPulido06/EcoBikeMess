@@ -12,6 +12,26 @@ $user_id = $_SESSION['user_id'];
 $rol = $_SESSION['user_role'] ?? 'usuario'; // Obtener el rol
 $conn = conexionDB();
 
+function asegurarColumnasBancariasCliente(PDO $conn): void
+{
+    $columns = [
+        'cuenta_bancaria_principal' => "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_principal TEXT NULL AFTER direccion_principal",
+        'cuenta_bancaria_opcional_1' => "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_1 TEXT NULL AFTER cuenta_bancaria_principal",
+        'cuenta_bancaria_opcional_2' => "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_2 TEXT NULL AFTER cuenta_bancaria_opcional_1",
+        'cuenta_bancaria_opcional_3' => "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_3 TEXT NULL AFTER cuenta_bancaria_opcional_2",
+    ];
+
+    foreach ($columns as $column => $alterSql) {
+        $stmtColumn = $conn->prepare("SHOW COLUMNS FROM clientes LIKE :column_name");
+        $stmtColumn->execute([':column_name' => $column]);
+        if (!$stmtColumn->fetch(PDO::FETCH_ASSOC)) {
+            $conn->exec($alterSql);
+        }
+    }
+}
+
+asegurarColumnasBancariasCliente($conn);
+
 // 1. Obtener datos básicos del usuario (Común para todos)
 $sql = "SELECT * FROM usuarios WHERE id = :id";
 $stmt = $conn->prepare($sql);
@@ -162,6 +182,27 @@ if ($rol === 'cliente') {
                         <div class="form-group">
                             <label>Dirección Principal</label>
                             <input type="text" name="direccion_principal" value="<?php echo htmlspecialchars($datos_extra['direccion_principal'] ?? ''); ?>" <?php echo $readonly; ?>>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <h3 class="form-section-title">Datos bancarios</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Cuenta principal / Nequi / llave bancaria *</label>
+                            <input type="text" name="cuenta_bancaria_principal" value="<?php echo htmlspecialchars($datos_extra['cuenta_bancaria_principal'] ?? ''); ?>" placeholder="Ej: Nequi 3001234567 o llave principal" <?php echo $readonly; ?> <?php echo $rol === 'cliente' ? 'required' : ''; ?>>
+                        </div>
+                        <div class="form-group">
+                            <label>Cuenta adicional 1</label>
+                            <input type="text" name="cuenta_bancaria_opcional_1" value="<?php echo htmlspecialchars($datos_extra['cuenta_bancaria_opcional_1'] ?? ''); ?>" placeholder="Opcional" <?php echo $readonly; ?>>
+                        </div>
+                        <div class="form-group">
+                            <label>Cuenta adicional 2</label>
+                            <input type="text" name="cuenta_bancaria_opcional_2" value="<?php echo htmlspecialchars($datos_extra['cuenta_bancaria_opcional_2'] ?? ''); ?>" placeholder="Opcional" <?php echo $readonly; ?>>
+                        </div>
+                        <div class="form-group">
+                            <label>Cuenta adicional 3</label>
+                            <input type="text" name="cuenta_bancaria_opcional_3" value="<?php echo htmlspecialchars($datos_extra['cuenta_bancaria_opcional_3'] ?? ''); ?>" placeholder="Opcional" <?php echo $readonly; ?>>
                         </div>
                     </div>
                 </div>

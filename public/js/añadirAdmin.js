@@ -1161,8 +1161,18 @@ async function verDetallesCliente(id) {
             </div>
         </div>
 
+        <div class="mensajero-detail-section">
+            <h3>Datos bancarios</h3>
+            <div class="detail-grid">
+                ${renderDetailItem('Cuenta principal', displayValue(cliente.cuentaBancariaPrincipal))}
+                ${renderDetailItem('Cuenta adicional 1', displayValue(cliente.cuentaBancariaOpcional1))}
+                ${renderDetailItem('Cuenta adicional 2', displayValue(cliente.cuentaBancariaOpcional2))}
+                ${renderDetailItem('Cuenta adicional 3', displayValue(cliente.cuentaBancariaOpcional3))}
+            </div>
+        </div>
+
         <form class="mensajero-detail-section" id="formClientePersonal" data-cliente-id="${cliente.id}">
-            <h3>Corregir datos personales</h3>
+            <h3>Corregir datos personales y bancarios</h3>
             <div class="detail-grid">
                 <div class="detail-item">
                     <div class="detail-label">Nombres</div>
@@ -1175,6 +1185,22 @@ async function verDetallesCliente(id) {
                 <div class="detail-item">
                     <div class="detail-label">Telefono</div>
                     <input class="form-control" type="tel" name="telefono" value="${escapeHtml(cliente.telefono || '')}" autocomplete="tel" required>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Cuenta principal / Nequi / llave bancaria *</div>
+                    <input class="form-control" type="text" name="cuenta_bancaria_principal" value="${escapeHtml(cliente.cuentaBancariaPrincipal || '')}" required>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Cuenta adicional 1</div>
+                    <input class="form-control" type="text" name="cuenta_bancaria_opcional_1" value="${escapeHtml(cliente.cuentaBancariaOpcional1 || '')}">
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Cuenta adicional 2</div>
+                    <input class="form-control" type="text" name="cuenta_bancaria_opcional_2" value="${escapeHtml(cliente.cuentaBancariaOpcional2 || '')}">
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Cuenta adicional 3</div>
+                    <input class="form-control" type="text" name="cuenta_bancaria_opcional_3" value="${escapeHtml(cliente.cuentaBancariaOpcional3 || '')}">
                 </div>
             </div>
             <div class="form-actions" style="justify-content: flex-start; margin-top: 15px;">
@@ -1220,6 +1246,10 @@ async function manejarGuardarClientePersonal(event) {
     const nombres = form.elements.nombres?.value || '';
     const apellidos = form.elements.apellidos?.value || '';
     const telefono = form.elements.telefono?.value || '';
+    const cuentaPrincipal = form.elements.cuenta_bancaria_principal?.value || '';
+    const cuentaOpcional1 = form.elements.cuenta_bancaria_opcional_1?.value || '';
+    const cuentaOpcional2 = form.elements.cuenta_bancaria_opcional_2?.value || '';
+    const cuentaOpcional3 = form.elements.cuenta_bancaria_opcional_3?.value || '';
 
     if (!validatePersonName(nombres)) {
         showNotification('Ingresa nombres reales, no un numero de documento', 'warning');
@@ -1228,6 +1258,11 @@ async function manejarGuardarClientePersonal(event) {
 
     if (!validatePersonName(apellidos)) {
         showNotification('Ingresa apellidos reales, no un numero de documento', 'warning');
+        return;
+    }
+
+    if (!cuentaPrincipal.trim()) {
+        showNotification('La cuenta bancaria principal es obligatoria', 'warning');
         return;
     }
 
@@ -1244,6 +1279,10 @@ async function manejarGuardarClientePersonal(event) {
         formData.append('nombres', nombres);
         formData.append('apellidos', apellidos);
         formData.append('telefono', telefono);
+        formData.append('cuenta_bancaria_principal', cuentaPrincipal);
+        formData.append('cuenta_bancaria_opcional_1', cuentaOpcional1);
+        formData.append('cuenta_bancaria_opcional_2', cuentaOpcional2);
+        formData.append('cuenta_bancaria_opcional_3', cuentaOpcional3);
 
         const response = await fetch(getAdminControllerUrl(), {
             method: 'POST',

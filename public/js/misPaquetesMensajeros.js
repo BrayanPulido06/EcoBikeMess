@@ -22,6 +22,7 @@ let contextoFotoModal = null;
 let resolverDecisionActual = null;
 let entregaManualActiva = false;
 let guiaEntregaManual = '';
+let filtroTextoPaquetes = '';
 
 // ============================================
 // FUNCIONES DE FEEDBACK TÁCTIL
@@ -245,6 +246,14 @@ function normalizarGuia(valor) {
     return raw.startsWith('QR-') ? raw.substring(3) : raw;
 }
 
+function normalizarBusqueda(valor) {
+    return String(valor || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase();
+}
+
 function aplicarDeepLinkDesdeURL() {
     if (deepLinkProcesado) return;
     const params = new URLSearchParams(window.location.search);
@@ -307,13 +316,22 @@ function mostrarPaquetes(filtro = 'todos') {
         }
     }
 
+    const busqueda = normalizarBusqueda(filtroTextoPaquetes);
+    if (busqueda) {
+        paquetesFiltrados = paquetesFiltrados.filter((paquete) => {
+            const guia = normalizarBusqueda(paquete.guia);
+            const destinatario = normalizarBusqueda(paquete.nombreDestinatario);
+            return guia.includes(busqueda) || destinatario.includes(busqueda);
+        });
+    }
+
     paquetesFiltrados.sort((a, b) => Number(b.qrEscaneado) - Number(a.qrEscaneado));
     
     if (paquetesFiltrados.length === 0) {
         contenedor.innerHTML = `
             <div style="text-align: center; padding: 3rem; color: #64748b;">
                 <p style="font-size: 3rem; margin-bottom: 1rem;">📭</p>
-                <p style="font-size: 1.2rem; font-weight: 500;">No hay paquetes ${filtro === 'todos' ? '' : 'con estado: ' + filtro}</p>
+                <p style="font-size: 1.2rem; font-weight: 500;">${busqueda ? 'No hay paquetes con esa busqueda' : `No hay paquetes ${filtro === 'todos' ? '' : 'con estado: ' + filtro}`}</p>
             </div>
         `;
         return;
@@ -1377,6 +1395,15 @@ function configurarEventListeners() {
     });
     
     // Navegación
+    const buscarPaqueteInput = document.getElementById('buscarPaqueteInput');
+    if (buscarPaqueteInput) {
+        buscarPaqueteInput.addEventListener('input', function() {
+            filtroTextoPaquetes = this.value || '';
+            const filtroActivo = document.querySelector('.filtro-btn.activo')?.dataset?.filtro || 'todos';
+            mostrarPaquetes(filtroActivo);
+        });
+    }
+
     document.getElementById('btnVolverDetalle')?.addEventListener('click', function() {
         feedbackClick();
         volverALista();

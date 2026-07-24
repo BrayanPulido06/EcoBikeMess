@@ -597,6 +597,26 @@ body.sidebar-collapsed .facturacion-shell,
     grid-column: 1 / -1;
 }
 
+.bank-info-box {
+    margin: 1rem 0;
+    padding: 1rem;
+    border: 1px solid var(--fact-border);
+    border-radius: 12px;
+    background: #f9fcfa;
+}
+
+.bank-info-box h3 {
+    margin: 0 0 0.85rem;
+    font-size: 1rem;
+    color: var(--fact-text);
+}
+
+.bank-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.85rem;
+}
+
 .package-label {
     display: block;
     color: var(--fact-muted);

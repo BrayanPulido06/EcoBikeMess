@@ -6,6 +6,22 @@ class AñadirAdminModel {
 
     public function __construct() {
         $this->conn = conexionDB();
+        $this->ensureClienteBankColumns();
+    }
+
+    private function ensureColumn(string $table, string $column, string $alterSql): void {
+        $stmt = $this->conn->prepare("SHOW COLUMNS FROM {$table} LIKE :column_name");
+        $stmt->execute([':column_name' => $column]);
+        if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+            $this->conn->exec($alterSql);
+        }
+    }
+
+    private function ensureClienteBankColumns(): void {
+        $this->ensureColumn('clientes', 'cuenta_bancaria_principal', "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_principal TEXT NULL AFTER direccion_principal");
+        $this->ensureColumn('clientes', 'cuenta_bancaria_opcional_1', "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_1 TEXT NULL AFTER cuenta_bancaria_principal");
+        $this->ensureColumn('clientes', 'cuenta_bancaria_opcional_2', "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_2 TEXT NULL AFTER cuenta_bancaria_opcional_1");
+        $this->ensureColumn('clientes', 'cuenta_bancaria_opcional_3', "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_3 TEXT NULL AFTER cuenta_bancaria_opcional_2");
     }
 
     // --- ADMINISTRADORES ---
@@ -168,6 +184,10 @@ class AñadirAdminModel {
                        u.nombres, u.apellidos,
                        u.telefono, u.correo as email, c.direccion_principal as direccion,
                        c.tipo_producto as tipoProducto, c.instagram,
+                       c.cuenta_bancaria_principal as cuentaBancariaPrincipal,
+                       c.cuenta_bancaria_opcional_1 as cuentaBancariaOpcional1,
+                       c.cuenta_bancaria_opcional_2 as cuentaBancariaOpcional2,
+                       c.cuenta_bancaria_opcional_3 as cuentaBancariaOpcional3,
                        c.saldo_pendiente as saldoPendiente,
                        c.limite_credito as limiteCredito,
                        u.estado, c.fecha_registro as fechaRegistro
@@ -188,6 +208,10 @@ class AñadirAdminModel {
                        c.direccion_principal as direccion,
                        c.tipo_producto as tipoProducto,
                        c.instagram,
+                       c.cuenta_bancaria_principal as cuentaBancariaPrincipal,
+                       c.cuenta_bancaria_opcional_1 as cuentaBancariaOpcional1,
+                       c.cuenta_bancaria_opcional_2 as cuentaBancariaOpcional2,
+                       c.cuenta_bancaria_opcional_3 as cuentaBancariaOpcional3,
                        c.saldo_pendiente as saldoPendiente,
                        c.limite_credito as limiteCredito,
                        u.estado,
@@ -206,13 +230,21 @@ class AñadirAdminModel {
                 INNER JOIN clientes c ON c.usuario_id = u.id
                 SET u.nombres = :nombres,
                     u.apellidos = :apellidos,
-                    u.telefono = :telefono
+                    u.telefono = :telefono,
+                    c.cuenta_bancaria_principal = :cuenta_principal,
+                    c.cuenta_bancaria_opcional_1 = :cuenta_opcional_1,
+                    c.cuenta_bancaria_opcional_2 = :cuenta_opcional_2,
+                    c.cuenta_bancaria_opcional_3 = :cuenta_opcional_3
                 WHERE c.id = :cliente_id";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
             ':nombres' => $datos['nombres'],
             ':apellidos' => $datos['apellidos'],
             ':telefono' => $datos['telefono'],
+            ':cuenta_principal' => $datos['cuenta_bancaria_principal'],
+            ':cuenta_opcional_1' => $datos['cuenta_bancaria_opcional_1'],
+            ':cuenta_opcional_2' => $datos['cuenta_bancaria_opcional_2'],
+            ':cuenta_opcional_3' => $datos['cuenta_bancaria_opcional_3'],
             ':cliente_id' => $clienteId
         ]);
     }

@@ -643,6 +643,47 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function nombreMensajeroPorId(id) {
+        const mensajero = todosLosMensajeros.find(item => String(item.id) === String(id));
+        return mensajero ? mensajero.nombre : '';
+    }
+
+    function renderMensajeroSearchSelect({ inputId, hiddenId, optionsId, fieldName, selectedId }) {
+        const selectedName = nombreMensajeroPorId(selectedId);
+        return `
+            <div class="search-select">
+                <input
+                    type="text"
+                    id="${inputId}"
+                    class="form-control"
+                    placeholder="Buscar mensajero..."
+                    autocomplete="off"
+                    value="${escaparAtributoHtml(selectedName)}"
+                >
+                <input type="hidden" id="${hiddenId}" name="${fieldName}" value="${selectedId ? escaparAtributoHtml(selectedId) : ''}">
+                <div id="${optionsId}" class="search-select-options"></div>
+            </div>
+        `;
+    }
+
+    function configurarBuscadoresMensajeroDetalle() {
+        configurarBuscadorFormulario({
+            input: document.getElementById('detalleMensajeroRecoleccionInput'),
+            hidden: document.getElementById('detalleMensajeroRecoleccionId'),
+            optionsContainer: document.getElementById('detalleMensajeroRecoleccionOpciones'),
+            getItems: () => todosLosMensajeros,
+            emptyLabel: 'Sin asignar'
+        });
+
+        configurarBuscadorFormulario({
+            input: document.getElementById('detalleMensajeroEntregaInput'),
+            hidden: document.getElementById('detalleMensajeroEntregaId'),
+            optionsContainer: document.getElementById('detalleMensajeroEntregaOpciones'),
+            getItems: () => todosLosMensajeros,
+            emptyLabel: 'Sin asignar'
+        });
+    }
+
     function getPaquetesParaExportar() {
         const selectedCheckboxes = document.querySelectorAll('.paquete-checkbox:checked');
         let dataToExport = [];
@@ -1295,15 +1336,23 @@ function verDetalle(id, options = {}) {
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Mensajero Recolección</div>
-                                    <select class="form-control" name="mensajero_recoleccion_id">
-                                        ${renderMensajeroOptions(info.mensajero_recoleccion_id)}
-                                    </select>
+                                    ${renderMensajeroSearchSelect({
+                                        inputId: 'detalleMensajeroRecoleccionInput',
+                                        hiddenId: 'detalleMensajeroRecoleccionId',
+                                        optionsId: 'detalleMensajeroRecoleccionOpciones',
+                                        fieldName: 'mensajero_recoleccion_id',
+                                        selectedId: info.mensajero_recoleccion_id
+                                    })}
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Mensajero Entrega</div>
-                                    <select class="form-control" name="mensajero_id">
-                                        ${renderMensajeroOptions(info.mensajero_id)}
-                                    </select>
+                                    ${renderMensajeroSearchSelect({
+                                        inputId: 'detalleMensajeroEntregaInput',
+                                        hiddenId: 'detalleMensajeroEntregaId',
+                                        optionsId: 'detalleMensajeroEntregaOpciones',
+                                        fieldName: 'mensajero_id',
+                                        selectedId: info.mensajero_id
+                                    })}
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Tipo de Paquete</div>
@@ -1464,6 +1513,7 @@ function verDetalle(id, options = {}) {
                 }
                 html += '</div></div>';
                 container.innerHTML = html;
+                configurarBuscadoresMensajeroDetalle();
 
                 const form = document.getElementById('formEditarDetalles');
                 if (form) {

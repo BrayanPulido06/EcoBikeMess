@@ -145,6 +145,88 @@ try {
         exit;
     }
 
+    if ($method === 'POST' && $action === 'actualizar_abono_cliente') {
+        $abonoId = (int) ($_POST['abono_id'] ?? 0);
+        $clienteId = (int) ($_POST['cliente_id'] ?? 0);
+        $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+        $monto = parseMoneyInput($_POST['monto'] ?? 0);
+        $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
+        $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
+
+        if ($abonoId <= 0 || $clienteId <= 0) {
+            throw new InvalidArgumentException('Abono o cliente invalido.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+            throw new InvalidArgumentException('La fecha del abono no es valida.');
+        }
+
+        if ($monto <= 0) {
+            throw new InvalidArgumentException('El abono debe ser mayor a cero.');
+        }
+
+        if (!in_array($metodoPago, ['efectivo', 'transferencia'], true)) {
+            throw new InvalidArgumentException('Metodo de pago invalido.');
+        }
+
+        $model->actualizarAbonoCliente(
+            $abonoId,
+            $clienteId,
+            $fechaGrupo,
+            $monto,
+            $metodoPago,
+            $observaciones !== '' ? $observaciones : null
+        );
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Abono actualizado correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
+    if ($method === 'POST' && $action === 'actualizar_abono_mensajero') {
+        $abonoId = (int) ($_POST['abono_id'] ?? 0);
+        $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
+        $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+        $monto = parseMoneyInput($_POST['monto'] ?? 0);
+        $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
+        $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
+
+        if ($abonoId <= 0 || $mensajeroId <= 0) {
+            throw new InvalidArgumentException('Abono o mensajero invalido.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+            throw new InvalidArgumentException('La fecha del abono no es valida.');
+        }
+
+        if ($monto <= 0) {
+            throw new InvalidArgumentException('El abono debe ser mayor a cero.');
+        }
+
+        if (!in_array($metodoPago, ['efectivo', 'transferencia'], true)) {
+            throw new InvalidArgumentException('Metodo de pago invalido.');
+        }
+
+        $model->actualizarAbonoMensajero(
+            $abonoId,
+            $mensajeroId,
+            $fechaGrupo,
+            $monto,
+            $metodoPago,
+            $observaciones !== '' ? $observaciones : null
+        );
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Abono actualizado correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
     if ($method === 'POST' && $action === 'guardar_adicional_cliente_grupo') {
         $clienteId = (int) ($_POST['cliente_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));

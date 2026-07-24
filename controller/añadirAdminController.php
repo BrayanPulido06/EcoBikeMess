@@ -26,6 +26,10 @@ function validarNombreAdmin($value, $campo) {
     return $texto;
 }
 
+function normalizarCuentaBancariaAdmin($value) {
+    return preg_replace('/\s+/', ' ', trim((string) $value));
+}
+
 require_once __DIR__ . '/../includes/auth.php';
 requireApiAuth(['administrador', 'admin'], 'Acceso denegado');
 require_once '../models/añadirAdminModels.php';
@@ -106,11 +110,19 @@ try {
             $datos = [
                 'nombres' => validarNombreAdmin($_POST['nombres'] ?? '', 'nombres'),
                 'apellidos' => validarNombreAdmin($_POST['apellidos'] ?? '', 'apellidos'),
-                'telefono' => normalizarTextoAdmin($_POST['telefono'] ?? '')
+                'telefono' => normalizarTextoAdmin($_POST['telefono'] ?? ''),
+                'cuenta_bancaria_principal' => normalizarCuentaBancariaAdmin($_POST['cuenta_bancaria_principal'] ?? ''),
+                'cuenta_bancaria_opcional_1' => normalizarCuentaBancariaAdmin($_POST['cuenta_bancaria_opcional_1'] ?? ''),
+                'cuenta_bancaria_opcional_2' => normalizarCuentaBancariaAdmin($_POST['cuenta_bancaria_opcional_2'] ?? ''),
+                'cuenta_bancaria_opcional_3' => normalizarCuentaBancariaAdmin($_POST['cuenta_bancaria_opcional_3'] ?? '')
             ];
 
             if ($datos['telefono'] === '') {
                 throw new Exception("El telefono es obligatorio.");
+            }
+
+            if ($datos['cuenta_bancaria_principal'] === '') {
+                throw new Exception("La cuenta bancaria principal es obligatoria.");
             }
 
             $res = $model->actualizarClienteDatosPersonales($id, $datos);

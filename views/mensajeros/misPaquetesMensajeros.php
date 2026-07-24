@@ -27,7 +27,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>EB</text></svg>">
     
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
-    <link rel="stylesheet" href="../../public/css/misPaquetesMensajeros.css?v=20260422-2">
+    <link rel="stylesheet" href="../../public/css/misPaquetesMensajeros.css?v=20260724-1">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css?v=20260528-1">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <style>
@@ -104,6 +104,15 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                 <button class="filtro-btn activo" data-filtro="todos">Todos</button>
                 <button class="filtro-btn" data-filtro="pendiente">Pendientes</button>
                 <button class="filtro-btn" data-filtro="aplazado">Aplazados</button>
+            </div>
+            <div class="buscador-paquetes">
+                <input
+                    type="search"
+                    id="buscarPaqueteInput"
+                    class="buscador-paquetes-input"
+                    placeholder="Buscar por guia o destinatario"
+                    autocomplete="off"
+                >
             </div>
         </div>
     
@@ -518,7 +527,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <script src="../../public/js/mensajeroLayout.js?v=20260528-1"></script>
     <script src="../../public/js/uiToast.js"></script>
     <script src="../../public/js/mensajeroBackGuard.js?v=20260615-1"></script>
-    <script src="../../public/js/misPaquetesMensajeros.js?v=20260524-1"></script>
+    <script src="../../public/js/misPaquetesMensajeros.js?v=20260724-1"></script>
 
     <script>
         // Garantizar que todos los botones "Volver" regresen a la lista principal

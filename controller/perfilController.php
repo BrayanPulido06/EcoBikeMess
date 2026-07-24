@@ -37,6 +37,22 @@ function columnExists(PDO $conn, string $table, string $column): bool
     return $cache[$key];
 }
 
+function ensureClienteBankColumns(PDO $conn): void
+{
+    $columns = [
+        'cuenta_bancaria_principal' => "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_principal TEXT NULL AFTER direccion_principal",
+        'cuenta_bancaria_opcional_1' => "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_1 TEXT NULL AFTER cuenta_bancaria_principal",
+        'cuenta_bancaria_opcional_2' => "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_2 TEXT NULL AFTER cuenta_bancaria_opcional_1",
+        'cuenta_bancaria_opcional_3' => "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_3 TEXT NULL AFTER cuenta_bancaria_opcional_2",
+    ];
+
+    foreach ($columns as $column => $alterSql) {
+        if (!columnExists($conn, 'clientes', $column)) {
+            $conn->exec($alterSql);
+        }
+    }
+}
+
 function guardarArchivoPerfil(array $file, string $subfolder, array $allowedExtensions): ?string
 {
     if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
@@ -149,6 +165,7 @@ $conn = null;
 
 try {
     $conn = conexionDB();
+    ensureClienteBankColumns($conn);
     $conn->beginTransaction();
 
     $nombres = validarNombrePerfil($_POST['nombres'] ?? '', 'nombres');
@@ -171,11 +188,20 @@ try {
     ]);
 
     if ($role === 'cliente') {
+        $cuentaPrincipal = normalizarTextoPerfil($_POST['cuenta_bancaria_principal'] ?? '');
+        if ($cuentaPrincipal === '') {
+            throw new Exception('Debes registrar al menos una cuenta bancaria principal.');
+        }
+
         $sqlCliente = "UPDATE clientes
                        SET nombre_emprendimiento = :emp,
                            tipo_producto = :prod,
                            instagram = :insta,
-                           direccion_principal = :dir
+                           direccion_principal = :dir,
+                           cuenta_bancaria_principal = :cuenta_principal,
+                           cuenta_bancaria_opcional_1 = :cuenta_opcional_1,
+                           cuenta_bancaria_opcional_2 = :cuenta_opcional_2,
+                           cuenta_bancaria_opcional_3 = :cuenta_opcional_3
                        WHERE usuario_id = :uid";
         $stmtCliente = $conn->prepare($sqlCliente);
         $stmtCliente->execute([
@@ -183,6 +209,10 @@ try {
             ':prod' => trim((string) ($_POST['tipo_producto'] ?? '')),
             ':insta' => trim((string) ($_POST['instagram'] ?? '')),
             ':dir' => trim((string) ($_POST['direccion_principal'] ?? '')),
+            ':cuenta_principal' => $cuentaPrincipal,
+            ':cuenta_opcional_1' => normalizarTextoPerfil($_POST['cuenta_bancaria_opcional_1'] ?? ''),
+            ':cuenta_opcional_2' => normalizarTextoPerfil($_POST['cuenta_bancaria_opcional_2'] ?? ''),
+            ':cuenta_opcional_3' => normalizarTextoPerfil($_POST['cuenta_bancaria_opcional_3'] ?? ''),
             ':uid' => $user_id
         ]);
     } elseif ($role === 'mensajero') {
