@@ -472,7 +472,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             nombre: '<?php echo $_SESSION['user_name'] ?? 'Usuario'; ?>'
         };
     </script>
-    <script src="../../public/js/añadirAdmin.js?v=20260724-5"></script>
+    <script src="../../public/js/añadirAdmin.js?v=20260724-6"></script>
     <script type="text/plain" data-disabled="cliente-detail-legacy">
         (function() {
             function escapeHtml(value) {

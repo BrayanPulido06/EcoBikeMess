@@ -86,9 +86,7 @@ function setupEventListeners() {
     // Clientes
     document.getElementById('searchCliente')?.addEventListener('input', filtrarClientes);
     document.getElementById('btnReporteClientes')?.addEventListener('click', () => alert('Funcionalidad de reporte en desarrollo'));
-    document.getElementById('tablaClientesBody')?.addEventListener('click', manejarClickTablaClientes);
     document.getElementById('detallesCliente')?.addEventListener('submit', manejarGuardarClientePersonal);
-    document.addEventListener('click', manejarClickGlobalClientes);
 
     // Reset Password
     document.getElementById('btnCerrarModalReset').addEventListener('click', () => closeModal('modalResetPassword'));
@@ -880,9 +878,13 @@ function openModal(modalId) {
     document.querySelectorAll('.modal.active').forEach(activeModal => {
         if (activeModal.id && activeModal.id !== modalId) {
             activeModal.classList.remove('active');
+            activeModal.style.display = 'none';
+            activeModal.setAttribute('aria-hidden', 'true');
         }
     });
+    modal.style.display = 'flex';
     modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 }
 
@@ -891,6 +893,14 @@ function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
     modal.classList.remove('active');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    if (modalId === 'modalCliente') {
+        const container = document.getElementById('detallesCliente');
+        if (container) {
+            container.innerHTML = '';
+        }
+    }
     const hayOtroModalAbierto = document.querySelector('.modal.active');
     document.body.style.overflow = hayOtroModalAbierto ? 'hidden' : '';
 }
@@ -1232,30 +1242,6 @@ function pintarDetallesCliente(cliente) {
 
 function getAdminControllerUrl() {
     return '../../controller/a\u00f1adirAdminController.php';
-}
-
-function manejarClickTablaClientes(event) {
-    const button = event.target.closest('.btn-ver-cliente');
-    if (!button) return;
-    event.preventDefault();
-    event.stopPropagation();
-
-    const clienteId = Number(button.dataset.clienteId || 0);
-    if (!clienteId) return;
-
-    verDetallesCliente(clienteId);
-}
-
-function manejarClickGlobalClientes(event) {
-    const button = event.target.closest('.btn-ver-cliente');
-    if (!button) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    const clienteId = Number(button.dataset.clienteId || 0);
-    if (!clienteId) return;
-
-    verDetallesCliente(clienteId);
 }
 
 window.verDetallesCliente = verDetallesCliente;
