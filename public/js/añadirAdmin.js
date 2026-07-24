@@ -7,7 +7,6 @@ let solicitudesPendientes = [];
 let currentUser = window.serverUser || { rol: 'guest' }; // Obtener usuario de la vista
 let adminEnEdicion = null;
 let userToReset = null;
-let clienteDetalleActivoId = null;
 
 // Permisos por rol
 const PERMISOS_POR_ROL = {
@@ -89,6 +88,7 @@ function setupEventListeners() {
     document.getElementById('btnReporteClientes')?.addEventListener('click', () => alert('Funcionalidad de reporte en desarrollo'));
     document.getElementById('tablaClientesBody')?.addEventListener('click', manejarClickTablaClientes);
     document.getElementById('detallesCliente')?.addEventListener('submit', manejarGuardarClientePersonal);
+    document.addEventListener('click', manejarClickGlobalClientes);
 
     // Reset Password
     document.getElementById('btnCerrarModalReset').addEventListener('click', () => closeModal('modalResetPassword'));
@@ -877,6 +877,11 @@ function formatRelativeTime(dateStr) {
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
+    document.querySelectorAll('.modal.active').forEach(activeModal => {
+        if (activeModal.id && activeModal.id !== modalId) {
+            activeModal.classList.remove('active');
+        }
+    });
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -886,10 +891,6 @@ function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
     modal.classList.remove('active');
-    if (modalId === 'modalCliente') {
-        clienteDetalleActivoId = null;
-    }
-
     const hayOtroModalAbierto = document.querySelector('.modal.active');
     document.body.style.overflow = hayOtroModalAbierto ? 'hidden' : '';
 }
@@ -1064,7 +1065,7 @@ function renderClientes() {
             <td><span class="status-badge status-${escapeHtml(c.estado || 'inactivo')}">${c.estado === 'activo' ? 'Activo' : 'Inactivo'}</span></td>
             <td>${formatDate(c.fechaRegistro)}</td>
             <td>
-                <button class="btn btn-sm btn-info btn-ver-cliente" data-cliente-id="${c.id}" type="button" title="Ver detalles">Ver</button>
+                <button class="btn btn-sm btn-info btn-ver-cliente" data-cliente-id="${c.id}" onclick="verDetallesCliente(${Number(c.id)}); return false;" type="button" title="Ver detalles">Ver</button>
             </td>
         </tr>
     `).join('');
@@ -1136,12 +1137,10 @@ function verDetallesMensajero(id) {
 }
 
 function verDetallesCliente(id) {
-    let cliente = clientes.find(c => Number(c.id) === Number(id));
+    const cliente = clientes.find(c => Number(c.id) === Number(id));
     if (!cliente) return;
 
-    clienteDetalleActivoId = Number(id);
     pintarDetallesCliente(cliente);
-    cargarDetalleClienteActualizado(id);
 }
 
 function pintarDetallesCliente(cliente) {
@@ -1231,32 +1230,6 @@ function pintarDetallesCliente(cliente) {
     openModal('modalCliente');
 }
 
-async function cargarDetalleClienteActualizado(id) {
-    try {
-        const response = await fetch(`${getAdminControllerUrl()}?action=detalle_cliente&id=${encodeURIComponent(id)}`);
-        const result = await response.json();
-        const modal = document.getElementById('modalCliente');
-        if (!result.success || !result.data || Number(clienteDetalleActivoId) !== Number(id) || !modal?.classList.contains('active')) {
-            return;
-        }
-
-        const index = clientes.findIndex(c => Number(c.id) === Number(id));
-        const actualizado = {
-            ...(index >= 0 ? clientes[index] : {}),
-            ...result.data,
-            nombreContacto: `${result.data.nombres || ''} ${result.data.apellidos || ''}`.trim() || result.data.nombreContacto
-        };
-
-        if (index >= 0) {
-            clientes[index] = actualizado;
-        }
-
-        pintarDetallesCliente(actualizado);
-    } catch (error) {
-        console.warn('No se pudo cargar detalle completo del cliente:', error);
-    }
-}
-
 function getAdminControllerUrl() {
     return '../../controller/a\u00f1adirAdminController.php';
 }
@@ -1264,12 +1237,28 @@ function getAdminControllerUrl() {
 function manejarClickTablaClientes(event) {
     const button = event.target.closest('.btn-ver-cliente');
     if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
 
     const clienteId = Number(button.dataset.clienteId || 0);
     if (!clienteId) return;
 
     verDetallesCliente(clienteId);
 }
+
+function manejarClickGlobalClientes(event) {
+    const button = event.target.closest('.btn-ver-cliente');
+    if (!button) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    const clienteId = Number(button.dataset.clienteId || 0);
+    if (!clienteId) return;
+
+    verDetallesCliente(clienteId);
+}
+
+window.verDetallesCliente = verDetallesCliente;
 
 // Reemplazo defensivo para evitar errores de carga por nombres de archivo con "ñ"
 async function manejarGuardarClientePersonal(event) {
