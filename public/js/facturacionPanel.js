@@ -247,9 +247,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     item.destinatario_nombre
                 ].join(' ').toLowerCase()
                 : [
-                item.numero_guia,
-                item.destinatario_nombre,
-                item.cliente_nombre,
                 item.mensajero_nombre
             ].join(' ').toLowerCase();
 
@@ -497,10 +494,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const descripcionAdicionalGeneralNegativa = getNegativeAdditionalDescription(adicionalGeneral);
                 const totalAdicionales = Number(group.totalAdicionalesPaquetes || 0) + montoAdicionalGeneralPositivo - montoAdicionalGeneralNegativo;
                 const totalServicio = Number(group.subtotalServicio || 0) + totalAdicionales;
-                const saldoCalculado = Number(group.totalRecaudado || 0) - totalServicio;
+                const saldoCalculado = Number(group.totalRecaudado || 0) - totalServicio - abono;
                 const estadoManual = getGroupEstadoManual(group.clienteId, group.dateKey);
                 const saldo = estadoManual === 'pagado' ? 0 : saldoCalculado;
-                const balance = estadoManual === 'pagado' ? 0 : saldo + abono;
+                const balance = estadoManual === 'pagado' ? 0 : saldo;
                 return {
                     ...group,
                     adicionalGeneral,
@@ -819,13 +816,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${escapeHtml(group.clienteNombre)}</td>
                     <td>${group.fechaLabel}</td>
                     <td>${group.paquetesEntregados}</td>
-                    <td>${money(group.totalServicio)}</td>
                     <td>${adicionalesCell(
                         Number(group.totalAdicionalesPaquetes || 0) + Number(group.adicionalGeneralPositivo || 0),
                         group.adicionalGeneralDescripcionPositiva || packageAdditionalSummary(group.packages, 'observaciones_admin'),
                         group.adicionalGeneralNegativo,
                         group.adicionalGeneralDescripcionNegativa
                     )}</td>
+                    <td>${money(group.totalServicio)}</td>
                     <td>${money(group.totalRecaudado)}</td>
                     <td>${money(group.abono)}</td>
                     <td>${clientGroupStatusSelect(group)}</td>
@@ -937,8 +934,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${escapeHtml(group.mensajeroNombre)}</td>
                     <td>${group.fechaLabel}</td>
                     <td>${group.entregas}</td>
-                    <td>${money(group.totalPago)}</td>
                     <td>${messengerAdditionalCell(group)}</td>
+                    <td>${money(group.totalPago)}</td>
                     <td>${money(group.totalRecaudado)}</td>
                     <td>${money(group.abono)}</td>
                     <td>${messengerGroupStatusSelect(group)}</td>

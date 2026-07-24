@@ -867,7 +867,7 @@ class FacturacionModels
         }
 
         if ($fechaDesde !== null) {
-            $conditions[] = '(p.fecha_entrega >= :fecha_desde OR (p.fecha_entrega IS NULL AND p.fecha_creacion >= :fecha_desde))';
+            $conditions[] = 'COALESCE(e.fecha_entrega, p.fecha_entrega, p.fecha_creacion) >= :fecha_desde';
             $params[':fecha_desde'] = $fechaDesde . ' 00:00:00';
         }
 
@@ -877,7 +877,7 @@ class FacturacionModels
                     p.id AS paquete_id,
                     p.numero_guia,
                     p.fecha_creacion,
-                    p.fecha_entrega,
+                    COALESCE(e.fecha_entrega, p.fecha_entrega) AS fecha_entrega,
                     p.estado,
                     p.destinatario_nombre,
                     p.direccion_destino,
@@ -897,7 +897,7 @@ class FacturacionModels
                 LEFT JOIN entregas e ON e.paquete_id = p.id
                 LEFT JOIN facturacion f ON f.paquete_id = p.id
                 {$where}
-                ORDER BY p.fecha_creacion DESC, p.id DESC";
+                ORDER BY COALESCE(e.fecha_entrega, p.fecha_entrega, p.fecha_creacion) DESC, p.id DESC";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
@@ -919,7 +919,7 @@ class FacturacionModels
             $params[':mensajero_id'] = $mensajeroId;
         }
         if ($fechaDesde !== null) {
-            $conditions[] = '(p.fecha_entrega >= :fecha_desde OR (p.fecha_entrega IS NULL AND p.fecha_creacion >= :fecha_desde))';
+            $conditions[] = 'COALESCE(e.fecha_entrega, p.fecha_entrega, p.fecha_creacion) >= :fecha_desde';
             $params[':fecha_desde'] = $fechaDesde . ' 00:00:00';
         }
 
@@ -929,7 +929,7 @@ class FacturacionModels
                     p.id AS paquete_id,
                     p.numero_guia,
                     p.fecha_creacion,
-                    p.fecha_entrega,
+                    COALESCE(e.fecha_entrega, p.fecha_entrega) AS fecha_entrega,
                     p.estado,
                     p.destinatario_nombre,
                     p.costo_envio,
@@ -951,7 +951,7 @@ class FacturacionModels
                 LEFT JOIN mensajeros m ON m.id = p.mensajero_id
                 LEFT JOIN usuarios um ON um.id = m.usuario_id
                 {$where}
-                ORDER BY COALESCE(p.fecha_entrega, p.fecha_creacion) DESC, p.id DESC";
+                ORDER BY COALESCE(e.fecha_entrega, p.fecha_entrega, p.fecha_creacion) DESC, p.id DESC";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
@@ -966,7 +966,7 @@ class FacturacionModels
                     p.id AS paquete_id,
                     p.numero_guia,
                     p.fecha_creacion,
-                    p.fecha_entrega,
+                    COALESCE(e.fecha_entrega, p.fecha_entrega) AS fecha_entrega,
                     p.estado,
                     p.destinatario_nombre,
                     p.costo_envio,
@@ -985,7 +985,7 @@ class FacturacionModels
                 LEFT JOIN mensajeros m ON m.id = p.mensajero_id
                 LEFT JOIN usuarios um ON um.id = m.usuario_id
                 WHERE p.estado = 'entregado'
-                ORDER BY COALESCE(p.fecha_entrega, p.fecha_creacion) DESC, p.id DESC";
+                ORDER BY COALESCE(e.fecha_entrega, p.fecha_entrega, p.fecha_creacion) DESC, p.id DESC";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();

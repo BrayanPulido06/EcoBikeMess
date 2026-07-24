@@ -85,13 +85,13 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                                     <th>Clientes</th>
                                     <th>Fecha</th>
                                     <th>Paquetes entregados</th>
-                                    <th>Total servicio</th>
                                     <th>Adicionales</th>
+                                    <th>Total servicio</th>
                                     <th>Total recaudado</th>
                                     <th>Abono</th>
                                     <th>Estado</th>
                                     <th>Saldo</th>
-                                    <th>Total</th>
+                                    <th>Total acumulado</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -111,7 +111,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                     <div class="facturacion-filters">
                         <div class="facturacion-field">
                             <label>Buscar</label>
-                            <input type="text" placeholder="Mensajero, guia o cliente" data-panel-filter="mensajero" data-filter-field="q">
+                            <input type="text" placeholder="Mensajero" data-panel-filter="mensajero" data-filter-field="q">
                         </div>
                         <div class="facturacion-field">
                             <label>Estado</label>
@@ -149,13 +149,13 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                                     <th>Mensajero</th>
                                     <th>Fecha</th>
                                     <th>Entregas</th>
-                                    <th>Total pago</th>
                                     <th>Adicionales</th>
+                                    <th>Total pago</th>
                                     <th>Total recaudado</th>
                                     <th>Abono</th>
                                     <th>Estado</th>
                                     <th>Saldo</th>
-                                    <th>Total</th>
+                                    <th>Total acumulado</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
