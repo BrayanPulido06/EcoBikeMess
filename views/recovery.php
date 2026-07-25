@@ -31,7 +31,7 @@ try {
     }
 
     $token = bin2hex(random_bytes(32));
-    $expiracion = date('Y-m-d H:i:s', strtotime('+1 hour'));
+    $expiracion = date('Y-m-d H:i:s', strtotime('+30 days'));
 
     $updateSql = "UPDATE usuarios SET token = :token, token_expiracion = :expiracion WHERE id = :id";
     $updateStmt = $db->prepare($updateSql);
@@ -89,7 +89,7 @@ try {
                 </div>
                 <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
                 <p style="font-size: 13px; color: #999; text-align: center;">
-                    Este enlace tiene una validez de <strong>1 hora</strong>.<br>
+                    Este enlace tiene una validez de <strong>30 dias</strong>.<br>
                     Si tu no solicitaste este cambio, puedes ignorar este correo.
                 </p>
             </div>

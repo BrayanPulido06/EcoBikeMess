@@ -1,4 +1,24 @@
-<?php require_once __DIR__ . '/../includes/paths.php'; ?>
+<?php
+require_once __DIR__ . '/../includes/paths.php';
+require_once __DIR__ . '/../models/conexionGlobal.php';
+
+function tokenRecuperacionExiste(string $token): bool
+{
+    if ($token === '') {
+        return false;
+    }
+
+    try {
+        $conn = conexionDB();
+        $stmt = $conn->prepare("SELECT id FROM usuarios WHERE token = :token LIMIT 1");
+        $stmt->execute([':token' => $token]);
+        return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        error_log('Error validando token de recuperacion: ' . $e->getMessage());
+        return true;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -27,8 +47,9 @@
             <?php
             // Verificar que llegue un token
             $token = $_GET['token'] ?? '';
-            if (empty($token)) {
-                echo "<div class='form-container active'><p class='error-message' style='display:block; text-align:center;'>Token no válido o faltante.</p>";
+            if (empty($token) || !tokenRecuperacionExiste((string) $token)) {
+                echo "<div class='form-container active'><p class='error-message' style='display:block; text-align:center;'>Este enlace ya fue usado o no corresponde al ultimo enlace enviado.</p>";
+                echo "<div class='form-footer'><a href='" . htmlspecialchars(route_url('forgot-password'), ENT_QUOTES, 'UTF-8') . "' class='link'>Solicitar un nuevo enlace</a></div>";
                 echo "<div class='form-footer'><a href='" . htmlspecialchars(route_url('login'), ENT_QUOTES, 'UTF-8') . "' class='link'>Volver al inicio</a></div></div>";
             } else {
             ?>
@@ -45,7 +66,7 @@
 
                     <div class="form-group">
                         <label for="password">Nueva Contraseña</label>
-                        <input type="password" id="password" name="password" placeholder="Mínimo 6 caracteres" required>
+                        <input type="password" id="password" name="password" placeholder="Minimo 8 caracteres" minlength="8" required>
                     </div>
 
                     <div class="form-group">

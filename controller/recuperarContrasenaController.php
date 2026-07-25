@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if ($usuario) {
                 $token = bin2hex(random_bytes(32));
-                $expiracion = date('Y-m-d H:i:s', strtotime('+1 hour'));
+                $expiracion = date('Y-m-d H:i:s', strtotime('+30 days'));
 
                 $updateSql = "UPDATE usuarios SET token = :token, token_expiracion = :expiracion WHERE id = :id";
                 $updateStmt = $conn->prepare($updateSql);
@@ -57,7 +57,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         try {
-            $sql = "SELECT id FROM usuarios WHERE token = :token AND token_expiracion > NOW()";
+            if (strlen($password) < 8) {
+                redirect_route('reset-password', ['token' => $token, 'error' => 'La contrasena debe tener al menos 8 caracteres']);
+            }
+
+            $sql = "SELECT id FROM usuarios WHERE token = :token LIMIT 1";
             $stmt = $conn->prepare($sql);
             $stmt->execute([':token' => $token]);
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -75,7 +79,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 redirect_route('login', ['mensaje' => 'Contrasena actualizada correctamente. Inicia sesion.']);
             }
 
-            redirect_route('login', ['error' => 'El enlace es invalido o ha expirado.']);
+            redirect_route('forgot-password', [
+                'error' => 'Este enlace ya fue usado o no corresponde al ultimo enlace enviado. Solicita uno nuevo para ingresar sin inconvenientes.',
+            ]);
         } catch (Exception $e) {
             redirect_route('reset-password', ['token' => $token, 'error' => 'Error al actualizar la contrasena']);
         }

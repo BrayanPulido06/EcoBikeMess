@@ -576,12 +576,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const wrapper = input.closest('.search-select');
 
+        const coincideBusqueda = (item, query) => {
+            const normalizedQuery = normalizarTexto(query);
+            if (!normalizedQuery) return true;
+
+            const normalizedName = normalizarTexto(item.nombre);
+            return normalizedQuery
+                .split(/\s+/)
+                .filter(Boolean)
+                .every(part => normalizedName.includes(part));
+        };
+
         const renderOptions = (query = '') => {
             const normalizedQuery = normalizarTexto(query);
             const items = getItems();
-            const filtrados = normalizedQuery
-                ? items.filter(item => normalizarTexto(item.nombre).includes(normalizedQuery))
-                : items;
+            const filtrados = items
+                .filter(item => coincideBusqueda(item, normalizedQuery))
+                .slice(0, 40);
 
             let html = `<div class="search-select-option" data-value="" data-label="${escaparAtributoHtml(emptyLabel)}">${emptyLabel}</div>`;
 
@@ -604,7 +615,10 @@ document.addEventListener('DOMContentLoaded', function() {
             wrapper?.classList.remove('open');
         };
 
-        input.addEventListener('focus', () => renderOptions(input.value));
+        input.addEventListener('focus', () => {
+            input.select?.();
+            renderOptions(input.value);
+        });
         input.addEventListener('click', () => renderOptions(input.value));
         input.addEventListener('input', () => {
             hidden.value = '';

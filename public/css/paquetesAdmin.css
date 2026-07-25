@@ -274,6 +274,16 @@ body {
     max-height: 300px;
 }
 
+.modal-detalles .search-select-options,
+#modalDetalles .search-select-options {
+    z-index: 1400;
+    max-height: 220px;
+}
+
+#modalDetalles .search-select-option {
+    padding: 9px 12px;
+}
+
 .search-select.open .search-select-options {
     display: block;
 }
