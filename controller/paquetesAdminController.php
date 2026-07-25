@@ -42,6 +42,7 @@ try {
         case 'detalle':
             $id = $_REQUEST['id'] ?? 0;
             $data = $model->getPaqueteDetails($id);
+            adjuntarDataUrisEvidencia($data);
             echo json_encode($data);
             break;
 

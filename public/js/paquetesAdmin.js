@@ -576,23 +576,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const wrapper = input.closest('.search-select');
 
-        const coincideBusqueda = (item, query) => {
-            const normalizedQuery = normalizarTexto(query);
-            if (!normalizedQuery) return true;
-
-            const normalizedName = normalizarTexto(item.nombre);
-            return normalizedQuery
-                .split(/\s+/)
-                .filter(Boolean)
-                .every(part => normalizedName.includes(part));
-        };
-
         const renderOptions = (query = '') => {
             const normalizedQuery = normalizarTexto(query);
             const items = getItems();
-            const filtrados = items
-                .filter(item => coincideBusqueda(item, normalizedQuery))
-                .slice(0, 40);
+            const filtrados = normalizedQuery
+                ? items.filter(item => normalizarTexto(item.nombre).includes(normalizedQuery))
+                : items;
 
             let html = `<div class="search-select-option" data-value="" data-label="${escaparAtributoHtml(emptyLabel)}">${emptyLabel}</div>`;
 
@@ -615,10 +604,7 @@ document.addEventListener('DOMContentLoaded', function() {
             wrapper?.classList.remove('open');
         };
 
-        input.addEventListener('focus', () => {
-            input.select?.();
-            renderOptions(input.value);
-        });
+        input.addEventListener('focus', () => renderOptions(input.value));
         input.addEventListener('click', () => renderOptions(input.value));
         input.addEventListener('input', () => {
             hidden.value = '';
@@ -1351,23 +1337,15 @@ function verDetalle(id, options = {}) {
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Mensajero Recolección</div>
-                                    ${renderMensajeroSearchSelect({
-                                        inputId: 'detalleMensajeroRecoleccionInput',
-                                        hiddenId: 'detalleMensajeroRecoleccionId',
-                                        optionsId: 'detalleMensajeroRecoleccionOpciones',
-                                        fieldName: 'mensajero_recoleccion_id',
-                                        selectedId: info.mensajero_recoleccion_id
-                                    })}
+                                    <select class="form-control" name="mensajero_recoleccion_id">
+                                        ${renderMensajeroOptions(info.mensajero_recoleccion_id)}
+                                    </select>
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Mensajero Entrega</div>
-                                    ${renderMensajeroSearchSelect({
-                                        inputId: 'detalleMensajeroEntregaInput',
-                                        hiddenId: 'detalleMensajeroEntregaId',
-                                        optionsId: 'detalleMensajeroEntregaOpciones',
-                                        fieldName: 'mensajero_id',
-                                        selectedId: info.mensajero_id
-                                    })}
+                                    <select class="form-control" name="mensajero_id">
+                                        ${renderMensajeroOptions(info.mensajero_id)}
+                                    </select>
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Tipo de Paquete</div>
@@ -1528,11 +1506,6 @@ function verDetalle(id, options = {}) {
                 }
                 html += '</div></div>';
                 container.innerHTML = html;
-                try {
-                    configurarBuscadoresMensajeroDetalle();
-                } catch (buscadorError) {
-                    console.error('Error inicializando buscadores de mensajero:', buscadorError);
-                }
 
                 const form = document.getElementById('formEditarDetalles');
                 if (form) {
@@ -1719,9 +1692,8 @@ function verDetalle(id, options = {}) {
                 });
             })
             .catch(err => {
-                console.error('Error cargando detalle de paquete:', err);
-                const message = err?.message ? ` ${err.message}` : '';
-                container.innerHTML = `<p class="text-danger">Error al cargar datos.${escaparAtributoHtml(message)}</p>`;
+                console.error(err);
+                container.innerHTML = '<p class="text-danger">Error al cargar datos.</p>';
             });
     }
 }
