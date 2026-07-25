@@ -644,8 +644,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function nombreMensajeroPorId(id) {
-        const lista = Array.isArray(todosLosMensajeros) ? todosLosMensajeros : [];
-        const mensajero = lista.find(item => String(item.id) === String(id));
+        const mensajero = todosLosMensajeros.find(item => String(item.id) === String(id));
         return mensajero ? mensajero.nombre : '';
     }
 
@@ -672,7 +671,7 @@ document.addEventListener('DOMContentLoaded', function() {
             input: document.getElementById('detalleMensajeroRecoleccionInput'),
             hidden: document.getElementById('detalleMensajeroRecoleccionId'),
             optionsContainer: document.getElementById('detalleMensajeroRecoleccionOpciones'),
-            getItems: () => Array.isArray(todosLosMensajeros) ? todosLosMensajeros : [],
+            getItems: () => todosLosMensajeros,
             emptyLabel: 'Sin asignar'
         });
 
@@ -680,7 +679,7 @@ document.addEventListener('DOMContentLoaded', function() {
             input: document.getElementById('detalleMensajeroEntregaInput'),
             hidden: document.getElementById('detalleMensajeroEntregaId'),
             optionsContainer: document.getElementById('detalleMensajeroEntregaOpciones'),
-            getItems: () => Array.isArray(todosLosMensajeros) ? todosLosMensajeros : [],
+            getItems: () => todosLosMensajeros,
             emptyLabel: 'Sin asignar'
         });
     }
@@ -1337,15 +1336,23 @@ function verDetalle(id, options = {}) {
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Mensajero Recolección</div>
-                                    <select class="form-control" name="mensajero_recoleccion_id">
-                                        ${renderMensajeroOptions(info.mensajero_recoleccion_id)}
-                                    </select>
+                                    ${renderMensajeroSearchSelect({
+                                        inputId: 'detalleMensajeroRecoleccionInput',
+                                        hiddenId: 'detalleMensajeroRecoleccionId',
+                                        optionsId: 'detalleMensajeroRecoleccionOpciones',
+                                        fieldName: 'mensajero_recoleccion_id',
+                                        selectedId: info.mensajero_recoleccion_id
+                                    })}
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Mensajero Entrega</div>
-                                    <select class="form-control" name="mensajero_id">
-                                        ${renderMensajeroOptions(info.mensajero_id)}
-                                    </select>
+                                    ${renderMensajeroSearchSelect({
+                                        inputId: 'detalleMensajeroEntregaInput',
+                                        hiddenId: 'detalleMensajeroEntregaId',
+                                        optionsId: 'detalleMensajeroEntregaOpciones',
+                                        fieldName: 'mensajero_id',
+                                        selectedId: info.mensajero_id
+                                    })}
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Tipo de Paquete</div>
@@ -1506,6 +1513,7 @@ function verDetalle(id, options = {}) {
                 }
                 html += '</div></div>';
                 container.innerHTML = html;
+                configurarBuscadoresMensajeroDetalle();
 
                 const form = document.getElementById('formEditarDetalles');
                 if (form) {
