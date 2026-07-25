@@ -658,7 +658,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function nombreMensajeroPorId(id) {
-        const mensajero = todosLosMensajeros.find(item => String(item.id) === String(id));
+        const lista = Array.isArray(todosLosMensajeros) ? todosLosMensajeros : [];
+        const mensajero = lista.find(item => String(item.id) === String(id));
         return mensajero ? mensajero.nombre : '';
     }
 
@@ -685,7 +686,7 @@ document.addEventListener('DOMContentLoaded', function() {
             input: document.getElementById('detalleMensajeroRecoleccionInput'),
             hidden: document.getElementById('detalleMensajeroRecoleccionId'),
             optionsContainer: document.getElementById('detalleMensajeroRecoleccionOpciones'),
-            getItems: () => todosLosMensajeros,
+            getItems: () => Array.isArray(todosLosMensajeros) ? todosLosMensajeros : [],
             emptyLabel: 'Sin asignar'
         });
 
@@ -693,7 +694,7 @@ document.addEventListener('DOMContentLoaded', function() {
             input: document.getElementById('detalleMensajeroEntregaInput'),
             hidden: document.getElementById('detalleMensajeroEntregaId'),
             optionsContainer: document.getElementById('detalleMensajeroEntregaOpciones'),
-            getItems: () => todosLosMensajeros,
+            getItems: () => Array.isArray(todosLosMensajeros) ? todosLosMensajeros : [],
             emptyLabel: 'Sin asignar'
         });
     }
@@ -1527,7 +1528,11 @@ function verDetalle(id, options = {}) {
                 }
                 html += '</div></div>';
                 container.innerHTML = html;
-                configurarBuscadoresMensajeroDetalle();
+                try {
+                    configurarBuscadoresMensajeroDetalle();
+                } catch (buscadorError) {
+                    console.error('Error inicializando buscadores de mensajero:', buscadorError);
+                }
 
                 const form = document.getElementById('formEditarDetalles');
                 if (form) {
@@ -1714,8 +1719,9 @@ function verDetalle(id, options = {}) {
                 });
             })
             .catch(err => {
-                console.error(err);
-                container.innerHTML = '<p class="text-danger">Error al cargar datos.</p>';
+                console.error('Error cargando detalle de paquete:', err);
+                const message = err?.message ? ` ${err.message}` : '';
+                container.innerHTML = `<p class="text-danger">Error al cargar datos.${escaparAtributoHtml(message)}</p>`;
             });
     }
 }
