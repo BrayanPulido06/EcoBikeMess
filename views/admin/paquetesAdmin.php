@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../../includes/paths.php';
 session_start();
+$paquetesAdminJsVersion = @filemtime(__DIR__ . '/../../public/js/paquetesAdmin.js') ?: time();
+$rotuloSharedJsVersion = @filemtime(__DIR__ . '/../../public/js/rotuloShared.js') ?: time();
 if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' && ($_SESSION['user_role'] ?? '') !== 'administrador')) {
     redirect_route('login', ['error' => 'Debes iniciar sesión.']);
 }
@@ -720,9 +722,9 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
 
     </div>
 
-    <script src="../../public/js/imageLightbox.js"></script>
-    <script src="../../public/js/rotuloShared.js?v=20260721-4"></script>
-    <script src="../../public/js/paquetesAdmin.js?v=20260721-6"></script>
+    <script src="<?php echo htmlspecialchars(app_asset_url('js/imageLightbox.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+    <script src="<?php echo htmlspecialchars(app_asset_url('js/rotuloShared.js') . '?v=' . $rotuloSharedJsVersion, ENT_QUOTES, 'UTF-8'); ?>"></script>
+    <script src="<?php echo htmlspecialchars(app_asset_url('js/paquetesAdmin.js') . '?v=' . $paquetesAdminJsVersion, ENT_QUOTES, 'UTF-8'); ?>"></script>
     <script>
         window.abrirModalAsignacionMasiva = async function() {
             const seleccionados = Array.from(document.querySelectorAll('.paquete-checkbox:checked')).map((checkbox) => ({
