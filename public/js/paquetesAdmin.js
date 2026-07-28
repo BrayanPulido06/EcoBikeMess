@@ -15,6 +15,129 @@ const opcionesParentescoNuevaEntrega = [
     { id: 'Otro', nombre: 'Otro' }
 ];
 
+function normalizarTextoDetallePaquete(texto) {
+    return String(texto || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+}
+
+function escaparAtributoHtmlDetallePaquete(valor) {
+    return String(valor ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function nombreMensajeroPorIdDetallePaquete(id) {
+    const mensajero = todosLosMensajeros.find(item => String(item.id) === String(id));
+    return mensajero ? mensajero.nombre : '';
+}
+
+function renderMensajeroSearchSelect({ inputId, hiddenId, optionsId, fieldName, selectedId }) {
+    const selectedName = nombreMensajeroPorIdDetallePaquete(selectedId);
+    return `
+        <div class="search-select">
+            <input
+                type="text"
+                id="${inputId}"
+                class="form-control"
+                placeholder="Buscar mensajero..."
+                autocomplete="off"
+                value="${escaparAtributoHtmlDetallePaquete(selectedName)}"
+            >
+            <input type="hidden" id="${hiddenId}" name="${fieldName}" value="${selectedId ? escaparAtributoHtmlDetallePaquete(selectedId) : ''}">
+            <div id="${optionsId}" class="search-select-options"></div>
+        </div>
+    `;
+}
+
+function configurarBuscadorMensajeroDetalle({ input, hidden, optionsContainer, emptyLabel }) {
+    if (!input || !hidden || !optionsContainer) {
+        return;
+    }
+
+    const wrapper = input.closest('.search-select');
+
+    const seleccionarOpcion = (value, label) => {
+        hidden.value = value;
+        input.value = label || '';
+        wrapper?.classList.remove('open');
+    };
+
+    const renderOptions = () => {
+        const texto = normalizarTextoDetallePaquete(input.value);
+        const filtrados = todosLosMensajeros
+            .filter(item => normalizarTextoDetallePaquete(item.nombre).includes(texto))
+            .slice(0, 20);
+
+        const opciones = [
+            `<div class="search-select-option" data-value="" data-label="">${emptyLabel}</div>`,
+            ...filtrados.map(item => `
+                <div class="search-select-option" data-value="${escaparAtributoHtmlDetallePaquete(item.id)}" data-label="${escaparAtributoHtmlDetallePaquete(item.nombre)}">
+                    ${escaparAtributoHtmlDetallePaquete(item.nombre)}
+                </div>
+            `)
+        ];
+
+        optionsContainer.innerHTML = opciones.join('');
+        wrapper?.classList.add('open');
+    };
+
+    input.addEventListener('focus', renderOptions);
+    input.addEventListener('input', () => {
+        hidden.value = '';
+        renderOptions();
+    });
+    input.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') {
+            return;
+        }
+        e.preventDefault();
+        const exacta = todosLosMensajeros.find(item => normalizarTextoDetallePaquete(item.nombre) === normalizarTextoDetallePaquete(input.value));
+        if (exacta) {
+            seleccionarOpcion(String(exacta.id), exacta.nombre);
+        }
+    });
+    input.addEventListener('blur', () => {
+        window.setTimeout(() => {
+            const exacta = todosLosMensajeros.find(item => normalizarTextoDetallePaquete(item.nombre) === normalizarTextoDetallePaquete(input.value));
+            if (input.value.trim() === '') {
+                seleccionarOpcion('', emptyLabel);
+            } else if (exacta) {
+                seleccionarOpcion(String(exacta.id), exacta.nombre);
+            } else if (!hidden.value) {
+                input.value = '';
+            }
+            wrapper?.classList.remove('open');
+        }, 150);
+    });
+
+    optionsContainer.addEventListener('mousedown', (e) => {
+        const option = e.target.closest('.search-select-option');
+        if (!option) return;
+        seleccionarOpcion(option.dataset.value || '', option.dataset.label || '');
+    });
+}
+
+function configurarBuscadoresMensajeroDetalle() {
+    configurarBuscadorMensajeroDetalle({
+        input: document.getElementById('detalleMensajeroRecoleccionInput'),
+        hidden: document.getElementById('detalleMensajeroRecoleccionId'),
+        optionsContainer: document.getElementById('detalleMensajeroRecoleccionOpciones'),
+        emptyLabel: 'Sin asignar'
+    });
+
+    configurarBuscadorMensajeroDetalle({
+        input: document.getElementById('detalleMensajeroEntregaInput'),
+        hidden: document.getElementById('detalleMensajeroEntregaId'),
+        optionsContainer: document.getElementById('detalleMensajeroEntregaOpciones'),
+        emptyLabel: 'Sin asignar'
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Script paquetesAdmin.js cargado correctamente');
 
