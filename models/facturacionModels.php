@@ -302,30 +302,30 @@ class FacturacionModels
 
     public function obtenerVistaAdmin(?string $panel = null): array
     {
-        $fechaInicioMensajerosAdmin = date('Y-m-d', strtotime('-1 day'));
+        $fechaInicioFacturacionAdmin = date('Y-m-d', strtotime('-2 months'));
 
         if ($panel === 'cliente') {
             return [
-                'cliente' => $this->obtenerResumenClientes(),
+                'cliente' => $this->obtenerResumenClientes(null, true, $fechaInicioFacturacionAdmin),
             ];
         }
 
         if ($panel === 'mensajero') {
             return [
-                'mensajero' => $this->obtenerResumenMensajeros(false, null, true, $fechaInicioMensajerosAdmin),
+                'mensajero' => $this->obtenerResumenMensajeros(false, null, true, $fechaInicioFacturacionAdmin),
             ];
         }
 
         if ($panel === 'ecobikemess') {
             return [
-                'ecobikemess' => $this->obtenerResumenEcoBikeMess(),
+                'ecobikemess' => $this->obtenerResumenEcoBikeMess($fechaInicioFacturacionAdmin),
             ];
         }
 
         return [
-            'cliente' => $this->obtenerResumenClientes(),
-            'mensajero' => $this->obtenerResumenMensajeros(false, null, true, $fechaInicioMensajerosAdmin),
-            'ecobikemess' => $this->obtenerResumenEcoBikeMess(),
+            'cliente' => $this->obtenerResumenClientes(null, true, $fechaInicioFacturacionAdmin),
+            'mensajero' => $this->obtenerResumenMensajeros(false, null, true, $fechaInicioFacturacionAdmin),
+            'ecobikemess' => $this->obtenerResumenEcoBikeMess($fechaInicioFacturacionAdmin),
         ];
     }
 
@@ -1027,8 +1027,18 @@ class FacturacionModels
         return $this->mapearResumenMensajeros($rows, $mensajeroId, $aplicarOcultos);
     }
 
-    private function obtenerResumenEcoBikeMess(): array
+    private function obtenerResumenEcoBikeMess(?string $fechaDesde = null): array
     {
+        $conditions = ["p.estado = 'entregado'"];
+        $params = [];
+
+        if ($fechaDesde !== null) {
+            $conditions[] = 'COALESCE(e.fecha_entrega, p.fecha_entrega, p.fecha_creacion) >= :fecha_desde';
+            $params[':fecha_desde'] = $fechaDesde . ' 00:00:00';
+        }
+
+        $where = 'WHERE ' . implode(' AND ', $conditions);
+
         $sql = "SELECT
                     p.id AS paquete_id,
                     p.numero_guia,
@@ -1052,11 +1062,11 @@ class FacturacionModels
                 LEFT JOIN usuarios uc ON uc.id = c.usuario_id
                 LEFT JOIN mensajeros m ON m.id = p.mensajero_id
                 LEFT JOIN usuarios um ON um.id = m.usuario_id
-                WHERE p.estado = 'entregado'
+                {$where}
                 ORDER BY COALESCE(e.fecha_entrega, p.fecha_entrega, p.fecha_creacion) DESC, p.id DESC";
 
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute();
+        $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return $this->mapearResumenEcoBikeMess($rows);

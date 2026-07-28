@@ -788,7 +788,8 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 if (typeof todosLosMensajeros !== 'undefined' && Array.isArray(todosLosMensajeros) && todosLosMensajeros.length > 0 && typeof renderizarListaMensajeros === 'function') {
                     renderizarListaMensajeros(todosLosMensajeros);
                 } else {
-                    const response = await fetch('../../controller/paquetesAdminController.php?action=filtros');
+                    const appBasePath = String(window.APP_BASE_PATH || '').replace(/\/+$/, '');
+                    const response = await fetch(`${appBasePath}/controller/paquetesAdminController.php?action=filtros`);
                     const data = await response.json();
                     const mensajeros = Array.isArray(data.mensajeros) ? data.mensajeros : [];
 

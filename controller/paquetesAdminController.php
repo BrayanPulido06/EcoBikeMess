@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 requireApiAuth(['administrador', 'admin'], 'No autorizado');
-require_once '../models/paquetesAdminModels.php';
+require_once __DIR__ . '/../models/paquetesAdminModels.php';
 require_once __DIR__ . '/../includes/upload.php';
 
 // Configurar cabecera para devolver JSON
@@ -30,7 +30,7 @@ try {
             $data = $model->getPaquetes($filters);
             
             // Devolver en formato que DataTables o tu JS pueda leer
-            echo json_encode(['data' => $data]);
+            echo json_encode(['data' => $data], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
             break;
 
         case 'filtros':
@@ -43,7 +43,7 @@ try {
             $id = $_REQUEST['id'] ?? 0;
             $data = $model->getPaqueteDetails($id);
             adjuntarDataUrisEvidencia($data);
-            echo json_encode($data);
+            responderJsonPaquetesAdmin($data);
             break;
 
         case 'imagen_ver':
@@ -582,8 +582,23 @@ try {
             echo json_encode(['error' => 'Acción no válida']);
             break;
     }
-} catch (Exception $e) {
-    echo json_encode(['error' => $e->getMessage()]);
+} catch (Throwable $e) {
+    responderJsonPaquetesAdmin(['error' => $e->getMessage()], 500);
+}
+
+function responderJsonPaquetesAdmin(array $payload, int $statusCode = 200): void
+{
+    http_response_code($statusCode);
+    $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+
+    if ($json === false) {
+        $json = json_encode([
+            'error' => 'No se pudo codificar la respuesta del servidor.',
+            'json_error' => json_last_error_msg(),
+        ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    }
+
+    echo $json;
 }
 
 function eliminarArchivoSiExiste($ruta)

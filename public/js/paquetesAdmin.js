@@ -4,6 +4,8 @@ let todosLosClientes = [];
 let currentData = []; // Almacenar datos actuales de la tabla para exportación
 let selectedPackageIds = new Set();
 let selectedPackagesMeta = new Map();
+const APP_BASE_PATH = String(window.APP_BASE_PATH || '').replace(/\/+$/, '');
+const PAQUETES_ADMIN_CONTROLLER = `${APP_BASE_PATH}/controller/paquetesAdminController.php`;
 const opcionesParentescoNuevaEntrega = [
     { id: 'Destinatario', nombre: 'Destinatario' },
     { id: 'Familiar', nombre: 'Familiar' },
@@ -246,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Petición AJAX al controlador
-        fetch(`../../controller/paquetesAdminController.php?${params.toString()}`)
+        fetch(`${PAQUETES_ADMIN_CONTROLLER}?${params.toString()}`)
             .then(response => response.json())
             .then(response => {
                 if (response.data) {
@@ -394,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         checkbox.disabled = true;
         try {
-            const response = await fetch('../../controller/paquetesAdminController.php?action=toggle_checklist_verde', {
+            const response = await fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=toggle_checklist_verde`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -752,7 +754,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function asegurarClientesNuevoPaquete() {
         if (todosLosClientes.length > 0 && todosLosMensajeros.length > 0) return todosLosClientes;
 
-        const response = await fetch('../../controller/paquetesAdminController.php?action=filtros');
+        const response = await fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=filtros`);
         const data = await response.json();
         todosLosClientes = data.clientes || [];
         if (data.mensajeros) {
@@ -850,7 +852,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
-            const response = await fetch('../../controller/paquetesAdminController.php?action=crear_entrega_sin_rotulo', {
+            const response = await fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=crear_entrega_sin_rotulo`, {
                 method: 'POST',
                 body: new FormData(form)
             });
@@ -899,7 +901,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         for (const id of ids) {
             try {
-                const res = await fetch(`../../controller/paquetesAdminController.php?action=detalle&id=${id}`);
+                const res = await fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=detalle&id=${id}`);
                 const response = await res.json();
                 const info = response.info;
                 if (!info) continue;
@@ -940,7 +942,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 1. Cargar opciones para los Selects (Clientes y Mensajeros) - AHORA GLOBAL
 function cargarFiltros() {
-    fetch('../../controller/paquetesAdminController.php?action=filtros')
+    fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=filtros`)
         .then(response => response.json())
         .then(data => {
             if (data.clientes) {
@@ -1000,8 +1002,20 @@ function verDetalle(id, options = {}) {
         modal.style.display = 'flex'; // Mostrar modal
         container.innerHTML = '<p style="text-align:center">Cargando historial...</p>';
 
-        fetch(`../../controller/paquetesAdminController.php?action=detalle&id=${id}`)
-            .then(res => res.json())
+        fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=detalle&id=${id}`)
+            .then(async res => {
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (error) {
+                    throw new Error(text ? text.slice(0, 250) : 'Respuesta vacia del servidor.');
+                }
+                if (!res.ok || data.error) {
+                    throw new Error(data.error || 'No fue posible cargar el detalle.');
+                }
+                return data;
+            })
             .then(data => {
                 const info = data.info;
                 const historial = data.historial || [];
@@ -1183,17 +1197,17 @@ function verDetalle(id, options = {}) {
                     const params = new URLSearchParams({ action: 'imagen_ver' });
                     if (item.imageId) {
                         params.set('image_id', item.imageId);
-                        return `../../controller/paquetesAdminController.php?${params.toString()}`;
+                        return `${PAQUETES_ADMIN_CONTROLLER}?${params.toString()}`;
                     }
                     if (item.novedadId) {
                         params.set('novedad_id', item.novedadId);
                         params.set('target', item.target || 'novedad_principal');
-                        return `../../controller/paquetesAdminController.php?${params.toString()}`;
+                        return `${PAQUETES_ADMIN_CONTROLLER}?${params.toString()}`;
                     }
                     if (item.target) {
                         params.set('paquete_id', info.paquete_id || id);
                         params.set('target', item.target);
-                        return `../../controller/paquetesAdminController.php?${params.toString()}`;
+                        return `${PAQUETES_ADMIN_CONTROLLER}?${params.toString()}`;
                     }
                     return buildImageUrl(item.ruta || item.ruta_archivo);
                 };
@@ -1257,7 +1271,7 @@ function verDetalle(id, options = {}) {
 
                     return fotos.map(f => {
                         const fullPath = f.dataUrl || (n?.id
-                            ? `../../controller/paquetesAdminController.php?action=imagen_ver&novedad_id=${encodeURIComponent(n.id)}&target=${encodeURIComponent(f.target)}`
+                            ? `${PAQUETES_ADMIN_CONTROLLER}?action=imagen_ver&novedad_id=${encodeURIComponent(n.id)}&target=${encodeURIComponent(f.target)}`
                             : buildImageUrl(f.ruta));
                         const safeFullPath = escapeHtml(fullPath);
                         const alt = `${cap(n.tipo)} - ${f.label}`;
@@ -1587,7 +1601,7 @@ function verDetalle(id, options = {}) {
                         }
 
                         try {
-                            const resp = await fetch('../../controller/paquetesAdminController.php?action=actualizar', {
+                            const resp = await fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=actualizar`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify(payload)
@@ -1628,7 +1642,7 @@ function verDetalle(id, options = {}) {
                         fd.append('tipo', tipo);
                         Array.from(inputFiles.files).forEach(file => fd.append('imagenes[]', file));
                         try {
-                            const resp = await fetch('../../controller/paquetesAdminController.php?action=imagen_subir', {
+                            const resp = await fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=imagen_subir`, {
                                 method: 'POST',
                                 body: fd
                             });
@@ -1655,7 +1669,7 @@ function verDetalle(id, options = {}) {
                         if (imageId) payload.image_id = imageId;
                         if (target) payload.target = target;
                         try {
-                            const resp = await fetch('../../controller/paquetesAdminController.php?action=imagen_eliminar', {
+                            const resp = await fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=imagen_eliminar`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify(payload)
@@ -1682,7 +1696,7 @@ function verDetalle(id, options = {}) {
                         fd.append('target', target);
                         fd.append('imagen', input.files[0]);
                         try {
-                            const resp = await fetch('../../controller/paquetesAdminController.php?action=imagen_reemplazar', {
+                            const resp = await fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=imagen_reemplazar`, {
                                 method: 'POST',
                                 body: fd
                             });
@@ -1701,7 +1715,7 @@ function verDetalle(id, options = {}) {
             })
             .catch(err => {
                 console.error(err);
-                container.innerHTML = '<p class="text-danger">Error al cargar datos.</p>';
+                container.innerHTML = `<p class="text-danger">Error al cargar datos: ${String(err.message || err).replace(/[<>&"']/g, '')}</p>`;
             });
     }
 }
@@ -1752,7 +1766,7 @@ async function cancelarServicioAction() {
         formData.append('evidencia', evidenciaInput.files[0]);
     }
     try {
-        const response = await fetch('../../controller/paquetesAdminController.php?action=cancelar_servicio', {
+        const response = await fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=cancelar_servicio`, {
             method: 'POST',
             body: formData
         });
@@ -1781,7 +1795,7 @@ window.eliminarPaqueteAdmin = async function(id, guia, nombrePaquete) {
     }
 
     try {
-        const response = await fetch('../../controller/paquetesAdminController.php?action=eliminar', {
+        const response = await fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=eliminar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ paquete_id: id })
@@ -1810,7 +1824,7 @@ function cargarRotuloAdmin(id) {
         btn.disabled = true;
     }
 
-    fetch(`../../controller/paquetesAdminController.php?action=detalle&id=${id}`)
+    fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=detalle&id=${id}`)
         .then(res => res.json())
         .then(response => {
             if (btn) {
@@ -1988,7 +2002,7 @@ function asignarMensajeroAction() {
         formData.append('paquete_id', paqueteId || paqueteIds[0]);
     }
 
-    fetch(`../../controller/paquetesAdminController.php?action=${esMasivo ? 'asignar_masivo' : 'asignar'}`, {
+    fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=${esMasivo ? 'asignar_masivo' : 'asignar'}`, {
         method: 'POST',
         body: formData
     })
