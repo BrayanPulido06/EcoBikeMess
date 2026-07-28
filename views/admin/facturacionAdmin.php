@@ -70,6 +70,11 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                             <input type="date" data-panel-filter="cliente" data-filter-field="hasta">
                         </div>
                         <div class="facturacion-actions">
+                            <select data-role="bulk-client-status" aria-label="Estado para clientes seleccionados" disabled>
+                                <option value="pagado">Pagado</option>
+                                <option value="pendiente">Pendiente</option>
+                            </select>
+                            <button class="fact-btn primary" type="button" data-role="update-selected-client-status" disabled>Cambiar estado</button>
                             <button class="fact-btn danger" type="button" data-role="hide-selected-client-groups" disabled>Eliminar seleccionados</button>
                             <button class="fact-btn secondary" type="button" data-reset-panel="cliente">Limpiar filtros</button>
                         </div>
@@ -134,6 +139,11 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                             <input type="date" data-panel-filter="mensajero" data-filter-field="hasta">
                         </div>
                         <div class="facturacion-actions">
+                            <select data-role="bulk-messenger-status" aria-label="Estado para mensajeros seleccionados" disabled>
+                                <option value="pagado">Pagado</option>
+                                <option value="pendiente">Pendiente</option>
+                            </select>
+                            <button class="fact-btn primary" type="button" data-role="update-selected-messenger-status" disabled>Cambiar estado</button>
                             <button class="fact-btn danger" type="button" data-role="hide-selected-messenger-groups" disabled>Eliminar seleccionados</button>
                             <button class="fact-btn secondary" type="button" data-reset-panel="mensajero">Limpiar filtros</button>
                         </div>

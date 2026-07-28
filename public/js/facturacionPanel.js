@@ -1225,8 +1225,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const saveClientGroupStatus = async (groupKey, estado) => {
-        const group = getClienteGroupByKey(groupKey);
+    const postClientGroupStatus = async (group, estado) => {
         if (!group || mode !== 'admin') {
             return;
         }
@@ -1249,14 +1248,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         state.rawData = result.data;
+        return result;
+    };
+
+    const saveClientGroupStatus = async (groupKey, estado) => {
+        const group = getClienteGroupByKey(groupKey);
+        await postClientGroupStatus(group, estado);
         render();
     };
 
     const getMensajeroGroupByKey = (groupKey) => state.mensajeroGroups.find((group) => group.key === groupKey) || null;
     const getEcoBikeGroupByKey = (groupKey) => state.ecobikemessGroups.find((group) => group.key === groupKey) || null;
 
-    const saveMessengerGroupStatus = async (groupKey, estado) => {
-        const group = getMensajeroGroupByKey(groupKey);
+    const postMessengerGroupStatus = async (group, estado) => {
         if (!group || mode !== 'admin') {
             return;
         }
@@ -1279,6 +1283,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         state.rawData = result.data;
+        return result;
+    };
+
+    const saveMessengerGroupStatus = async (groupKey, estado) => {
+        const group = getMensajeroGroupByKey(groupKey);
+        await postMessengerGroupStatus(group, estado);
         render();
     };
 
@@ -1471,8 +1481,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const syncClienteSelectionControls = () => {
         const selectAll = document.querySelector('[data-role="select-all-client-groups"]');
         const bulkButton = document.querySelector('[data-role="hide-selected-client-groups"]');
+        const bulkStatusSelect = document.querySelector('[data-role="bulk-client-status"]');
+        const bulkStatusButton = document.querySelector('[data-role="update-selected-client-status"]');
         const visibleKeys = state.clienteGroups.map((group) => group.key);
         const selectedVisible = visibleKeys.filter((key) => state.selectedClienteGroups.has(key));
+        const hasSelection = selectedVisible.length > 0;
 
         if (selectAll) {
             selectAll.checked = visibleKeys.length > 0 && selectedVisible.length === visibleKeys.length;
@@ -1481,18 +1494,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (bulkButton) {
-            bulkButton.disabled = selectedVisible.length === 0;
-            bulkButton.textContent = selectedVisible.length > 0
+            bulkButton.disabled = !hasSelection;
+            bulkButton.textContent = hasSelection
                 ? `Eliminar seleccionados (${selectedVisible.length})`
                 : 'Eliminar seleccionados';
+        }
+
+        if (bulkStatusSelect) {
+            bulkStatusSelect.disabled = !hasSelection;
+        }
+
+        if (bulkStatusButton) {
+            bulkStatusButton.disabled = !hasSelection;
+            bulkStatusButton.textContent = hasSelection
+                ? `Cambiar estado (${selectedVisible.length})`
+                : 'Cambiar estado';
         }
     };
 
     const syncMensajeroSelectionControls = () => {
         const selectAll = document.querySelector('[data-role="select-all-messenger-groups"]');
         const bulkButton = document.querySelector('[data-role="hide-selected-messenger-groups"]');
+        const bulkStatusSelect = document.querySelector('[data-role="bulk-messenger-status"]');
+        const bulkStatusButton = document.querySelector('[data-role="update-selected-messenger-status"]');
         const visibleKeys = state.mensajeroGroups.map((group) => group.key);
         const selectedVisible = visibleKeys.filter((key) => state.selectedMensajeroGroups.has(key));
+        const hasSelection = selectedVisible.length > 0;
 
         if (selectAll) {
             selectAll.checked = visibleKeys.length > 0 && selectedVisible.length === visibleKeys.length;
@@ -1501,10 +1528,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (bulkButton) {
-            bulkButton.disabled = selectedVisible.length === 0;
-            bulkButton.textContent = selectedVisible.length > 0
+            bulkButton.disabled = !hasSelection;
+            bulkButton.textContent = hasSelection
                 ? `Eliminar seleccionados (${selectedVisible.length})`
                 : 'Eliminar seleccionados';
+        }
+
+        if (bulkStatusSelect) {
+            bulkStatusSelect.disabled = !hasSelection;
+        }
+
+        if (bulkStatusButton) {
+            bulkStatusButton.disabled = !hasSelection;
+            bulkStatusButton.textContent = hasSelection
+                ? `Cambiar estado (${selectedVisible.length})`
+                : 'Cambiar estado';
         }
     };
 
@@ -2427,6 +2465,98 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const handleUpdateSelectedClientStatus = async (button) => {
+        if (mode !== 'admin') {
+            return;
+        }
+
+        const groups = state.clienteGroups.filter((group) => state.selectedClienteGroups.has(group.key));
+        if (!groups.length) {
+            return;
+        }
+
+        const statusSelect = document.querySelector('[data-role="bulk-client-status"]');
+        const estado = statusSelect?.value || 'pagado';
+        if (!['pendiente', 'pagado'].includes(estado)) {
+            throw new Error('Estado invalido.');
+        }
+
+        const label = estado === 'pagado' ? 'Pagado' : 'Pendiente';
+        const confirmed = window.confirm(`Se cambiara el estado de ${groups.length} cuenta(s) de clientes a ${label}. Deseas continuar?`);
+        if (!confirmed) {
+            return;
+        }
+
+        const originalText = button?.textContent || 'Cambiar estado';
+        if (button) {
+            button.disabled = true;
+            button.textContent = 'Actualizando...';
+        }
+        if (statusSelect) {
+            statusSelect.disabled = true;
+        }
+
+        try {
+            for (const group of groups) {
+                await postClientGroupStatus(group, estado);
+                state.selectedClienteGroups.delete(group.key);
+            }
+            closeClientDetailModal();
+            render();
+        } finally {
+            if (button) {
+                button.textContent = originalText;
+            }
+            syncClienteSelectionControls();
+        }
+    };
+
+    const handleUpdateSelectedMessengerStatus = async (button) => {
+        if (mode !== 'admin') {
+            return;
+        }
+
+        const groups = state.mensajeroGroups.filter((group) => state.selectedMensajeroGroups.has(group.key));
+        if (!groups.length) {
+            return;
+        }
+
+        const statusSelect = document.querySelector('[data-role="bulk-messenger-status"]');
+        const estado = statusSelect?.value || 'pagado';
+        if (!['pendiente', 'pagado'].includes(estado)) {
+            throw new Error('Estado invalido.');
+        }
+
+        const label = estado === 'pagado' ? 'Pagado' : 'Pendiente';
+        const confirmed = window.confirm(`Se cambiara el estado de ${groups.length} cuenta(s) de mensajeros a ${label}. Deseas continuar?`);
+        if (!confirmed) {
+            return;
+        }
+
+        const originalText = button?.textContent || 'Cambiar estado';
+        if (button) {
+            button.disabled = true;
+            button.textContent = 'Actualizando...';
+        }
+        if (statusSelect) {
+            statusSelect.disabled = true;
+        }
+
+        try {
+            for (const group of groups) {
+                await postMessengerGroupStatus(group, estado);
+                state.selectedMensajeroGroups.delete(group.key);
+            }
+            closeClientDetailModal();
+            render();
+        } finally {
+            if (button) {
+                button.textContent = originalText;
+            }
+            syncMensajeroSelectionControls();
+        }
+    };
+
     const bindAdminActions = () => {
         document.addEventListener('click', async (event) => {
             const detailButton = event.target.closest('[data-role="open-client-detail"]');
@@ -2514,9 +2644,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const bulkUpdateClientStatusButton = event.target.closest('[data-role="update-selected-client-status"]');
+            if (bulkUpdateClientStatusButton) {
+                handleUpdateSelectedClientStatus(bulkUpdateClientStatusButton).catch((error) => {
+                    alert(error.message);
+                    syncClienteSelectionControls();
+                });
+                return;
+            }
+
             const bulkHideMessengerButton = event.target.closest('[data-role="hide-selected-messenger-groups"]');
             if (bulkHideMessengerButton) {
                 handleHideSelectedMessengerGroups(bulkHideMessengerButton).catch((error) => {
+                    alert(error.message);
+                    syncMensajeroSelectionControls();
+                });
+                return;
+            }
+
+            const bulkUpdateMessengerStatusButton = event.target.closest('[data-role="update-selected-messenger-status"]');
+            if (bulkUpdateMessengerStatusButton) {
+                handleUpdateSelectedMessengerStatus(bulkUpdateMessengerStatusButton).catch((error) => {
                     alert(error.message);
                     syncMensajeroSelectionControls();
                 });

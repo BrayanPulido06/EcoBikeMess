@@ -302,6 +302,8 @@ class FacturacionModels
 
     public function obtenerVistaAdmin(?string $panel = null): array
     {
+        $fechaInicioMensajerosAdmin = date('Y-m-d', strtotime('-1 day'));
+
         if ($panel === 'cliente') {
             return [
                 'cliente' => $this->obtenerResumenClientes(),
@@ -310,7 +312,7 @@ class FacturacionModels
 
         if ($panel === 'mensajero') {
             return [
-                'mensajero' => $this->obtenerResumenMensajeros(false, null, true, date('Y-m-d')),
+                'mensajero' => $this->obtenerResumenMensajeros(false, null, true, $fechaInicioMensajerosAdmin),
             ];
         }
 
@@ -322,7 +324,7 @@ class FacturacionModels
 
         return [
             'cliente' => $this->obtenerResumenClientes(),
-            'mensajero' => $this->obtenerResumenMensajeros(false, null, true, date('Y-m-d')),
+            'mensajero' => $this->obtenerResumenMensajeros(false, null, true, $fechaInicioMensajerosAdmin),
             'ecobikemess' => $this->obtenerResumenEcoBikeMess(),
         ];
     }
