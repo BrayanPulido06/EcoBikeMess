@@ -1045,6 +1045,7 @@ class FacturacionModels
                     CONCAT(COALESCE(um.nombres, ''), ' ', COALESCE(um.apellidos, '')) AS mensajero_nombre
                 FROM paquetes p
                 INNER JOIN facturacion f ON f.paquete_id = p.id
+                LEFT JOIN entregas e ON e.paquete_id = p.id
                 LEFT JOIN clientes c ON c.id = p.cliente_id
                 LEFT JOIN usuarios uc ON uc.id = c.usuario_id
                 LEFT JOIN mensajeros m ON m.id = p.mensajero_id

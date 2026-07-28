@@ -11,12 +11,12 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Facturación Cliente - EcoBikeMess</title>
-    <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
-    <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
-    <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
-    <link rel="stylesheet" href="../../public/css/clientesTheme.css">
-    <link rel="stylesheet" href="../../public/css/responsive.css">
-    <link rel="stylesheet" href="../../public/css/facturacionPanel.css?v=<?php echo $facturacionPanelCssVersion; ?>">
+    <link rel="icon" href="<?php echo htmlspecialchars(app_asset_url('img/Logo_Negro_Transparente.png'), ENT_QUOTES, 'UTF-8'); ?>" type="image/png">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/clienteSidebar.css'), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/clienteNavbar.css'), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/clientesTheme.css'), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/responsive.css'), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/facturacionPanel.css') . '?v=' . $facturacionPanelCssVersion, ENT_QUOTES, 'UTF-8'); ?>">
 </head>
 <body class="facturacion-page">
     <?php include '../layouts/clienteNavbar.php'; ?>
@@ -26,7 +26,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
         <section
             id="facturacionApp"
             data-mode="cliente"
-            data-endpoint="../../controller/facturacionClienteController.php"
+            data-endpoint="<?php echo htmlspecialchars(app_controller_url('facturacionClienteController.php'), ENT_QUOTES, 'UTF-8'); ?>"
         >
             <div class="facturacion-top">
                 <div>
@@ -92,6 +92,6 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
         </div>
     </div>
 
-    <script src="../../public/js/facturacionPanel.js?v=<?php echo $facturacionPanelJsVersion; ?>"></script>
+    <script src="<?php echo htmlspecialchars(app_asset_url('js/facturacionPanel.js') . '?v=' . $facturacionPanelJsVersion, ENT_QUOTES, 'UTF-8'); ?>"></script>
 </body>
 </html>

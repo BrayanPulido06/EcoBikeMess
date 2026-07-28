@@ -29,15 +29,15 @@ function tokenRecuperacionExiste(string $token): bool
         window.APP_BASE_PATH = <?php echo json_encode(app_url(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
     </script>
     <title>Restablecer Contraseña - EcoBikeMess</title>
-    <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
-    <link rel="stylesheet" href="../public/css/login.css">
-    <link rel="stylesheet" href="../public/css/responsive.css">
+    <link rel="icon" href="public/img/Logo_Negro_Transparente.png" type="image/png">
+    <link rel="stylesheet" href="public/css/login.css">
+    <link rel="stylesheet" href="public/css/responsive.css">
 </head>
 <body>
     <div class="login-container">
         <div class="login-header">
             <h1>
-                <img src="../public/img/Logo_Blanco_Trasparente_Circulo.png" alt="Logo" style="width: 90px; vertical-align: middle;"> 
+                <img src="public/img/Logo_Blanco_Trasparente_Circulo.png" alt="Logo" style="width: 90px; vertical-align: middle;"> 
                 EcoBikeMess
             </h1>
             <p>Crea una nueva contraseña</p>
@@ -53,7 +53,7 @@ function tokenRecuperacionExiste(string $token): bool
                 echo "<div class='form-footer'><a href='" . htmlspecialchars(route_url('login'), ENT_QUOTES, 'UTF-8') . "' class='link'>Volver al inicio</a></div></div>";
             } else {
             ?>
-                <form action="../controller/recuperarContrasenaController.php" method="POST" class="form-container active">
+                <form action="controller/recuperarContrasenaController.php" method="POST" class="form-container active">
                     <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
 
                     <h2>Nueva Contraseña</h2>

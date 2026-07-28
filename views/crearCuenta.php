@@ -9,9 +9,9 @@
         window.APP_BASE_PATH = <?php echo json_encode(app_url(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
     </script>
     <title>Crear Cuenta - EcoBikeMess</title>
-    <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
-    <link rel="stylesheet" href="../public/css/crearCuenta.css?v=20260418-3">
-    <link rel="stylesheet" href="../public/css/responsive.css">
+    <link rel="icon" href="public/img/Logo_Negro_Transparente.png" type="image/png">
+    <link rel="stylesheet" href="public/css/crearCuenta.css?v=20260418-3">
+    <link rel="stylesheet" href="public/css/responsive.css">
     <style>
         /* Estilos para ocultar el input de archivo nativo */
         .hidden-file-input {
@@ -55,7 +55,7 @@
 
         <!-- Header -->
         <div class="register-header">
-            <h1><img src="../public/img/Logo_Blanco_Trasparente_Circulo.png" alt="EcoBikeMess" style="width: 100px; vertical-align: middle;">EcoBikeMess</h1>
+            <h1><img src="public/img/Logo_Blanco_Trasparente_Circulo.png" alt="EcoBikeMess" style="width: 100px; vertical-align: middle;">EcoBikeMess</h1>
             <p>Crea tu cuenta y comienza tu experiencia</p>
         </div>
 
@@ -67,7 +67,7 @@
         <?php endif; ?>
 
         <!-- FORMULARIO UNIFICADO -->
-        <form id="registerForm" class="register-form active" action="../controller/crearCuentaController.php" method="POST" enctype="multipart/form-data">
+        <form id="registerForm" class="register-form active" action="controller/crearCuentaController.php" method="POST" enctype="multipart/form-data">
             
             <!-- 1. DATOS COMUNES (Siempre visibles) -->
             <h2>Información Personal</h2>
@@ -382,6 +382,6 @@
         </div>
     </div>
 
-    <script src="../public/js/crearCuenta.js?v=20260721-1"></script>
+    <script src="public/js/crearCuenta.js?v=20260721-1"></script>
 </body>
 </html>

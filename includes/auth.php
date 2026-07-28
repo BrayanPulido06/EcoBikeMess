@@ -13,7 +13,10 @@ function userHasRole($roles)
     if ($roles === null) {
         return true;
     }
-    $role = $_SESSION['user_role'] ?? '';
+    $role = strtolower(trim((string) ($_SESSION['user_role'] ?? '')));
+    $roles = array_map(function ($allowedRole) {
+        return strtolower(trim((string) $allowedRole));
+    }, (array) $roles);
     return in_array($role, $roles, true);
 }
 

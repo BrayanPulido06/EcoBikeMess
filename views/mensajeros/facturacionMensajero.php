@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../../includes/paths.php';
 require_once __DIR__ . '/../../includes/auth.php';
 requireWebAuth(['mensajero']);
+$facturacionPanelCssVersion = @filemtime(__DIR__ . '/../../public/css/facturacionPanel.css') ?: time();
+$facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionPanel.js') ?: time();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -9,11 +11,11 @@ requireWebAuth(['mensajero']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Facturación Mensajero - EcoBikeMess</title>
-    <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
-    <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
-    <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css?v=20260528-1">
-    <link rel="stylesheet" href="../../public/css/responsive.css">
-    <link rel="stylesheet" href="../../public/css/facturacionPanel.css">
+    <link rel="icon" href="<?php echo htmlspecialchars(app_asset_url('img/Logo_Negro_Transparente.png'), ENT_QUOTES, 'UTF-8'); ?>" type="image/png">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/inicioMensajero.css'), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/mensajeroSidebar.css') . '?v=20260528-1', ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/responsive.css'), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/facturacionPanel.css') . '?v=' . $facturacionPanelCssVersion, ENT_QUOTES, 'UTF-8'); ?>">
 </head>
 <body class="facturacion-page">
     <header class="mobile-header">
@@ -21,7 +23,7 @@ requireWebAuth(['mensajero']);
             <span class="menu-icon">☰</span>
         </button>
         <div class="header-info">
-            <h1><img src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width:35px;height:35px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
+            <h1><img src="<?php echo htmlspecialchars(app_asset_url('img/Logo_Circulo_Fondoblanco.png'), ENT_QUOTES, 'UTF-8'); ?>" alt="EcoBikeMess" style="width:35px;height:35px;vertical-align:middle;margin-right:6px;">EcoBikeMess</h1>
             <p class="user-name">Facturación del mensajero</p>
         </div>
     </header>
@@ -32,7 +34,7 @@ requireWebAuth(['mensajero']);
         <section
             id="facturacionApp"
             data-mode="mensajero"
-            data-endpoint="../../controller/facturacionMensajeroController.php"
+            data-endpoint="<?php echo htmlspecialchars(app_controller_url('facturacionMensajeroController.php'), ENT_QUOTES, 'UTF-8'); ?>"
         >
             <div class="facturacion-top">
                 <div>
@@ -104,7 +106,7 @@ requireWebAuth(['mensajero']);
         </section>
     </main>
 
-    <script src="../../public/js/facturacionPanel.js"></script>
-    <script src="../../public/js/mensajeroLayout.js?v=20260528-1"></script>
+    <script src="<?php echo htmlspecialchars(app_asset_url('js/facturacionPanel.js') . '?v=' . $facturacionPanelJsVersion, ENT_QUOTES, 'UTF-8'); ?>"></script>
+    <script src="<?php echo htmlspecialchars(app_asset_url('js/mensajeroLayout.js') . '?v=20260528-1', ENT_QUOTES, 'UTF-8'); ?>"></script>
 </body>
 </html>

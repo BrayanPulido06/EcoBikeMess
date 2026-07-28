@@ -9,9 +9,9 @@
         window.APP_BASE_PATH = <?php echo json_encode(app_url(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
     </script>
     <title>Iniciar Sesión - EcoBikeMess</title>
-    <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
-    <link rel="stylesheet" href="../public/css/login.css">
-    <link rel="stylesheet" href="../public/css/responsive.css">
+    <link rel="icon" href="public/img/Logo_Negro_Transparente.png" type="image/png">
+    <link rel="stylesheet" href="public/css/login.css">
+    <link rel="stylesheet" href="public/css/responsive.css">
     <style>
         /* Estabilización del campo de contraseña */
         .password-input {
@@ -71,14 +71,14 @@
         <!-- Header con logo -->
         <div class="login-header">
             <h1>
-                <img src="../public/img/Logo_Blanco_Trasparente_Circulo.png" alt="Logo" style="width: 100px; vertical-align: middle;">EcoBikeMess</h1>
+                <img src="public/img/Logo_Blanco_Trasparente_Circulo.png" alt="Logo" style="width: 100px; vertical-align: middle;">EcoBikeMess</h1>
             <p>Mensajería Ecológica para un Futuro Sostenible</p>
         </div>
 
         <!-- Cuerpo del formulario -->
         <div class="login-body">
             <!-- Formulario de Inicio de Sesión -->
-            <form id="loginForm" class="form-container active" action="../controller/loginController.php" method="POST">
+            <form id="loginForm" class="form-container active" action="controller/loginController.php" method="POST">
                     <h2>Iniciar Sesión</h2>
                     <p class="form-subtitle">Bienvenido de nuevo</p>
 
@@ -130,6 +130,6 @@
         </div>
     </div>
 
-    <script src="../public/js/login.js"></script>
+    <script src="public/js/login.js"></script>
 </body>
 </html>

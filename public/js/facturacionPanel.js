@@ -279,8 +279,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     item.destinatario_nombre
                 ].join(' ').toLowerCase()
                 : [
-                item.mensajero_nombre
-            ].join(' ').toLowerCase();
+                    item.numero_guia,
+                    item.mensajero_nombre,
+                    item.cliente_nombre,
+                    item.destinatario_nombre
+                ].join(' ').toLowerCase();
 
         if (text && !haystack.includes(text)) {
             return false;

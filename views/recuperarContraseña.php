@@ -9,16 +9,16 @@
         window.APP_BASE_PATH = <?php echo json_encode(app_url(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
     </script>
     <title>Recuperar Contraseña - EcoBikeMess</title>
-    <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
-    <link rel="stylesheet" href="../public/css/login.css">
-    <link rel="stylesheet" href="../public/css/responsive.css">
+    <link rel="icon" href="public/img/Logo_Negro_Transparente.png" type="image/png">
+    <link rel="stylesheet" href="public/css/login.css">
+    <link rel="stylesheet" href="public/css/responsive.css">
 </head>
 <body>
     <div class="login-container">
         <!-- Header con logo -->
         <div class="login-header">
             <h1>
-                <img src="../public/img/Logo_Blanco_Trasparente_Circulo.png" alt="Logo" style="width: 90px; vertical-align: middle;"> 
+                <img src="public/img/Logo_Blanco_Trasparente_Circulo.png" alt="Logo" style="width: 90px; vertical-align: middle;"> 
                 EcoBikeMess
             </h1>
             <p>Mensajería Ecológica para un Futuro Sostenible</p>
@@ -64,6 +64,6 @@
         </div>
     </div>
 
-    <script src="../public/js/login.js"></script>
+    <script src="public/js/login.js"></script>
 </body>
 </html>

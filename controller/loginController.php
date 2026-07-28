@@ -9,7 +9,7 @@ session_set_cookie_params($sessionLifetime, "/");
 
 session_start();
 
-require_once '../models/conexionGlobal.php';
+require_once __DIR__ . '/../models/conexionGlobal.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $correo = filter_var(trim($_POST['correo']), FILTER_SANITIZE_EMAIL);
@@ -40,7 +40,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_lastname'] = $usuario['apellidos'];
             $_SESSION['user_email'] = $usuario['correo'];
             $_SESSION['user_phone'] = $usuario['telefono'];
-            $_SESSION['user_role'] = $usuario['tipo_usuario'];
+            $rol = strtolower(trim($usuario['tipo_usuario']));
+            $_SESSION['user_role'] = $rol;
 
             if (isset($_POST['remember_me'])) {
                 setcookie('remember_email', $correo, time() + $sessionLifetime, "/");
@@ -54,7 +55,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
 
-            $rol = strtolower(trim($usuario['tipo_usuario']));
             switch ($rol) {
                 case 'admin':
                 case 'administrador':
