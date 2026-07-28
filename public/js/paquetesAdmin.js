@@ -1428,6 +1428,20 @@ function verDetalle(id, options = {}) {
                 };
 
                 const yesNoLabel = (value) => (Number(value) === 1 || String(value).toLowerCase() === '1' ? 'Sí' : 'No');
+                const yesNoOptions = (value) => {
+                    const normalized = Number(value) === 1 || String(value).toLowerCase() === '1' ? '1' : '0';
+                    return `
+                        <option value="1" ${normalized === '1' ? 'selected' : ''}>Si</option>
+                        <option value="0" ${normalized === '0' ? 'selected' : ''}>No</option>
+                    `;
+                };
+                const envioDestinatarioOptions = (value) => {
+                    const normalized = String(value || 'no').toLowerCase() === 'si' ? 'si' : 'no';
+                    return `
+                        <option value="si" ${normalized === 'si' ? 'selected' : ''}>Si</option>
+                        <option value="no" ${normalized === 'no' ? 'selected' : ''}>No</option>
+                    `;
+                };
 
                 const remitenteOptions = (Array.isArray(todosLosClientes) ? todosLosClientes : [])
                     .map(cliente => `<option value="${escapeHtml(cliente.nombre || '')}"></option>`)
@@ -1521,23 +1535,31 @@ function verDetalle(id, options = {}) {
                             <div class="detalle-grid">
                                 <div class="detalle-item">
                                     <div class="detalle-label">Dimensión escogida</div>
-                                    <div class="detalle-value">${escapeHtml(info.dimensiones || 'Sin registro')}</div>
+                                    <input class="form-control" name="dimensiones" value="${escapeHtml(info.dimensiones || '')}" placeholder="Ej: Menor o igual a 20 x 20 cm">
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Entrega el mismo día</div>
-                                    <div class="detalle-value">${yesNoLabel(info.envio_mismo_dia)}</div>
+                                    <select class="form-control" name="envio_mismo_dia">
+                                        ${yesNoOptions(info.envio_mismo_dia)}
+                                    </select>
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Entrega en otra zona</div>
-                                    <div class="detalle-value">${yesNoLabel(info.zona_periferica)}</div>
+                                    <select class="form-control" name="zona_periferica">
+                                        ${yesNoOptions(info.zona_periferica)}
+                                    </select>
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Recoger cambios</div>
-                                    <div class="detalle-value">${yesNoLabel(info.recoger_cambios)}</div>
+                                    <select class="form-control" name="recoger_cambios">
+                                        ${yesNoOptions(info.recoger_cambios)}
+                                    </select>
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Sumar envío al recaudo</div>
-                                    <div class="detalle-value">${String(info.envio_destinatario || '').toLowerCase() === 'si' ? 'Sí' : 'No'}</div>
+                                    <select class="form-control" name="envio_destinatario">
+                                        ${envioDestinatarioOptions(info.envio_destinatario)}
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -1702,7 +1724,12 @@ function verDetalle(id, options = {}) {
                             recaudo_esperado: parseFloat(formData.get('recaudo_esperado') || '0'),
                             instrucciones_entrega: formData.get('instrucciones_entrega') || '',
                             mensajero_id: formData.get('mensajero_id') || '',
-                            mensajero_recoleccion_id: formData.get('mensajero_recoleccion_id') || ''
+                            mensajero_recoleccion_id: formData.get('mensajero_recoleccion_id') || '',
+                            dimensiones: formData.get('dimensiones') || '',
+                            envio_mismo_dia: parseInt(formData.get('envio_mismo_dia') || '0', 10) === 1 ? 1 : 0,
+                            zona_periferica: parseInt(formData.get('zona_periferica') || '0', 10) === 1 ? 1 : 0,
+                            recoger_cambios: parseInt(formData.get('recoger_cambios') || '0', 10) === 1 ? 1 : 0,
+                            envio_destinatario: formData.get('envio_destinatario') === 'si' ? 'si' : 'no'
                         };
 
                         if (formData.get('entrega_nombre_receptor') !== null) {

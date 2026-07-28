@@ -146,7 +146,12 @@ try {
                 'estado' => trim((string) ($input['estado'] ?? '')),
                 'mensajero_id' => (int) ($input['mensajero_id'] ?? 0),
                 'mensajero_recoleccion_id' => (int) ($input['mensajero_recoleccion_id'] ?? 0),
-                'fecha_creacion' => trim((string) ($input['fecha_creacion'] ?? ''))
+                'fecha_creacion' => trim((string) ($input['fecha_creacion'] ?? '')),
+                'dimensiones' => trim((string) ($input['dimensiones'] ?? '')),
+                'envio_mismo_dia' => (int) ($input['envio_mismo_dia'] ?? 0) === 1 ? 1 : 0,
+                'zona_periferica' => (int) ($input['zona_periferica'] ?? 0) === 1 ? 1 : 0,
+                'recoger_cambios' => (int) ($input['recoger_cambios'] ?? 0) === 1 ? 1 : 0,
+                'envio_destinatario' => strtolower((string) ($input['envio_destinatario'] ?? 'no')) === 'si' ? 'si' : 'no'
             ];
 
             $fechaEntregaSync = null;
