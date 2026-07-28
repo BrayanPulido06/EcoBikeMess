@@ -1442,6 +1442,50 @@ function verDetalle(id, options = {}) {
                         <option value="no" ${normalized === 'no' ? 'selected' : ''}>No</option>
                     `;
                 };
+                const dimensionesOpcionesAdmin = [
+                    { value: '', label: 'Seleccionar tamaño...', recargo: 0 },
+                    { value: 'Menor o igual a 20 x 20 cm', label: 'Menor o igual a 20 x 20 cm', recargo: 0 },
+                    { value: 'Entre 21x21 y 30x30 cm', label: 'Entre 21x21 y 30x30 cm (+$2.000)', recargo: 2000 },
+                    { value: 'Entre 31x31 y 35x35 cm', label: 'Entre 31x31 y 35x35 cm (+$4.000)', recargo: 4000 },
+                    { value: 'Entre 36x36 y 40x40 cm', label: 'Entre 36x36 y 40x40 cm (+$7.000)', recargo: 7000 },
+                    { value: 'Entre 41x41 y 45x45 cm', label: 'Entre 41x41 y 45x45 cm (+$10.000)', recargo: 10000 },
+                    { value: 'Entre 46x46 y 49x49 cm', label: 'Entre 46x46 y 49x49 cm (+$12.000)', recargo: 12000 },
+                    { value: 'Igual o mayor a 50 x 50 cm', label: 'Igual o mayor a 50 x 50 cm (Notificar)', recargo: 0, notificar: true }
+                ];
+                const normalizarDimensionDetalle = (value) => {
+                    const raw = String(value || '').trim();
+                    const normalized = raw.toLowerCase();
+                    const map = {
+                        '0': 'Menor o igual a 20 x 20 cm',
+                        '2000': 'Entre 21x21 y 30x30 cm',
+                        '4000': 'Entre 31x31 y 35x35 cm',
+                        '7000': 'Entre 36x36 y 40x40 cm',
+                        '10000': 'Entre 41x41 y 45x45 cm',
+                        '12000': 'Entre 46x46 y 49x49 cm',
+                        'notificar': 'Igual o mayor a 50 x 50 cm',
+                        'menor o igual a 20x20 cm': 'Menor o igual a 20 x 20 cm',
+                        'menor o igual a 20 x 20 cm': 'Menor o igual a 20 x 20 cm',
+                        'entre 21x21 y 30x30 cm': 'Entre 21x21 y 30x30 cm',
+                        'entre 31x31 y 35x35 cm': 'Entre 31x31 y 35x35 cm',
+                        'entre 36x36 y 40x40 cm': 'Entre 36x36 y 40x40 cm',
+                        'entre 41x41 y 45x45 cm': 'Entre 41x41 y 45x45 cm',
+                        'entre 46x46 y 49x49 cm': 'Entre 46x46 y 49x49 cm',
+                        'igual o mayor a 50 x 50 cm': 'Igual o mayor a 50 x 50 cm',
+                        'igual o mayor a 50 x 50 cm (notificar)': 'Igual o mayor a 50 x 50 cm'
+                    };
+                    return map[normalized] || raw;
+                };
+                const dimensionOptions = (value) => {
+                    const selected = normalizarDimensionDetalle(value);
+                    return dimensionesOpcionesAdmin.map(option => `
+                        <option
+                            value="${escapeHtml(option.value)}"
+                            data-recargo="${option.recargo}"
+                            data-notificar="${option.notificar ? '1' : '0'}"
+                            ${option.value === selected ? 'selected' : ''}
+                        >${escapeHtml(option.label)}</option>
+                    `).join('');
+                };
 
                 const remitenteOptions = (Array.isArray(todosLosClientes) ? todosLosClientes : [])
                     .map(cliente => `<option value="${escapeHtml(cliente.nombre || '')}"></option>`)
@@ -1535,7 +1579,9 @@ function verDetalle(id, options = {}) {
                             <div class="detalle-grid">
                                 <div class="detalle-item">
                                     <div class="detalle-label">Dimensión escogida</div>
-                                    <input class="form-control" name="dimensiones" value="${escapeHtml(info.dimensiones || '')}" placeholder="Ej: Menor o igual a 20 x 20 cm">
+                                    <select class="form-control" name="dimensiones">
+                                        ${dimensionOptions(info.dimensiones)}
+                                    </select>
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Entrega el mismo día</div>
@@ -1677,6 +1723,46 @@ function verDetalle(id, options = {}) {
                 const form = document.getElementById('formEditarDetalles');
                 if (form) {
                     let guardandoCambios = false;
+                    const recalcularCostoDetalleAdmin = () => {
+                        const dimensionSelect = form.querySelector('select[name="dimensiones"]');
+                        const selectedDimension = dimensionSelect?.selectedOptions?.[0] || null;
+                        if (selectedDimension?.dataset.notificar === '1') {
+                            alert('Para paquetes de 50 x 50 cm o más se debe confirmar el costo manualmente.');
+                            dimensionSelect.value = normalizarDimensionDetalle(info.dimensiones || '');
+                            return;
+                        }
+
+                        const costoInput = form.querySelector('input[name="costo_envio"]');
+                        const tipoServicio = String(form.querySelector('[name="tipo_servicio"]')?.value || '').toLowerCase();
+                        const recaudo = parseFloat(form.querySelector('input[name="recaudo_esperado"]')?.value || '0') || 0;
+                        const tieneRecaudo = tipoServicio === 'contraentrega' || recaudo > 0;
+                        const recargoRecaudo = tieneRecaudo
+                            ? 3000 + Math.max(0, Math.floor((recaudo - 300000) / 100000) * 1000)
+                            : 0;
+                        const total = 8000
+                            + (parseInt(selectedDimension?.dataset.recargo || '0', 10) || 0)
+                            + (Number(form.querySelector('select[name="envio_mismo_dia"]')?.value || 0) === 1 ? 2000 : 0)
+                            + (Number(form.querySelector('select[name="zona_periferica"]')?.value || 0) === 1 ? 4000 : 0)
+                            + (Number(form.querySelector('select[name="recoger_cambios"]')?.value || 0) === 1 ? 5000 : 0)
+                            + recargoRecaudo;
+
+                        if (costoInput) {
+                            costoInput.value = total;
+                        }
+                    };
+
+                    form.querySelectorAll([
+                        'select[name="dimensiones"]',
+                        'select[name="envio_mismo_dia"]',
+                        'select[name="zona_periferica"]',
+                        'select[name="recoger_cambios"]',
+                        'select[name="tipo_servicio"]',
+                        'input[name="recaudo_esperado"]'
+                    ].join(',')).forEach((field) => {
+                        field.addEventListener('change', recalcularCostoDetalleAdmin);
+                        field.addEventListener('input', recalcularCostoDetalleAdmin);
+                    });
+
                     if (options.modoCierre) {
                         const estadoSelect = form.querySelector('select[name="estado"]');
                         const fechaEntregaInput = form.querySelector('input[name="entrega_fecha"]');
