@@ -1612,7 +1612,10 @@ function verDetalle(id, options = {}) {
 
                         ${info.infoEntrega ? `
                         <div class="detalle-section" style="margin-top: 20px; background-color: #f8fff9; border: 1px solid #c3e6cb;">
-                            <h3 style="color: #155724;">? Detalles de la Entrega</h3>
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                                <h3 style="color: #155724; margin:0;">? Detalles de la Entrega</h3>
+                                <button type="button" class="btn btn-secondary btn-sm" id="btnCopiarInfoEntrega">Copiar informacion</button>
+                            </div>
                             <div class="detalle-grid">
                                 <div class="detalle-item">
                                     <div class="detalle-label">Recibido por</div>
@@ -1864,6 +1867,45 @@ function verDetalle(id, options = {}) {
                 }
 
                 const btnSubir = document.getElementById('btnSubirImagenes');
+                const btnCopiarInfoEntrega = document.getElementById('btnCopiarInfoEntrega');
+                if (btnCopiarInfoEntrega && form) {
+                    btnCopiarInfoEntrega.addEventListener('click', async () => {
+                        const getValue = (selector) => String(form.querySelector(selector)?.value || '').trim();
+                        const texto = [
+                            'Detalles de la entrega',
+                            `Recibido por: ${getValue('[name="entrega_nombre_receptor"]') || 'Sin informacion'}`,
+                            `Parentesco/Cargo: ${getValue('[name="entrega_parentesco"]') || 'Sin informacion'}`,
+                            `Documento: ${getValue('[name="entrega_documento"]') || 'Sin informacion'}`,
+                            `Fecha entrega: ${getValue('[name="entrega_fecha"]') || 'Sin informacion'}`,
+                            `Total recaudado: ${getValue('[name="entrega_recaudo_real"]') || '0'}`,
+                            `Cambios recogidos: ${getValue('[name="entrega_recibio_cambios"]') === '1' ? 'Si' : 'No'}`,
+                            `Observaciones: ${getValue('[name="entrega_observaciones"]') || 'Sin observaciones'}`
+                        ].join('\n');
+
+                        try {
+                            if (navigator.clipboard?.writeText) {
+                                await navigator.clipboard.writeText(texto);
+                            } else {
+                                const textarea = document.createElement('textarea');
+                                textarea.value = texto;
+                                textarea.style.position = 'fixed';
+                                textarea.style.opacity = '0';
+                                document.body.appendChild(textarea);
+                                textarea.select();
+                                document.execCommand('copy');
+                                textarea.remove();
+                            }
+                            const originalText = btnCopiarInfoEntrega.textContent;
+                            btnCopiarInfoEntrega.textContent = 'Copiado';
+                            setTimeout(() => {
+                                btnCopiarInfoEntrega.textContent = originalText;
+                            }, 1800);
+                        } catch (error) {
+                            alert('No se pudo copiar la informacion.');
+                        }
+                    });
+                }
+
                 if (btnSubir) {
                     btnSubir.addEventListener('click', async () => {
                         const tipo = document.getElementById('tipoImagenNueva').value;
