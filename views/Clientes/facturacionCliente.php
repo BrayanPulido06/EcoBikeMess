@@ -36,10 +36,26 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                 <div class="facturacion-role-badge">Cliente</div>
             </div>
 
-            <div id="summary-cliente" class="facturacion-summary" style="display: none;"></div>
+            <div id="summary-cliente" class="facturacion-summary"></div>
 
             <div class="facturacion-card">
                 <div class="facturacion-filters">
+                    <div class="facturacion-field">
+                        <label>Buscar</label>
+                        <input type="text" placeholder="Guia o destinatario" data-panel-filter="cliente" data-filter-field="q">
+                    </div>
+                    <div class="facturacion-field">
+                        <label>Estado</label>
+                        <select data-panel-filter="cliente" data-filter-field="estado">
+                            <option value="">Todos</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="asignado">Asignado</option>
+                            <option value="en_transito">En transito</option>
+                            <option value="en_ruta">En ruta</option>
+                            <option value="entregado">Entregado</option>
+                            <option value="cancelado">Cancelado</option>
+                        </select>
+                    </div>
                     <div class="facturacion-field">
                         <label>Desde</label>
                         <input type="date" data-panel-filter="cliente" data-filter-field="desde">
@@ -59,16 +75,18 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                             <tr>
                                 <th>Fecha</th>
                                 <th>Paquetes entregados</th>
+                                <th>Adicionales</th>
                                 <th>Total servicio</th>
                                 <th>Total recaudado</th>
                                 <th>Abono</th>
                                 <th>Estado</th>
                                 <th>Saldo</th>
+                                <th>Total acumulado</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="table-body-cliente" data-loading>
-                            <tr><td colspan="8" class="loading-state">Cargando información...</td></tr>
+                            <tr><td colspan="10" class="loading-state">Cargando información...</td></tr>
                         </tbody>
                     </table>
                 </div>

@@ -43,7 +43,7 @@ try {
     if ($method === 'POST' && $action === 'actualizar_pago_mensajero') {
         $paqueteId = (int) ($_POST['paquete_id'] ?? 0);
         $valorPago = (float) ($_POST['valor_pago_mensajero'] ?? 7000);
-        $mostrarAlMensajero = (int) ($_POST['mostrar_al_mensajero'] ?? 0) === 1;
+        $mostrarAlMensajero = true;
 
         if ($paqueteId <= 0) {
             throw new InvalidArgumentException('Paquete invalido.');

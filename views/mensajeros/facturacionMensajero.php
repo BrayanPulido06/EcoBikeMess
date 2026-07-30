@@ -39,7 +39,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
             <div class="facturacion-top">
                 <div>
                     <h1>Facturación del mensajero</h1>
-                    <p>Consulta los paquetes visibles para ti con recaudos, valor del envío y valor a pagar definido por administración.</p>
+                    <p>Consulta tus paquetes entregados con recaudos, valor del envío y valor a pagar definido por administración.</p>
                 </div>
                 <div class="facturacion-role-badge">Mensajero</div>
             </div>
@@ -91,16 +91,15 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                                 <th>Recaudo real</th>
                                 <th>Estado</th>
                                 <th>Pago mensajero</th>
-                                <th>Visible</th>
                             </tr>
                         </thead>
                         <tbody id="table-body-mensajero" data-loading>
-                            <tr><td colspan="11" class="loading-state">Cargando información...</td></tr>
+                            <tr><td colspan="10" class="loading-state">Cargando información...</td></tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div class="facturacion-footnote">Esta vista es solo lectura y únicamente muestra los pagos que administración marcó como visibles para ti.</div>
+                <div class="facturacion-footnote">Esta vista es solo lectura y muestra tus entregas facturadas.</div>
                 <div class="facturacion-footnote" id="count-mensajero">0 registros</div>
             </div>
         </section>

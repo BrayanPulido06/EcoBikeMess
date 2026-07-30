@@ -792,8 +792,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const groupStatusFromBalance = (value) => Math.round(Number(value || 0)) === 0 ? 'pagado' : 'pendiente';
 
-    const clienteTableColspan = () => mode === 'admin' ? 12 : 8;
-    const mensajeroTableColspan = () => mode === 'admin' ? 12 : 11;
+    const clienteTableColspan = () => mode === 'admin' ? 12 : 10;
+    const mensajeroTableColspan = () => mode === 'admin' ? 12 : 10;
     const ecobikemessTableColspan = () => 8;
 
     const renderClienteTable = (items) => {
@@ -822,11 +822,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tr>
                         <td>${group.fechaLabel}</td>
                         <td>${group.paquetesEntregados}</td>
+                        <td>${adicionalesCell(
+                            Number(group.totalAdicionalesPaquetes || 0) + Number(group.adicionalGeneralPositivo || 0),
+                            group.adicionalGeneralDescripcionPositiva || packageAdditionalSummary(group.packages, 'observaciones_admin'),
+                            group.adicionalGeneralNegativo,
+                            group.adicionalGeneralDescripcionNegativa
+                        )}</td>
                         <td>${money(group.totalServicio)}</td>
                         <td>${money(group.totalRecaudado)}</td>
                         <td>${money(group.abono)}</td>
                         <td>${clientGroupStatusBadge(group.estado)}</td>
                         <td class="amount-cell ${balanceCellClass(group.saldo)}">${moneyAbs(group.saldo)}</td>
+                        <td class="amount-cell ${balanceCellClass(group.totalAcumulado)}">${moneyAbs(group.totalAcumulado)}</td>
                         <td>
                             <button
                                 type="button"
@@ -936,7 +943,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${money(item.valor_recaudo_real)}</td>
                     <td>${statusBadge(item.estado)}</td>
                     <td>${money(getMessengerPaymentValue(item))}</td>
-                    <td>${boolBadge(item.mostrar_al_mensajero, 'Visible', 'Oculto')}</td>
                 </tr>
             `).join('');
 
@@ -1199,13 +1205,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const savePayment = async (paqueteId) => {
         const paymentInput = document.querySelector(`[data-role="payment-input"][data-id="${paqueteId}"]`);
-        const toggleInput = document.querySelector(`[data-role="show-toggle"][data-id="${paqueteId}"]`);
 
         const formData = new FormData();
         formData.append('action', 'actualizar_pago_mensajero');
         formData.append('paquete_id', paqueteId);
         formData.append('valor_pago_mensajero', paymentInput ? paymentInput.value : '7000');
-        formData.append('mostrar_al_mensajero', toggleInput && toggleInput.checked ? '1' : '0');
+        formData.append('mostrar_al_mensajero', '1');
 
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -1738,10 +1743,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <strong>${money(item.valor_recaudo_real)}</strong>
                     </div>
                     <div class="package-data">
-                        <span class="package-label">Visible al mensajero</span>
-                        <strong>${item.mostrar_al_mensajero ? 'Si' : 'No'}</strong>
-                    </div>
-                    <div class="package-data">
                         <span class="package-label">Fecha</span>
                         <strong>${shortDate(item.fecha_entrega || item.fecha_ingreso)}</strong>
                     </div>
@@ -1757,10 +1758,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${mode === 'admin' ? `
                     <div class="table-tools messenger-payment-tools">
                         <input type="number" min="0" step="100" value="${Math.round(pagoBase)}" data-role="payment-input" data-id="${item.paquete_id}">
-                        <label class="toggle-wrap">
-                            <input type="checkbox" data-role="show-toggle" data-id="${item.paquete_id}" ${item.mostrar_al_mensajero ? 'checked' : ''}>
-                            Mostrar
-                        </label>
                         <button
                             type="button"
                             class="fact-btn secondary"
@@ -2704,11 +2701,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.addEventListener('change', (event) => {
-            const paymentControl = event.target.closest('[data-role="payment-input"], [data-role="show-toggle"]');
+            const paymentControl = event.target.closest('[data-role="payment-input"]');
             if (paymentControl && mode === 'admin') {
                 const paqueteId = paymentControl.dataset.id;
                 const paymentInput = document.querySelector(`[data-role="payment-input"][data-id="${paqueteId}"]`);
-                const toggleInput = document.querySelector(`[data-role="show-toggle"][data-id="${paqueteId}"]`);
                 const statusEl = document.querySelector(`[data-role="payment-status"][data-id="${paqueteId}"]`);
 
                 if (paymentInput && Number(paymentInput.value || 0) <= 0) {
@@ -2721,9 +2717,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (paymentInput) {
                     paymentInput.disabled = true;
                 }
-                if (toggleInput) {
-                    toggleInput.disabled = true;
-                }
 
                 savePayment(paqueteId).catch((error) => {
                     alert(error.message);
@@ -2732,9 +2725,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     if (paymentInput) {
                         paymentInput.disabled = false;
-                    }
-                    if (toggleInput) {
-                        toggleInput.disabled = false;
                     }
                 });
                 return;

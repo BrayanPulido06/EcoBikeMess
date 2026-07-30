@@ -331,17 +331,17 @@ class FacturacionModels
 
     public function obtenerVistaCliente(int $clienteId): array
     {
-        $fechaInicioFacturacionCliente = date('Y-m-d');
+        $fechaInicioFacturacionCliente = date('Y-m-d', strtotime('-2 months'));
 
         return [
-            'cliente' => $this->obtenerResumenClientes($clienteId, false, $fechaInicioFacturacionCliente),
+            'cliente' => $this->obtenerResumenClientes($clienteId, true, $fechaInicioFacturacionCliente),
         ];
     }
 
     public function obtenerVistaMensajero(int $mensajeroId): array
     {
         return [
-            'mensajero' => $this->obtenerResumenMensajeros(true, $mensajeroId, false),
+            'mensajero' => $this->obtenerResumenMensajeros(false, $mensajeroId, false),
         ];
     }
 
