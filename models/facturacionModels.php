@@ -3,6 +3,8 @@ require_once __DIR__ . '/conexionGlobal.php';
 
 class FacturacionModels
 {
+    private const FECHA_INICIO_FACTURACION = '2026-07-13';
+
     private $conn;
 
     public function __construct()
@@ -302,7 +304,7 @@ class FacturacionModels
 
     public function obtenerVistaAdmin(?string $panel = null): array
     {
-        $fechaInicioFacturacionAdmin = date('Y-m-d', strtotime('-2 months'));
+        $fechaInicioFacturacionAdmin = self::FECHA_INICIO_FACTURACION;
 
         if ($panel === 'cliente') {
             return [
@@ -331,7 +333,7 @@ class FacturacionModels
 
     public function obtenerVistaCliente(int $clienteId): array
     {
-        $fechaInicioFacturacionCliente = '2026-07-20';
+        $fechaInicioFacturacionCliente = self::FECHA_INICIO_FACTURACION;
 
         return [
             'cliente' => $this->obtenerResumenClientes($clienteId, true, $fechaInicioFacturacionCliente),
@@ -340,7 +342,7 @@ class FacturacionModels
 
     public function obtenerVistaMensajero(int $mensajeroId): array
     {
-        $fechaInicioFacturacionMensajero = '2026-07-20';
+        $fechaInicioFacturacionMensajero = self::FECHA_INICIO_FACTURACION;
 
         return [
             'mensajero' => $this->obtenerResumenMensajeros(false, $mensajeroId, false, $fechaInicioFacturacionMensajero),
