@@ -331,7 +331,7 @@ class FacturacionModels
 
     public function obtenerVistaCliente(int $clienteId): array
     {
-        $fechaInicioFacturacionCliente = '2026-07-27';
+        $fechaInicioFacturacionCliente = '2026-07-20';
 
         return [
             'cliente' => $this->obtenerResumenClientes($clienteId, true, $fechaInicioFacturacionCliente),
@@ -340,7 +340,7 @@ class FacturacionModels
 
     public function obtenerVistaMensajero(int $mensajeroId): array
     {
-        $fechaInicioFacturacionMensajero = '2026-07-27';
+        $fechaInicioFacturacionMensajero = '2026-07-20';
 
         return [
             'mensajero' => $this->obtenerResumenMensajeros(false, $mensajeroId, false, $fechaInicioFacturacionMensajero),
