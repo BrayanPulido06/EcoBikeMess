@@ -278,12 +278,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     item.mensajero_nombre,
                     item.destinatario_nombre
                 ].join(' ').toLowerCase()
-                : [
-                    item.numero_guia,
-                    item.mensajero_nombre,
-                    item.cliente_nombre,
-                    item.destinatario_nombre
-                ].join(' ').toLowerCase();
+                : mode === 'admin'
+                    ? String(item.mensajero_nombre || '').toLowerCase()
+                    : [
+                        item.numero_guia,
+                        item.mensajero_nombre,
+                        item.cliente_nombre,
+                        item.destinatario_nombre
+                    ].join(' ').toLowerCase();
 
         if (text && !haystack.includes(text)) {
             return false;
