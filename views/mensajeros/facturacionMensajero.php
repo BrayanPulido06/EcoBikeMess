@@ -78,19 +78,19 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                 </div>
 
                 <div class="facturacion-table-wrap">
-                    <table class="facturacion-table">
+                    <table class="facturacion-table facturacion-table-mensajeros">
                         <thead>
                             <tr>
-                                <th>Número guía</th>
-                                <th>Mensajero</th>
-                                <th>Cliente</th>
-                                <th>Paquetes por día</th>
-                                <th>Valor envío</th>
-                                <th>Agregado al recaudo</th>
-                                <th>Valor recaudo</th>
-                                <th>Recaudo real</th>
+                                <th>Fecha</th>
+                                <th>Entregas</th>
+                                <th>Adicionales</th>
+                                <th>Total pago</th>
+                                <th>Total recaudado</th>
+                                <th>Abono</th>
                                 <th>Estado</th>
-                                <th>Pago mensajero</th>
+                                <th>Saldo</th>
+                                <th>Total acumulado</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="table-body-mensajero" data-loading>

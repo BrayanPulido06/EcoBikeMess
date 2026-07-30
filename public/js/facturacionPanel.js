@@ -923,30 +923,40 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tbody) return [];
 
         if (mode !== 'admin') {
-            const filtered = items.filter((item) => matchesFilter(item, 'mensajero'));
-            document.getElementById('count-mensajero').textContent = `${filtered.length} registros`;
+            const groups = buildMensajeroGroups(items);
+            state.mensajeroGroups = groups;
+            document.getElementById('count-mensajero').textContent = `${groups.length} registros`;
 
-            if (!filtered.length) {
+            if (!groups.length) {
                 tbody.innerHTML = `<tr><td colspan="${mensajeroTableColspan()}" class="empty-state">No hay registros con los filtros actuales.</td></tr>`;
-                return filtered;
+                return groups;
             }
 
-            tbody.innerHTML = filtered.map((item) => `
+            tbody.innerHTML = groups.map((group) => `
                 <tr>
-                    <td class="mono">${escapeHtml(item.numero_guia)}</td>
-                    <td>${escapeHtml(item.mensajero_nombre)}</td>
-                    <td>${escapeHtml(item.cliente_nombre)}</td>
-                    <td>${item.cantidad_paquetes_dia}</td>
-                    <td>${money(item.valor_envio)}</td>
-                    <td>${boolBadge(item.agregado_al_recaudo, 'Agregado', 'No agregado')}</td>
-                    <td>${money(item.valor_recaudo)}</td>
-                    <td>${money(item.valor_recaudo_real)}</td>
-                    <td>${statusBadge(item.estado)}</td>
-                    <td>${money(getMessengerPaymentValue(item))}</td>
+                    <td>${group.fechaLabel}</td>
+                    <td>${group.entregas}</td>
+                    <td>${messengerAdditionalCell(group)}</td>
+                    <td>${money(group.totalPago)}</td>
+                    <td>${money(group.totalRecaudado)}</td>
+                    <td>${money(group.abono)}</td>
+                    <td>${clientGroupStatusBadge(group.estado)}</td>
+                    <td class="amount-cell ${balanceCellClass(group.saldo)}">${moneyAbs(group.saldo)}</td>
+                    <td class="amount-cell ${balanceCellClass(group.totalAcumulado)}">${moneyAbs(group.totalAcumulado)}</td>
+                    <td>
+                        <button
+                            type="button"
+                            class="fact-btn tertiary detail-trigger"
+                            data-role="open-messenger-detail"
+                            data-group-key="${escapeHtml(group.key)}"
+                        >
+                            Ver entregas
+                        </button>
+                    </td>
                 </tr>
             `).join('');
 
-            return filtered;
+            return groups;
         }
 
         const groups = buildMensajeroGroups(items);
@@ -1080,13 +1090,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (state.rawData.mensajero) {
-            const visibleMensajeroData = renderMensajeroTable(state.rawData.mensajero.items);
-            renderSummary(
-                mode === 'admin'
-                    ? buildMensajeroSummaryFromGroups(state.mensajeroGroups)
-                    : buildMensajeroSummaryFromItems(visibleMensajeroData),
-                'mensajero'
-            );
+            renderMensajeroTable(state.rawData.mensajero.items);
+            renderSummary(buildMensajeroSummaryFromGroups(state.mensajeroGroups), 'mensajero');
         }
 
         if (state.rawData.ecobikemess) {
@@ -1801,16 +1806,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><span>Saldo del dia</span><strong>${moneyAbs(group.saldo)}</strong></div>
                 <div><span>Total acumulado</span><strong>${moneyAbs(group.totalAcumulado)}</strong></div>
             </div>
-            <div class="facturacion-abono-actions">
-                <button
-                    type="button"
-                    class="fact-btn secondary"
-                    data-role="open-messenger-abono"
-                    data-group-key="${escapeHtml(group.key)}"
-                >
-                    Registrar abono
-                </button>
-            </div>
+            ${mode === 'admin' ? `
+                <div class="facturacion-abono-actions">
+                    <button
+                        type="button"
+                        class="fact-btn secondary"
+                        data-role="open-messenger-abono"
+                        data-group-key="${escapeHtml(group.key)}"
+                    >
+                        Registrar abono
+                    </button>
+                </div>
+            ` : ''}
             <div class="package-list">
                 ${group.packages.map(renderMessengerPackageCard).join('')}
             </div>
