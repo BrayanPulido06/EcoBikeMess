@@ -155,13 +155,14 @@ try {
             ];
 
             $fechaEntregaSync = null;
+            $fechaEntregaExistente = $model->getFechaEntregaFacturacion($paqueteId);
 
             $actualizoEntrega = null;
             if (!empty($input['entrega']) && is_array($input['entrega'])) {
                 $entrega = $input['entrega'];
                 $fechaEntrega = trim((string) ($entrega['fecha_entrega'] ?? ''));
                 if ($payload['estado'] === 'entregado' && $fechaEntrega === '') {
-                    $fechaEntrega = date('Y-m-d H:i:s');
+                    $fechaEntrega = $fechaEntregaExistente ?: date('Y-m-d H:i:s');
                 }
                 $payloadEntrega = [
                     'nombre_receptor' => trim((string) ($entrega['nombre_receptor'] ?? '')),
@@ -178,7 +179,7 @@ try {
                 }
                 $payload['fecha_entrega'] = $fechaEntregaSync;
             } elseif ($payload['estado'] === 'entregado') {
-                $fechaEntregaSync = date('Y-m-d H:i:s');
+                $fechaEntregaSync = $fechaEntregaExistente ?: date('Y-m-d H:i:s');
                 $payload['fecha_entrega'] = $fechaEntregaSync;
                 $payloadEntrega = [
                     'nombre_receptor' => '',

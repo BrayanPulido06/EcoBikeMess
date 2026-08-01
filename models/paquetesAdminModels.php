@@ -75,6 +75,24 @@ class PaquetesAdminModel {
         }
     }
 
+    public function getFechaEntregaFacturacion(int $paqueteId): ?string
+    {
+        try {
+            $stmt = $this->conn->prepare(
+                "SELECT COALESCE(p.fecha_entrega, e.fecha_entrega) AS fecha_entrega
+                 FROM paquetes p
+                 LEFT JOIN entregas e ON e.paquete_id = p.id
+                 WHERE p.id = :id
+                 LIMIT 1"
+            );
+            $stmt->execute([':id' => $paqueteId]);
+            $value = $stmt->fetchColumn();
+            return $value ? (string) $value : null;
+        } catch (Throwable $e) {
+            return null;
+        }
+    }
+
     private function buscarClientePorRemitente(string $remitente): ?array
     {
         $remitente = trim($remitente);

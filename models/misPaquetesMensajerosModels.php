@@ -197,7 +197,7 @@ class MisPaquetesMensajerosModels
             $sqlUpdatePaquete = "UPDATE paquetes
                                  SET estado = 'entregado',
                                      mensajero_id = :mensajero_id,
-                                     fecha_entrega = NOW()
+                                     fecha_entrega = COALESCE(fecha_entrega, NOW())
                                  WHERE id = :id";
             $stmt = $this->conn->prepare($sqlUpdatePaquete);
             $stmt->execute([
@@ -224,8 +224,7 @@ class MisPaquetesMensajerosModels
                                 coordenadas_entrega_lng = VALUES(coordenadas_entrega_lng),
                                 foto_entrega = VALUES(foto_entrega),
                                 foto_adicional = VALUES(foto_adicional),
-                                observaciones = VALUES(observaciones),
-                                fecha_entrega = CURRENT_TIMESTAMP";
+                                observaciones = VALUES(observaciones)";
 
             $stmtEntrega = $this->conn->prepare($sqlEntrega);
             $stmtEntrega->execute([
