@@ -398,13 +398,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Usamos window.remitenteData para asegurar acceso global a los datos
     if (autoFillBtn) {
-        autoFillBtn.addEventListener('click', () => {
+        autoFillBtn.addEventListener('click', (event) => {
+            event.preventDefault();
             // Verificamos que existan los datos al momento de hacer clic
             const data = window.remitenteData || {};
             
             // Mapa de IDs de inputs y sus valores correspondientes
             const campos = {
-                'remitente_nombre': data.nombre_completo,
+                'remitente_nombre': data.nombre_tienda || data.nombre_completo,
                 'remitente_telefono': data.telefono,
                 'remitente_direccion': data.direccion
             };
@@ -412,10 +413,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Llenar campos y limpiar errores visuales
             for (const [id, valor] of Object.entries(campos)) {
                 const input = document.getElementById(id);
-                if (input) {
-                    input.value = valor || '';
+                const valorFinal = String(valor || '').trim();
+                if (input && valorFinal) {
+                    input.value = valorFinal;
                     // Disparar evento input para simular escritura y limpiar validaciones
                     input.dispatchEvent(new Event('input'));
+                    input.dispatchEvent(new Event('change'));
                     // Remover clase de error si existe
                     input.closest('.form-group')?.classList.remove('error');
                     const errorSpan = input.closest('.form-group')?.querySelector('.error-message');
@@ -433,7 +436,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- CARGA DE EXCEL ---
     if (btnUploadExcel && excelUploadInput) {
-        btnUploadExcel.addEventListener('click', () => {
+        btnUploadExcel.addEventListener('click', (event) => {
+            event.preventDefault();
             excelUploadInput.click();
         });
 
@@ -965,7 +969,8 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
 
     // --- DESCARGAR PLANTILLA EXCEL ---
     if (btnDownloadTemplate) {
-        btnDownloadTemplate.addEventListener('click', async () => {
+        btnDownloadTemplate.addEventListener('click', async (event) => {
+            event.preventDefault();
             try {
                 if (typeof ExcelJS !== 'undefined') {
                     await descargarPlantillaExcelEstilizada();

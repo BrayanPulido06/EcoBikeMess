@@ -801,6 +801,6 @@ $remitente_data = [
 
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/rotuloShared.js?v=20260721-4"></script>
-    <script src="../../public/js/enviarPaquete.js?v=20260801-1"></script>
+    <script src="../../public/js/enviarPaquete.js?v=20260804-1"></script>
 </body>
 </html>
