@@ -434,7 +434,7 @@ function renderRecolecciones() {
     if (!recolecciones || recolecciones.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" style="text-align: center; padding: 20px;">No hay recolecciones pendientes.</td>
+                <td colspan="9" style="text-align: center; padding: 20px;">No hay recolecciones pendientes.</td>
             </tr>
         `;
         return;
@@ -473,7 +473,7 @@ function applyFilters() {
 
     const tbody = document.getElementById('tablaRecoleccionesBody');
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px;">No se encontraron resultados.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 20px;">No se encontraron resultados.</td></tr>`;
     } else {
         tbody.innerHTML = buildRows(filtered);
     }
@@ -517,6 +517,14 @@ function formatFechaGestion(rec) {
     return Number.isNaN(date.getTime()) ? raw : date.toLocaleString();
 }
 
+function formatFechaCreacion(rec) {
+    const value = rec.fecha_creacion;
+    if (!value) return '';
+
+    const date = new Date(String(value));
+    return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+}
+
 function buildRows(items) {
     return items.map(rec => `
         <tr class="prioridad-${rec.color_prioridad || 'verde'}">
@@ -541,6 +549,7 @@ function buildRows(items) {
                 ${escapeHtml(formatFechaGestion(rec))}
                 ${rec.fecha_programada_recoleccion ? '<br><small>Programada</small>' : ''}
             </td>
+            <td>${escapeHtml(formatFechaCreacion(rec))}</td>
             <td>${renderAccionesRecoleccion(rec)}</td>
         </tr>
     `).join('');

@@ -378,13 +378,14 @@ $recolecciones = $model->listarRecolecciones([]);
                             <th>Cantidad</th>
                             <th>Guías</th>
                             <th>Fecha Gestión</th>
+                            <th>Fecha Creacion</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tablaRecoleccionesBody">
                         <?php if (empty($recolecciones)): ?>
                             <tr>
-                                <td colspan="6" style="text-align: center; padding: 20px;">No hay recolecciones pendientes.</td>
+                                <td colspan="9" style="text-align: center; padding: 20px;">No hay recolecciones pendientes.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($recolecciones as $rec): ?>
@@ -421,6 +422,9 @@ $recolecciones = $model->listarRecolecciones([]);
                                         <?php endif; ?>
                                     </td>
                                     <td>
+                                        <?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($rec['fecha_creacion']))); ?>
+                                    </td>
+                                    <td>
                                         <div class="actions">
                                             <button class="btn btn-sm btn-info" title="Ver Paquetes" onclick="verDetallesPaquetes('<?php echo $rec['ids']; ?>')">👁️</button>
                                             <?php if (!in_array($rec['estado'], ['entregado', 'completada', 'cancelado'])): ?>
@@ -443,6 +447,6 @@ $recolecciones = $model->listarRecolecciones([]);
     </div>
 
     <script src="../../public/js/rotuloShared.js?v=20260721-4"></script>
-    <script src="../../public/js/asignarRecolecciones.js?v=20260801-1"></script>
+    <script src="../../public/js/asignarRecolecciones.js?v=20260805-1"></script>
 </body>
 </html>
