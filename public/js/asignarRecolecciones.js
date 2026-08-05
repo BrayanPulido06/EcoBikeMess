@@ -465,7 +465,8 @@ function applyFilters() {
             (rec.mensajero_nombre || '').toLowerCase().includes(busqueda);
 
         const coincideEstado = !estado || getEstadoFiltro(rec.estado) === estado;
-        const coincideFecha = !fecha || String(rec.fecha_creacion || '').slice(0, 10) === fecha;
+        const fechaGestion = rec.fecha_gestion_recoleccion || rec.fecha_programada_recoleccion || rec.fecha_creacion;
+        const coincideFecha = !fecha || String(fechaGestion || '').slice(0, 10) === fecha;
 
         return coincideBusqueda && coincideEstado && coincideFecha;
     });
@@ -502,6 +503,20 @@ function capitalize(s) {
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 }
 
+function formatFechaGestion(rec) {
+    const value = rec.fecha_gestion_recoleccion || rec.fecha_programada_recoleccion || rec.fecha_creacion;
+    if (!value) return '';
+
+    const raw = String(value);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        const [year, month, day] = raw.split('-');
+        return `${day}/${month}/${year}`;
+    }
+
+    const date = new Date(raw);
+    return Number.isNaN(date.getTime()) ? raw : date.toLocaleString();
+}
+
 function buildRows(items) {
     return items.map(rec => `
         <tr class="prioridad-${rec.color_prioridad || 'verde'}">
@@ -522,7 +537,10 @@ function buildRows(items) {
                 </span>
             </td>
             <td><small>${escapeHtml(rec.guias ? rec.guias.substring(0, 50) + (rec.guias.length > 50 ? '...' : '') : '')}</small></td>
-            <td>${escapeHtml(new Date(rec.fecha_creacion).toLocaleString())}</td>
+            <td>
+                ${escapeHtml(formatFechaGestion(rec))}
+                ${rec.fecha_programada_recoleccion ? '<br><small>Programada</small>' : ''}
+            </td>
             <td>${renderAccionesRecoleccion(rec)}</td>
         </tr>
     `).join('');

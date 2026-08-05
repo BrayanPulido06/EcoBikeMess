@@ -61,7 +61,7 @@ $remitente_data = [
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
-    <link rel="stylesheet" href="../../public/css/enviarPaquete.css?v=20260721-1">
+    <link rel="stylesheet" href="../../public/css/enviarPaquete.css?v=20260801-1">
     <link rel="stylesheet" href="../../public/css/clientesTheme.css">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <style>
@@ -465,6 +465,12 @@ $remitente_data = [
                                 <textarea id="observaciones_recoleccion" name="observaciones_recoleccion" rows="3" placeholder="Ej: Llamar al llegar, recoger en portería, tocar el timbre 2 veces, etc."></textarea>
                                 <span class="error-message"></span>
                             </div>
+                            <div class="form-group">
+                                <label for="fecha_programada_recoleccion">Fecha programada de recolección</label>
+                                <input type="date" id="fecha_programada_recoleccion" name="fecha_programada_recoleccion">
+                                <small>Opcional. Úsala si quieres que la recolección se gestione otro día.</small>
+                                <span class="error-message"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -795,6 +801,6 @@ $remitente_data = [
 
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/rotuloShared.js?v=20260721-4"></script>
-    <script src="../../public/js/enviarPaquete.js?v=20260721-1"></script>
+    <script src="../../public/js/enviarPaquete.js?v=20260801-1"></script>
 </body>
 </html>

@@ -1190,6 +1190,15 @@ function verDetalle(id, options = {}) {
                     return normalized.length === 16 ? `${normalized}:00` : normalized;
                 };
 
+                const formatCopiedDateTime = (value) => {
+                    if (!value) return '';
+                    const normalized = String(value).replace('T', ' ');
+                    const [datePart, timePart = ''] = normalized.split(' ');
+                    const [year, month, day] = datePart.split('-');
+                    if (!year || !month || !day) return normalized;
+                    return `${day}/${month}/${year}${timePart ? ` ${timePart.slice(0, 5)}` : ''}`;
+                };
+
                 const renderMensajeroOptions = (selectedId) => {
                     let opts = `<option value="">Sin asignar</option>`;
                     todosLosMensajeros.forEach(m => {
@@ -1876,7 +1885,7 @@ function verDetalle(id, options = {}) {
                             `Recibido por: ${getValue('[name="entrega_nombre_receptor"]') || 'Sin informacion'}`,
                             `Parentesco/Cargo: ${getValue('[name="entrega_parentesco"]') || 'Sin informacion'}`,
                             `Documento: ${getValue('[name="entrega_documento"]') || 'Sin informacion'}`,
-                            `Fecha entrega: ${getValue('[name="entrega_fecha"]') || 'Sin informacion'}`,
+                            `Fecha entrega: ${formatCopiedDateTime(getValue('[name="entrega_fecha"]')) || 'Sin informacion'}`,
                             `Total recaudado: ${getValue('[name="entrega_recaudo_real"]') || '0'}`,
                             `Cambios recogidos: ${getValue('[name="entrega_recibio_cambios"]') === '1' ? 'Si' : 'No'}`,
                             `Observaciones: ${getValue('[name="entrega_observaciones"]') || 'Sin observaciones'}`

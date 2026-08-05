@@ -1563,7 +1563,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const valorBase = Number(item.valor_envio_base ?? item.valor_envio ?? 0);
         const adicional = Number(item.costo_adicional_servicio || 0);
         const valorTotal = Number(item.valor_envio || 0);
-        const saldo = Math.max(valorTotal, 0);
+        const recaudoEsperado = Number(item.valor_recaudo || 0);
+        const saldo = recaudoReal - valorTotal;
         return `
             <article class="package-card">
                 <div class="package-card-head">
@@ -1595,7 +1596,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         <strong>${money(recaudoReal)}</strong>
                     </div>
                     <div class="package-data">
-                        <span class="package-label">Saldo</span>
+                        <span class="package-label">Recaudo esperado</span>
+                        <strong>${money(recaudoEsperado)}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Contraentrega</span>
+                        <strong>${item.agregado_al_recaudo ? 'Si' : 'No'}</strong>
+                    </div>
+                    <div class="package-data">
+                        <span class="package-label">Saldo paquete</span>
                         <strong>${money(saldo)}</strong>
                     </div>
                     <div class="package-data">
@@ -1996,8 +2005,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             ` : ''}
             ${renderClienteBankInfo(group)}
+            <h3 class="package-list-title">Detalle de paquetes facturados</h3>
             <div class="package-list">
-                ${group.packages.map(renderPackageCard).join('')}
+                ${group.packages.length ? group.packages.map(renderPackageCard).join('') : '<div class="empty-state">No hay paquetes para este detalle.</div>'}
             </div>
         `;
 

@@ -25,6 +25,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $datos['creado_por'] = $usuario_id;
         $datos['descripcion_contenido'] = trim((string) ($_POST['descripcion_contenido'] ?? ''));
         $datos['observaciones_recoleccion'] = trim((string) ($_POST['observaciones_recoleccion'] ?? ''));
+        $datos['fecha_programada_recoleccion'] = trim((string) ($_POST['fecha_programada_recoleccion'] ?? ''));
+
+        if ($datos['fecha_programada_recoleccion'] !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $datos['fecha_programada_recoleccion'])) {
+            throw new Exception('La fecha programada de recolección no es válida.');
+        }
 
         $datos['tiene_recaudo'] = isset($_POST['tiene_recaudo']) ? 1 : 0;
         $datos['tiene_cambios'] = isset($_POST['recoger_cambios']) ? 1 : 0;

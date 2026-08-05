@@ -377,7 +377,7 @@ $recolecciones = $model->listarRecolecciones([]);
                             <th>Estado</th>
                             <th>Cantidad</th>
                             <th>Guías</th>
-                            <th>Fecha Solicitud</th>
+                            <th>Fecha Gestión</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -411,7 +411,15 @@ $recolecciones = $model->listarRecolecciones([]);
                                     <td>
                                         <small><?php echo htmlspecialchars(mb_strimwidth($rec['guias'], 0, 50, "...")); ?></small>
                                     </td>
-                                    <td><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($rec['fecha_creacion']))); ?></td>
+                                    <td>
+                                        <?php
+                                            $fechaGestion = $rec['fecha_gestion_recoleccion'] ?? $rec['fecha_programada_recoleccion'] ?? $rec['fecha_creacion'];
+                                            echo htmlspecialchars(date('d/m/Y', strtotime($fechaGestion)));
+                                        ?>
+                                        <?php if (!empty($rec['fecha_programada_recoleccion'])): ?>
+                                            <br><small>Programada</small>
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <div class="actions">
                                             <button class="btn btn-sm btn-info" title="Ver Paquetes" onclick="verDetallesPaquetes('<?php echo $rec['ids']; ?>')">👁️</button>
@@ -435,6 +443,6 @@ $recolecciones = $model->listarRecolecciones([]);
     </div>
 
     <script src="../../public/js/rotuloShared.js?v=20260721-4"></script>
-    <script src="../../public/js/asignarRecolecciones.js?v=20260720-1"></script>
+    <script src="../../public/js/asignarRecolecciones.js?v=20260801-1"></script>
 </body>
 </html>

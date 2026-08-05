@@ -26,7 +26,8 @@ class EnvioModel {
             'envio_mismo_dia' => "ALTER TABLE paquetes ADD COLUMN envio_mismo_dia TINYINT(1) NOT NULL DEFAULT 0 AFTER dimensiones",
             'zona_periferica' => "ALTER TABLE paquetes ADD COLUMN zona_periferica TINYINT(1) NOT NULL DEFAULT 0 AFTER envio_mismo_dia",
             'recoger_cambios' => "ALTER TABLE paquetes ADD COLUMN recoger_cambios TINYINT(1) NOT NULL DEFAULT 0 AFTER zona_periferica",
-            'observaciones_recoleccion' => "ALTER TABLE paquetes ADD COLUMN observaciones_recoleccion TEXT NULL AFTER direccion_origen"
+            'observaciones_recoleccion' => "ALTER TABLE paquetes ADD COLUMN observaciones_recoleccion TEXT NULL AFTER direccion_origen",
+            'fecha_programada_recoleccion' => "ALTER TABLE paquetes ADD COLUMN fecha_programada_recoleccion DATE NULL AFTER observaciones_recoleccion"
         ];
 
         foreach ($columns as $column => $sql) {
@@ -65,6 +66,7 @@ class EnvioModel {
                         remitente_telefono, 
                         direccion_origen,
                         observaciones_recoleccion,
+                        fecha_programada_recoleccion,
                         destinatario_nombre, 
                         destinatario_telefono, 
                         direccion_destino, 
@@ -84,7 +86,7 @@ class EnvioModel {
                         :cliente_id, 
                         :creado_por,
                         :numero_guia,
-                        :remitente_nombre, :remitente_telefono, :remitente_direccion, :observaciones_recoleccion,
+                        :remitente_nombre, :remitente_telefono, :remitente_direccion, :observaciones_recoleccion, :fecha_programada_recoleccion,
                         :destinatario_nombre, :destinatario_telefono, :destinatario_direccion, :instrucciones_entrega,
                         :descripcion_contenido, :dimensiones, :envio_mismo_dia, :zona_periferica, :recoger_cambios, :envio_destinatario,
                         :tipo_servicio, :valor_recaudo, :costo_total, 'pendiente', NOW()
@@ -100,6 +102,7 @@ class EnvioModel {
                 ':remitente_telefono' => $datos['remitente_telefono'],
                 ':remitente_direccion' => $datos['remitente_direccion'],
                 ':observaciones_recoleccion' => trim((string) ($datos['observaciones_recoleccion'] ?? '')),
+                ':fecha_programada_recoleccion' => !empty($datos['fecha_programada_recoleccion']) ? $datos['fecha_programada_recoleccion'] : null,
                 ':destinatario_nombre' => $datos['destinatario_nombre'],
                 ':destinatario_telefono' => $datos['destinatario_telefono'],
                 ':destinatario_direccion' => $datos['destinatario_direccion'],

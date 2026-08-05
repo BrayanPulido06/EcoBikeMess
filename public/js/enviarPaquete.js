@@ -614,6 +614,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 remitente_nombre: getStructuredValue(0, getValue('remitente nombre') || getValue('datos remitente nombre') || getValue('nombre remitente')) || document.getElementById('remitente_nombre').value || (window.remitenteData?.nombre_completo),
                 remitente_telefono: getStructuredValue(1, getValue('remitente telefono') || getValue('telefono remitente')) || document.getElementById('remitente_telefono').value || (window.remitenteData?.telefono),
                 observaciones_recoleccion: getStructuredValue(2, getValue('observaciones de recoleccion') || getValue('observacion de recoleccion') || getValue('observaciones recoleccion') || getValue('email de contacto') || getValue('remitente email') || getValue('correo remitente')) || document.getElementById('observaciones_recoleccion')?.value || '',
+                fecha_programada_recoleccion: document.getElementById('fecha_programada_recoleccion')?.value || '',
                 remitente_direccion: getStructuredValue(3, getValue('direccion de origen') || getValue('remitente direccion') || getValue('origen')) || document.getElementById('remitente_direccion').value || (window.remitenteData?.direccion),
                 destinatario_nombre: getStructuredValue(4, getValue('nombre') || getValue('destinatario')),
                 destinatario_telefono: getStructuredValue(5, getValue('num destinatario') || getValue('telefono') || getValue('celular') || getValue('movil')),

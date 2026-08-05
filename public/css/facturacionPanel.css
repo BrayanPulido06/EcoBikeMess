@@ -528,6 +528,12 @@ body.sidebar-collapsed .facturacion-shell,
     gap: 1rem;
 }
 
+.package-list-title {
+    margin: 1.2rem 0 0.75rem;
+    color: var(--fact-text);
+    font-size: 1rem;
+}
+
 .package-card {
     border: 1px solid var(--fact-border);
     border-radius: 16px;

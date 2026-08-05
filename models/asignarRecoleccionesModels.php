@@ -23,6 +23,10 @@ class AsignarRecoleccionesModel {
     private function ensureVisibilityColumns(): void
     {
         try {
+            if (!$this->columnExists('paquetes', 'fecha_programada_recoleccion')) {
+                $this->conn->exec("ALTER TABLE paquetes ADD COLUMN fecha_programada_recoleccion DATE NULL AFTER observaciones_recoleccion");
+            }
+
             if (!$this->columnExists('paquetes', 'ocultar_recoleccion_admin')) {
                 $this->conn->exec("ALTER TABLE paquetes ADD COLUMN ocultar_recoleccion_admin TINYINT(1) NOT NULL DEFAULT 0");
             }
@@ -78,6 +82,7 @@ class AsignarRecoleccionesModel {
                     GROUP_CONCAT(DISTINCT NULLIF(TRIM(p.remitente_nombre), '') SEPARATOR ' | ') as remitente_nombre,
                     GROUP_CONCAT(DISTINCT NULLIF(TRIM(p.remitente_telefono), '') SEPARATOR ' | ') as remitente_telefono,
                     GROUP_CONCAT(DISTINCT NULLIF(TRIM(p.observaciones_recoleccion), '') SEPARATOR ' | ') as observaciones_recoleccion,
+                    MIN(p.fecha_programada_recoleccion) as fecha_programada_recoleccion,
                     p.estado as estado_paquete,
                     MAX(r.estado) as estado_recoleccion,
                     p.mensajero_id,
@@ -86,6 +91,7 @@ class AsignarRecoleccionesModel {
                     GROUP_CONCAT(p.id) as ids,
                     GROUP_CONCAT(p.numero_guia SEPARATOR ', ') as guias,
                     MAX(p.fecha_creacion) as fecha_creacion,
+                    MAX(COALESCE(p.fecha_programada_recoleccion, DATE(p.fecha_creacion))) as fecha_gestion_recoleccion,
                     c.nombre_emprendimiento,
                     u_cli.nombres as cli_nombres, 
                     u_cli.apellidos as cli_apellidos,
@@ -94,7 +100,9 @@ class AsignarRecoleccionesModel {
                         CONCAT(u_mens.nombres, ' ', u_mens.apellidos)
                     ) as mensajero_nombre,
                     CASE
-                        WHEN DATE(p.fecha_creacion) < CURDATE() THEN 'verde'
+                        WHEN p.fecha_programada_recoleccion IS NOT NULL AND p.fecha_programada_recoleccion > CURDATE() THEN 'programada'
+                        WHEN COALESCE(p.fecha_programada_recoleccion, DATE(p.fecha_creacion)) < CURDATE() THEN 'verde'
+                        WHEN p.fecha_programada_recoleccion IS NOT NULL THEN 'verde'
                         WHEN HOUR(p.fecha_creacion) < 13 THEN 'verde'
                         WHEN HOUR(p.fecha_creacion) < 16 THEN 'amarillo'
                         ELSE 'rojo'
@@ -110,7 +118,7 @@ class AsignarRecoleccionesModel {
                 WHERE p.estado IN ('pendiente', 'asignado', 'en_transito', 'en_ruta', 'entregado')
                   AND COALESCE(TRIM(p.direccion_origen), '') <> ''
                   AND COALESCE(p.ocultar_recoleccion_admin, 0) = 0
-                  AND COALESCE(r.fecha_completada, r.fecha_asignacion, p.fecha_creacion) >= DATE_SUB(NOW(), INTERVAL 5 DAY)";
+                  AND COALESCE(r.fecha_completada, r.fecha_asignacion, COALESCE(p.fecha_programada_recoleccion, DATE(p.fecha_creacion))) >= DATE_SUB(NOW(), INTERVAL 5 DAY)";
 
         $params = [];
 
@@ -123,9 +131,13 @@ class AsignarRecoleccionesModel {
                            IFNULL(p.recoleccion_id, p.estado), 
                            p.mensajero_id,
                            p.mensajero_recoleccion_id,
-                           DATE(p.fecha_creacion), 
-                           CASE WHEN HOUR(p.fecha_creacion) < 13 THEN 'AM' ELSE 'PM' END 
-                  ORDER BY fecha_creacion DESC";
+                           COALESCE(p.fecha_programada_recoleccion, DATE(p.fecha_creacion)),
+                           CASE
+                               WHEN p.fecha_programada_recoleccion IS NOT NULL THEN 'PROGRAMADA'
+                               WHEN HOUR(p.fecha_creacion) < 13 THEN 'AM'
+                               ELSE 'PM'
+                           END 
+                  ORDER BY fecha_gestion_recoleccion DESC, fecha_creacion DESC";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
