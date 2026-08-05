@@ -377,8 +377,8 @@ $recolecciones = $model->listarRecolecciones([]);
                             <th>Estado</th>
                             <th>Cantidad</th>
                             <th>Guías</th>
-                            <th>Fecha Gestión</th>
                             <th>Fecha Creacion</th>
+                            <th>Fecha Gestión</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -413,6 +413,9 @@ $recolecciones = $model->listarRecolecciones([]);
                                         <small><?php echo htmlspecialchars(mb_strimwidth($rec['guias'], 0, 50, "...")); ?></small>
                                     </td>
                                     <td>
+                                        <?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($rec['fecha_creacion']))); ?>
+                                    </td>
+                                    <td>
                                         <?php
                                             $fechaGestion = $rec['fecha_gestion_recoleccion'] ?? $rec['fecha_programada_recoleccion'] ?? $rec['fecha_creacion'];
                                             echo htmlspecialchars(date('d/m/Y', strtotime($fechaGestion)));
@@ -420,9 +423,6 @@ $recolecciones = $model->listarRecolecciones([]);
                                         <?php if (!empty($rec['fecha_programada_recoleccion'])): ?>
                                             <br><small>Programada</small>
                                         <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($rec['fecha_creacion']))); ?>
                                     </td>
                                     <td>
                                         <div class="actions">

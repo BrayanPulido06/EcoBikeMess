@@ -545,11 +545,11 @@ function buildRows(items) {
                 </span>
             </td>
             <td><small>${escapeHtml(rec.guias ? rec.guias.substring(0, 50) + (rec.guias.length > 50 ? '...' : '') : '')}</small></td>
+            <td>${escapeHtml(formatFechaCreacion(rec))}</td>
             <td>
                 ${escapeHtml(formatFechaGestion(rec))}
                 ${rec.fecha_programada_recoleccion ? '<br><small>Programada</small>' : ''}
             </td>
-            <td>${escapeHtml(formatFechaCreacion(rec))}</td>
             <td>${renderAccionesRecoleccion(rec)}</td>
         </tr>
     `).join('');
