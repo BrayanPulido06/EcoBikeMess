@@ -565,6 +565,71 @@ body.sidebar-collapsed .facturacion-shell,
     gap: 0.8rem;
 }
 
+.package-detail-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--fact-border);
+    border-radius: 12px;
+    background: #fff;
+}
+
+.package-detail-table {
+    width: 100%;
+    min-width: 1120px;
+    border-collapse: collapse;
+    color: var(--fact-text);
+}
+
+.package-detail-table th,
+.package-detail-table td {
+    padding: 0.85rem 0.95rem;
+    border-bottom: 1px solid #e8f0ea;
+    text-align: left;
+    vertical-align: top;
+}
+
+.package-detail-table th {
+    background: #f7faf7;
+    color: var(--fact-muted);
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.package-detail-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.package-detail-table td {
+    font-size: 0.92rem;
+    line-height: 1.35;
+}
+
+.package-detail-table td strong {
+    color: var(--fact-text);
+}
+
+.detail-table-note {
+    display: block;
+    margin-top: 0.28rem;
+    color: var(--fact-muted);
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.package-detail-actions {
+    display: flex;
+    min-width: 190px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.package-detail-actions .facturacion-footnote {
+    width: 100%;
+    margin-top: 0;
+    font-size: 0.76rem;
+}
+
 .facturacion-abono-form {
     margin: 1.25rem 0;
     padding: 1rem;

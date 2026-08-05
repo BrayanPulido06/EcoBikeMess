@@ -1789,6 +1789,200 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
+    const renderPackageDetailTable = (headers, rows, emptyMessage) => {
+        if (!rows.length) {
+            return `<div class="empty-state">${emptyMessage}</div>`;
+        }
+
+        return `
+            <div class="package-detail-table-wrap">
+                <table class="package-detail-table">
+                    <thead>
+                        <tr>
+                            ${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows.map((cells) => `
+                            <tr>
+                                ${cells.map((cell) => `<td>${cell}</td>`).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    };
+
+    const renderClientPackagesTable = (packages) => {
+        const headers = [
+            'Guia',
+            'Fecha',
+            'Destinatario',
+            'Direccion',
+            'Estado',
+            'Servicio base',
+            'Adicional',
+            'Total servicio',
+            'Recaudado',
+            'Recaudo esperado',
+            'Contraentrega',
+            'Saldo',
+            'Observaciones'
+        ];
+
+        if (mode === 'admin') {
+            headers.push('Acciones');
+        }
+
+        const rows = packages.map((item) => {
+            const recaudoReal = getRecaudoRealValue(item);
+            const valorBase = Number(item.valor_envio_base ?? item.valor_envio ?? 0);
+            const adicional = Number(item.costo_adicional_servicio || 0);
+            const valorTotal = Number(item.valor_envio || 0);
+            const recaudoEsperado = Number(item.valor_recaudo || 0);
+            const saldo = recaudoReal - valorTotal;
+            const observaciones = [
+                escapeHtml(item.instrucciones_entrega || 'Sin instrucciones'),
+                item.observaciones_admin
+                    ? `<small class="detail-table-note">Adicional: ${escapeHtml(item.observaciones_admin)}</small>`
+                    : ''
+            ].filter(Boolean).join('');
+
+            const cells = [
+                `<strong>${escapeHtml(item.numero_guia)}</strong>`,
+                shortDate(item.fecha_entrega || item.fecha_ingreso),
+                escapeHtml(item.destinatario_nombre || 'Sin destinatario'),
+                escapeHtml(item.direccion_destino || 'Sin direccion'),
+                statusBadge(item.estado),
+                money(valorBase),
+                money(adicional),
+                money(valorTotal),
+                money(recaudoReal),
+                money(recaudoEsperado),
+                item.agregado_al_recaudo ? 'Si' : 'No',
+                `<strong>${money(saldo)}</strong>`,
+                observaciones
+            ];
+
+            if (mode === 'admin') {
+                cells.push(`
+                    <div class="package-detail-actions">
+                        <button
+                            type="button"
+                            class="fact-btn secondary"
+                            data-role="open-package-additional-cost"
+                            data-package-id="${escapeHtml(String(item.paquete_id))}"
+                        >
+                            Editar adicional
+                        </button>
+                    </div>
+                `);
+            }
+
+            return cells;
+        });
+
+        return renderPackageDetailTable(headers, rows, 'No hay paquetes para este detalle.');
+    };
+
+    const renderMessengerPackagesTable = (packages) => {
+        const headers = [
+            'Guia',
+            'Fecha',
+            'Cliente',
+            'Destinatario',
+            'Estado',
+            'Pago base',
+            'Adicional',
+            'Total pago',
+            'Servicio cliente',
+            'Contraentrega',
+            'Recaudo esperado',
+            'Recaudo real',
+            'Observaciones'
+        ];
+
+        if (mode === 'admin') {
+            headers.push('Acciones');
+        }
+
+        const rows = packages.map((item) => {
+            const pagoBase = getMessengerBasePaymentValue(item);
+            const adicional = Number(item.adicional_pago_mensajero || 0);
+            const pagoTotal = getMessengerPaymentValue(item);
+            const observaciones = [
+                item.observaciones_mensajero
+                    ? `<span>Adicional: ${escapeHtml(item.observaciones_mensajero)}</span>`
+                    : '<span>Sin adicional</span>',
+                item.observaciones
+                    ? `<small class="detail-table-note">Entrega: ${escapeHtml(item.observaciones)}</small>`
+                    : '<small class="detail-table-note">Sin observaciones de entrega</small>'
+            ].join('');
+
+            const cells = [
+                `<strong>${escapeHtml(item.numero_guia)}</strong>`,
+                shortDate(item.fecha_entrega || item.fecha_ingreso),
+                escapeHtml(item.cliente_nombre || 'Sin cliente'),
+                escapeHtml(item.destinatario_nombre || 'Sin destinatario'),
+                statusBadge(item.estado),
+                money(pagoBase),
+                money(adicional),
+                `<strong>${money(pagoTotal)}</strong>`,
+                money(item.valor_envio),
+                item.agregado_al_recaudo ? 'Si' : 'No',
+                money(item.valor_recaudo),
+                money(item.valor_recaudo_real),
+                observaciones
+            ];
+
+            if (mode === 'admin') {
+                cells.push(`
+                    <div class="table-tools messenger-payment-tools package-detail-actions">
+                        <input type="number" min="0" step="100" value="${Math.round(pagoBase)}" data-role="payment-input" data-id="${escapeHtml(String(item.paquete_id))}">
+                        <button
+                            type="button"
+                            class="fact-btn secondary"
+                            data-role="open-messenger-additional-cost"
+                            data-package-id="${escapeHtml(String(item.paquete_id))}"
+                        >
+                            Editar adicional
+                        </button>
+                        <span class="facturacion-footnote" data-role="payment-status" data-id="${escapeHtml(String(item.paquete_id))}">Guardado automatico</span>
+                    </div>
+                `);
+            }
+
+            return cells;
+        });
+
+        return renderPackageDetailTable(headers, rows, 'No hay entregas para este detalle.');
+    };
+
+    const renderEcoBikePackagesTable = (packages) => {
+        const headers = [
+            'Guia',
+            'Cliente',
+            'Mensajero',
+            'Destinatario',
+            'Cobrado cliente',
+            'Pago mensajero',
+            'Ganancia'
+        ];
+
+        const rows = packages.map((item) => [
+            `<strong>${escapeHtml(item.numero_guia)}</strong>`,
+            escapeHtml(clientDisplayName(item)),
+            escapeHtml(item.mensajero_nombre || 'Sin asignar'),
+            escapeHtml(item.destinatario_nombre || 'Sin destinatario'),
+            money(item.total_cobrado_paquete),
+            money(item.total_pago_mensajero_paquete),
+            `<strong>${money(item.ganancia_paquete)}</strong>`
+        ]);
+
+        return renderPackageDetailTable(headers, rows, 'No hay paquetes para este detalle.');
+    };
+
     const openMessengerDetailModal = (groupKey) => {
         const group = getMensajeroGroupByKey(groupKey);
         const modal = document.getElementById('facturacionDetailModal');
@@ -1829,9 +2023,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>
                 </div>
             ` : ''}
-            <div class="package-list">
-                ${group.packages.map(renderMessengerPackageCard).join('')}
-            </div>
+            <h3 class="package-list-title">Detalle de entregas facturadas</h3>
+            ${renderMessengerPackagesTable(group.packages)}
         `;
 
         modal.classList.remove('modal-hidden');
@@ -2006,9 +2199,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ` : ''}
             ${renderClienteBankInfo(group)}
             <h3 class="package-list-title">Detalle de paquetes facturados</h3>
-            <div class="package-list">
-                ${group.packages.length ? group.packages.map(renderPackageCard).join('') : '<div class="empty-state">No hay paquetes para este detalle.</div>'}
-            </div>
+            ${renderClientPackagesTable(group.packages)}
         `;
 
         modal.classList.remove('modal-hidden');
@@ -2269,45 +2460,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><span>Ajuste mensajeros</span><strong>${money(group.ajustesMensajeroGeneral)}</strong></div>
                 <div><span>Ganancia</span><strong>${money(group.gananciaTotal)}</strong></div>
             </div>
-            <div class="package-list">
-                ${group.packages.map((item) => `
-                    <article class="package-card">
-                        <div class="package-card-head">
-                            <div>
-                                <span class="package-label">Guia</span>
-                                <strong>${escapeHtml(item.numero_guia)}</strong>
-                            </div>
-                            <span class="status-chip paid">Entregado</span>
-                        </div>
-                        <div class="package-grid">
-                            <div>
-                                <span class="package-label">Cliente</span>
-                                <strong>${escapeHtml(clientDisplayName(item))}</strong>
-                            </div>
-                            <div>
-                                <span class="package-label">Mensajero</span>
-                                <strong>${escapeHtml(item.mensajero_nombre || 'Sin asignar')}</strong>
-                            </div>
-                            <div>
-                                <span class="package-label">Cobrado cliente</span>
-                                <strong>${money(item.total_cobrado_paquete)}</strong>
-                            </div>
-                            <div>
-                                <span class="package-label">Pago mensajero</span>
-                                <strong>${money(item.total_pago_mensajero_paquete)}</strong>
-                            </div>
-                            <div>
-                                <span class="package-label">Ganancia paquete</span>
-                                <strong>${money(item.ganancia_paquete)}</strong>
-                            </div>
-                            <div>
-                                <span class="package-label">Destinatario</span>
-                                <strong>${escapeHtml(item.destinatario_nombre || 'Sin destinatario')}</strong>
-                            </div>
-                        </div>
-                    </article>
-                `).join('')}
-            </div>
+            <h3 class="package-list-title">Detalle de paquetes facturados</h3>
+            ${renderEcoBikePackagesTable(group.packages)}
         `;
 
         modal.classList.remove('modal-hidden');
