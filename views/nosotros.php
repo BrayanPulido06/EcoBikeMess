@@ -41,7 +41,7 @@
                         entregas en bicicleta, comunicación clara y cuidado por cada paquete que sale a ruta.
                     </p>
                     <div class="about-actions">
-                        <a href="#tarifas" class="btn-primary-about">Ver tarifas</a>
+                        <a href="<?php echo htmlspecialchars(route_url('about'), ENT_QUOTES, 'UTF-8'); ?>#tarifas" class="btn-primary-about">Ver tarifas</a>
                         <a href="https://wa.link/49g8jg" target="_blank" class="btn-secondary-about" rel="noopener">Escríbenos</a>
                     </div>
                 </div>
