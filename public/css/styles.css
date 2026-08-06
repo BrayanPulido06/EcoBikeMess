@@ -153,6 +153,43 @@ header {
     font-weight: 600;
 }
 
+.services-details-cta {
+    align-items: center;
+    background: white;
+    border: 1px solid #e8f5f1;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    display: flex;
+    gap: 1.5rem;
+    justify-content: space-between;
+    margin: 0 auto 2rem;
+    max-width: 900px;
+    padding: 1.3rem 1.5rem;
+}
+
+.services-details-cta p {
+    color: #5a6c7d;
+    font-size: 1.05rem;
+    margin: 0;
+}
+
+.services-details-cta a {
+    background: #5cb85c;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(92, 184, 92, 0.3);
+    color: white;
+    flex: 0 0 auto;
+    font-weight: 600;
+    padding: 12px 22px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.services-details-cta a:hover {
+    background: #4cae4c;
+    transform: translateY(-2px);
+}
+
 .services-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -520,6 +557,12 @@ footer p {
     
     .services-grid {
         grid-template-columns: 1fr;
+    }
+
+    .services-details-cta {
+        align-items: stretch;
+        flex-direction: column;
+        text-align: center;
     }
     
     .contact-grid {

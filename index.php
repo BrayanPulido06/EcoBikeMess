@@ -132,6 +132,10 @@
         <section class="services" id="services">
             <div class="container">
                 <h2>Nuestros Servicios</h2>
+                <div class="services-details-cta">
+                    <p>Si quieres ver más detalles sobre tarifas, condiciones y servicios adicionales, consulta la información completa.</p>
+                    <a href="<?php echo htmlspecialchars(route_url('about'), ENT_QUOTES, 'UTF-8'); ?>#tarifas">Ver tarifas detalladas</a>
+                </div>
                 <div class="services-grid">
                     <div class="service-card">
                         <h3>Tarifa Emprendedor</h3>
