@@ -11,7 +11,7 @@
     <title>Nosotros - EcoBikeMess</title>
     <link rel="icon" href="public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="public/css/styles.css">
-    <link rel="stylesheet" href="public/css/nosotros.css?v=2">
+    <link rel="stylesheet" href="public/css/nosotros.css?v=3">
 </head>
 <body>
     <header>
@@ -601,6 +601,6 @@
         </div>
     </footer>
 
-    <script src="public/js/nosotros.js?v=2"></script>
+    <script src="public/js/nosotros.js?v=3"></script>
 </body>
 </html>

@@ -290,6 +290,14 @@
     opacity: 1;
 }
 
+.rate-content.is-open {
+    max-height: 8000px !important;
+}
+
+.rate-nested-content.is-open {
+    max-height: 1800px !important;
+}
+
 .rate-nested-list {
     border-top: 1px solid #e8f5f1;
     display: grid;
