@@ -50,4 +50,19 @@ document.addEventListener('DOMContentLoaded', function() {
     counters.forEach(function(counter) {
         counterObserver.observe(counter);
     });
+
+    document.querySelectorAll('.rate-toggle, .rate-nested-toggle').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const targetId = button.getAttribute('aria-controls');
+            const target = document.getElementById(targetId);
+
+            if (!target) {
+                return;
+            }
+
+            const isOpen = button.classList.toggle('is-open');
+            target.classList.toggle('is-open', isOpen);
+            button.setAttribute('aria-expanded', String(isOpen));
+        });
+    });
 });

@@ -110,6 +110,103 @@
             </div>
         </section>
 
+        <section class="mission-vision-section">
+            <div class="container">
+                <span class="section-kicker">Nuestro propósito</span>
+                <h3>Misión y visión</h3>
+                <div class="mission-vision-grid">
+                    <article class="purpose-card reveal-on-scroll">
+                        <h4>Misión de Eco BikeMess</h4>
+                        <p>
+                            Fomentar un cambio positivo en la movilidad urbana, ofreciendo un servicio de mensajería en
+                            bicicleta que resuelve de forma ecológica la entrega de tus paquetes y mercancías en la ciudad.
+                        </p>
+                    </article>
+                    <article class="purpose-card reveal-on-scroll">
+                        <h4>Visión de Eco BikeMess</h4>
+                        <p>
+                            Ser líderes en la transformación de la logística urbana mediante soluciones innovadoras y
+                            sostenibles en bicicleta. Aspiramos a redefinir el futuro de los envíos urbanos, combinando
+                            velocidad, eficiencia y responsabilidad ambiental para crear ciudades más limpias, donde cada
+                            envío sea una contribución activa al cuidado del medio ambiente.
+                        </p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="rates-section">
+            <div class="container rates-grid">
+                <div class="rates-copy reveal-on-scroll">
+                    <span class="section-kicker">Información comercial</span>
+                    <h3>Tarifas</h3>
+                    <p>
+                        En este apartado puedes colocar la información detallada de tarifas, condiciones, servicios
+                        adicionales, tiempos de entrega, zonas de cobertura y cualquier aclaración importante para tus clientes.
+                    </p>
+                    <p>
+                        Puedes usarlo para explicar la Tarifa Emprendedor, Tarifa Oportuna, contraentregas, retornos,
+                        packing, espera y recargos especiales.
+                    </p>
+                </div>
+                <div class="rates-list reveal-on-scroll">
+                    <article class="rate-accordion">
+                        <button class="rate-toggle" type="button" aria-expanded="false" aria-controls="rate-emprendedor">
+                            <span>
+                                <strong>Tarifa Emprendedor</strong>
+                                <small>Ideal para tus envíos con una tarifa fija.</small>
+                            </span>
+                            <span class="toggle-icon" aria-hidden="true">+</span>
+                        </button>
+
+                        <div class="rate-content" id="rate-emprendedor">
+                            <div class="rate-nested-list">
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-emprendedor-entregas">
+                                        <span>Entregas</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-emprendedor-entregas">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>Mismo día o siguiente:</strong> Gestionamos tu pedido en el transcurso del día, sin horario fijo.</li>
+                                            <li><strong>Prioridad same-day:</strong> Asegura tu envío el mismo día por $10.000 en Bogotá o $14.000 en Soacha y zonas verde oscuro.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-emprendedor-cobertura">
+                                        <span>Cobertura y precios base</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-emprendedor-cobertura">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>$8.000:</strong> Envío estándar en Bogotá para paquetes hasta 2kg y 20x20x20cm.</li>
+                                            <li><strong>$12.000:</strong> Para Soacha y zonas verdes oscuras en Bogotá, según el mapa de cobertura.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-emprendedor-importante">
+                                        <span>Importante</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-emprendedor-importante">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>Programación:</strong> Solicita tu envío antes de las 10:00 a.m. Después de esta hora, queda sujeto a disponibilidad.</li>
+                                            <li><strong>Horarios específicos:</strong> Si necesitas una hora máxima de entrega, puede tener un adicional o aplicar la tarifa oportuna.</li>
+                                            <li><strong>Factores externos:</strong> Lluvia, tráfico o alta demanda pueden retrasar tu envío al día siguiente.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
         <section class="timeline-section">
             <div class="container">
                 <span class="section-kicker">Para ampliar</span>

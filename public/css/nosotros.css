@@ -113,6 +113,8 @@
 
 .about-content-section,
 .values-section,
+.mission-vision-section,
+.rates-section,
 .timeline-section,
 .about-cta {
     padding: 70px 20px;
@@ -141,6 +143,8 @@
 
 .content-panel h3,
 .values-section h3,
+.mission-vision-section h3,
+.rates-section h3,
 .timeline-section h3,
 .about-cta h3 {
     color: #2d3e50;
@@ -187,6 +191,188 @@
     gap: 1.5rem;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     margin-top: 2rem;
+}
+
+.mission-vision-section {
+    background: white;
+}
+
+.mission-vision-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 2rem;
+}
+
+.purpose-card {
+    background: #f8fdf9;
+    border: 1px solid #dcefe6;
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.purpose-card h4 {
+    color: #2d3e50;
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+}
+
+.purpose-card p {
+    color: #5a6c7d;
+    font-size: 1.08rem;
+}
+
+.rates-section {
+    background: #fafffe;
+}
+
+.rates-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+    gap: 2rem;
+    align-items: start;
+}
+
+.rates-copy p {
+    color: #5a6c7d;
+    font-size: 1.08rem;
+    margin-bottom: 1rem;
+}
+
+.rates-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.rate-accordion {
+    background: white;
+    border: 1px solid #e8f5f1;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.rate-toggle,
+.rate-nested-toggle {
+    align-items: center;
+    background: white;
+    border: 0;
+    color: #2d3e50;
+    cursor: pointer;
+    display: flex;
+    font-family: inherit;
+    gap: 1rem;
+    justify-content: space-between;
+    text-align: left;
+    width: 100%;
+}
+
+.rate-toggle {
+    padding: 1.5rem;
+}
+
+.rate-toggle strong {
+    display: block;
+    font-size: 1.25rem;
+    margin-bottom: 0.35rem;
+}
+
+.rate-toggle small {
+    color: #5a6c7d;
+    display: block;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.rate-toggle:hover,
+.rate-nested-toggle:hover {
+    background: #f8fdf9;
+}
+
+.toggle-icon {
+    align-items: center;
+    background: #e8f8f5;
+    border-radius: 50%;
+    color: #4cae4c;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 1.2rem;
+    font-weight: 700;
+    height: 34px;
+    justify-content: center;
+    line-height: 1;
+    transition: all 0.25s ease;
+    width: 34px;
+}
+
+.rate-toggle.is-open .toggle-icon,
+.rate-nested-toggle.is-open .toggle-icon {
+    background: #5cb85c;
+    color: white;
+    transform: rotate(45deg);
+}
+
+.rate-content,
+.rate-nested-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+}
+
+.rate-content.is-open,
+.rate-nested-content.is-open {
+    max-height: 900px;
+}
+
+.rate-nested-list {
+    border-top: 1px solid #e8f5f1;
+    display: grid;
+    gap: 0;
+    padding: 0.8rem;
+}
+
+.rate-nested {
+    border: 1px solid #e8f5f1;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.rate-nested + .rate-nested {
+    margin-top: 0.8rem;
+}
+
+.rate-nested-toggle {
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 1rem;
+}
+
+.pretty-bullets {
+    list-style: none;
+    padding: 0.2rem 1rem 1rem;
+}
+
+.pretty-bullets li {
+    color: #5a6c7d;
+    font-size: 1rem;
+    padding: 0.55rem 0 0.55rem 1.7rem;
+    position: relative;
+}
+
+.pretty-bullets li::before {
+    background: #5cb85c;
+    border: 3px solid #dff3e7;
+    border-radius: 50%;
+    content: "";
+    height: 12px;
+    left: 0;
+    position: absolute;
+    top: 1rem;
+    width: 12px;
+}
+
+.pretty-bullets strong {
+    color: #2d3e50;
 }
 
 .value-card {
@@ -256,6 +442,8 @@
 @media (max-width: 992px) {
     .about-hero-grid,
     .content-grid,
+    .mission-vision-grid,
+    .rates-grid,
     .values-grid {
         grid-template-columns: 1fr;
     }
@@ -269,6 +457,8 @@
     .about-hero,
     .about-content-section,
     .values-section,
+    .mission-vision-section,
+    .rates-section,
     .timeline-section,
     .about-cta {
         padding: 50px 20px;
@@ -277,6 +467,8 @@
     .about-hero h2,
     .content-panel h3,
     .values-section h3,
+    .mission-vision-section h3,
+    .rates-section h3,
     .timeline-section h3,
     .about-cta h3 {
         font-size: 1.9rem;
