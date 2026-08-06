@@ -11,7 +11,7 @@
     <title>Nosotros - EcoBikeMess</title>
     <link rel="icon" href="public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="public/css/styles.css">
-    <link rel="stylesheet" href="public/css/nosotros.css">
+    <link rel="stylesheet" href="public/css/nosotros.css?v=2">
 </head>
 <body>
     <header>
@@ -116,6 +116,7 @@
                 <h3>Misión y visión</h3>
                 <div class="mission-vision-grid">
                     <article class="purpose-card reveal-on-scroll">
+                        <span class="purpose-badge">M</span>
                         <h4>Misión de Eco BikeMess</h4>
                         <p>
                             Fomentar un cambio positivo en la movilidad urbana, ofreciendo un servicio de mensajería en
@@ -123,6 +124,7 @@
                         </p>
                     </article>
                     <article class="purpose-card reveal-on-scroll">
+                        <span class="purpose-badge">V</span>
                         <h4>Visión de Eco BikeMess</h4>
                         <p>
                             Ser líderes en la transformación de la logística urbana mediante soluciones innovadoras y
@@ -136,8 +138,8 @@
         </section>
 
         <section class="rates-section">
-            <div class="container rates-grid">
-                <div class="rates-copy reveal-on-scroll">
+            <div class="container">
+                <div class="rates-header reveal-on-scroll">
                     <span class="section-kicker">Información comercial</span>
                     <h3>Tarifas</h3>
                     <p>
@@ -247,6 +249,6 @@
         </div>
     </footer>
 
-    <script src="public/js/nosotros.js"></script>
+    <script src="public/js/nosotros.js?v=2"></script>
 </body>
 </html>

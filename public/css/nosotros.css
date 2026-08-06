@@ -194,21 +194,50 @@
 }
 
 .mission-vision-section {
-    background: white;
+    background:
+        linear-gradient(90deg, rgba(92, 184, 92, 0.08), transparent 45%),
+        white;
 }
 
 .mission-vision-grid {
     display: grid;
-    gap: 1.5rem;
+    gap: 2rem;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-top: 2rem;
 }
 
 .purpose-card {
-    background: #f8fdf9;
+    background: white;
     border: 1px solid #dcefe6;
     border-radius: 12px;
+    box-shadow: 0 14px 35px rgba(45, 62, 80, 0.08);
+    min-height: 100%;
     padding: 2rem;
+    position: relative;
+}
+
+.purpose-card::before {
+    background: linear-gradient(135deg, #5cb85c 0%, #2f9e77 100%);
+    content: "";
+    height: 5px;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.purpose-badge {
+    align-items: center;
+    background: #e8f8f5;
+    border-radius: 50%;
+    color: #4cae4c;
+    display: inline-flex;
+    font-size: 1.1rem;
+    font-weight: 800;
+    height: 46px;
+    justify-content: center;
+    margin-bottom: 1rem;
+    width: 46px;
 }
 
 .purpose-card h4 {
@@ -223,17 +252,16 @@
 }
 
 .rates-section {
-    background: #fafffe;
+    background: linear-gradient(180deg, #fafffe 0%, #eef9f3 100%);
 }
 
-.rates-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
-    gap: 2rem;
-    align-items: start;
+.rates-header {
+    margin: 0 auto 2rem;
+    max-width: 880px;
+    text-align: center;
 }
 
-.rates-copy p {
+.rates-header p {
     color: #5a6c7d;
     font-size: 1.08rem;
     margin-bottom: 1rem;
@@ -242,6 +270,8 @@
 .rates-list {
     display: grid;
     gap: 1rem;
+    margin: 0 auto;
+    max-width: 900px;
 }
 
 .rate-accordion {
@@ -268,12 +298,14 @@
 }
 
 .rate-toggle {
-    padding: 1.5rem;
+    background: linear-gradient(135deg, #ffffff 0%, #f2fbf6 100%);
+    padding: 1.6rem;
 }
 
 .rate-toggle strong {
+    color: #2d3e50;
     display: block;
-    font-size: 1.25rem;
+    font-size: 1.35rem;
     margin-bottom: 0.35rem;
 }
 
@@ -316,12 +348,13 @@
 .rate-nested-content {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.35s ease;
+    transition: max-height 0.35s ease, opacity 0.25s ease;
+    opacity: 0;
 }
 
 .rate-content.is-open,
 .rate-nested-content.is-open {
-    max-height: 900px;
+    opacity: 1;
 }
 
 .rate-nested-list {
@@ -332,8 +365,10 @@
 }
 
 .rate-nested {
-    border: 1px solid #e8f5f1;
+    background: white;
+    border: 1px solid #dcefe6;
     border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(45, 62, 80, 0.05);
     overflow: hidden;
 }
 
@@ -342,6 +377,7 @@
 }
 
 .rate-nested-toggle {
+    background: #ffffff;
     font-size: 1rem;
     font-weight: 700;
     padding: 1rem;
@@ -349,7 +385,8 @@
 
 .pretty-bullets {
     list-style: none;
-    padding: 0.2rem 1rem 1rem;
+    margin: 0;
+    padding: 0.3rem 1.2rem 1.2rem;
 }
 
 .pretty-bullets li {
@@ -443,7 +480,6 @@
     .about-hero-grid,
     .content-grid,
     .mission-vision-grid,
-    .rates-grid,
     .values-grid {
         grid-template-columns: 1fr;
     }

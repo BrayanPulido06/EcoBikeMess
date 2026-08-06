@@ -51,6 +51,14 @@ document.addEventListener('DOMContentLoaded', function() {
         counterObserver.observe(counter);
     });
 
+    const updatePanelHeight = function(panel, isOpen) {
+        if (!panel) {
+            return;
+        }
+
+        panel.style.maxHeight = isOpen ? `${panel.scrollHeight}px` : '0px';
+    };
+
     document.querySelectorAll('.rate-toggle, .rate-nested-toggle').forEach(function(button) {
         button.addEventListener('click', function() {
             const targetId = button.getAttribute('aria-controls');
@@ -63,6 +71,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const isOpen = button.classList.toggle('is-open');
             target.classList.toggle('is-open', isOpen);
             button.setAttribute('aria-expanded', String(isOpen));
+            updatePanelHeight(target, isOpen);
+
+            const parentPanel = button.closest('.rate-content');
+            if (parentPanel && parentPanel.classList.contains('is-open')) {
+                requestAnimationFrame(function() {
+                    parentPanel.style.maxHeight = `${parentPanel.scrollHeight}px`;
+                });
+            }
         });
     });
 });
