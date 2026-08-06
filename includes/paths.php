@@ -58,6 +58,7 @@ function app_routes(): array
 
     $routes = [
         'home' => '',
+        'about' => 'nosotros',
         'login' => 'login',
         'register' => 'crear-cuenta',
         'forgot-password' => 'recuperar-contrasena',

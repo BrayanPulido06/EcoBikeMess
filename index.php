@@ -101,7 +101,7 @@
             </div>
             <div class="nav-links">
                 <a href="#inicio">Inicio</a>
-                <a href="#about">Nosotros</a>
+                <a href="<?php echo htmlspecialchars(route_url('about'), ENT_QUOTES, 'UTF-8'); ?>">Nosotros</a>
                 <a href="#services">Servicios</a>
                 <a href="#pricing">Cobertura</a>
                 <a href="#contact">Contacto</a>

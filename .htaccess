@@ -12,6 +12,7 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # Redirecciones desde rutas físicas antiguas hacia URLs amigables
 RewriteRule ^index\.php$ ./ [R=301,L,NE]
+RewriteRule ^views/nosotros\.php$ nosotros [R=301,L,NE]
 RewriteRule ^login\.php$ login [R=301,L,NE]
 RewriteRule ^crearCuenta\.php$ crear-cuenta [R=301,L,NE]
 RewriteRule ^recuperarContrase.*\.php$ recuperar-contrasena [R=301,L,NE]
@@ -60,6 +61,7 @@ RewriteRule ^ - [L]
 
 # URLs amigables
 RewriteRule ^$ index.php [L,QSA]
+RewriteRule ^nosotros/?$ views/nosotros.php [L,QSA]
 RewriteRule ^login/?$ views/login.php [L,QSA]
 RewriteRule ^crear-cuenta/?$ views/crearCuenta.php [L,QSA]
 RewriteRule ^recuperar-contrasena/?$ views/recuperarContraseña.php [L,QSA]
