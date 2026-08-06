@@ -46,7 +46,7 @@
                     </div>
                 </div>
                 <div class="about-hero-card">
-                    <img src="public/img/Logo_Circulo_Fondoverde.png" alt="Logo verde de EcoBikeMess">
+                    <img src="public/img/Logo_Circulo_Fondoblanco.png" alt="Logo EcoBikeMess">
                     <p>Más de 7 años pedaleando por entregas sostenibles en Bogotá y Soacha.</p>
                 </div>
             </div>
