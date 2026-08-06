@@ -205,6 +205,448 @@
                             </div>
                         </div>
                     </article>
+
+                    <article class="rate-accordion">
+                        <button class="rate-toggle" type="button" aria-expanded="false" aria-controls="rate-oportuna">
+                            <span>
+                                <strong>Tarifa Oportuna</strong>
+                                <small>Entregas rápidas y/o con horarios.</small>
+                            </span>
+                            <span class="toggle-icon" aria-hidden="true">+</span>
+                        </button>
+
+                        <div class="rate-content" id="rate-oportuna">
+                            <div class="rate-nested-list">
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-oportuna-valor">
+                                        <span>Valor del servicio</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-oportuna-valor">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>$12.000:</strong> Cubre los primeros 7 km, desde el punto de recogida hasta la entrega.</li>
+                                            <li><strong>$1.500:</strong> Por cada km adicional.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-oportuna-paquete">
+                                        <span>Especificaciones del paquete</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-oportuna-paquete">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>Tamaño máximo:</strong> 30x30x30 cm.</li>
+                                            <li><strong>Peso máximo:</strong> 3 kg.</li>
+                                            <li>Si tu paquete excede estas medidas, puede tener un adicional.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-oportuna-funciona">
+                                        <span>Cómo funciona</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-oportuna-funciona">
+                                        <ul class="pretty-bullets">
+                                            <li>Asignamos un mensajero exclusivo para gestionar tu envío.</li>
+                                            <li><strong>Entrega express:</strong> Lo más rápido posible o en el horario que nos indiques.</li>
+                                            <li><strong>Ruta optimizada:</strong> Calculamos la tarifa con base en la distancia real usando Google Maps o Waze.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="rate-accordion">
+                        <button class="rate-toggle" type="button" aria-expanded="false" aria-controls="rate-contraentrega">
+                            <span>
+                                <strong>Servicio Contraentrega</strong>
+                                <small>Para que tu cliente cancele al recibir.</small>
+                            </span>
+                            <span class="toggle-icon" aria-hidden="true">+</span>
+                        </button>
+
+                        <div class="rate-content" id="rate-contraentrega">
+                            <div class="rate-nested-list">
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-contraentrega-funciona">
+                                        <span>Cómo funciona</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-contraentrega-funciona">
+                                        <ul class="pretty-bullets">
+                                            <li>Al solicitar el servicio, indícanos el monto total a cobrar a tu cliente.</li>
+                                            <li>Nuestro mensajero recogerá el pago al entregar el paquete. Nos pueden pagar en efectivo o transferencia.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-contraentrega-devolucion">
+                                        <span>Devolución del dinero</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-contraentrega-devolucion">
+                                        <ul class="pretty-bullets">
+                                            <li>Máximo en 2 días hábiles después de la entrega.</li>
+                                            <li><strong>Métodos:</strong> Transferencia a Nequi, Daviplata, Davivienda o Bancolombia, o efectivo si es posible.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-contraentrega-tarifas">
+                                        <span>Tarifas transparentes</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-contraentrega-tarifas">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>Costo fijo:</strong> $3.000 adicionales al valor del envío.</li>
+                                            <li>Para recaudos mayores a $300.000 equivale al 1% del monto, es decir $1.000 por cada $100.000.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="rate-accordion">
+                        <button class="rate-toggle" type="button" aria-expanded="false" aria-controls="rate-retorno">
+                            <span>
+                                <strong>Retorno de Paquetes</strong>
+                                <small>Entregamos un paquete y recogemos otro con dimensiones similares.</small>
+                            </span>
+                            <span class="toggle-icon" aria-hidden="true">+</span>
+                        </button>
+
+                        <div class="rate-content" id="rate-retorno">
+                            <div class="rate-nested-list">
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-retorno-funciona">
+                                        <span>Cómo funciona</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-retorno-funciona">
+                                        <ul class="pretty-bullets">
+                                            <li>Entregamos un paquete a tu cliente.</li>
+                                            <li>Recogemos otro paquete de dimensiones similares en el mismo lugar.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-retorno-tarifas">
+                                        <span>Tarifas</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-retorno-tarifas">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>Retorno en 3 días hábiles:</strong> $5.000 adicionales al servicio original.</li>
+                                            <li><strong>Retorno al día siguiente:</strong> Aplica tarifa normal, Emprendedor u Oportuna.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-retorno-importante">
+                                        <span>Importante</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-retorno-importante">
+                                        <ul class="pretty-bullets">
+                                            <li>El paquete a recoger debe tener un tamaño y peso similar al entregado.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="rate-accordion">
+                        <button class="rate-toggle" type="button" aria-expanded="false" aria-controls="rate-cancelados">
+                            <span>
+                                <strong>Servicios Cancelados y/o Devoluciones</strong>
+                                <small>Cuando el cliente no recibe, no aparece y no se logra llevar a cabo la entrega.</small>
+                            </span>
+                            <span class="toggle-icon" aria-hidden="true">+</span>
+                        </button>
+
+                        <div class="rate-content" id="rate-cancelados">
+                            <div class="rate-nested-list">
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-cancelados-cancelacion">
+                                        <span>Cancelación antes de la entrega</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-cancelados-cancelacion">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>Costo fijo:</strong> $5.000 por logística.</li>
+                                            <li><strong>Devolución del paquete:</strong> 3 días hábiles.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-cancelados-no-responde">
+                                        <span>Cliente no responde</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-cancelados-no-responde">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>Primer intento:</strong> Entrega aplazada para el día siguiente.</li>
+                                            <li><strong>Segundo intento:</strong> Si persiste la falta de respuesta, se retorna el paquete con costo del servicio de $5.000.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-cancelados-no-recibe">
+                                        <span>Cliente no recibe</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-cancelados-no-recibe">
+                                        <ul class="pretty-bullets">
+                                            <li>Se cobra el valor completo del servicio.</li>
+                                            <li><strong>Devolución del paquete:</strong> 3 días hábiles.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-cancelados-reprogramacion">
+                                        <span>Reprogramación y recomendaciones</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-cancelados-reprogramacion">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>Reprogramación sin costo:</strong> Solo aplica para paquetes pequeños y con aviso previo.</li>
+                                            <li>Siempre notificaremos cada intento de entrega.</li>
+                                            <li>Una reprogramación gratuita aplica si avisas con tiempo.</li>
+                                            <li>Tu paquete se devuelve en 72 horas hábiles.</li>
+                                            <li><strong>Recomendación:</strong> Asegúrate de estar disponible o delegar a alguien en la dirección indicada para garantizar una entrega exitosa.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="rate-accordion">
+                        <button class="rate-toggle" type="button" aria-expanded="false" aria-controls="rate-packing">
+                            <span>
+                                <strong>Servicio de Packing</strong>
+                                <small>Para paquetes sin sellar o sin información del destinatario.</small>
+                            </span>
+                            <span class="toggle-icon" aria-hidden="true">+</span>
+                        </button>
+
+                        <div class="rate-content" id="rate-packing">
+                            <div class="rate-nested-list">
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-packing-uso">
+                                        <span>Cuándo usarlo</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-packing-uso">
+                                        <ul class="pretty-bullets">
+                                            <li>Paquetes sin sellar o sin información del destinatario.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-packing-datos">
+                                        <span>Datos requeridos</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-packing-datos">
+                                        <ul class="pretty-bullets">
+                                            <li>Dirección exacta, torre o apartamento si aplica.</li>
+                                            <li>Nombre y teléfono del destinatario.</li>
+                                            <li>Observaciones, por ejemplo: entregar solo a nombre de una persona específica.</li>
+                                            <li>Indicar si es contraentrega y especificar el valor del recaudo.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-packing-tarifas">
+                                        <span>Tarifas simples</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-packing-tarifas">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>$2.000:</strong> Incluye embalaje, sellado y rotulado con los datos del cliente.</li>
+                                            <li><strong>$1.000:</strong> Solo rotulado si el paquete ya está empacado.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-packing-exclusiones">
+                                        <span>Exclusiones</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-packing-exclusiones">
+                                        <ul class="pretty-bullets">
+                                            <li>No embalamos objetos delicados como vidrio, cerámica o porcelana.</li>
+                                            <li>No embalamos alimentos o líquidos.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-packing-beneficios">
+                                        <span>Beneficios</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-packing-beneficios">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>Prevención de pérdidas:</strong> Etiquetamos claramente tu paquete.</li>
+                                            <li><strong>Protección básica:</strong> Sellado seguro para evitar aperturas accidentales.</li>
+                                            <li><strong>Ahorro de tiempo:</strong> Nos ocupamos de lo técnico, tú enfócate en lo importante.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="rate-accordion">
+                        <button class="rate-toggle" type="button" aria-expanded="false" aria-controls="rate-espera">
+                            <span>
+                                <strong>Tiempo de Espera</strong>
+                                <small>Servicios que requieran esperar en un mismo punto.</small>
+                            </span>
+                            <span class="toggle-icon" aria-hidden="true">+</span>
+                        </button>
+
+                        <div class="rate-content" id="rate-espera">
+                            <div class="rate-nested-list">
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-espera-funciona">
+                                        <span>Cómo funciona</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-espera-funciona">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>Primeros 20 minutos:</strong> Incluidos en el servicio sin costo adicional.</li>
+                                            <li><strong>Después de 20 minutos:</strong> Se aplica un recargo de $2.000 por cada 10 minutos de espera.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-espera-recomendaciones">
+                                        <span>Recomendaciones para clientes</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-espera-recomendaciones">
+                                        <ul class="pretty-bullets">
+                                            <li>Programa entregas con tiempo suficiente para evitar esperas.</li>
+                                            <li>Comunica cambios de horario con anticipación.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-espera-mensaje">
+                                        <span>Mensaje amigable</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-espera-mensaje">
+                                        <ul class="pretty-bullets">
+                                            <li>Valoramos el tiempo de todos. Coordina con tu destinatario para que todo esté listo al llegar nuestro mensajero.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-espera-ejemplo">
+                                        <span>Ejemplo</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-espera-ejemplo">
+                                        <ul class="pretty-bullets">
+                                            <li>Si el mensajero espera 40 minutos, el recargo será de $4.000, equivalente a 2 bloques de 10 minutos.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="rate-accordion">
+                        <button class="rate-toggle" type="button" aria-expanded="false" aria-controls="rate-adicionales">
+                            <span>
+                                <strong>Adicionales</strong>
+                                <small>Información requerida, restricciones y tarifas adicionales.</small>
+                            </span>
+                            <span class="toggle-icon" aria-hidden="true">+</span>
+                        </button>
+
+                        <div class="rate-content" id="rate-adicionales">
+                            <div class="rate-nested-list">
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-adicionales-info">
+                                        <span>Información requerida al programar</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-adicionales-info">
+                                        <ul class="pretty-bullets">
+                                            <li>Envíanos los datos completos de quien recibe el pedido: dirección, nombre y teléfono.</li>
+                                            <li><strong>Descripción del paquete:</strong> Qué se transporta. No alimentos perecederos o delicados.</li>
+                                            <li><strong>Tamaño y peso exactos:</strong> Si supera los estándares, enviar foto para validar tarifa.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-adicionales-restricciones">
+                                        <span>Restricciones importantes</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-adicionales-restricciones">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>No transportamos:</strong> Alimentos perecederos, vidrios, cerámicas u objetos frágiles sin embalaje seguro.</li>
+                                            <li>No nos hacemos responsables por paquetes dejados en portería o con el cliente si no están sellados correctamente.</li>
+                                            <li><strong>Sellado obligatorio:</strong> Evita pérdidas o malentendidos en la entrega.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-adicionales-tarifas">
+                                        <span>Tarifas adicionales</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-adicionales-tarifas">
+                                        <ul class="pretty-bullets">
+                                            <li><strong>Paquetes sobredimensionados:</strong> Se calculan bajo la Tarifa Oportuna más ajuste por peso o volumen.</li>
+                                            <li><strong>Compras en efectivo:</strong> Si requieres que el mensajero retire dinero, por ejemplo para compras, tiene un adicional de $5.000. No adelantamos ni prestamos dinero para compras.</li>
+                                            <li><strong>Múltiples paradas:</strong> $1.000 por punto adicional en la misma zona.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="rate-nested">
+                                    <button class="rate-nested-toggle" type="button" aria-expanded="false" aria-controls="rate-adicionales-mensaje">
+                                        <span>Mensaje clave para clientes</span>
+                                        <span class="toggle-icon" aria-hidden="true">+</span>
+                                    </button>
+                                    <div class="rate-nested-content" id="rate-adicionales-mensaje">
+                                        <ul class="pretty-bullets">
+                                            <li>Ayúdanos a garantizar que tu envío llegue seguro y a tiempo. Proporciona todos los detalles del paquete y asegúrate de que esté bien sellado. Juntos hacemos logística eficiente.</li>
+                                        </ul>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </article>
                 </div>
             </div>
         </section>
