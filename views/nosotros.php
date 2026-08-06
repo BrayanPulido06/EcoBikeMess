@@ -601,6 +601,12 @@
         </div>
     </footer>
 
+    <a href="https://wa.link/49g8jg" class="whatsapp-container" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
+        <div class="whatsapp-btn">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+        </div>
+    </a>
+
     <script src="public/js/nosotros.js?v=3"></script>
 </body>
 </html>
