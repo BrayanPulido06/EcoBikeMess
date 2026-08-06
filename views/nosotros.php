@@ -17,7 +17,7 @@
     <header>
         <nav class="navbar">
             <div class="logo">
-                <h1><img src="public/img/Logo_Circulo_Fondoverde.png" alt="Logo EcoBikeMess"> EcoBikeMess</h1>
+                <h1><img src="public/img/Logo_Circulo_Fondoblanco.png" alt="Logo EcoBikeMess"> EcoBikeMess</h1>
             </div>
             <div class="nav-links">
                 <a href="<?php echo htmlspecialchars(route_url('home'), ENT_QUOTES, 'UTF-8'); ?>#inicio">Inicio</a>
