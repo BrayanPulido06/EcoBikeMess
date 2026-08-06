@@ -17,7 +17,7 @@
     <header>
         <nav class="navbar">
             <div class="logo">
-                <h1><img src="public/img/Logo_Circulo_Fondoblanco.png" alt="Logo EcoBikeMess"> EcoBikeMess</h1>
+                <h1><img src="public/img/Logo_Circulo_Fondoverde.png" alt="Logo EcoBikeMess"> EcoBikeMess</h1>
             </div>
             <div class="nav-links">
                 <a href="<?php echo htmlspecialchars(route_url('home'), ENT_QUOTES, 'UTF-8'); ?>#inicio">Inicio</a>
@@ -41,7 +41,7 @@
                         entregas en bicicleta, comunicación clara y cuidado por cada paquete que sale a ruta.
                     </p>
                     <div class="about-actions">
-                        <a href="<?php echo htmlspecialchars(route_url('home'), ENT_QUOTES, 'UTF-8'); ?>#services" class="btn-primary-about">Ver servicios</a>
+                        <a href="#tarifas" class="btn-primary-about">Ver tarifas</a>
                         <a href="https://wa.link/49g8jg" target="_blank" class="btn-secondary-about" rel="noopener">Escríbenos</a>
                     </div>
                 </div>
@@ -79,19 +79,11 @@
             </div>
         </section>
 
-        <section class="rates-section">
+        <section class="rates-section" id="tarifas">
             <div class="container">
                 <div class="rates-header reveal-on-scroll">
                     <span class="section-kicker">Información comercial</span>
                     <h3>Tarifas</h3>
-                    <p>
-                        En este apartado puedes colocar la información detallada de tarifas, condiciones, servicios
-                        adicionales, tiempos de entrega, zonas de cobertura y cualquier aclaración importante para tus clientes.
-                    </p>
-                    <p>
-                        Puedes usarlo para explicar la Tarifa Emprendedor, Tarifa Oportuna, contraentregas, retornos,
-                        packing, espera y recargos especiales.
-                    </p>
                 </div>
                 <div class="rates-list reveal-on-scroll">
                     <article class="rate-accordion">
