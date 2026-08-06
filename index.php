@@ -10,7 +10,7 @@
     </script>
     <title>EcoBikeMess - Mensajería Ecológica en Bicicleta</title>
     <link rel="icon" href="public/img/Logo_Negro_Transparente.png" type="image/png">
-    <link rel="stylesheet" href="public/css/styles.css">
+    <link rel="stylesheet" href="public/css/styles.css?v=2">
     <style>
         /* Aumentamos el límite de altura para que no se corte el texto al desplegar */
         .service-details.show {
@@ -133,7 +133,10 @@
             <div class="container">
                 <h2>Nuestros Servicios</h2>
                 <div class="services-details-cta">
-                    <p>Si quieres ver más detalles sobre tarifas, condiciones y servicios adicionales, consulta la información completa.</p>
+                    <div class="services-details-cta-text">
+                        <p>¿Quieres ver más detalles de tarifas y condiciones?</p>
+                        <span>Consulta la información completa de servicios, adicionales y recomendaciones.</span>
+                    </div>
                     <a href="<?php echo htmlspecialchars(route_url('about'), ENT_QUOTES, 'UTF-8'); ?>#tarifas">Ver tarifas detalladas</a>
                 </div>
                 <div class="services-grid">

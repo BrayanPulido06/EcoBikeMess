@@ -155,22 +155,47 @@ header {
 
 .services-details-cta {
     align-items: center;
-    background: white;
-    border: 1px solid #e8f5f1;
+    background: linear-gradient(135deg, #ffffff 0%, #eefaf4 100%);
+    border: 1px solid #d7efe2;
     border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 10px 28px rgba(45, 62, 80, 0.08);
     display: flex;
     gap: 1.5rem;
     justify-content: space-between;
     margin: 0 auto 2rem;
     max-width: 900px;
-    padding: 1.3rem 1.5rem;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.services-details-cta::before {
+    background: #5cb85c;
+    border-radius: 999px;
+    content: "";
+    height: calc(100% - 2rem);
+    left: 0;
+    position: absolute;
+    top: 1rem;
+    width: 5px;
+}
+
+.services-details-cta-text {
+    padding-left: 0.6rem;
 }
 
 .services-details-cta p {
-    color: #5a6c7d;
+    color: #2d3e50;
     font-size: 1.05rem;
     margin: 0;
+    font-weight: 600;
+}
+
+.services-details-cta span {
+    color: #5a6c7d;
+    display: block;
+    font-size: 0.95rem;
+    margin-top: 0.25rem;
 }
 
 .services-details-cta a {
@@ -180,7 +205,9 @@ header {
     color: white;
     flex: 0 0 auto;
     font-weight: 600;
-    padding: 12px 22px;
+    min-width: 190px;
+    padding: 13px 22px;
+    text-align: center;
     text-decoration: none;
     transition: all 0.3s ease;
 }
