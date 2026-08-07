@@ -21,6 +21,7 @@ class FacturacionModels
         $this->ensureMessengerGroupStatusTable();
         $this->ensureClienteBankColumns();
         $this->ensurePerformanceIndexes();
+        $this->syncPackageClientFromRemitente();
         $this->syncFacturacionRows();
     }
 
@@ -77,6 +78,19 @@ class FacturacionModels
         $this->ensureColumn('clientes', 'cuenta_bancaria_opcional_1', "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_1 TEXT NULL AFTER cuenta_bancaria_principal");
         $this->ensureColumn('clientes', 'cuenta_bancaria_opcional_2', "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_2 TEXT NULL AFTER cuenta_bancaria_opcional_1");
         $this->ensureColumn('clientes', 'cuenta_bancaria_opcional_3', "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_3 TEXT NULL AFTER cuenta_bancaria_opcional_2");
+    }
+
+    private function syncPackageClientFromRemitente(): void
+    {
+        $sql = "UPDATE paquetes p
+                INNER JOIN clientes c_actual ON c_actual.id = p.cliente_id
+                INNER JOIN clientes c_match
+                    ON LOWER(TRIM(c_match.nombre_emprendimiento)) = LOWER(TRIM(p.remitente_nombre))
+                   AND c_match.id <> p.cliente_id
+                SET p.cliente_id = c_match.id
+                WHERE TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')
+                  AND COALESCE(NULLIF(c_actual.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero%'";
+        $this->conn->exec($sql);
     }
 
     private function syncFacturacionRows(): void

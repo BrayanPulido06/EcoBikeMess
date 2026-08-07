@@ -104,12 +104,36 @@ class PaquetesAdminModel {
                        COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos)) AS nombre
                 FROM clientes c
                 LEFT JOIN usuarios u ON c.usuario_id = u.id
-                WHERE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos)) = :nombre
+                WHERE LOWER(TRIM(COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos)))) = LOWER(TRIM(:nombre))
                 LIMIT 1";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':nombre' => $remitente]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
+    }
+
+    private function sincronizarFacturacionPaquete(int $paqueteId): void
+    {
+        try {
+            $insertSql = "INSERT INTO facturacion (paquete_id, cliente_id, mensajero_id, valor_pago_mensajero)
+                          SELECT p.id, p.cliente_id, p.mensajero_id, 7000.00
+                          FROM paquetes p
+                          LEFT JOIN facturacion f ON f.paquete_id = p.id
+                          WHERE p.id = :paquete_id_insert
+                            AND f.paquete_id IS NULL";
+            $stmtInsert = $this->conn->prepare($insertSql);
+            $stmtInsert->execute([':paquete_id_insert' => $paqueteId]);
+
+            $sql = "UPDATE facturacion f
+                    INNER JOIN paquetes p ON p.id = f.paquete_id
+                    SET f.cliente_id = p.cliente_id,
+                        f.mensajero_id = p.mensajero_id
+                    WHERE f.paquete_id = :paquete_id";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([':paquete_id' => $paqueteId]);
+        } catch (Throwable $e) {
+            // Si facturacion aun no existe, la pantalla de facturacion la sincroniza al abrir.
+        }
     }
 
     private function buscarMensajeroPorNombre(string $nombre): ?array
@@ -713,7 +737,11 @@ class PaquetesAdminModel {
                 WHERE id = :id";
         
         $stmt = $this->conn->prepare($sql);
-        return $stmt->execute($params);
+        $ok = $stmt->execute($params);
+        if ($ok) {
+            $this->sincronizarFacturacionPaquete((int) $id);
+        }
+        return $ok;
     }
 
     public function updateEntregaInfo($paqueteId, $data) {
