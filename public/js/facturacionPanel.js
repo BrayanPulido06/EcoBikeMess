@@ -476,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const baseDate = item.fecha_entrega || item.fecha_ingreso;
             const dateKey = dateKeyFromValue(baseDate);
             const displayName = clientDisplayName(item);
-            const clientKey = normalizeText(displayName || 'cliente');
+            const clientKey = normalizeText(item.cliente_nombre || displayName || 'cliente');
             const groupKey = `${dateKey}__${clientKey}`;
 
             if (!groupsMap.has(groupKey)) {
@@ -509,6 +509,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const group = groupsMap.get(groupKey);
+            if (normalizeText(item.cliente_contacto) && normalizeText(group.clienteNombre) === clientKey) {
+                group.clienteNombre = displayName;
+            }
             if (item.estado === 'entregado') {
                 const valorBase = Number(item.valor_envio_base ?? item.valor_envio ?? 0);
                 const adicional = Number(item.costo_adicional_servicio || 0);

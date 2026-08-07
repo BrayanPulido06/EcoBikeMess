@@ -85,7 +85,7 @@ class FacturacionModels
         $sql = "UPDATE paquetes p
                 INNER JOIN clientes c_actual ON c_actual.id = p.cliente_id
                 INNER JOIN clientes c_match
-                    ON LOWER(TRIM(c_match.nombre_emprendimiento)) = LOWER(TRIM(p.remitente_nombre))
+                    ON LOWER(REPLACE(REPLACE(TRIM(c_match.nombre_emprendimiento), ' ', ''), CHAR(160), '')) = LOWER(REPLACE(REPLACE(TRIM(p.remitente_nombre), ' ', ''), CHAR(160), ''))
                    AND c_match.id <> p.cliente_id
                 SET p.cliente_id = c_match.id
                 WHERE TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')
@@ -961,6 +961,7 @@ class FacturacionModels
                     p.fecha_creacion,
                     COALESCE(p.fecha_entrega, e.fecha_entrega) AS fecha_entrega,
                     p.estado,
+                    p.remitente_nombre,
                     p.destinatario_nombre,
                     p.direccion_destino,
                     p.instrucciones_entrega,
@@ -984,7 +985,7 @@ class FacturacionModels
                 INNER JOIN clientes c ON c.id = p.cliente_id
                 INNER JOIN usuarios uc ON uc.id = c.usuario_id
                 LEFT JOIN clientes c_match
-                    ON LOWER(TRIM(c_match.nombre_emprendimiento)) = LOWER(TRIM(p.remitente_nombre))
+                    ON LOWER(REPLACE(REPLACE(TRIM(c_match.nombre_emprendimiento), ' ', ''), CHAR(160), '')) = LOWER(REPLACE(REPLACE(TRIM(p.remitente_nombre), ' ', ''), CHAR(160), ''))
                    AND c_match.id <> p.cliente_id
                    AND COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero%'
                 LEFT JOIN usuarios uc_match ON uc_match.id = c_match.usuario_id
@@ -1159,8 +1160,16 @@ class FacturacionModels
                 'fecha_entrega' => $row['fecha_entrega'],
                 'estado' => $row['estado'],
                 'cliente_id' => (int) $row['cliente_id'],
-                'cliente_nombre' => trim((string) $row['cliente_nombre']),
-                'cliente_contacto' => trim((string) $row['cliente_contacto']),
+                'cliente_nombre' => (
+                    stripos(trim((string) $row['cliente_nombre']), 'Operativo Mensajero') === 0
+                    && trim((string) ($row['remitente_nombre'] ?? '')) !== ''
+                    && !in_array(trim((string) ($row['remitente_nombre'] ?? '')), ['-', 'Pendiente por definir'], true)
+                ) ? trim((string) $row['remitente_nombre']) : trim((string) $row['cliente_nombre']),
+                'cliente_contacto' => (
+                    stripos(trim((string) $row['cliente_nombre']), 'Operativo Mensajero') === 0
+                    && trim((string) ($row['remitente_nombre'] ?? '')) !== ''
+                    && !in_array(trim((string) ($row['remitente_nombre'] ?? '')), ['-', 'Pendiente por definir'], true)
+                ) ? '' : trim((string) $row['cliente_contacto']),
                 'cuenta_bancaria_principal' => trim((string) ($row['cuenta_bancaria_principal'] ?? '')),
                 'cuenta_bancaria_opcional_1' => trim((string) ($row['cuenta_bancaria_opcional_1'] ?? '')),
                 'cuenta_bancaria_opcional_2' => trim((string) ($row['cuenta_bancaria_opcional_2'] ?? '')),

@@ -104,7 +104,7 @@ class PaquetesAdminModel {
                        COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos)) AS nombre
                 FROM clientes c
                 LEFT JOIN usuarios u ON c.usuario_id = u.id
-                WHERE LOWER(TRIM(COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos)))) = LOWER(TRIM(:nombre))
+                WHERE LOWER(REPLACE(REPLACE(TRIM(COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos))), ' ', ''), CHAR(160), '')) = LOWER(REPLACE(REPLACE(TRIM(:nombre), ' ', ''), CHAR(160), ''))
                 LIMIT 1";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':nombre' => $remitente]);
