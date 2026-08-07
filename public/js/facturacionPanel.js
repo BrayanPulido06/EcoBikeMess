@@ -134,6 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return contact || business || 'Cliente';
     };
 
+    const clientBusinessGroupName = (item) => {
+        const business = String(item?.cliente_nombre || '').trim();
+        if (!business) {
+            return clientDisplayName(item);
+        }
+
+        const parts = business.split(' - ').map((part) => part.trim()).filter(Boolean);
+        return parts.length > 1 ? parts[parts.length - 1] : business;
+    };
+
     const statusBadge = (status) => {
         const map = {
             pendiente: ['Pendiente', 'orange'],
@@ -476,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const baseDate = item.fecha_entrega || item.fecha_ingreso;
             const dateKey = dateKeyFromValue(baseDate);
             const displayName = clientDisplayName(item);
-            const clientKey = normalizeText(item.cliente_nombre || displayName || 'cliente');
+            const clientKey = normalizeText(clientBusinessGroupName(item) || displayName || 'cliente');
             const groupKey = `${dateKey}__${clientKey}`;
 
             if (!groupsMap.has(groupKey)) {
