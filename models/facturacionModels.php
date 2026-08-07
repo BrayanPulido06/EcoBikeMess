@@ -941,9 +941,10 @@ class FacturacionModels
     {
         $params = [];
         $conditions = ["p.estado = 'entregado'"];
+        $clienteFacturacionExpr = 'COALESCE(c_match.id, c.id)';
 
         if ($clienteId !== null) {
-            $conditions[] = 'p.cliente_id = :cliente_id';
+            $conditions[] = "{$clienteFacturacionExpr} = :cliente_id";
             $params[':cliente_id'] = $clienteId;
         }
 
@@ -969,16 +970,24 @@ class FacturacionModels
                     COALESCE(e.recaudo_real, 0) AS recaudo_real,
                     COALESCE(f.costo_adicional_servicio, 0) AS costo_adicional_servicio,
                     COALESCE(f.observaciones_admin, '') AS observaciones_admin,
-                    c.id AS cliente_id,
-                    c.nombre_emprendimiento AS cliente_nombre,
-                    c.cuenta_bancaria_principal,
-                    c.cuenta_bancaria_opcional_1,
-                    c.cuenta_bancaria_opcional_2,
-                    c.cuenta_bancaria_opcional_3,
-                    CONCAT(COALESCE(uc.nombres, ''), ' ', COALESCE(uc.apellidos, '')) AS cliente_contacto
+                    {$clienteFacturacionExpr} AS cliente_id,
+                    COALESCE(c_match.nombre_emprendimiento, c.nombre_emprendimiento) AS cliente_nombre,
+                    COALESCE(c_match.cuenta_bancaria_principal, c.cuenta_bancaria_principal) AS cuenta_bancaria_principal,
+                    COALESCE(c_match.cuenta_bancaria_opcional_1, c.cuenta_bancaria_opcional_1) AS cuenta_bancaria_opcional_1,
+                    COALESCE(c_match.cuenta_bancaria_opcional_2, c.cuenta_bancaria_opcional_2) AS cuenta_bancaria_opcional_2,
+                    COALESCE(c_match.cuenta_bancaria_opcional_3, c.cuenta_bancaria_opcional_3) AS cuenta_bancaria_opcional_3,
+                    COALESCE(
+                        NULLIF(TRIM(CONCAT(COALESCE(uc_match.nombres, ''), ' ', COALESCE(uc_match.apellidos, ''))), ''),
+                        NULLIF(TRIM(CONCAT(COALESCE(uc.nombres, ''), ' ', COALESCE(uc.apellidos, ''))), '')
+                    ) AS cliente_contacto
                 FROM paquetes p
                 INNER JOIN clientes c ON c.id = p.cliente_id
                 INNER JOIN usuarios uc ON uc.id = c.usuario_id
+                LEFT JOIN clientes c_match
+                    ON LOWER(TRIM(c_match.nombre_emprendimiento)) = LOWER(TRIM(p.remitente_nombre))
+                   AND c_match.id <> p.cliente_id
+                   AND COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero%'
+                LEFT JOIN usuarios uc_match ON uc_match.id = c_match.usuario_id
                 LEFT JOIN entregas e ON e.paquete_id = p.id
                 LEFT JOIN facturacion f ON f.paquete_id = p.id
                 {$where}
