@@ -94,6 +94,26 @@ class MisPedidosMensajeroModel
         return "TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')";
     }
 
+    private function expresionRemitenteDisplay(): string
+    {
+        return "TRIM(CASE
+            WHEN COALESCE(p.remitente_nombre, '') LIKE 'Operativo Mensajero%'
+                 OR COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero%'
+            THEN COALESCE(
+                NULLIF(TRIM(REPLACE(COALESCE(c.nombre_emprendimiento, ''), 'Operativo Mensajero - ', '')), ''),
+                NULLIF(TRIM(CONCAT(uc.nombres, ' ', uc.apellidos)), ''),
+                NULLIF(TRIM(p.remitente_nombre), ''),
+                'Mensajero EcoBikeMess'
+            )
+            ELSE COALESCE(
+                NULLIF(TRIM(p.remitente_nombre), ''),
+                NULLIF(TRIM(c.nombre_emprendimiento), ''),
+                NULLIF(TRIM(CONCAT(uc.nombres, ' ', uc.apellidos)), ''),
+                'Sin remitente'
+            )
+        END)";
+    }
+
     public function obtenerEstadisticas(int $usuarioId, array $filtros = []): array
     {
         $rows = $this->listarPedidos($usuarioId, $filtros);
@@ -131,9 +151,11 @@ class MisPedidosMensajeroModel
         $filtroRemitenteAsignado = $this->construirFiltroRemitenteAsignado($nombreCompleto, $params);
         $esEntregaManual = $this->condicionEntregaManual();
         $tieneRemitenteReal = $this->condicionRemitenteReal();
+        $remitenteDisplay = $this->expresionRemitenteDisplay();
 
         $sql = "SELECT p.*,
                        c.nombre_emprendimiento,
+                       {$remitenteDisplay} AS remitente_display,
                        CONCAT(um.nombres, ' ', um.apellidos) AS mensajero_asignado
                 FROM paquetes p
                 LEFT JOIN clientes c ON p.cliente_id = c.id
@@ -212,8 +234,10 @@ class MisPedidosMensajeroModel
         $filtroRemitenteAsignado = $this->construirFiltroRemitenteAsignado($nombreCompleto, $params);
         $esEntregaManual = $this->condicionEntregaManual();
         $tieneRemitenteReal = $this->condicionRemitenteReal();
+        $remitenteDisplay = $this->expresionRemitenteDisplay();
 
         $sql = "SELECT p.*,
+                       {$remitenteDisplay} AS remitente_display,
                        CONCAT(um.nombres, ' ', um.apellidos) AS mensajero_asignado
                 FROM paquetes p
                 LEFT JOIN clientes c ON p.cliente_id = c.id

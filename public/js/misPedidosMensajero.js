@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         </tr>
                         <tr>
                             <td style="padding:8px;"><strong>Remitente:</strong></td>
-                            <td style="padding:8px;">${escapeHtml(d.nombre_emprendimiento || d.remitente_nombre || 'Sin remitente')}</td>
+                            <td style="padding:8px;">${escapeHtml(d.remitente_display || d.remitente_nombre || 'Sin remitente')}</td>
                         </tr>
                         <tr>
                             <td style="padding:8px;"><strong>Contenido:</strong></td>
@@ -299,8 +299,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             currentRotuloData = {
                 guia: json.data.numero_guia,
-                remitente_nombre: json.data.remitente_nombre || 'EcoBikeMess',
-                tienda_nombre: json.data.nombre_emprendimiento || json.data.remitente_nombre || 'Tienda',
+                remitente_nombre: json.data.remitente_display || json.data.remitente_nombre || 'EcoBikeMess',
+                tienda_nombre: json.data.remitente_display || json.data.remitente_nombre || 'Tienda',
                 destinatario_nombre: json.data.destinatario_nombre,
                 destinatario_direccion: json.data.direccion_destino,
                 destinatario_telefono: json.data.destinatario_telefono || '',

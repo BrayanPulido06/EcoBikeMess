@@ -33,7 +33,7 @@ if ($nombre_remitente === '') {
 }
 
 $remitente_data = [
-    'nombre_tienda' => 'Operativo Mensajero',
+    'nombre_tienda' => $nombre_remitente,
     'nombre_completo' => $nombre_remitente,
     'telefono' => $telefono_usuario,
     'correo' => $_SESSION['user_email'] ?? '',
