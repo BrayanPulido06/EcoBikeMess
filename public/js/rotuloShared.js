@@ -94,7 +94,7 @@
         else if (totalLength >= 10) totalFontSize = 34;
         else if (totalLength >= 9) totalFontSize = 36;
         const cambiosHtml = data.tieneCambios
-            ? `<div style="border:1px solid #bfe8c9;background:#f1fbf4;padding:4px 6px;border-radius:8px;margin-bottom:4px;">
+            ? `<div style="width:280px;max-width:100%;box-sizing:border-box;border:1px solid #bfe8c9;background:#f1fbf4;padding:4px 6px;border-radius:8px;margin-bottom:4px;">
                     <h3 style="margin:0 0 4px;font-size:17px;font-weight:800;color:#235b34;">Cambios por recoger</h3>
                     <p style="margin:0;line-height:1.02;overflow-wrap:anywhere;"><span style="font-size:15px;font-weight:800;color:#1f2a37;">${escapeHtml(data.cambios)}</span></p>
                 </div>`
@@ -140,8 +140,8 @@
                     </tr>
                 </table>
 
-                <div style="display:flex;align-items:flex-start;width:100%;margin-top:4px;gap:8px;">
-                    <div style="flex:1 1 auto;min-width:0;max-width:calc(100% - 140px);position:relative;padding-right:2px;">
+                <div style="display:flex;align-items:flex-start;width:100%;margin-top:4px;gap:0;">
+                    <div style="flex:1 1 auto;min-width:0;max-width:calc(100% - 156px);position:relative;padding-right:2px;">
                         ${cambiosHtml}
                         <div style="margin-top:4px;">
                             <h3 style="margin:0 0 4px;font-size:18px;font-weight:900;color:#30363d;">Total a Cobrar</h3>
