@@ -208,11 +208,11 @@ class MisPaquetesMensajerosModels
             $sqlEntrega = "INSERT INTO entregas (
                                 paquete_id, mensajero_id, nombre_receptor, parentesco_cargo,
                                 documento_receptor, recaudo_real, recibio_cambios, coordenadas_entrega_lat,
-                                coordenadas_entrega_lng, foto_entrega, foto_adicional, observaciones
+                                coordenadas_entrega_lng, foto_entrega, foto_adicional, observaciones, fecha_entrega
                            ) VALUES (
                                 :paquete_id, :mensajero_id, :nombre_receptor, :parentesco_cargo,
                                 :documento_receptor, :recaudo_real, :recibio_cambios, :lat, :lng, :foto_entrega,
-                                :foto_adicional, :observaciones
+                                :foto_adicional, :observaciones, NOW()
                            )
                            ON DUPLICATE KEY UPDATE
                                 nombre_receptor = VALUES(nombre_receptor),
@@ -224,7 +224,8 @@ class MisPaquetesMensajerosModels
                                 coordenadas_entrega_lng = VALUES(coordenadas_entrega_lng),
                                 foto_entrega = VALUES(foto_entrega),
                                 foto_adicional = VALUES(foto_adicional),
-                                observaciones = VALUES(observaciones)";
+                                observaciones = VALUES(observaciones),
+                                fecha_entrega = COALESCE(fecha_entrega, VALUES(fecha_entrega))";
 
             $stmtEntrega = $this->conn->prepare($sqlEntrega);
             $stmtEntrega->execute([

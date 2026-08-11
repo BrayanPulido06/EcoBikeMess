@@ -525,6 +525,7 @@ class PaquetesAdminModel {
                                p.recaudo_esperado,
                                p.instrucciones_entrega,
                                p.estado,
+                               p.fecha_entrega as paquete_fecha_entrega,
                                p.mensajero_id,
                                p.mensajero_recoleccion_id,
                                CONCAT(um.nombres, ' ', um.apellidos) as mensajero,
@@ -560,13 +561,18 @@ class PaquetesAdminModel {
                         }
                     }
 
+                    $fechaEntrega = $entrega['fecha_entrega'] ?? '';
+                    if ($fechaEntrega === '' || $fechaEntrega === null) {
+                        $fechaEntrega = $info['paquete_fecha_entrega'] ?? '';
+                    }
+
                     $info['infoEntrega'] = [
                         'nombreRecibe' => $entrega['nombre_receptor'] ?? '',
                         'parentesco' => $entrega['parentesco_cargo'] ?? '',
                         'documento' => $entrega['documento_receptor'] ?? '',
                         'recaudo' => isset($entrega['recaudo_real']) ? (float) $entrega['recaudo_real'] : 0,
                         'recibioCambios' => $recibioCambiosEntrega,
-                        'fecha' => $entrega['fecha_entrega'] ?? '',
+                        'fecha' => $fechaEntrega,
                         'observaciones' => $entrega['observaciones'] ?? '',
                         'fotoPrincipal' => $entrega['foto_entrega'] ?? '',
                         'fotoAdicional' => $entrega['foto_adicional'] ?? ''
