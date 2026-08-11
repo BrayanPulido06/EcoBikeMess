@@ -148,7 +148,7 @@
                             <p class="rotulo-total" style="margin:0;font-size:${totalFontSize}px;font-weight:900;color:#1f8f3a;line-height:0.9;text-align:center;letter-spacing:0;">${escapeHtml(totalText)}</p>
                         </div>
                     </div>
-                    <div style="flex:0 0 132px;display:flex;justify-content:flex-start;align-items:flex-start;padding-top:0;margin-left:0;">
+                    <div style="flex:0 0 132px;display:flex;justify-content:flex-start;align-items:flex-start;padding-top:0;margin-left:-10px;">
                         <div style="display:flex;align-items:center;justify-content:center;width:132px;min-width:132px;height:132px;padding:2px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-sizing:border-box;overflow:hidden;margin-top:-6px;">
                             <div data-rotulo-qr style="display:flex;align-items:flex-start;justify-content:center;width:128px;height:128px;flex:0 0 128px;overflow:hidden;"></div>
                         </div>

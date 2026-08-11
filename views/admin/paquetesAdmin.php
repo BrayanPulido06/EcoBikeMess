@@ -182,7 +182,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
             justify-content: flex-start;
             align-items: flex-start;
             padding-top: 0;
-            margin-left: 0;
+            margin-left: -10px;
         }
         #rotuloPreview .rotulo-scale .rotulo-qr-panel {
             display: flex;
