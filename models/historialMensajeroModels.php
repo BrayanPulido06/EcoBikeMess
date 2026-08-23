@@ -34,14 +34,14 @@ class HistorialMensajeroModels
                     e.parentesco_cargo,
                     e.documento_receptor,
                     e.recaudo_real,
-                    e.fecha_entrega,
+                    COALESCE(p.fecha_entrega, e.fecha_entrega) AS fecha_entrega,
                     e.foto_entrega,
                     e.foto_adicional,
                     e.observaciones
                 FROM paquetes p
                 INNER JOIN entregas e ON e.paquete_id = p.id
                 WHERE e.mensajero_id = :mensajero_id
-                ORDER BY e.fecha_entrega DESC, e.id DESC";
+                ORDER BY COALESCE(p.fecha_entrega, e.fecha_entrega) DESC, e.id DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':mensajero_id' => $mensajeroId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

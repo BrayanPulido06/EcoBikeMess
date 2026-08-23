@@ -9,6 +9,7 @@ class PaquetesAdminModel {
         $this->ensureEntregaAdditionalColumns();
         $this->ensureChecklistVerdeColumn();
         $this->ensureNovedadesAdminSupport();
+        $this->sincronizarFechasEntrega();
     }
 
     private function columnExists(string $table, string $column): bool
@@ -51,6 +52,32 @@ class PaquetesAdminModel {
             // No bloquear la app si falla el ajuste.
         }
     }
+
+    private function sincronizarFechasEntrega(): void
+    {
+        try {
+            $this->conn->exec(
+                "UPDATE paquetes p
+                 INNER JOIN entregas e ON e.paquete_id = p.id
+                 SET p.fecha_entrega = e.fecha_entrega
+                 WHERE p.estado = 'entregado'
+                   AND p.fecha_entrega IS NULL
+                   AND e.fecha_entrega IS NOT NULL"
+            );
+
+            $this->conn->exec(
+                "UPDATE entregas e
+                 INNER JOIN paquetes p ON p.id = e.paquete_id
+                 SET e.fecha_entrega = p.fecha_entrega
+                 WHERE p.estado = 'entregado'
+                   AND e.fecha_entrega IS NULL
+                   AND p.fecha_entrega IS NOT NULL"
+            );
+        } catch (Throwable $e) {
+            // No bloquear la app si falla una sincronizacion correctiva.
+        }
+    }
+
     private function ensureChecklistVerdeColumn(): void
     {
         if (!$this->columnExists('paquetes', 'checklist_verde')) {
@@ -327,6 +354,7 @@ class PaquetesAdminModel {
         $sql = "SELECT p.id, 
                        p.numero_guia as guia, 
                        p.fecha_creacion as fechaIngreso,
+                       COALESCE(p.fecha_entrega, e.fecha_entrega) as fecha_entrega,
                        COALESCE(p.checklist_verde, 0) as checklist_verde,
                        CASE
                            WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
@@ -381,7 +409,7 @@ class PaquetesAdminModel {
             $params[':search'] = '%' . $filters['search'] . '%';
         }
         $usarFechaEntrega = !empty($filters['estado']) && $filters['estado'] === 'entregado';
-        $campoFechaFiltro = $usarFechaEntrega ? 'e.fecha_entrega' : 'p.fecha_creacion';
+        $campoFechaFiltro = $usarFechaEntrega ? 'COALESCE(p.fecha_entrega, e.fecha_entrega)' : 'p.fecha_creacion';
 
         if (!empty($filters['fechaDesde'])) {
             $sql .= " AND DATE({$campoFechaFiltro}) >= :fechaDesde";
@@ -437,7 +465,9 @@ class PaquetesAdminModel {
             $params[':tipo'] = $filters['tipo'];
         }
 
-        $sql .= " ORDER BY p.fecha_creacion DESC";
+        $sql .= $usarFechaEntrega
+            ? " ORDER BY COALESCE(p.fecha_entrega, e.fecha_entrega, p.fecha_creacion) DESC"
+            : " ORDER BY p.fecha_creacion DESC";
 
         $limit = $filters['limit'] ?? 300;
         if ($limit !== 'all') {

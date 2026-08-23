@@ -469,6 +469,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 : `<span class="badge badge-secondary">No</span> ${valorEnvioFormateado}`;
             const nombrePaquete = escaparJsString(p.nombre_paquete || p.descripcion_contenido || p.destinatario || 'Sin nombre');
             const guiaSeguro = escaparJsString(p.guia || '');
+            const fechaFila = p.estado === 'entregado' && p.fecha_entrega ? p.fecha_entrega : p.fechaIngreso;
 
             html += `
                 <tr class="paquete-row">
@@ -485,7 +486,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             ${p.estado !== 'entregado' && p.estado !== 'cancelado' ? `<button class="btn btn-sm btn-warning" onclick="abrirModalAsignar(${p.id}, '${p.guia}')" title="Asignar o reasignar">Asignar</button>` : ''}
                         </div>
                     </td>
-                    <td>${p.fechaIngreso}</td>
+                    <td>${fechaFila || ''}</td>
                     <td>${p.remitente || '<span class="text-muted">N/A</span>'}</td>
                     <td>${p.nombre_persona || '<span class="text-muted">N/A</span>'}</td>
                     <td>${p.destinatario}</td>
@@ -831,7 +832,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const exportData = data.map(p => ({
             "Guía": p.guia,
-            "Fecha": p.fechaIngreso,
+            "Fecha": (p.estado === 'entregado' && p.fecha_entrega ? p.fecha_entrega : p.fechaIngreso) || '',
             "Remitente": p.remitente,
             "Nombre": p.nombre_persona,
             "Destinatario": p.destinatario,

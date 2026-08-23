@@ -11,6 +11,7 @@ class MisPaquetesMensajerosModels
         $this->asegurarTablaNovedades();
         $this->asegurarTablaCierresJornada();
         $this->asegurarColumnasEntrega();
+        $this->sincronizarFechasEntrega();
     }
 
     private function columnaExiste(string $table, string $column): bool
@@ -89,6 +90,31 @@ class MisPaquetesMensajerosModels
         }
     }
 
+    private function sincronizarFechasEntrega()
+    {
+        try {
+            $this->conn->exec(
+                "UPDATE paquetes p
+                 INNER JOIN entregas e ON e.paquete_id = p.id
+                 SET p.fecha_entrega = e.fecha_entrega
+                 WHERE p.estado = 'entregado'
+                   AND p.fecha_entrega IS NULL
+                   AND e.fecha_entrega IS NOT NULL"
+            );
+
+            $this->conn->exec(
+                "UPDATE entregas e
+                 INNER JOIN paquetes p ON p.id = e.paquete_id
+                 SET e.fecha_entrega = p.fecha_entrega
+                 WHERE p.estado = 'entregado'
+                   AND e.fecha_entrega IS NULL
+                   AND p.fecha_entrega IS NOT NULL"
+            );
+        } catch (Throwable $e) {
+            // No bloquear la app si falla una sincronizacion correctiva.
+        }
+    }
+
     public function obtenerMensajeroPorUsuario($usuarioId)
     {
         $sql = "SELECT m.id, u.nombres, u.apellidos
@@ -124,7 +150,7 @@ class MisPaquetesMensajerosModels
                     e.parentesco_cargo,
                     e.documento_receptor,
                     e.recaudo_real,
-                    e.fecha_entrega
+                    COALESCE(p.fecha_entrega, e.fecha_entrega) AS fecha_entrega
                 FROM paquetes p
                 LEFT JOIN clientes c ON p.cliente_id = c.id
                 LEFT JOIN usuarios uc ON c.usuario_id = uc.id
@@ -192,17 +218,24 @@ class MisPaquetesMensajerosModels
             throw new Exception('Paquete no encontrado para este mensajero');
         }
 
+        $stmtFechaEntrega = $this->conn->query("SELECT NOW()");
+        $fechaEntrega = $stmtFechaEntrega ? (string) $stmtFechaEntrega->fetchColumn() : date('Y-m-d H:i:s');
+        if ($fechaEntrega === '') {
+            $fechaEntrega = date('Y-m-d H:i:s');
+        }
+
         $this->conn->beginTransaction();
         try {
             $sqlUpdatePaquete = "UPDATE paquetes
                                  SET estado = 'entregado',
                                      mensajero_id = :mensajero_id,
-                                     fecha_entrega = COALESCE(fecha_entrega, NOW())
+                                     fecha_entrega = COALESCE(fecha_entrega, :fecha_entrega)
                                  WHERE id = :id";
             $stmt = $this->conn->prepare($sqlUpdatePaquete);
             $stmt->execute([
                 ':id' => $paquete['id'],
-                ':mensajero_id' => (int) $mensajeroId
+                ':mensajero_id' => (int) $mensajeroId,
+                ':fecha_entrega' => $fechaEntrega
             ]);
 
             $sqlEntrega = "INSERT INTO entregas (
@@ -212,7 +245,7 @@ class MisPaquetesMensajerosModels
                            ) VALUES (
                                 :paquete_id, :mensajero_id, :nombre_receptor, :parentesco_cargo,
                                 :documento_receptor, :recaudo_real, :recibio_cambios, :lat, :lng, :foto_entrega,
-                                :foto_adicional, :observaciones, NOW()
+                                :foto_adicional, :observaciones, :fecha_entrega
                            )
                            ON DUPLICATE KEY UPDATE
                                 nombre_receptor = VALUES(nombre_receptor),
@@ -240,7 +273,8 @@ class MisPaquetesMensajerosModels
                 ':lng' => $payload['lng'] !== null ? (float) $payload['lng'] : null,
                 ':foto_entrega' => $payload['foto_entrega'],
                 ':foto_adicional' => $payload['foto_adicional'] ?: null,
-                ':observaciones' => $payload['observaciones'] ?: null
+                ':observaciones' => $payload['observaciones'] ?: null,
+                ':fecha_entrega' => $fechaEntrega
             ]);
 
             $sqlComprobante = "INSERT INTO comprobantes (
