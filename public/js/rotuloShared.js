@@ -94,7 +94,7 @@
         else if (totalLength >= 10) totalFontSize = 34;
         else if (totalLength >= 9) totalFontSize = 36;
         const cambiosHtml = data.tieneCambios
-            ? `<div class="rotulo-cambios-alert" style="width:280px;max-width:100%;box-sizing:border-box;border:3px solid #dc2626;background:#fff3b0;padding:6px 8px;border-radius:8px;margin-bottom:5px;box-shadow:inset 0 0 0 2px #ffffff;">
+            ? `<div class="rotulo-cambios-alert" style="width:280px;max-width:100%;box-sizing:border-box;border:3px solid #dc2626;background:#e8f8ee;padding:6px 8px;border-radius:8px;margin-bottom:5px;box-shadow:inset 0 0 0 2px #ffffff;">
                     <h3 style="margin:0 0 3px;font-size:21px !important;font-weight:900 !important;color:#991b1b;line-height:0.95;text-transform:uppercase;letter-spacing:0;">Cambios por recoger</h3>
                     <p style="margin:0;line-height:0.9;overflow-wrap:anywhere;"><span style="font-size:30px !important;font-weight:900 !important;color:#111827;text-transform:uppercase;letter-spacing:0;">${escapeHtml(data.cambios)}</span></p>
                 </div>`
