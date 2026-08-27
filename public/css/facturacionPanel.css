@@ -433,6 +433,92 @@ body.sidebar-collapsed .facturacion-shell,
     display: none;
 }
 
+.client-folder-view {
+    background: #fff;
+}
+
+.client-folder-list {
+    display: grid;
+}
+
+.client-folder-row {
+    display: grid;
+    grid-template-columns: 34px minmax(260px, 1fr) minmax(170px, auto) minmax(130px, auto);
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 1.2rem 1.4rem;
+    border: 0;
+    border-bottom: 1px solid #edf2ee;
+    background: #fff;
+    color: var(--fact-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.client-folder-row:hover {
+    background: #fbfefb;
+}
+
+.client-folder-icon {
+    position: relative;
+    width: 28px;
+    height: 20px;
+    border-radius: 4px;
+    background: #e9f8ed;
+    border: 1px solid #bfe4c8;
+}
+
+.client-folder-icon::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: -6px;
+    width: 13px;
+    height: 7px;
+    border-radius: 4px 4px 0 0;
+    background: #d6f0dd;
+    border: 1px solid #bfe4c8;
+    border-bottom: 0;
+}
+
+.client-folder-name {
+    font-weight: 600;
+}
+
+.client-folder-meta {
+    color: var(--fact-muted);
+    font-size: 0.86rem;
+}
+
+.client-folder-money {
+    justify-self: end;
+    color: var(--fact-danger);
+    font-weight: 700;
+}
+
+.client-history-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--fact-border);
+    background: #f9fbf9;
+}
+
+.client-history-toolbar.panel-hidden {
+    display: none;
+}
+
+.client-history-label {
+    display: block;
+    color: var(--fact-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+}
+
 .detail-trigger {
     min-width: 112px;
 }
@@ -739,6 +825,22 @@ body.sidebar-collapsed .facturacion-shell,
 
     .facturacion-actions {
         width: 100%;
+    }
+
+    .client-folder-row {
+        grid-template-columns: 30px minmax(0, 1fr);
+        gap: 0.8rem;
+    }
+
+    .client-folder-meta,
+    .client-folder-money {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    .client-history-toolbar {
+        align-items: stretch;
+        flex-direction: column;
     }
 
     .fact-btn {

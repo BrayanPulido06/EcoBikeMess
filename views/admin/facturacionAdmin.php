@@ -80,7 +80,17 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                         </div>
                     </div>
 
-                    <div class="facturacion-table-wrap">
+                    <div id="cliente-folder-view" class="client-folder-view"></div>
+
+                    <div id="cliente-history-toolbar" class="client-history-toolbar panel-hidden">
+                        <button class="fact-btn secondary" type="button" data-role="back-to-client-folders">Volver a clientes</button>
+                        <div>
+                            <span class="client-history-label">Historial de cliente</span>
+                            <strong id="cliente-history-title">Cliente</strong>
+                        </div>
+                    </div>
+
+                    <div id="cliente-history-table" class="facturacion-table-wrap panel-hidden">
                         <table class="facturacion-table facturacion-table-clientes">
                             <thead>
                                 <tr>

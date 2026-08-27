@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clienteGroups: [],
         selectedClienteGroups: new Set(),
         selectedMensajeroGroups: new Set(),
+        selectedClienteFolderKey: null,
         selectedClienteGroupKey: null,
         selectedMensajeroGroupKey: null,
         selectedEcoBikeGroupKey: null,
@@ -453,6 +454,96 @@ document.addEventListener('DOMContentLoaded', () => {
         paquetes_entregados: 0
     });
 
+    const buildClienteFolders = (groups) => {
+        const folders = new Map();
+
+        groups.forEach((group) => {
+            const key = group.clientKey;
+            if (!folders.has(key)) {
+                folders.set(key, {
+                    key,
+                    clienteNombre: group.clienteNombre,
+                    clienteId: group.clienteId,
+                    registros: 0,
+                    paquetesEntregados: 0,
+                    totalServicio: 0,
+                    totalRecaudado: 0,
+                    saldo: 0,
+                    totalAcumulado: Number(group.totalAcumulado || 0),
+                    ultimaFecha: group.dateKey,
+                    ultimaFechaLabel: group.fechaLabel
+                });
+            }
+
+            const folder = folders.get(key);
+            folder.registros += 1;
+            folder.paquetesEntregados += Number(group.paquetesEntregados || 0);
+            folder.totalServicio += Number(group.totalServicio || 0);
+            folder.totalRecaudado += Number(group.totalRecaudado || 0);
+            folder.saldo += Number(group.saldo || 0);
+
+            if (String(group.dateKey || '') > String(folder.ultimaFecha || '')) {
+                folder.ultimaFecha = group.dateKey;
+                folder.ultimaFechaLabel = group.fechaLabel;
+                folder.totalAcumulado = Number(group.totalAcumulado || 0);
+            }
+        });
+
+        return Array.from(folders.values()).sort((a, b) => (
+            a.clienteNombre.localeCompare(b.clienteNombre, 'es', { sensitivity: 'base' })
+        ));
+    };
+
+    const renderClienteFolders = (folders) => {
+        const folderView = document.getElementById('cliente-folder-view');
+        const historyTable = document.getElementById('cliente-history-table');
+        const toolbar = document.getElementById('cliente-history-toolbar');
+        const title = document.getElementById('cliente-history-title');
+        if (!folderView || !historyTable || !toolbar) return;
+
+        const selectedFolder = folders.find((folder) => folder.key === state.selectedClienteFolderKey) || null;
+        if (state.selectedClienteFolderKey && !selectedFolder) {
+            state.selectedClienteFolderKey = null;
+        }
+
+        if (state.selectedClienteFolderKey) {
+            folderView.classList.add('panel-hidden');
+            historyTable.classList.remove('panel-hidden');
+            toolbar.classList.remove('panel-hidden');
+            if (title && selectedFolder) {
+                title.textContent = selectedFolder.clienteNombre;
+            }
+            return;
+        }
+
+        historyTable.classList.add('panel-hidden');
+        toolbar.classList.add('panel-hidden');
+        folderView.classList.remove('panel-hidden');
+
+        if (!folders.length) {
+            folderView.innerHTML = '<div class="empty-state">No hay clientes con los filtros actuales.</div>';
+            return;
+        }
+
+        folderView.innerHTML = `
+            <div class="client-folder-list">
+                ${folders.map((folder) => `
+                    <button
+                        type="button"
+                        class="client-folder-row"
+                        data-role="open-client-folder"
+                        data-client-key="${escapeHtml(folder.key)}"
+                    >
+                        <span class="client-folder-icon" aria-hidden="true"></span>
+                        <span class="client-folder-name">${escapeHtml(folder.clienteNombre)}</span>
+                        <span class="client-folder-meta">${folder.registros} dias | ${folder.paquetesEntregados} paquetes</span>
+                        <span class="client-folder-money">${moneyAbs(folder.totalAcumulado)}</span>
+                    </button>
+                `).join('')}
+            </div>
+        `;
+    };
+
     const sumByDate = (items, dateField, amountField) => {
         const totals = new Map();
         (Array.isArray(items) ? items : []).forEach((item) => {
@@ -816,22 +907,39 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tbody) return;
 
         const groups = buildClienteGroups(items);
-        state.clienteGroups = groups;
-        const visibleKeys = new Set(groups.map((group) => group.key));
+        const folders = mode === 'admin' ? buildClienteFolders(groups) : [];
+        const selectedFolder = folders.find((folder) => folder.key === state.selectedClienteFolderKey) || null;
+        const visibleGroups = mode === 'admin' && selectedFolder
+            ? groups.filter((group) => group.clientKey === selectedFolder.key)
+            : groups;
+        state.clienteSummaryGroups = visibleGroups;
+        state.clienteGroups = mode === 'admin' && !selectedFolder ? [] : visibleGroups;
+        const visibleKeys = new Set(state.clienteGroups.map((group) => group.key));
         state.selectedClienteGroups.forEach((key) => {
             if (!visibleKeys.has(key)) {
                 state.selectedClienteGroups.delete(key);
             }
         });
-        document.getElementById('count-cliente').textContent = `${groups.length} registros`;
+        document.getElementById('count-cliente').textContent = mode === 'admin' && !selectedFolder
+            ? `${folders.length} clientes`
+            : `${visibleGroups.length} registros`;
 
-        if (!groups.length) {
+        if (mode === 'admin') {
+            renderClienteFolders(folders);
+            if (!selectedFolder) {
+                tbody.innerHTML = '';
+                syncClienteSelectionControls();
+                return;
+            }
+        }
+
+        if (!state.clienteGroups.length) {
             tbody.innerHTML = `<tr><td colspan="${clienteTableColspan()}" class="empty-state">No hay registros con los filtros actuales.</td></tr>`;
             syncClienteSelectionControls();
             return;
         }
 
-        tbody.innerHTML = groups.map((group) => {
+        tbody.innerHTML = state.clienteGroups.map((group) => {
             if (mode !== 'admin') {
                 return `
                     <tr>
@@ -1101,7 +1209,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (state.rawData.cliente) {
             renderClienteTable(state.rawData.cliente.items);
-            renderSummary(buildClienteSummaryFromGroups(state.clienteGroups), 'cliente');
+            renderSummary(buildClienteSummaryFromGroups(state.clienteSummaryGroups || state.clienteGroups), 'cliente');
         }
 
         if (state.rawData.mensajero) {
@@ -1141,6 +1249,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const colspan = tableColspanForPanel(panelName);
             el.innerHTML = `<tr><td colspan="${colspan}" class="loading-state">${message}</td></tr>`;
         });
+
+        if ((panel === 'cliente' || (!panel && mode === 'admin')) && !state.selectedClienteFolderKey) {
+            const folderView = document.getElementById('cliente-folder-view');
+            if (folderView) {
+                folderView.innerHTML = `<div class="loading-state">${message}</div>`;
+            }
+        }
     };
 
     const fetchData = async (panel = '') => {
@@ -1161,6 +1276,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const resetFilters = (panel) => {
         state.filters[panel] = { q: '', estado: '', desde: '', hasta: '' };
+        if (panel === 'cliente') {
+            state.selectedClienteFolderKey = null;
+            state.selectedClienteGroups.clear();
+        }
         document.querySelectorAll(`[data-panel-filter="${panel}"]`).forEach((input) => {
             input.value = '';
         });
@@ -2742,6 +2861,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const bindAdminActions = () => {
         document.addEventListener('click', async (event) => {
+            const clientFolderButton = event.target.closest('[data-role="open-client-folder"]');
+            if (clientFolderButton) {
+                state.selectedClienteFolderKey = clientFolderButton.dataset.clientKey || null;
+                state.selectedClienteGroups.clear();
+                render();
+                return;
+            }
+
+            if (event.target.closest('[data-role="back-to-client-folders"]')) {
+                state.selectedClienteFolderKey = null;
+                state.selectedClienteGroups.clear();
+                render();
+                return;
+            }
+
             const detailButton = event.target.closest('[data-role="open-client-detail"]');
             if (detailButton) {
                 openClientDetailModal(detailButton.dataset.groupKey);
