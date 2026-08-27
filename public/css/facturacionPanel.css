@@ -471,9 +471,9 @@ body.sidebar-collapsed .facturacion-shell,
     width: 54px;
     height: 42px;
     border-radius: 4px 4px 5px 5px;
-    background: linear-gradient(180deg, #bfe8c7 0%, #9fd8ad 100%);
-    border: 2px solid #73b986;
-    box-shadow: inset 0 -12px 0 rgba(84, 160, 104, 0.22);
+    background: linear-gradient(180deg, #ffd65a 0%, #ffc63d 100%);
+    border: 2px solid #f1aa16;
+    box-shadow: inset 0 -12px 0 rgba(255, 179, 25, 0.3);
 }
 
 .client-folder-icon::before {
@@ -484,8 +484,8 @@ body.sidebar-collapsed .facturacion-shell,
     width: 24px;
     height: 13px;
     border-radius: 5px 5px 0 0;
-    background: #a9ddb6;
-    border: 2px solid #73b986;
+    background: #ffc21f;
+    border: 2px solid #f1aa16;
     border-bottom: 0;
 }
 
@@ -521,9 +521,9 @@ body.sidebar-collapsed .facturacion-shell,
     bottom: -2px;
     height: 18px;
     border-radius: 0 0 5px 5px;
-    background: linear-gradient(180deg, #d5f0dc 0%, #a9ddb6 100%);
-    border: 2px solid #73b986;
-    border-top: 1px solid #91ce9f;
+    background: linear-gradient(180deg, #ffe48a 0%, #ffc94a 100%);
+    border: 2px solid #f1aa16;
+    border-top: 1px solid #f7bd35;
 }
 
 .client-folder-name {
