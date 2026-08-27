@@ -292,6 +292,96 @@ try {
         exit;
     }
 
+    if ($method === 'POST' && $action === 'eliminar_abono_cliente') {
+        $abonoId = (int) ($_POST['abono_id'] ?? 0);
+        $clienteId = (int) ($_POST['cliente_id'] ?? 0);
+        $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+
+        if ($abonoId <= 0 || $clienteId <= 0) {
+            throw new InvalidArgumentException('Abono o cliente invalido.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+            throw new InvalidArgumentException('La fecha del abono no es valida.');
+        }
+
+        $model->eliminarAbonoCliente($abonoId, $clienteId, $fechaGrupo);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Abono eliminado correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
+    if ($method === 'POST' && $action === 'eliminar_abono_mensajero') {
+        $abonoId = (int) ($_POST['abono_id'] ?? 0);
+        $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
+        $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+
+        if ($abonoId <= 0 || $mensajeroId <= 0) {
+            throw new InvalidArgumentException('Abono o mensajero invalido.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+            throw new InvalidArgumentException('La fecha del abono no es valida.');
+        }
+
+        $model->eliminarAbonoMensajero($abonoId, $mensajeroId, $fechaGrupo);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Abono eliminado correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
+    if ($method === 'POST' && $action === 'eliminar_adicional_cliente_grupo') {
+        $clienteId = (int) ($_POST['cliente_id'] ?? 0);
+        $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+
+        if ($clienteId <= 0) {
+            throw new InvalidArgumentException('Cliente invalido.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+            throw new InvalidArgumentException('La fecha del adicional no es valida.');
+        }
+
+        $model->eliminarAdicionalClienteGrupo($clienteId, $fechaGrupo);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Adicional eliminado correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
+    if ($method === 'POST' && $action === 'eliminar_adicional_mensajero_grupo') {
+        $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
+        $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+
+        if ($mensajeroId <= 0) {
+            throw new InvalidArgumentException('Mensajero invalido.');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+            throw new InvalidArgumentException('La fecha del adicional no es valida.');
+        }
+
+        $model->eliminarAdicionalMensajeroGrupo($mensajeroId, $fechaGrupo);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Adicional eliminado correctamente.',
+            'data' => $model->obtenerVistaAdmin(),
+        ]);
+        exit;
+    }
+
     if ($method === 'POST' && $action === 'guardar_adicional_mensajero_grupo') {
         $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));

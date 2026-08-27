@@ -1702,6 +1702,75 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const postDeleteAction = async (action, fields) => {
+        const formData = new FormData();
+        formData.append('action', action);
+        Object.entries(fields).forEach(([key, value]) => {
+            formData.append(key, String(value));
+        });
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.message || 'No se pudo eliminar el registro.');
+        }
+
+        state.rawData = result.data;
+        render();
+        return result;
+    };
+
+    const deleteClientAbono = async (abonoId) => {
+        const group = getClienteGroupByKey(state.selectedClienteGroupKey);
+        if (!group) return;
+
+        await postDeleteAction('eliminar_abono_cliente', {
+            abono_id: abonoId,
+            cliente_id: group.clienteId,
+            fecha_grupo: group.dateKey
+        });
+        openClientAbonoModal(state.selectedClienteGroupKey);
+    };
+
+    const deleteMessengerAbono = async (abonoId) => {
+        const group = getMensajeroGroupByKey(state.selectedMensajeroGroupKey);
+        if (!group) return;
+
+        await postDeleteAction('eliminar_abono_mensajero', {
+            abono_id: abonoId,
+            mensajero_id: group.mensajeroId,
+            fecha_grupo: group.dateKey
+        });
+        openMessengerAbonoModal(state.selectedMensajeroGroupKey);
+    };
+
+    const deleteClientGroupAdditional = async () => {
+        const group = getClienteGroupByKey(state.selectedClienteGroupKey);
+        if (!group) return;
+
+        await postDeleteAction('eliminar_adicional_cliente_grupo', {
+            cliente_id: group.clienteId,
+            fecha_grupo: group.dateKey
+        });
+        openClientAdditionalModal(state.selectedClienteGroupKey);
+    };
+
+    const deleteMessengerGroupAdditional = async () => {
+        const group = getMensajeroGroupByKey(state.selectedMensajeroGroupKey);
+        if (!group) return;
+
+        await postDeleteAction('eliminar_adicional_mensajero_grupo', {
+            mensajero_id: group.mensajeroId,
+            fecha_grupo: group.dateKey
+        });
+        openMessengerAdditionalModal(state.selectedMensajeroGroupKey);
+    };
+
     const savePackageAdditionalCost = async (form) => {
         const formData = new FormData();
         formData.append('action', 'actualizar_costo_adicional_paquete');
@@ -1747,6 +1816,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         state.rawData = result.data;
         render();
+        if (state.selectedMensajeroGroupKey) {
+            openMessengerDetailModal(state.selectedMensajeroGroupKey);
+        }
+    };
+
+    const deletePackageAdditionalCost = async (paqueteId) => {
+        await postDeleteAction('actualizar_costo_adicional_paquete', {
+            paquete_id: paqueteId,
+            monto: 0,
+            descripcion: ''
+        });
+        if (state.selectedClienteGroupKey) {
+            openClientDetailModal(state.selectedClienteGroupKey);
+        }
+    };
+
+    const deleteMessengerAdditionalCost = async (paqueteId) => {
+        await postDeleteAction('actualizar_adicional_mensajero_paquete', {
+            paquete_id: paqueteId,
+            monto: 0,
+            descripcion: ''
+        });
         if (state.selectedMensajeroGroupKey) {
             openMessengerDetailModal(state.selectedMensajeroGroupKey);
         }
@@ -1910,6 +2001,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         >
                             Editar adicional
                         </button>
+                        ${adicional > 0 ? `
+                            <button
+                                type="button"
+                                class="fact-btn danger"
+                                data-role="delete-package-additional-cost"
+                                data-package-id="${item.paquete_id}"
+                            >
+                                Eliminar
+                            </button>
+                        ` : ''}
                     </div>
                 ` : ''}
             </article>
@@ -1934,15 +2035,26 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <h3>${money(abono.monto)}</h3>
                                     <p>${escapeHtml(abono.metodo_pago)}</p>
                                 </div>
-                                <button
-                                    type="button"
-                                    class="fact-btn secondary"
-                                    data-role="edit-abono"
-                                    data-abono-kind="${abonoKind}"
-                                    data-abono-id="${abono.id}"
-                                >
-                                    Editar
-                                </button>
+                                <div class="facturacion-inline-actions">
+                                    <button
+                                        type="button"
+                                        class="fact-btn secondary"
+                                        data-role="edit-abono"
+                                        data-abono-kind="${abonoKind}"
+                                        data-abono-id="${abono.id}"
+                                    >
+                                        Editar
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="fact-btn danger"
+                                        data-role="delete-abono"
+                                        data-abono-kind="${abonoKind}"
+                                        data-abono-id="${abono.id}"
+                                    >
+                                        Eliminar
+                                    </button>
+                                </div>
                             </div>
                             <div class="package-card-grid">
                                 <div class="package-data">
@@ -2086,6 +2198,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         >
                             Editar adicional
                         </button>
+                        ${adicional > 0 ? `
+                            <button
+                                type="button"
+                                class="fact-btn danger"
+                                data-role="delete-messenger-additional-cost"
+                                data-package-id="${item.paquete_id}"
+                            >
+                                Eliminar
+                            </button>
+                        ` : ''}
                         <span class="facturacion-footnote" data-role="payment-status" data-id="${item.paquete_id}">Guardado automatico</span>
                     </div>
                 ` : ''}
@@ -2180,6 +2302,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         >
                             Editar adicional
                         </button>
+                        ${adicional > 0 ? `
+                            <button
+                                type="button"
+                                class="fact-btn danger"
+                                data-role="delete-package-additional-cost"
+                                data-package-id="${escapeHtml(String(item.paquete_id))}"
+                            >
+                                Eliminar
+                            </button>
+                        ` : ''}
                     </div>
                 `);
             }
@@ -2252,6 +2384,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         >
                             Editar adicional
                         </button>
+                        ${adicional > 0 ? `
+                            <button
+                                type="button"
+                                class="fact-btn danger"
+                                data-role="delete-messenger-additional-cost"
+                                data-package-id="${escapeHtml(String(item.paquete_id))}"
+                            >
+                                Eliminar
+                            </button>
+                        ` : ''}
                         <span class="facturacion-footnote" data-role="payment-status" data-id="${escapeHtml(String(item.paquete_id))}">Guardado automatico</span>
                     </div>
                 `);
@@ -2463,6 +2605,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="facturacion-abono-actions">
                     <button type="submit" class="fact-btn primary" data-role="submit-messenger-group-additional">Guardar adicional</button>
+                    ${montoPositivo > 0 || montoNegativo > 0 ? '<button type="button" class="fact-btn danger" data-role="delete-messenger-group-additional">Eliminar adicional</button>' : ''}
                     <button type="button" class="fact-btn tertiary" data-role="open-messenger-detail" data-group-key="${escapeHtml(group.key)}">Ver entregas</button>
                 </div>
                 <div class="facturacion-footnote">El positivo suma al pago del mensajero y el negativo se descuenta. Para quitar un valor, dejalo en cero o vacio y guarda.</div>
@@ -2652,6 +2795,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="facturacion-abono-actions">
                     <button type="submit" class="fact-btn primary" data-role="submit-client-group-additional">Guardar adicional</button>
+                    ${montoPositivo > 0 || montoNegativo > 0 ? '<button type="button" class="fact-btn danger" data-role="delete-client-group-additional">Eliminar adicional</button>' : ''}
                     <button type="button" class="fact-btn tertiary" data-role="open-client-detail" data-group-key="${escapeHtml(group.key)}">Ver paquetes</button>
                 </div>
                 <div class="facturacion-footnote">El positivo suma al cobro del cliente y el negativo lo descuenta. Para quitar un valor, dejalo en cero o vacio y guarda.</div>
@@ -2704,6 +2848,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="facturacion-abono-actions">
                     <button type="submit" class="fact-btn primary" data-role="submit-package-additional-cost">Guardar adicional</button>
+                    ${adicional > 0 ? `
+                        <button
+                            type="button"
+                            class="fact-btn danger"
+                            data-role="delete-package-additional-cost"
+                            data-package-id="${escapeHtml(String(item.paquete_id))}"
+                        >
+                            Eliminar adicional
+                        </button>
+                    ` : ''}
                     <button type="button" class="fact-btn tertiary" data-role="open-client-detail" data-group-key="${escapeHtml(group.key)}">Volver al dia</button>
                 </div>
                 <div class="facturacion-footnote">Para quitar el adicional, deja el valor en cero o vacio y guarda.</div>
@@ -2756,6 +2910,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="facturacion-abono-actions">
                     <button type="submit" class="fact-btn primary" data-role="submit-messenger-additional-cost">Guardar adicional</button>
+                    ${adicional > 0 ? `
+                        <button
+                            type="button"
+                            class="fact-btn danger"
+                            data-role="delete-messenger-additional-cost"
+                            data-package-id="${escapeHtml(String(item.paquete_id))}"
+                        >
+                            Eliminar adicional
+                        </button>
+                    ` : ''}
                     <button type="button" class="fact-btn tertiary" data-role="open-messenger-detail" data-group-key="${escapeHtml(group.key)}">Volver al dia</button>
                 </div>
                 <div class="facturacion-footnote">Para quitar el adicional, deja el valor en cero o vacio y guarda.</div>
@@ -3107,6 +3271,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const deleteAbonoButton = event.target.closest('[data-role="delete-abono"]');
+            if (deleteAbonoButton) {
+                if (!confirm('¿Eliminar este abono?')) {
+                    return;
+                }
+
+                const deleteAction = deleteAbonoButton.dataset.abonoKind === 'cliente'
+                    ? deleteClientAbono
+                    : deleteMessengerAbono;
+                deleteAction(deleteAbonoButton.dataset.abonoId).catch((error) => {
+                    alert(error.message);
+                });
+                return;
+            }
+
             const clientAdditionalButton = event.target.closest('[data-role="open-client-additional"]');
             if (clientAdditionalButton) {
                 openClientAdditionalModal(clientAdditionalButton.dataset.groupKey);
@@ -3131,6 +3310,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const deleteClientAdditionalButton = event.target.closest('[data-role="delete-client-group-additional"]');
+            if (deleteClientAdditionalButton) {
+                if (!confirm('¿Eliminar este adicional?')) {
+                    return;
+                }
+                deleteClientGroupAdditional().catch((error) => {
+                    alert(error.message);
+                });
+                return;
+            }
+
+            const deleteMessengerAdditionalButton = event.target.closest('[data-role="delete-messenger-group-additional"]');
+            if (deleteMessengerAdditionalButton) {
+                if (!confirm('¿Eliminar este adicional?')) {
+                    return;
+                }
+                deleteMessengerGroupAdditional().catch((error) => {
+                    alert(error.message);
+                });
+                return;
+            }
+
             const packageAdditionalCostButton = event.target.closest('[data-role="open-package-additional-cost"]');
             if (packageAdditionalCostButton) {
                 openPackageAdditionalCostModal(packageAdditionalCostButton.dataset.packageId);
@@ -3140,6 +3341,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const messengerAdditionalCostButton = event.target.closest('[data-role="open-messenger-additional-cost"]');
             if (messengerAdditionalCostButton) {
                 openMessengerAdditionalCostModal(messengerAdditionalCostButton.dataset.packageId);
+                return;
+            }
+
+            const deletePackageAdditionalCostButton = event.target.closest('[data-role="delete-package-additional-cost"]');
+            if (deletePackageAdditionalCostButton) {
+                if (!confirm('¿Eliminar este adicional?')) {
+                    return;
+                }
+                deletePackageAdditionalCost(deletePackageAdditionalCostButton.dataset.packageId).catch((error) => {
+                    alert(error.message);
+                });
+                return;
+            }
+
+            const deleteMessengerAdditionalCostButton = event.target.closest('[data-role="delete-messenger-additional-cost"]');
+            if (deleteMessengerAdditionalCostButton) {
+                if (!confirm('¿Eliminar este adicional?')) {
+                    return;
+                }
+                deleteMessengerAdditionalCost(deleteMessengerAdditionalCostButton.dataset.packageId).catch((error) => {
+                    alert(error.message);
+                });
                 return;
             }
 

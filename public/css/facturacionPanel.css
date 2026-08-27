@@ -797,6 +797,14 @@ body.sidebar-collapsed .facturacion-shell,
     margin-top: 1rem;
 }
 
+.facturacion-inline-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
 .package-data {
     background: #fff;
     border: 1px solid #e7efe9;

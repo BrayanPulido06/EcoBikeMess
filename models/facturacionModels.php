@@ -549,6 +549,34 @@ class FacturacionModels
         ]);
     }
 
+    public function eliminarAbonoCliente(int $abonoId, int $clienteId, string $fechaGrupo): bool
+    {
+        $sql = "DELETE FROM facturacion_abonos_cliente
+                WHERE id = :id
+                  AND cliente_id = :cliente_id
+                  AND fecha_grupo = :fecha_grupo";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':id' => $abonoId,
+            ':cliente_id' => $clienteId,
+            ':fecha_grupo' => $fechaGrupo,
+        ]);
+    }
+
+    public function eliminarAbonoMensajero(int $abonoId, int $mensajeroId, string $fechaGrupo): bool
+    {
+        $sql = "DELETE FROM facturacion_abonos_mensajero
+                WHERE id = :id
+                  AND mensajero_id = :mensajero_id
+                  AND fecha_grupo = :fecha_grupo";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':id' => $abonoId,
+            ':mensajero_id' => $mensajeroId,
+            ':fecha_grupo' => $fechaGrupo,
+        ]);
+    }
+
     public function guardarAdicionalClienteGrupo(
         int $clienteId,
         string $fechaGrupo,
@@ -602,6 +630,15 @@ class FacturacionModels
         ]);
     }
 
+    public function eliminarAdicionalClienteGrupo(int $clienteId, string $fechaGrupo): bool
+    {
+        $stmt = $this->conn->prepare("DELETE FROM facturacion_adicionales_cliente WHERE cliente_id = :cliente_id AND fecha_grupo = :fecha_grupo");
+        return $stmt->execute([
+            ':cliente_id' => $clienteId,
+            ':fecha_grupo' => $fechaGrupo,
+        ]);
+    }
+
     public function guardarAdicionalMensajeroGrupo(
         int $mensajeroId,
         string $fechaGrupo,
@@ -652,6 +689,15 @@ class FacturacionModels
             ':monto_negativo' => $montoNegativo,
             ':descripcion_negativa' => $descripcionNegativa,
             ':registrado_por' => $registradoPor,
+        ]);
+    }
+
+    public function eliminarAdicionalMensajeroGrupo(int $mensajeroId, string $fechaGrupo): bool
+    {
+        $stmt = $this->conn->prepare("DELETE FROM facturacion_adicionales_mensajero WHERE mensajero_id = :mensajero_id AND fecha_grupo = :fecha_grupo");
+        return $stmt->execute([
+            ':mensajero_id' => $mensajeroId,
+            ':fecha_grupo' => $fechaGrupo,
         ]);
     }
 
