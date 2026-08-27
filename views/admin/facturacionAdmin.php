@@ -159,7 +159,17 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                         </div>
                     </div>
 
-                    <div class="facturacion-table-wrap">
+                    <div id="mensajero-folder-view" class="client-folder-view"></div>
+
+                    <div id="mensajero-history-toolbar" class="client-history-toolbar panel-hidden">
+                        <button class="fact-btn secondary" type="button" data-role="back-to-messenger-folders">Volver a mensajeros</button>
+                        <div>
+                            <span class="client-history-label">Historial de mensajero</span>
+                            <strong id="mensajero-history-title">Mensajero</strong>
+                        </div>
+                    </div>
+
+                    <div id="mensajero-history-table" class="facturacion-table-wrap panel-hidden">
                         <table class="facturacion-table facturacion-table-mensajeros">
                             <thead>
                                 <tr>

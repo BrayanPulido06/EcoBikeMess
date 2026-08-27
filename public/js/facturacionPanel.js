@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedClienteGroups: new Set(),
         selectedMensajeroGroups: new Set(),
         selectedClienteFolderKey: null,
+        selectedMensajeroFolderKey: null,
         selectedClienteGroupKey: null,
         selectedMensajeroGroupKey: null,
         selectedEcoBikeGroupKey: null,
@@ -554,6 +555,95 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="client-folder-paper"></span>
                         </span>
                         <span class="client-folder-name">${escapeHtml(folder.clienteNombre)}</span>
+                    </button>
+                `).join('')}
+            </div>
+        `;
+    };
+
+    const buildMensajeroFolders = (groups) => {
+        const folders = new Map();
+
+        groups.forEach((group) => {
+            const key = group.messengerKey;
+            if (!folders.has(key)) {
+                folders.set(key, {
+                    key,
+                    mensajeroNombre: group.mensajeroNombre,
+                    mensajeroId: group.mensajeroId,
+                    registros: 0,
+                    entregas: 0,
+                    totalPago: 0,
+                    totalRecaudado: 0,
+                    totalAcumulado: Number(group.totalAcumulado || 0),
+                    ultimaFecha: group.dateKey,
+                    ultimaFechaLabel: group.fechaLabel
+                });
+            }
+
+            const folder = folders.get(key);
+            folder.registros += 1;
+            folder.entregas += Number(group.entregas || 0);
+            folder.totalPago += Number(group.totalPago || 0);
+            folder.totalRecaudado += Number(group.totalRecaudado || 0);
+
+            if (String(group.dateKey || '') > String(folder.ultimaFecha || '')) {
+                folder.ultimaFecha = group.dateKey;
+                folder.ultimaFechaLabel = group.fechaLabel;
+                folder.totalAcumulado = Number(group.totalAcumulado || 0);
+            }
+        });
+
+        return Array.from(folders.values()).sort((a, b) => (
+            a.mensajeroNombre.localeCompare(b.mensajeroNombre, 'es', { sensitivity: 'base' })
+        ));
+    };
+
+    const renderMensajeroFolders = (folders) => {
+        const folderView = document.getElementById('mensajero-folder-view');
+        const historyTable = document.getElementById('mensajero-history-table');
+        const toolbar = document.getElementById('mensajero-history-toolbar');
+        const title = document.getElementById('mensajero-history-title');
+        if (!folderView || !historyTable || !toolbar) return;
+
+        const selectedFolder = folders.find((folder) => folder.key === state.selectedMensajeroFolderKey) || null;
+        if (state.selectedMensajeroFolderKey && !selectedFolder) {
+            state.selectedMensajeroFolderKey = null;
+        }
+
+        if (state.selectedMensajeroFolderKey) {
+            folderView.classList.add('panel-hidden');
+            historyTable.classList.remove('panel-hidden');
+            toolbar.classList.remove('panel-hidden');
+            if (title && selectedFolder) {
+                title.textContent = selectedFolder.mensajeroNombre;
+            }
+            return;
+        }
+
+        historyTable.classList.add('panel-hidden');
+        toolbar.classList.add('panel-hidden');
+        folderView.classList.remove('panel-hidden');
+
+        if (!folders.length) {
+            folderView.innerHTML = '<div class="empty-state">No hay mensajeros con los filtros actuales.</div>';
+            return;
+        }
+
+        folderView.innerHTML = `
+            <div class="client-folder-list">
+                ${folders.map((folder) => `
+                    <button
+                        type="button"
+                        class="client-folder-row"
+                        data-role="open-messenger-folder"
+                        data-messenger-key="${escapeHtml(folder.key)}"
+                        title="${escapeHtml(folder.mensajeroNombre)}"
+                    >
+                        <span class="client-folder-icon" aria-hidden="true">
+                            <span class="client-folder-paper"></span>
+                        </span>
+                        <span class="client-folder-name">${escapeHtml(folder.mensajeroNombre)}</span>
                     </button>
                 `).join('')}
             </div>
@@ -1105,22 +1195,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const groups = buildMensajeroGroups(items);
-        state.mensajeroGroups = groups;
-        const visibleKeys = new Set(groups.map((group) => group.key));
+        const folders = buildMensajeroFolders(groups);
+        const selectedFolder = folders.find((folder) => folder.key === state.selectedMensajeroFolderKey) || null;
+        const visibleGroups = selectedFolder
+            ? groups.filter((group) => group.messengerKey === selectedFolder.key)
+            : groups;
+        state.mensajeroSummaryGroups = visibleGroups;
+        state.mensajeroGroups = selectedFolder ? visibleGroups : [];
+        const visibleKeys = new Set(state.mensajeroGroups.map((group) => group.key));
         state.selectedMensajeroGroups.forEach((key) => {
             if (!visibleKeys.has(key)) {
                 state.selectedMensajeroGroups.delete(key);
             }
         });
-        document.getElementById('count-mensajero').textContent = `${groups.length} registros`;
+        document.getElementById('count-mensajero').textContent = selectedFolder
+            ? `${visibleGroups.length} registros`
+            : `${folders.length} mensajeros`;
 
-        if (!groups.length) {
+        renderMensajeroFolders(folders);
+        if (!selectedFolder) {
+            tbody.innerHTML = '';
+            syncMensajeroSelectionControls();
+            return groups;
+        }
+
+        if (!state.mensajeroGroups.length) {
             tbody.innerHTML = `<tr><td colspan="${mensajeroTableColspan()}" class="empty-state">No hay registros con los filtros actuales.</td></tr>`;
             syncMensajeroSelectionControls();
             return groups;
         }
 
-        tbody.innerHTML = groups.map((group) => `
+        tbody.innerHTML = state.mensajeroGroups.map((group) => `
                 <tr>
                     <td class="select-col">
                         <input
@@ -1236,7 +1341,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (state.rawData.mensajero) {
             renderMensajeroTable(state.rawData.mensajero.items);
-            renderSummary(buildMensajeroSummaryFromGroups(state.mensajeroGroups), 'mensajero');
+            renderSummary(buildMensajeroSummaryFromGroups(state.mensajeroSummaryGroups || state.mensajeroGroups), 'mensajero');
         }
 
         if (state.rawData.ecobikemess) {
@@ -1278,6 +1383,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 folderView.innerHTML = `<div class="loading-state">${message}</div>`;
             }
         }
+
+        if (panel === 'mensajero' && mode === 'admin' && !state.selectedMensajeroFolderKey) {
+            const folderView = document.getElementById('mensajero-folder-view');
+            if (folderView) {
+                folderView.innerHTML = `<div class="loading-state">${message}</div>`;
+            }
+        }
     };
 
     const fetchData = async (panel = '') => {
@@ -1301,6 +1413,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (panel === 'cliente') {
             state.selectedClienteFolderKey = null;
             state.selectedClienteGroups.clear();
+        }
+        if (panel === 'mensajero') {
+            state.selectedMensajeroFolderKey = null;
+            state.selectedMensajeroGroups.clear();
         }
         document.querySelectorAll(`[data-panel-filter="${panel}"]`).forEach((input) => {
             input.value = '';
@@ -2894,6 +3010,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.target.closest('[data-role="back-to-client-folders"]')) {
                 state.selectedClienteFolderKey = null;
                 state.selectedClienteGroups.clear();
+                render();
+                return;
+            }
+
+            const messengerFolderButton = event.target.closest('[data-role="open-messenger-folder"]');
+            if (messengerFolderButton) {
+                state.selectedMensajeroFolderKey = messengerFolderButton.dataset.messengerKey || null;
+                state.selectedMensajeroGroups.clear();
+                render();
+                return;
+            }
+
+            if (event.target.closest('[data-role="back-to-messenger-folders"]')) {
+                state.selectedMensajeroFolderKey = null;
+                state.selectedMensajeroGroups.clear();
                 render();
                 return;
             }
