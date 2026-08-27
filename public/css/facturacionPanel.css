@@ -435,67 +435,107 @@ body.sidebar-collapsed .facturacion-shell,
 
 .client-folder-view {
     background: #fff;
+    padding: 1.25rem;
 }
 
 .client-folder-list {
     display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    align-items: start;
+    gap: 1.1rem 0.85rem;
 }
 
 .client-folder-row {
-    display: grid;
-    grid-template-columns: 34px minmax(260px, 1fr) minmax(170px, auto) minmax(130px, auto);
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 0.45rem;
     width: 100%;
-    padding: 1.2rem 1.4rem;
+    min-height: 104px;
+    padding: 0.35rem 0.25rem 0.55rem;
     border: 0;
-    border-bottom: 1px solid #edf2ee;
-    background: #fff;
+    border-radius: 8px;
+    background: transparent;
     color: var(--fact-text);
     font: inherit;
-    text-align: left;
+    text-align: center;
     cursor: pointer;
 }
 
 .client-folder-row:hover {
-    background: #fbfefb;
+    background: #f4faf5;
 }
 
 .client-folder-icon {
     position: relative;
-    width: 28px;
-    height: 20px;
-    border-radius: 4px;
-    background: #e9f8ed;
-    border: 1px solid #bfe4c8;
+    width: 54px;
+    height: 42px;
+    border-radius: 4px 4px 5px 5px;
+    background: linear-gradient(180deg, #ffd65a 0%, #ffc63d 100%);
+    border: 2px solid #f1aa16;
+    box-shadow: inset 0 -12px 0 rgba(255, 179, 25, 0.3);
 }
 
 .client-folder-icon::before {
     content: "";
     position: absolute;
-    left: 3px;
-    top: -6px;
-    width: 13px;
-    height: 7px;
-    border-radius: 4px 4px 0 0;
-    background: #d6f0dd;
-    border: 1px solid #bfe4c8;
+    left: -2px;
+    top: -10px;
+    width: 24px;
+    height: 13px;
+    border-radius: 5px 5px 0 0;
+    background: #ffc21f;
+    border: 2px solid #f1aa16;
     border-bottom: 0;
 }
 
+.client-folder-paper {
+    position: absolute;
+    left: 17px;
+    top: 9px;
+    width: 22px;
+    height: 25px;
+    border: 1px solid #c7ced6;
+    border-radius: 2px;
+    background: #fff;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+}
+
+.client-folder-paper::after {
+    content: "";
+    position: absolute;
+    right: -1px;
+    top: -1px;
+    width: 8px;
+    height: 8px;
+    background: linear-gradient(135deg, #e8edf2 0 50%, #fff 51%);
+    border-left: 1px solid #c7ced6;
+    border-bottom: 1px solid #c7ced6;
+}
+
+.client-folder-icon::after {
+    content: "";
+    position: absolute;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    height: 18px;
+    border-radius: 0 0 5px 5px;
+    background: linear-gradient(180deg, #ffe48a 0%, #ffc94a 100%);
+    border: 2px solid #f1aa16;
+    border-top: 1px solid #f7bd35;
+}
+
 .client-folder-name {
+    display: -webkit-box;
+    max-width: 100%;
+    overflow: hidden;
     font-weight: 600;
-}
-
-.client-folder-meta {
-    color: var(--fact-muted);
     font-size: 0.86rem;
-}
-
-.client-folder-money {
-    justify-self: end;
-    color: var(--fact-danger);
-    font-weight: 700;
+    line-height: 1.3;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow-wrap: anywhere;
 }
 
 .client-history-toolbar {
@@ -827,15 +867,8 @@ body.sidebar-collapsed .facturacion-shell,
         width: 100%;
     }
 
-    .client-folder-row {
-        grid-template-columns: 30px minmax(0, 1fr);
-        gap: 0.8rem;
-    }
-
-    .client-folder-meta,
-    .client-folder-money {
-        grid-column: 2;
-        justify-self: start;
+    .client-folder-list {
+        grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
     }
 
     .client-history-toolbar {

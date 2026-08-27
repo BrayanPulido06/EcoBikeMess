@@ -135,6 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return contact || business || 'Cliente';
     };
 
+    const isCompleteClientDisplayName = (value) => String(value || '').includes(' - ');
+
     const clientBusinessGroupName = (item) => {
         const business = String(item?.cliente_nombre || '').trim();
         if (!business) {
@@ -476,6 +478,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const folder = folders.get(key);
+            if (isCompleteClientDisplayName(group.clienteNombre) && !isCompleteClientDisplayName(folder.clienteNombre)) {
+                folder.clienteNombre = group.clienteNombre;
+            }
             folder.registros += 1;
             folder.paquetesEntregados += Number(group.paquetesEntregados || 0);
             folder.totalServicio += Number(group.totalServicio || 0);
@@ -533,11 +538,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         class="client-folder-row"
                         data-role="open-client-folder"
                         data-client-key="${escapeHtml(folder.key)}"
+                        title="${escapeHtml(folder.clienteNombre)}"
                     >
-                        <span class="client-folder-icon" aria-hidden="true"></span>
+                        <span class="client-folder-icon" aria-hidden="true">
+                            <span class="client-folder-paper"></span>
+                        </span>
                         <span class="client-folder-name">${escapeHtml(folder.clienteNombre)}</span>
-                        <span class="client-folder-meta">${folder.registros} dias | ${folder.paquetesEntregados} paquetes</span>
-                        <span class="client-folder-money">${moneyAbs(folder.totalAcumulado)}</span>
                     </button>
                 `).join('')}
             </div>
@@ -577,7 +583,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const baseDate = item.fecha_entrega || item.fecha_ingreso;
             const dateKey = dateKeyFromValue(baseDate);
             const displayName = clientDisplayName(item);
-            const clientKey = normalizeText(clientBusinessGroupName(item) || displayName || 'cliente');
+            const clientId = Number(item.cliente_id || 0);
+            const clientKey = clientId > 0 ? `id-${clientId}` : normalizeText(clientBusinessGroupName(item) || displayName || 'cliente');
             const groupKey = `${dateKey}__${clientKey}`;
 
             if (!groupsMap.has(groupKey)) {
@@ -587,7 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     clientKey,
                     fechaLabel: shortDate(baseDate),
                     clienteNombre: displayName,
-                    clienteId: Number(item.cliente_id || 0),
+                    clienteId: clientId,
                     cuentaBancariaPrincipal: item.cuenta_bancaria_principal || '',
                     cuentaBancariaOpcional1: item.cuenta_bancaria_opcional_1 || '',
                     cuentaBancariaOpcional2: item.cuenta_bancaria_opcional_2 || '',
@@ -610,7 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const group = groupsMap.get(groupKey);
-            if (normalizeText(item.cliente_contacto) && normalizeText(group.clienteNombre) === clientKey) {
+            if (isCompleteClientDisplayName(displayName) && !isCompleteClientDisplayName(group.clienteNombre)) {
                 group.clienteNombre = displayName;
             }
             if (item.estado === 'entregado') {
