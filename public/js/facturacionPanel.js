@@ -147,6 +147,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return parts.length > 1 ? parts[parts.length - 1] : business;
     };
 
+    const normalizeClientStoreKey = (value) => {
+        const text = normalizeText(value)
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\b(sas|s\.a\.s|sa|s\.a)\b/g, '')
+            .replace(/[^a-z0-9]/g, '');
+
+        return text || normalizeText(value);
+    };
+
     const statusBadge = (status) => {
         const map = {
             pendiente: ['Pendiente', 'orange'],
@@ -583,8 +593,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const baseDate = item.fecha_entrega || item.fecha_ingreso;
             const dateKey = dateKeyFromValue(baseDate);
             const displayName = clientDisplayName(item);
+            const clientKey = normalizeClientStoreKey(clientBusinessGroupName(item) || displayName || 'cliente');
             const clientId = Number(item.cliente_id || 0);
-            const clientKey = clientId > 0 ? `id-${clientId}` : normalizeText(clientBusinessGroupName(item) || displayName || 'cliente');
             const groupKey = `${dateKey}__${clientKey}`;
 
             if (!groupsMap.has(groupKey)) {
@@ -619,6 +629,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const group = groupsMap.get(groupKey);
             if (isCompleteClientDisplayName(displayName) && !isCompleteClientDisplayName(group.clienteNombre)) {
                 group.clienteNombre = displayName;
+                group.clienteId = clientId;
+                group.cuentaBancariaPrincipal = item.cuenta_bancaria_principal || group.cuentaBancariaPrincipal;
+                group.cuentaBancariaOpcional1 = item.cuenta_bancaria_opcional_1 || group.cuentaBancariaOpcional1;
+                group.cuentaBancariaOpcional2 = item.cuenta_bancaria_opcional_2 || group.cuentaBancariaOpcional2;
+                group.cuentaBancariaOpcional3 = item.cuenta_bancaria_opcional_3 || group.cuentaBancariaOpcional3;
             }
             if (item.estado === 'entregado') {
                 const valorBase = Number(item.valor_envio_base ?? item.valor_envio ?? 0);
