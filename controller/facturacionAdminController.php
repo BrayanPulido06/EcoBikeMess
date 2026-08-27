@@ -26,6 +26,28 @@ function parseMoneyInput($value): float
     return is_numeric($normalized) ? (float) $normalized : 0.0;
 }
 
+function parseAbonoSplitInput(): array
+{
+    $montoPositivo = parseMoneyInput($_POST['monto_positivo'] ?? ($_POST['monto'] ?? 0));
+    $descripcionPositiva = trim((string) ($_POST['descripcion_positiva'] ?? ($_POST['observaciones'] ?? '')));
+    $montoNegativo = parseMoneyInput($_POST['monto_negativo'] ?? 0);
+    $descripcionNegativa = trim((string) ($_POST['descripcion_negativa'] ?? ''));
+
+    if ($montoPositivo <= 0 && $montoNegativo <= 0) {
+        throw new InvalidArgumentException('El abono debe ser mayor a cero.');
+    }
+
+    if ($montoPositivo > 0 && $descripcionPositiva === '') {
+        throw new InvalidArgumentException('Debes ingresar la observacion del abono positivo.');
+    }
+
+    if ($montoNegativo > 0 && $descripcionNegativa === '') {
+        throw new InvalidArgumentException('Debes ingresar la observacion del abono negativo.');
+    }
+
+    return [$montoPositivo, $descripcionPositiva, $montoNegativo, $descripcionNegativa];
+}
+
 try {
     if ($method === 'GET') {
         $panel = isset($_GET['panel']) ? trim((string) $_GET['panel']) : null;
@@ -66,7 +88,7 @@ try {
     if ($method === 'POST' && $action === 'registrar_abono_cliente') {
         $clienteId = (int) ($_POST['cliente_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
-        $monto = parseMoneyInput($_POST['monto'] ?? 0);
+        [$montoPositivo, $descripcionPositiva, $montoNegativo, $descripcionNegativa] = parseAbonoSplitInput();
         $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
         $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
         $registradoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
@@ -79,10 +101,6 @@ try {
             throw new InvalidArgumentException('La fecha del abono no es valida.');
         }
 
-        if ($monto <= 0) {
-            throw new InvalidArgumentException('El abono debe ser mayor a cero.');
-        }
-
         if (!in_array($metodoPago, ['efectivo', 'transferencia'], true)) {
             throw new InvalidArgumentException('Metodo de pago invalido.');
         }
@@ -90,7 +108,10 @@ try {
         $model->registrarAbonoCliente(
             $clienteId,
             $fechaGrupo,
-            $monto,
+            $montoPositivo,
+            $montoPositivo > 0 ? $descripcionPositiva : null,
+            $montoNegativo,
+            $montoNegativo > 0 ? $descripcionNegativa : null,
             $metodoPago,
             $observaciones !== '' ? $observaciones : null,
             $registradoPor
@@ -107,7 +128,7 @@ try {
     if ($method === 'POST' && $action === 'registrar_abono_mensajero') {
         $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
-        $monto = parseMoneyInput($_POST['monto'] ?? 0);
+        [$montoPositivo, $descripcionPositiva, $montoNegativo, $descripcionNegativa] = parseAbonoSplitInput();
         $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
         $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
         $registradoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
@@ -120,10 +141,6 @@ try {
             throw new InvalidArgumentException('La fecha del abono no es valida.');
         }
 
-        if ($monto <= 0) {
-            throw new InvalidArgumentException('El abono debe ser mayor a cero.');
-        }
-
         if (!in_array($metodoPago, ['efectivo', 'transferencia'], true)) {
             throw new InvalidArgumentException('Metodo de pago invalido.');
         }
@@ -131,7 +148,10 @@ try {
         $model->registrarAbonoMensajero(
             $mensajeroId,
             $fechaGrupo,
-            $monto,
+            $montoPositivo,
+            $montoPositivo > 0 ? $descripcionPositiva : null,
+            $montoNegativo,
+            $montoNegativo > 0 ? $descripcionNegativa : null,
             $metodoPago,
             $observaciones !== '' ? $observaciones : null,
             $registradoPor
@@ -149,7 +169,7 @@ try {
         $abonoId = (int) ($_POST['abono_id'] ?? 0);
         $clienteId = (int) ($_POST['cliente_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
-        $monto = parseMoneyInput($_POST['monto'] ?? 0);
+        [$montoPositivo, $descripcionPositiva, $montoNegativo, $descripcionNegativa] = parseAbonoSplitInput();
         $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
         $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
 
@@ -161,10 +181,6 @@ try {
             throw new InvalidArgumentException('La fecha del abono no es valida.');
         }
 
-        if ($monto <= 0) {
-            throw new InvalidArgumentException('El abono debe ser mayor a cero.');
-        }
-
         if (!in_array($metodoPago, ['efectivo', 'transferencia'], true)) {
             throw new InvalidArgumentException('Metodo de pago invalido.');
         }
@@ -173,7 +189,10 @@ try {
             $abonoId,
             $clienteId,
             $fechaGrupo,
-            $monto,
+            $montoPositivo,
+            $montoPositivo > 0 ? $descripcionPositiva : null,
+            $montoNegativo,
+            $montoNegativo > 0 ? $descripcionNegativa : null,
             $metodoPago,
             $observaciones !== '' ? $observaciones : null
         );
@@ -190,7 +209,7 @@ try {
         $abonoId = (int) ($_POST['abono_id'] ?? 0);
         $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
-        $monto = parseMoneyInput($_POST['monto'] ?? 0);
+        [$montoPositivo, $descripcionPositiva, $montoNegativo, $descripcionNegativa] = parseAbonoSplitInput();
         $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
         $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
 
@@ -202,10 +221,6 @@ try {
             throw new InvalidArgumentException('La fecha del abono no es valida.');
         }
 
-        if ($monto <= 0) {
-            throw new InvalidArgumentException('El abono debe ser mayor a cero.');
-        }
-
         if (!in_array($metodoPago, ['efectivo', 'transferencia'], true)) {
             throw new InvalidArgumentException('Metodo de pago invalido.');
         }
@@ -214,7 +229,10 @@ try {
             $abonoId,
             $mensajeroId,
             $fechaGrupo,
-            $monto,
+            $montoPositivo,
+            $montoPositivo > 0 ? $descripcionPositiva : null,
+            $montoNegativo,
+            $montoNegativo > 0 ? $descripcionNegativa : null,
             $metodoPago,
             $observaciones !== '' ? $observaciones : null
         );

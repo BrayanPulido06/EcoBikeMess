@@ -181,6 +181,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const getNegativeAdditionalAmount = (adicional) => Number(adicional?.monto_negativo || 0);
     const getPositiveAdditionalDescription = (adicional) => String(adicional?.descripcion_positiva || (getPositiveAdditionalAmount(adicional) > 0 ? adicional?.descripcion || '' : '')).trim();
     const getNegativeAdditionalDescription = (adicional) => String(adicional?.descripcion_negativa || '').trim();
+    const getPositiveAbonoAmount = (abono) => Number(abono?.monto_positivo ?? Math.max(Number(abono?.monto || 0), 0));
+    const getNegativeAbonoAmount = (abono) => Number(abono?.monto_negativo || 0);
+    const getPositiveAbonoDescription = (abono) => String(abono?.descripcion_positiva || (getPositiveAbonoAmount(abono) > 0 ? abono?.observaciones || '' : '')).trim();
+    const getNegativeAbonoDescription = (abono) => String(abono?.descripcion_negativa || '').trim();
 
     const adicionalLine = (className, prefix, monto, descripcion) => `
         <div class="additional-line ${className}">
@@ -1583,7 +1587,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         formData.append('cliente_id', form.cliente_id.value);
         formData.append('fecha_grupo', form.fecha_grupo.value);
-        formData.append('monto', form.monto.value);
+        formData.append('monto_positivo', form.monto_positivo.value || '0');
+        formData.append('descripcion_positiva', form.descripcion_positiva.value || '');
+        formData.append('monto_negativo', form.monto_negativo.value || '0');
+        formData.append('descripcion_negativa', form.descripcion_negativa.value || '');
         formData.append('metodo_pago', form.metodo_pago.value);
         formData.append('observaciones', form.observaciones.value || '');
 
@@ -1642,7 +1649,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         formData.append('mensajero_id', form.mensajero_id.value);
         formData.append('fecha_grupo', form.fecha_grupo.value);
-        formData.append('monto', form.monto.value);
+        formData.append('monto_positivo', form.monto_positivo.value || '0');
+        formData.append('descripcion_positiva', form.descripcion_positiva.value || '');
+        formData.append('monto_negativo', form.monto_negativo.value || '0');
+        formData.append('descripcion_negativa', form.descripcion_negativa.value || '');
         formData.append('metodo_pago', form.metodo_pago.value);
         formData.append('observaciones', form.observaciones.value || '');
 
@@ -1914,47 +1924,67 @@ document.addEventListener('DOMContentLoaded', () => {
         const abonoKind = group.clienteId ? 'cliente' : 'mensajero';
         return `
             <div class="package-list">
-                ${group.abonos.map((abono) => `
-                    <article class="package-card">
-                        <div class="package-card-head">
-                            <div>
-                                <h3>${money(abono.monto)}</h3>
-                                <p>${escapeHtml(abono.metodo_pago)}</p>
+                ${group.abonos.map((abono) => {
+                    const montoPositivo = getPositiveAbonoAmount(abono);
+                    const montoNegativo = getNegativeAbonoAmount(abono);
+                    return `
+                        <article class="package-card">
+                            <div class="package-card-head">
+                                <div>
+                                    <h3>${money(abono.monto)}</h3>
+                                    <p>${escapeHtml(abono.metodo_pago)}</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="fact-btn secondary"
+                                    data-role="edit-abono"
+                                    data-abono-kind="${abonoKind}"
+                                    data-abono-id="${abono.id}"
+                                >
+                                    Editar
+                                </button>
                             </div>
-                            <button
-                                type="button"
-                                class="fact-btn secondary"
-                                data-role="edit-abono"
-                                data-abono-kind="${abonoKind}"
-                                data-abono-id="${abono.id}"
-                            >
-                                Editar
-                            </button>
-                        </div>
-                        <div class="package-card-grid">
-                            <div class="package-data">
-                                <span class="package-label">Monto</span>
-                                <strong>${money(abono.monto)}</strong>
+                            <div class="package-card-grid">
+                                <div class="package-data">
+                                    <span class="package-label">Abono positivo</span>
+                                    <strong>${money(montoPositivo)}</strong>
+                                </div>
+                                <div class="package-data">
+                                    <span class="package-label">Abono negativo</span>
+                                    <strong>${money(montoNegativo)}</strong>
+                                </div>
+                                <div class="package-data">
+                                    <span class="package-label">Neto</span>
+                                    <strong>${money(abono.monto)}</strong>
+                                </div>
+                                <div class="package-data">
+                                    <span class="package-label">Metodo</span>
+                                    <strong>${escapeHtml(abono.metodo_pago)}</strong>
+                                </div>
+                                <div class="package-data">
+                                    <span class="package-label">Fecha de registro</span>
+                                    <strong>${shortDate(abono.fecha_registro)}</strong>
+                                </div>
+                                <div class="package-data">
+                                    <span class="package-label">Registrado por</span>
+                                    <strong>${escapeHtml(abono.registrado_por_nombre || 'Sistema')}</strong>
+                                </div>
+                                <div class="package-data package-full">
+                                    <span class="package-label">Observacion positivo</span>
+                                    <strong>${escapeHtml(getPositiveAbonoDescription(abono) || 'Sin observacion')}</strong>
+                                </div>
+                                <div class="package-data package-full">
+                                    <span class="package-label">Observacion negativo</span>
+                                    <strong>${escapeHtml(getNegativeAbonoDescription(abono) || 'Sin observacion')}</strong>
+                                </div>
+                                <div class="package-data package-full">
+                                    <span class="package-label">Observaciones generales</span>
+                                    <strong>${escapeHtml(abono.observaciones || 'Sin observaciones')}</strong>
+                                </div>
                             </div>
-                            <div class="package-data">
-                                <span class="package-label">Metodo</span>
-                                <strong>${escapeHtml(abono.metodo_pago)}</strong>
-                            </div>
-                            <div class="package-data">
-                                <span class="package-label">Fecha de registro</span>
-                                <strong>${shortDate(abono.fecha_registro)}</strong>
-                            </div>
-                            <div class="package-data">
-                                <span class="package-label">Registrado por</span>
-                                <strong>${escapeHtml(abono.registrado_por_nombre || 'Sistema')}</strong>
-                            </div>
-                            <div class="package-data package-full">
-                                <span class="package-label">Observaciones</span>
-                                <strong>${escapeHtml(abono.observaciones || 'Sin observaciones')}</strong>
-                            </div>
-                        </div>
-                    </article>
-                `).join('')}
+                        </article>
+                    `;
+                }).join('')}
             </div>
         `;
     };
@@ -1971,8 +2001,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         form.abono_id.value = String(abono.id);
-        form.monto.value = String(Math.round(Number(abono.monto || 0)));
-        form.monto_display.value = money(abono.monto);
+        form.monto_positivo.value = getPositiveAbonoAmount(abono) > 0 ? String(Math.round(getPositiveAbonoAmount(abono))) : '';
+        form.monto_positivo_display.value = getPositiveAbonoAmount(abono) > 0 ? money(getPositiveAbonoAmount(abono)) : '';
+        form.monto_negativo.value = getNegativeAbonoAmount(abono) > 0 ? String(Math.round(getNegativeAbonoAmount(abono))) : '';
+        form.monto_negativo_display.value = getNegativeAbonoAmount(abono) > 0 ? money(getNegativeAbonoAmount(abono)) : '';
+        form.descripcion_positiva.value = getPositiveAbonoDescription(abono);
+        form.descripcion_negativa.value = getNegativeAbonoDescription(abono);
         form.metodo_pago.value = abono.metodo_pago || 'efectivo';
         form.observaciones.value = abono.observaciones || '';
 
@@ -2334,9 +2368,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="hidden" name="fecha_grupo" value="${escapeHtml(group.dateKey)}">
                 <div class="facturacion-abono-grid">
                     <label class="facturacion-field">
-                        <span>Monto del abono</span>
-                        <input type="hidden" name="monto" value="" required>
-                        <input type="text" name="monto_display" inputmode="numeric" autocomplete="off" placeholder="$ 49.000" required>
+                        <span>Abono positivo</span>
+                        <input type="hidden" name="monto_positivo" value="">
+                        <input type="text" name="monto_positivo_display" inputmode="numeric" autocomplete="off" placeholder="$ 49.000">
+                    </label>
+                    <label class="facturacion-field">
+                        <span>Abono negativo</span>
+                        <input type="hidden" name="monto_negativo" value="">
+                        <input type="text" name="monto_negativo_display" inputmode="numeric" autocomplete="off" placeholder="$ 10.000">
                     </label>
                     <label class="facturacion-field">
                         <span>Metodo de pago</span>
@@ -2344,6 +2383,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             <option value="efectivo">Efectivo</option>
                             <option value="transferencia">Transferencia</option>
                         </select>
+                    </label>
+                    <label class="facturacion-field facturacion-field-full">
+                        <span>Observacion abono positivo</span>
+                        <textarea name="descripcion_positiva" rows="2" placeholder="Ej: pago recibido, transferencia, efectivo"></textarea>
+                    </label>
+                    <label class="facturacion-field facturacion-field-full">
+                        <span>Observacion abono negativo</span>
+                        <textarea name="descripcion_negativa" rows="2" placeholder="Ej: ajuste, descuento revertido, novedad"></textarea>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Observaciones</span>
@@ -2509,9 +2556,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="hidden" name="fecha_grupo" value="${escapeHtml(group.dateKey)}">
                 <div class="facturacion-abono-grid">
                     <label class="facturacion-field">
-                        <span>Monto del abono</span>
-                        <input type="hidden" name="monto" value="" required>
-                        <input type="text" name="monto_display" inputmode="numeric" autocomplete="off" placeholder="$ 100.000" required>
+                        <span>Abono positivo</span>
+                        <input type="hidden" name="monto_positivo" value="">
+                        <input type="text" name="monto_positivo_display" inputmode="numeric" autocomplete="off" placeholder="$ 100.000">
+                    </label>
+                    <label class="facturacion-field">
+                        <span>Abono negativo</span>
+                        <input type="hidden" name="monto_negativo" value="">
+                        <input type="text" name="monto_negativo_display" inputmode="numeric" autocomplete="off" placeholder="$ 20.000">
                     </label>
                     <label class="facturacion-field">
                         <span>Metodo de pago</span>
@@ -2519,6 +2571,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             <option value="efectivo">Efectivo</option>
                             <option value="transferencia">Transferencia</option>
                         </select>
+                    </label>
+                    <label class="facturacion-field facturacion-field-full">
+                        <span>Observacion abono positivo</span>
+                        <textarea name="descripcion_positiva" rows="2" placeholder="Ej: pago recibido, transferencia, efectivo"></textarea>
+                    </label>
+                    <label class="facturacion-field facturacion-field-full">
+                        <span>Observacion abono negativo</span>
+                        <textarea name="descripcion_negativa" rows="2" placeholder="Ej: ajuste, descuento revertido, novedad"></textarea>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Observaciones</span>
@@ -3281,13 +3341,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!form) return;
 
             event.preventDefault();
-            const amountDisplayInput = form.querySelector('input[name="monto_display"]');
-            if (amountDisplayInput) {
-                syncCurrencyInput(amountDisplayInput);
-            }
+            form.querySelectorAll('input[name$="_display"]').forEach(syncCurrencyInput);
 
-            if (!form.monto.value || Number(form.monto.value) <= 0) {
+            const montoPositivo = Number(form.monto_positivo.value || 0);
+            const montoNegativo = Number(form.monto_negativo.value || 0);
+            if (montoPositivo <= 0 && montoNegativo <= 0) {
                 alert('Ingresa un monto de abono valido.');
+                return;
+            }
+            if (montoPositivo > 0 && !String(form.descripcion_positiva.value || '').trim()) {
+                alert('Ingresa la observacion del abono positivo.');
+                return;
+            }
+            if (montoNegativo > 0 && !String(form.descripcion_negativa.value || '').trim()) {
+                alert('Ingresa la observacion del abono negativo.');
                 return;
             }
 
@@ -3315,13 +3382,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!form) return;
 
             event.preventDefault();
-            const amountDisplayInput = form.querySelector('input[name="monto_display"]');
-            if (amountDisplayInput) {
-                syncCurrencyInput(amountDisplayInput);
-            }
+            form.querySelectorAll('input[name$="_display"]').forEach(syncCurrencyInput);
 
-            if (!form.monto.value || Number(form.monto.value) <= 0) {
+            const montoPositivo = Number(form.monto_positivo.value || 0);
+            const montoNegativo = Number(form.monto_negativo.value || 0);
+            if (montoPositivo <= 0 && montoNegativo <= 0) {
                 alert('Ingresa un monto de abono valido.');
+                return;
+            }
+            if (montoPositivo > 0 && !String(form.descripcion_positiva.value || '').trim()) {
+                alert('Ingresa la observacion del abono positivo.');
+                return;
+            }
+            if (montoNegativo > 0 && !String(form.descripcion_negativa.value || '').trim()) {
+                alert('Ingresa la observacion del abono negativo.');
                 return;
             }
 
@@ -3423,10 +3497,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!form) return;
 
             event.preventDefault();
-            const amountDisplayInput = form.querySelector('input[name="monto_display"]');
-            if (amountDisplayInput) {
-                syncCurrencyInput(amountDisplayInput);
-            }
+            form.querySelectorAll('input[name$="_display"]').forEach(syncCurrencyInput);
 
             const monto = Number(form.monto.value || 0);
             if (monto > 0 && !String(form.descripcion.value || '').trim()) {
@@ -3458,10 +3529,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!form) return;
 
             event.preventDefault();
-            const amountDisplayInput = form.querySelector('input[name="monto_display"]');
-            if (amountDisplayInput) {
-                syncCurrencyInput(amountDisplayInput);
-            }
+            form.querySelectorAll('input[name$="_display"]').forEach(syncCurrencyInput);
 
             const monto = Number(form.monto.value || 0);
             if (monto > 0 && !String(form.descripcion.value || '').trim()) {

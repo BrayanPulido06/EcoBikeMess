@@ -120,6 +120,10 @@ class FacturacionModels
                     cliente_id INT NOT NULL,
                     fecha_grupo DATE NOT NULL,
                     monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    monto_positivo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    descripcion_positiva TEXT NULL,
+                    monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    descripcion_negativa TEXT NULL,
                     metodo_pago ENUM('efectivo', 'transferencia') NOT NULL,
                     observaciones TEXT NULL,
                     registrado_por INT NULL,
@@ -129,6 +133,16 @@ class FacturacionModels
                     INDEX idx_abonos_cliente_fecha (cliente_id, fecha_grupo)
                 )";
         $this->conn->exec($sql);
+        $this->ensureColumn('facturacion_abonos_cliente', 'monto_positivo', "ALTER TABLE facturacion_abonos_cliente ADD COLUMN monto_positivo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER monto");
+        $this->ensureColumn('facturacion_abonos_cliente', 'descripcion_positiva', "ALTER TABLE facturacion_abonos_cliente ADD COLUMN descripcion_positiva TEXT NULL AFTER monto_positivo");
+        $this->ensureColumn('facturacion_abonos_cliente', 'monto_negativo', "ALTER TABLE facturacion_abonos_cliente ADD COLUMN monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER descripcion_positiva");
+        $this->ensureColumn('facturacion_abonos_cliente', 'descripcion_negativa', "ALTER TABLE facturacion_abonos_cliente ADD COLUMN descripcion_negativa TEXT NULL AFTER monto_negativo");
+        $this->conn->exec("UPDATE facturacion_abonos_cliente
+                           SET monto_positivo = monto,
+                               descripcion_positiva = observaciones
+                           WHERE monto > 0
+                             AND monto_positivo = 0
+                             AND monto_negativo = 0");
     }
 
     private function ensureHiddenClientGroupsTable(): void
@@ -220,6 +234,10 @@ class FacturacionModels
                     mensajero_id INT NOT NULL,
                     fecha_grupo DATE NOT NULL,
                     monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    monto_positivo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    descripcion_positiva TEXT NULL,
+                    monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    descripcion_negativa TEXT NULL,
                     metodo_pago ENUM('efectivo', 'transferencia') NOT NULL,
                     observaciones TEXT NULL,
                     registrado_por INT NULL,
@@ -229,6 +247,16 @@ class FacturacionModels
                     INDEX idx_abonos_mensajero_fecha (mensajero_id, fecha_grupo)
                 )";
         $this->conn->exec($sql);
+        $this->ensureColumn('facturacion_abonos_mensajero', 'monto_positivo', "ALTER TABLE facturacion_abonos_mensajero ADD COLUMN monto_positivo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER monto");
+        $this->ensureColumn('facturacion_abonos_mensajero', 'descripcion_positiva', "ALTER TABLE facturacion_abonos_mensajero ADD COLUMN descripcion_positiva TEXT NULL AFTER monto_positivo");
+        $this->ensureColumn('facturacion_abonos_mensajero', 'monto_negativo', "ALTER TABLE facturacion_abonos_mensajero ADD COLUMN monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER descripcion_positiva");
+        $this->ensureColumn('facturacion_abonos_mensajero', 'descripcion_negativa', "ALTER TABLE facturacion_abonos_mensajero ADD COLUMN descripcion_negativa TEXT NULL AFTER monto_negativo");
+        $this->conn->exec("UPDATE facturacion_abonos_mensajero
+                           SET monto_positivo = monto,
+                               descripcion_positiva = observaciones
+                           WHERE monto > 0
+                             AND monto_positivo = 0
+                             AND monto_negativo = 0");
     }
 
     private function ensureAdicionalesMensajeroTable(): void
@@ -380,21 +408,31 @@ class FacturacionModels
     public function registrarAbonoCliente(
         int $clienteId,
         string $fechaGrupo,
-        float $monto,
+        float $montoPositivo,
+        ?string $descripcionPositiva,
+        float $montoNegativo,
+        ?string $descripcionNegativa,
         string $metodoPago,
         ?string $observaciones,
         ?int $registradoPor
     ): bool {
         $sql = "INSERT INTO facturacion_abonos_cliente (
-                    cliente_id, fecha_grupo, monto, metodo_pago, observaciones, registrado_por
+                    cliente_id, fecha_grupo, monto, monto_positivo, descripcion_positiva,
+                    monto_negativo, descripcion_negativa, metodo_pago, observaciones, registrado_por
                 ) VALUES (
-                    :cliente_id, :fecha_grupo, :monto, :metodo_pago, :observaciones, :registrado_por
+                    :cliente_id, :fecha_grupo, :monto, :monto_positivo, :descripcion_positiva,
+                    :monto_negativo, :descripcion_negativa, :metodo_pago, :observaciones, :registrado_por
                 )";
         $stmt = $this->conn->prepare($sql);
+        $monto = $montoPositivo - $montoNegativo;
         return $stmt->execute([
             ':cliente_id' => $clienteId,
             ':fecha_grupo' => $fechaGrupo,
             ':monto' => $monto,
+            ':monto_positivo' => $montoPositivo,
+            ':descripcion_positiva' => $descripcionPositiva,
+            ':monto_negativo' => $montoNegativo,
+            ':descripcion_negativa' => $descripcionNegativa,
             ':metodo_pago' => $metodoPago,
             ':observaciones' => $observaciones,
             ':registrado_por' => $registradoPor,
@@ -404,21 +442,31 @@ class FacturacionModels
     public function registrarAbonoMensajero(
         int $mensajeroId,
         string $fechaGrupo,
-        float $monto,
+        float $montoPositivo,
+        ?string $descripcionPositiva,
+        float $montoNegativo,
+        ?string $descripcionNegativa,
         string $metodoPago,
         ?string $observaciones,
         ?int $registradoPor
     ): bool {
         $sql = "INSERT INTO facturacion_abonos_mensajero (
-                    mensajero_id, fecha_grupo, monto, metodo_pago, observaciones, registrado_por
+                    mensajero_id, fecha_grupo, monto, monto_positivo, descripcion_positiva,
+                    monto_negativo, descripcion_negativa, metodo_pago, observaciones, registrado_por
                 ) VALUES (
-                    :mensajero_id, :fecha_grupo, :monto, :metodo_pago, :observaciones, :registrado_por
+                    :mensajero_id, :fecha_grupo, :monto, :monto_positivo, :descripcion_positiva,
+                    :monto_negativo, :descripcion_negativa, :metodo_pago, :observaciones, :registrado_por
                 )";
         $stmt = $this->conn->prepare($sql);
+        $monto = $montoPositivo - $montoNegativo;
         return $stmt->execute([
             ':mensajero_id' => $mensajeroId,
             ':fecha_grupo' => $fechaGrupo,
             ':monto' => $monto,
+            ':monto_positivo' => $montoPositivo,
+            ':descripcion_positiva' => $descripcionPositiva,
+            ':monto_negativo' => $montoNegativo,
+            ':descripcion_negativa' => $descripcionNegativa,
             ':metodo_pago' => $metodoPago,
             ':observaciones' => $observaciones,
             ':registrado_por' => $registradoPor,
@@ -429,23 +477,35 @@ class FacturacionModels
         int $abonoId,
         int $clienteId,
         string $fechaGrupo,
-        float $monto,
+        float $montoPositivo,
+        ?string $descripcionPositiva,
+        float $montoNegativo,
+        ?string $descripcionNegativa,
         string $metodoPago,
         ?string $observaciones
     ): bool {
         $sql = "UPDATE facturacion_abonos_cliente
                 SET monto = :monto,
+                    monto_positivo = :monto_positivo,
+                    descripcion_positiva = :descripcion_positiva,
+                    monto_negativo = :monto_negativo,
+                    descripcion_negativa = :descripcion_negativa,
                     metodo_pago = :metodo_pago,
                     observaciones = :observaciones
                 WHERE id = :id
                   AND cliente_id = :cliente_id
                   AND fecha_grupo = :fecha_grupo";
         $stmt = $this->conn->prepare($sql);
+        $monto = $montoPositivo - $montoNegativo;
         return $stmt->execute([
             ':id' => $abonoId,
             ':cliente_id' => $clienteId,
             ':fecha_grupo' => $fechaGrupo,
             ':monto' => $monto,
+            ':monto_positivo' => $montoPositivo,
+            ':descripcion_positiva' => $descripcionPositiva,
+            ':monto_negativo' => $montoNegativo,
+            ':descripcion_negativa' => $descripcionNegativa,
             ':metodo_pago' => $metodoPago,
             ':observaciones' => $observaciones,
         ]);
@@ -455,23 +515,35 @@ class FacturacionModels
         int $abonoId,
         int $mensajeroId,
         string $fechaGrupo,
-        float $monto,
+        float $montoPositivo,
+        ?string $descripcionPositiva,
+        float $montoNegativo,
+        ?string $descripcionNegativa,
         string $metodoPago,
         ?string $observaciones
     ): bool {
         $sql = "UPDATE facturacion_abonos_mensajero
                 SET monto = :monto,
+                    monto_positivo = :monto_positivo,
+                    descripcion_positiva = :descripcion_positiva,
+                    monto_negativo = :monto_negativo,
+                    descripcion_negativa = :descripcion_negativa,
                     metodo_pago = :metodo_pago,
                     observaciones = :observaciones
                 WHERE id = :id
                   AND mensajero_id = :mensajero_id
                   AND fecha_grupo = :fecha_grupo";
         $stmt = $this->conn->prepare($sql);
+        $monto = $montoPositivo - $montoNegativo;
         return $stmt->execute([
             ':id' => $abonoId,
             ':mensajero_id' => $mensajeroId,
             ':fecha_grupo' => $fechaGrupo,
             ':monto' => $monto,
+            ':monto_positivo' => $montoPositivo,
+            ':descripcion_positiva' => $descripcionPositiva,
+            ':monto_negativo' => $montoNegativo,
+            ':descripcion_negativa' => $descripcionNegativa,
             ':metodo_pago' => $metodoPago,
             ':observaciones' => $observaciones,
         ]);
@@ -757,6 +829,10 @@ class FacturacionModels
                     a.cliente_id,
                     a.fecha_grupo,
                     a.monto,
+                    a.monto_positivo,
+                    a.descripcion_positiva,
+                    a.monto_negativo,
+                    a.descripcion_negativa,
                     a.metodo_pago,
                     a.observaciones,
                     a.fecha_registro,
@@ -774,6 +850,10 @@ class FacturacionModels
                 'cliente_id' => (int) $row['cliente_id'],
                 'fecha_grupo' => $row['fecha_grupo'],
                 'monto' => (float) $row['monto'],
+                'monto_positivo' => (float) ($row['monto_positivo'] ?? 0),
+                'descripcion_positiva' => $row['descripcion_positiva'] ?? null,
+                'monto_negativo' => (float) ($row['monto_negativo'] ?? 0),
+                'descripcion_negativa' => $row['descripcion_negativa'] ?? null,
                 'metodo_pago' => $row['metodo_pago'],
                 'observaciones' => $row['observaciones'],
                 'fecha_registro' => $row['fecha_registro'],
@@ -866,6 +946,10 @@ class FacturacionModels
                     a.mensajero_id,
                     a.fecha_grupo,
                     a.monto,
+                    a.monto_positivo,
+                    a.descripcion_positiva,
+                    a.monto_negativo,
+                    a.descripcion_negativa,
                     a.metodo_pago,
                     a.observaciones,
                     a.fecha_registro,
@@ -883,6 +967,10 @@ class FacturacionModels
                 'mensajero_id' => (int) $row['mensajero_id'],
                 'fecha_grupo' => $row['fecha_grupo'],
                 'monto' => (float) $row['monto'],
+                'monto_positivo' => (float) ($row['monto_positivo'] ?? 0),
+                'descripcion_positiva' => $row['descripcion_positiva'] ?? null,
+                'monto_negativo' => (float) ($row['monto_negativo'] ?? 0),
+                'descripcion_negativa' => $row['descripcion_negativa'] ?? null,
                 'metodo_pago' => $row['metodo_pago'],
                 'observaciones' => $row['observaciones'],
                 'fecha_registro' => $row['fecha_registro'],
