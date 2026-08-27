@@ -1218,13 +1218,13 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
             if (valorRecaudoHidden) valorRecaudoHidden.value = total;
             if (preview) {
                 preview.style.display = 'block';
-                preview.innerHTML = `Total a cobrar al destinatario: <span style="font-size: 1.2em;">$${total.toLocaleString('es-CO')}</span>`;
+                preview.innerHTML = `<span>Total a cobrar al destinatario:</span> <strong>$${total.toLocaleString('es-CO')}</strong>`;
             }
         } else if (sumarOption && sumarOption.value === 'no') {
             if (valorRecaudoHidden) valorRecaudoHidden.value = baseRecaudoActual;
             if (preview) {
                 preview.style.display = 'block';
-                preview.innerHTML = `Total a cobrar al destinatario: <span style="font-size: 1.2em;">$${baseRecaudoActual.toLocaleString('es-CO')}</span>`;
+                preview.innerHTML = `<span>Total a cobrar al destinatario:</span> <strong>$${baseRecaudoActual.toLocaleString('es-CO')}</strong>`;
             }
         } else {
             if (preview) preview.style.display = 'none';

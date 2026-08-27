@@ -63,3 +63,19 @@ body {
         gap: 1rem;
     }
 }
+.total-destinatario-preview {
+    margin-top: 15px;
+    padding: 18px 20px;
+    border: 1px solid #bde5c8;
+    border-radius: 8px;
+    background-color: #d9f4df;
+    color: #155724;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.total-destinatario-preview strong {
+    font-size: 1.65rem;
+    font-weight: 800;
+}

@@ -574,19 +574,19 @@ $remitente_data = [
                                         <label class="radio-card">
                                             <input type="radio" name="envio_destinatario" value="si" required>
                                             <div class="radio-card-content">
-                                                <strong>SI, SUMAR</strong>
-                                                <small>Cobrar envio al destinatario</small>
+                                                <strong>SÍ, AGREGAR AL RECAUDO</strong>
+                                                <small>cobrar envio al destinatario</small>
                                             </div>
                                         </label>
                                         <label class="radio-card">
                                             <input type="radio" name="envio_destinatario" value="no" required>
                                             <div class="radio-card-content">
-                                                <strong>NO, MANTENER</strong>
-                                                <small>Cobrar solo el valor del producto</small>
+                                                <strong>NO AGREGAR AL RECAUDO</strong>
+                                                <small>no cobrar el envio al destinatario</small>
                                             </div>
                                         </label>
                                     </div>
-                                    <div id="preview_total_recaudo" style="margin-top: 15px; font-weight: bold; color: #155724; background-color: #d4edda; border-color: #c3e6cb; padding: 12px; border-radius: 6px; text-align: center; font-size: 1.1rem; display: none;"></div>
+                                    <div id="preview_total_recaudo" class="total-destinatario-preview" style="display: none;"></div>
                                     <span class="error-message"></span>
                                 </div>
 
