@@ -402,6 +402,10 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
             // Verificamos que existan los datos al momento de hacer clic
             const data = window.remitenteData || {};
+            const autoFillInput = document.getElementById('auto_fill_remitente');
+            if (autoFillInput) {
+                autoFillInput.value = '1';
+            }
             
             // Mapa de IDs de inputs y sus valores correspondientes
             const campos = {

@@ -21,6 +21,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $datos['descripcion_contenido'] = trim((string) ($_POST['descripcion_contenido'] ?? ''));
         $datos['observaciones_recoleccion'] = trim((string) ($_POST['observaciones_recoleccion'] ?? ''));
 
+        $usarDatosMensajero = (string) ($_POST['auto_fill_remitente'] ?? '0') === '1';
+        if ($usarDatosMensajero) {
+            $datosMensajero = $envioModel->obtenerDatosMensajero($usuario_id) ?: [];
+            $nombreMensajero = trim((string) ($datosMensajero['nombre'] ?? ''));
+            $telefonoMensajero = trim((string) ($datosMensajero['telefono'] ?? ''));
+
+            if ($nombreMensajero !== '') {
+                $datos['remitente_nombre'] = $nombreMensajero;
+            }
+            if ($telefonoMensajero !== '') {
+                $datos['remitente_telefono'] = $telefonoMensajero;
+            }
+        }
+
         $datos['tiene_recaudo'] = isset($_POST['tiene_recaudo']) ? 1 : 0;
         $datos['tiene_cambios'] = isset($_POST['recoger_cambios']) ? 1 : 0;
         $datos['envio_destinatario'] = $_POST['envio_destinatario'] ?? 'no';

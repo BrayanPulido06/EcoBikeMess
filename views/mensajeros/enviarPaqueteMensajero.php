@@ -13,7 +13,10 @@ $nombre_remitente = trim((string) (($_SESSION['user_name'] ?? '') . ' ' . ($_SES
 
 try {
     $conn = conexionDB();
-    $sql = "SELECT m.direccion_residencia, u.telefono
+    $sql = "SELECT
+                m.direccion_residencia,
+                u.telefono,
+                TRIM(CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, ''))) AS nombre_completo
             FROM mensajeros m
             JOIN usuarios u ON m.usuario_id = u.id
             WHERE m.usuario_id = :usuario_id";
@@ -23,6 +26,10 @@ try {
     if ($info) {
         $direccion_principal = $info['direccion_residencia'] ?? '';
         $telefono_usuario = $info['telefono'] ?? $telefono_usuario;
+        $nombre_desde_bd = trim((string) ($info['nombre_completo'] ?? ''));
+        if ($nombre_desde_bd !== '') {
+            $nombre_remitente = $nombre_desde_bd;
+        }
     }
 } catch (Exception $e) {
     error_log("Error al obtener datos del mensajero: " . $e->getMessage());
@@ -388,6 +395,7 @@ $remitente_data = [
 
             <!-- Formulario Multi-Step -->
             <form id="envioForm" class="envio-form" action="../../controller/enviarPaqueteMensajeroController.php" method="POST" novalidate>
+                <input type="hidden" id="auto_fill_remitente" name="auto_fill_remitente" value="0">
                 
                 <!-- PASO 1: DATOS DEL REMITENTE -->
                 <div class="form-step active" data-step="1">
@@ -765,8 +773,8 @@ $remitente_data = [
 
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/rotuloShared.js?v=20260721-4"></script>
-    <script src="../../public/js/enviarPaquete.js?v=20260721-1"></script>
-    <script src="../../public/js/enviarPaqueteMensajero.js?v=20260615-2"></script>
+    <script src="../../public/js/enviarPaquete.js?v=20260828-1"></script>
+    <script src="../../public/js/enviarPaqueteMensajero.js?v=20260828-1"></script>
     <script src="../../public/js/mensajeroLayout.js?v=20260528-1"></script>
     <script src="../../public/js/mensajeroBackGuard.js?v=20260615-1"></script>
 </body>

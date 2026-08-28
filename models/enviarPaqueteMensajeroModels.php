@@ -50,6 +50,23 @@ class EnvioMensajeroModel
         return (int) $stmt->fetchColumn() > 0;
     }
 
+    public function obtenerDatosMensajero(int $usuarioId): ?array
+    {
+        $sql = "SELECT
+                    TRIM(CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, ''))) AS nombre,
+                    u.telefono,
+                    m.direccion_residencia
+                FROM mensajeros m
+                INNER JOIN usuarios u ON u.id = m.usuario_id
+                WHERE m.usuario_id = :usuario_id
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':usuario_id' => $usuarioId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: null;
+    }
+
     public function obtenerOCrearClienteOperativo(int $usuarioId, array $usuarioSesion): int
     {
         $stmt = $this->conn->prepare("SELECT id FROM clientes WHERE usuario_id = :usuario_id LIMIT 1");
