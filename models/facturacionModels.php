@@ -22,6 +22,7 @@ class FacturacionModels
         $this->ensureClienteBankColumns();
         $this->ensurePerformanceIndexes();
         $this->syncPackageClientFromRemitente();
+        $this->syncDeliveredPackageDates();
         $this->syncFacturacionRows();
     }
 
@@ -115,6 +116,7 @@ class FacturacionModels
     private function syncPackageClientFromRemitente(): void
     {
         $matchCondition = $this->clientRemitenteMatchSql('c_match', 'p.remitente_nombre');
+        $currentMatchCondition = $this->clientRemitenteMatchSql('c_actual', 'p.remitente_nombre');
 
         $sql = "UPDATE paquetes p
                 INNER JOIN clientes c_actual ON c_actual.id = p.cliente_id
@@ -123,7 +125,16 @@ class FacturacionModels
                    AND c_match.id <> p.cliente_id
                 SET p.cliente_id = c_match.id
                 WHERE TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')
-                  AND COALESCE(NULLIF(c_actual.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero%'";
+                  AND (
+                      COALESCE(NULLIF(c_actual.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero%'
+                      OR c_actual.id NOT IN (
+                          SELECT cc_cliente.cliente_id
+                          FROM colaboradores_cliente cc_cliente
+                          WHERE cc_cliente.cliente_id = c_actual.id
+                            AND cc_cliente.usuario_id = p.creado_por
+                      )
+                  )
+                  AND NOT {$currentMatchCondition}";
         $this->conn->exec($sql);
     }
 
@@ -145,6 +156,17 @@ class FacturacionModels
                          OR (f.mensajero_id IS NOT NULL AND p.mensajero_id IS NULL)
                          OR (f.mensajero_id <> p.mensajero_id)";
         $this->conn->exec($updateSql);
+    }
+
+    private function syncDeliveredPackageDates(): void
+    {
+        $this->conn->exec(
+            "UPDATE paquetes p
+             LEFT JOIN entregas e ON e.paquete_id = p.id
+             SET p.fecha_entrega = COALESCE(e.fecha_entrega, p.fecha_creacion)
+             WHERE p.estado = 'entregado'
+               AND p.fecha_entrega IS NULL"
+        );
     }
 
     private function ensureAbonosClienteTable(): void
@@ -1156,7 +1178,7 @@ class FacturacionModels
                     ) AS cliente_contacto
                 FROM paquetes p
                 INNER JOIN clientes c ON c.id = p.cliente_id
-                INNER JOIN usuarios uc ON uc.id = c.usuario_id
+                LEFT JOIN usuarios uc ON uc.id = c.usuario_id
                 LEFT JOIN clientes c_match
                     ON {$clienteMatchCondition}
                    AND c_match.id <> p.cliente_id

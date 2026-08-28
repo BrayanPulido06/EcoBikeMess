@@ -682,10 +682,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const buildClienteGroups = (items) => {
-        const searchText = normalizeText(state.filters.cliente.q);
+        const clientFilter = state.filters.cliente || {};
+        const searchText = normalizeText(clientFilter.q);
+        const isAdminAuditFilter = mode === 'admin' && (searchText || clientFilter.desde || clientFilter.hasta);
         const filtered = items
             .filter((item) => matchesFilter(item, 'cliente'))
-            .filter((item) => !item.oculto || (mode === 'admin' && searchText));
+            .filter((item) => !item.oculto || isAdminAuditFilter);
         const groupsMap = new Map();
 
         filtered.forEach((item) => {
