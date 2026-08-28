@@ -1131,7 +1131,16 @@ class FacturacionModels
     {
         $params = [];
         $conditions = ["p.estado = 'entregado'"];
-        $clienteFacturacionExpr = 'COALESCE(c_match.id, c_colaborador.id, c_creador.id, c.id)';
+        $clienteFacturacionExpr = "COALESCE(
+            c_match.id,
+            CASE
+                WHEN COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') NOT LIKE 'Operativo Mensajero%' THEN c.id
+                ELSE NULL
+            END,
+            c_colaborador.id,
+            c_creador.id,
+            c.id
+        )";
         $clienteMatchCondition = $this->clientRemitenteMatchSql('c_match', 'p.remitente_nombre');
 
         if ($clienteId !== null) {
