@@ -94,12 +94,20 @@ class FacturacionModels
         return "(
                     {$clienteNombre} = {$remitente}
                     OR (CHAR_LENGTH({$clienteNombre}) >= 4 AND {$remitente} LIKE CONCAT('%', {$clienteNombre}, '%'))
+                    OR (CHAR_LENGTH({$remitente}) >= 4 AND {$clienteNombre} LIKE CONCAT('%', {$remitente}, '%'))
                     OR EXISTS (
                         SELECT 1
                         FROM usuarios u_cliente_match
                         WHERE u_cliente_match.id = {$clienteAlias}.usuario_id
                           AND CHAR_LENGTH({$contacto}) >= 4
                           AND {$remitente} LIKE CONCAT('%', {$contacto}, '%')
+                    )
+                    OR EXISTS (
+                        SELECT 1
+                        FROM usuarios u_cliente_match
+                        WHERE u_cliente_match.id = {$clienteAlias}.usuario_id
+                          AND CHAR_LENGTH({$remitente}) >= 4
+                          AND {$contacto} LIKE CONCAT('%', {$remitente}, '%')
                     )
                 )";
     }

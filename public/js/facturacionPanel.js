@@ -691,9 +691,11 @@ document.addEventListener('DOMContentLoaded', () => {
         filtered.forEach((item) => {
             const baseDate = item.fecha_entrega || item.fecha_ingreso;
             const dateKey = dateKeyFromValue(baseDate);
-            const displayName = clientDisplayName(item);
-            const clientKey = normalizeClientStoreKey(clientBusinessGroupName(item) || displayName || 'cliente');
             const clientId = Number(item.cliente_id || 0);
+            const displayName = clientDisplayName(item);
+            const clientKey = clientId > 0
+                ? `cliente:${clientId}`
+                : normalizeClientStoreKey(clientBusinessGroupName(item) || displayName || 'cliente');
             const groupKey = `${dateKey}__${clientKey}`;
 
             if (!groupsMap.has(groupKey)) {
