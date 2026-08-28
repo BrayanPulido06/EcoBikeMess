@@ -1133,7 +1133,11 @@ class FacturacionModels
                     COALESCE(f.costo_adicional_servicio, 0) AS costo_adicional_servicio,
                     COALESCE(f.observaciones_admin, '') AS observaciones_admin,
                     {$clienteFacturacionExpr} AS cliente_id,
-                    COALESCE(c_match.nombre_emprendimiento, c.nombre_emprendimiento) AS cliente_nombre,
+                    COALESCE(
+                        NULLIF(c_match.nombre_emprendimiento, ''),
+                        NULLIF(NULLIF(TRIM(p.remitente_nombre), 'Pendiente por definir'), '-'),
+                        NULLIF(c.nombre_emprendimiento, '')
+                    ) AS cliente_nombre,
                     COALESCE(c_match.cuenta_bancaria_principal, c.cuenta_bancaria_principal) AS cuenta_bancaria_principal,
                     COALESCE(c_match.cuenta_bancaria_opcional_1, c.cuenta_bancaria_opcional_1) AS cuenta_bancaria_opcional_1,
                     COALESCE(c_match.cuenta_bancaria_opcional_2, c.cuenta_bancaria_opcional_2) AS cuenta_bancaria_opcional_2,
@@ -1321,6 +1325,7 @@ class FacturacionModels
                 'fecha_entrega' => $row['fecha_entrega'],
                 'estado' => $row['estado'],
                 'cliente_id' => (int) $row['cliente_id'],
+                'remitente_nombre' => trim((string) ($row['remitente_nombre'] ?? '')),
                 'cliente_nombre' => (
                     stripos(trim((string) $row['cliente_nombre']), 'Operativo Mensajero') === 0
                     && trim((string) ($row['remitente_nombre'] ?? '')) !== ''

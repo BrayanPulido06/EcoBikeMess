@@ -294,6 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const haystack = panel === 'cliente'
             ? [
                 item.numero_guia,
+                item.remitente_nombre,
                 item.cliente_nombre,
                 item.cliente_contacto,
                 item.destinatario_nombre
@@ -301,6 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
             : panel === 'ecobikemess'
                 ? [
                     item.numero_guia,
+                    item.remitente_nombre,
                     item.cliente_nombre,
                     item.cliente_contacto,
                     item.mensajero_nombre,
