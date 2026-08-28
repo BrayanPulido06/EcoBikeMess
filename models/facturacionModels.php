@@ -1298,9 +1298,7 @@ class FacturacionModels
             $fechaBase = (string) ($row['fecha_entrega'] ?: $row['fecha_creacion']);
             $fechaDia = substr($fechaBase, 0, 10);
             $hiddenKey = (int) $row['cliente_id'] . '__' . $fechaDia;
-            if (isset($hiddenMap[$hiddenKey])) {
-                continue;
-            }
+            $grupoOculto = isset($hiddenMap[$hiddenKey]);
 
             $valorEnvioBase = (float) $row['costo_envio'];
             $costoAdicional = (float) ($row['costo_adicional_servicio'] ?? 0);
@@ -1324,6 +1322,7 @@ class FacturacionModels
                 'fecha_ingreso' => $row['fecha_creacion'],
                 'fecha_entrega' => $row['fecha_entrega'],
                 'estado' => $row['estado'],
+                'oculto' => $grupoOculto,
                 'cliente_id' => (int) $row['cliente_id'],
                 'remitente_nombre' => trim((string) ($row['remitente_nombre'] ?? '')),
                 'cliente_nombre' => (
