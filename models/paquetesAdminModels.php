@@ -102,6 +102,25 @@ class PaquetesAdminModel {
         }
     }
 
+    private function normalizedSql(string $expr): string
+    {
+        return "LOWER(REPLACE(REPLACE(TRIM(COALESCE({$expr}, '')), ' ', ''), CHAR(160), ''))";
+    }
+
+    private function clientRemitenteMatchSql(string $clienteAlias, string $remitenteExpr): string
+    {
+        $clienteNombre = $this->normalizedSql("{$clienteAlias}.nombre_emprendimiento");
+        $clienteFallback = $this->normalizedSql("CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, ''))");
+        $remitente = $this->normalizedSql($remitenteExpr);
+
+        return "(
+                    {$clienteNombre} = {$remitente}
+                    OR {$clienteFallback} = {$remitente}
+                    OR (CHAR_LENGTH({$clienteNombre}) >= 4 AND {$remitente} LIKE CONCAT('%', {$clienteNombre}, '%'))
+                    OR (CHAR_LENGTH({$clienteFallback}) >= 4 AND {$remitente} LIKE CONCAT('%', {$clienteFallback}, '%'))
+                )";
+    }
+
     public function getFechaEntregaFacturacion(int $paqueteId): ?string
     {
         try {
@@ -127,11 +146,13 @@ class PaquetesAdminModel {
             return null;
         }
 
+        $matchCondition = $this->clientRemitenteMatchSql('c', ':nombre');
+
         $sql = "SELECT c.id,
                        COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos)) AS nombre
                 FROM clientes c
                 LEFT JOIN usuarios u ON c.usuario_id = u.id
-                WHERE LOWER(REPLACE(REPLACE(TRIM(COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos))), ' ', ''), CHAR(160), '')) = LOWER(REPLACE(REPLACE(TRIM(:nombre), ' ', ''), CHAR(160), ''))
+                WHERE {$matchCondition}
                 LIMIT 1";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':nombre' => $remitente]);

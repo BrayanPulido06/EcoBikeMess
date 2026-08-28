@@ -80,12 +80,38 @@ class FacturacionModels
         $this->ensureColumn('clientes', 'cuenta_bancaria_opcional_3', "ALTER TABLE clientes ADD COLUMN cuenta_bancaria_opcional_3 TEXT NULL AFTER cuenta_bancaria_opcional_2");
     }
 
+    private function normalizedSql(string $expr): string
+    {
+        return "LOWER(REPLACE(REPLACE(TRIM(COALESCE({$expr}, '')), ' ', ''), CHAR(160), ''))";
+    }
+
+    private function clientRemitenteMatchSql(string $clienteAlias, string $remitenteExpr): string
+    {
+        $clienteNombre = $this->normalizedSql("{$clienteAlias}.nombre_emprendimiento");
+        $remitente = $this->normalizedSql($remitenteExpr);
+        $contacto = $this->normalizedSql("CONCAT(COALESCE(u_cliente_match.nombres, ''), ' ', COALESCE(u_cliente_match.apellidos, ''))");
+
+        return "(
+                    {$clienteNombre} = {$remitente}
+                    OR (CHAR_LENGTH({$clienteNombre}) >= 4 AND {$remitente} LIKE CONCAT('%', {$clienteNombre}, '%'))
+                    OR EXISTS (
+                        SELECT 1
+                        FROM usuarios u_cliente_match
+                        WHERE u_cliente_match.id = {$clienteAlias}.usuario_id
+                          AND CHAR_LENGTH({$contacto}) >= 4
+                          AND {$remitente} LIKE CONCAT('%', {$contacto}, '%')
+                    )
+                )";
+    }
+
     private function syncPackageClientFromRemitente(): void
     {
+        $matchCondition = $this->clientRemitenteMatchSql('c_match', 'p.remitente_nombre');
+
         $sql = "UPDATE paquetes p
                 INNER JOIN clientes c_actual ON c_actual.id = p.cliente_id
                 INNER JOIN clientes c_match
-                    ON LOWER(REPLACE(REPLACE(TRIM(c_match.nombre_emprendimiento), ' ', ''), CHAR(160), '')) = LOWER(REPLACE(REPLACE(TRIM(p.remitente_nombre), ' ', ''), CHAR(160), ''))
+                    ON {$matchCondition}
                    AND c_match.id <> p.cliente_id
                 SET p.cliente_id = c_match.id
                 WHERE TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')
@@ -1076,6 +1102,7 @@ class FacturacionModels
         $params = [];
         $conditions = ["p.estado = 'entregado'"];
         $clienteFacturacionExpr = 'COALESCE(c_match.id, c.id)';
+        $clienteMatchCondition = $this->clientRemitenteMatchSql('c_match', 'p.remitente_nombre');
 
         if ($clienteId !== null) {
             $conditions[] = "{$clienteFacturacionExpr} = :cliente_id";
@@ -1119,7 +1146,7 @@ class FacturacionModels
                 INNER JOIN clientes c ON c.id = p.cliente_id
                 INNER JOIN usuarios uc ON uc.id = c.usuario_id
                 LEFT JOIN clientes c_match
-                    ON LOWER(REPLACE(REPLACE(TRIM(c_match.nombre_emprendimiento), ' ', ''), CHAR(160), '')) = LOWER(REPLACE(REPLACE(TRIM(p.remitente_nombre), ' ', ''), CHAR(160), ''))
+                    ON {$clienteMatchCondition}
                    AND c_match.id <> p.cliente_id
                    AND COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero%'
                 LEFT JOIN usuarios uc_match ON uc_match.id = c_match.usuario_id
