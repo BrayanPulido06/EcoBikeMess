@@ -1325,15 +1325,6 @@ class FacturacionModels
         ];
         $diario = [];
 
-        foreach ($rows as $row) {
-            $fechaBase = (string) ($row['fecha_entrega'] ?: $row['fecha_creacion']);
-            $fechaDia = substr($fechaBase, 0, 10);
-            if (!isset($diario[$fechaDia])) {
-                $diario[$fechaDia] = 0;
-            }
-            $diario[$fechaDia]++;
-        }
-
         $hiddenMap = [];
         if ($aplicarOcultos) {
             $hiddenGroups = $this->obtenerGruposClienteOcultos();
@@ -1346,7 +1337,24 @@ class FacturacionModels
             $fechaBase = (string) ($row['fecha_entrega'] ?: $row['fecha_creacion']);
             $fechaDia = substr($fechaBase, 0, 10);
             $hiddenKey = (int) $row['cliente_id'] . '__' . $fechaDia;
+            if (isset($hiddenMap[$hiddenKey])) {
+                continue;
+            }
+
+            if (!isset($diario[$fechaDia])) {
+                $diario[$fechaDia] = 0;
+            }
+            $diario[$fechaDia]++;
+        }
+
+        foreach ($rows as $row) {
+            $fechaBase = (string) ($row['fecha_entrega'] ?: $row['fecha_creacion']);
+            $fechaDia = substr($fechaBase, 0, 10);
+            $hiddenKey = (int) $row['cliente_id'] . '__' . $fechaDia;
             $grupoOculto = isset($hiddenMap[$hiddenKey]);
+            if ($grupoOculto) {
+                continue;
+            }
 
             $valorEnvioBase = (float) $row['costo_envio'];
             $costoAdicional = (float) ($row['costo_adicional_servicio'] ?? 0);
