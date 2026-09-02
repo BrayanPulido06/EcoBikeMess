@@ -682,7 +682,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const buildClienteGroups = (items) => {
-        const clientFilter = state.filters.cliente || {};
         const filtered = items
             .filter((item) => matchesFilter(item, 'cliente'))
             .filter((item) => !item.oculto);
@@ -693,9 +692,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const dateKey = dateKeyFromValue(baseDate);
             const clientId = Number(item.cliente_id || 0);
             const displayName = clientDisplayName(item);
-            const clientKey = clientId > 0
-                ? `cliente:${clientId}`
-                : normalizeClientStoreKey(clientBusinessGroupName(item) || displayName || 'cliente');
+            const clientNameKey = normalizeClientStoreKey(clientBusinessGroupName(item) || displayName || '');
+            const clientKey = clientNameKey || (clientId > 0 ? `cliente:${clientId}` : 'cliente');
             const groupKey = `${dateKey}__${clientKey}`;
 
             if (!groupsMap.has(groupKey)) {
