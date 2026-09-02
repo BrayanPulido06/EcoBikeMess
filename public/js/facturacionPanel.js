@@ -475,9 +475,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const buildClienteFolders = (groups) => {
         const folders = new Map();
+        const clientsWithPending = new Set(
+            groups
+                .filter((group) => group.estado !== 'pagado')
+                .map((group) => group.clientKey)
+        );
 
         groups.forEach((group) => {
             const key = group.clientKey;
+            if (!clientsWithPending.has(key)) {
+                return;
+            }
+
             if (!folders.has(key)) {
                 folders.set(key, {
                     key,
