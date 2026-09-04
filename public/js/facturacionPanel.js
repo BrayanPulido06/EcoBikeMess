@@ -511,9 +511,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        return Array.from(folders.values()).sort((a, b) => (
-            a.clienteNombre.localeCompare(b.clienteNombre, 'es', { sensitivity: 'base' })
-        ));
+        const estadoFilter = state.filters.cliente?.estado || '';
+        return Array.from(folders.values())
+            .filter((folder) => {
+                if (!estadoFilter) {
+                    return true;
+                }
+
+                const clientGroups = groups.filter((group) => group.clientKey === folder.key);
+                const hasPending = clientGroups.some((group) => group.estado !== 'pagado');
+                return estadoFilter === 'pendiente' ? hasPending : !hasPending;
+            })
+            .sort((a, b) => (
+                a.clienteNombre.localeCompare(b.clienteNombre, 'es', { sensitivity: 'base' })
+            ));
     };
 
     const renderClienteFolders = (folders) => {
@@ -682,7 +693,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const buildClienteGroups = (items) => {
-        const estadoFilter = state.filters.cliente?.estado || '';
         const filtered = items
             .filter((item) => matchesFilter(item, 'cliente'))
             .filter((item) => !item.oculto);
@@ -784,7 +794,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     estado: estadoManual || groupStatusFromBalance(balance)
                 };
             })
-            .filter((group) => !estadoFilter || group.estado === estadoFilter)
             .sort((a, b) => {
                 if (a.dateKey === b.dateKey) {
                     return a.clienteNombre.localeCompare(b.clienteNombre, 'es', { sensitivity: 'base' });
@@ -1032,8 +1041,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const groups = buildClienteGroups(items);
         const folders = mode === 'admin' ? buildClienteFolders(groups) : [];
         const selectedFolder = folders.find((folder) => folder.key === state.selectedClienteFolderKey) || null;
+        const visibleFolderKeys = new Set(folders.map((folder) => folder.key));
         const visibleGroups = mode === 'admin' && selectedFolder
             ? groups.filter((group) => group.clientKey === selectedFolder.key)
+            : mode === 'admin'
+                ? groups.filter((group) => visibleFolderKeys.has(group.clientKey))
             : groups;
         state.clienteSummaryGroups = visibleGroups;
         state.clienteGroups = mode === 'admin' && !selectedFolder ? [] : visibleGroups;
