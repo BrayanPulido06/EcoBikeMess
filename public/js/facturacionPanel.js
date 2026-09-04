@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return false;
         }
 
-        if (filter.estado && item.estado !== filter.estado) {
+        if (filter.estado && item.estado !== filter.estado && !(mode === 'admin' && panel === 'cliente')) {
             return false;
         }
 
@@ -682,6 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const buildClienteGroups = (items) => {
+        const estadoFilter = state.filters.cliente?.estado || '';
         const filtered = items
             .filter((item) => matchesFilter(item, 'cliente'))
             .filter((item) => !item.oculto);
@@ -783,6 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     estado: estadoManual || groupStatusFromBalance(balance)
                 };
             })
+            .filter((group) => !estadoFilter || group.estado === estadoFilter)
             .sort((a, b) => {
                 if (a.dateKey === b.dateKey) {
                     return a.clienteNombre.localeCompare(b.clienteNombre, 'es', { sensitivity: 'base' });
