@@ -22,6 +22,7 @@ class FacturacionModels
         $this->ensureClienteBankColumns();
         $this->ensurePerformanceIndexes();
         $this->syncPackageClientFromRemitente();
+        $this->syncLuisTNoLabelPackagesToLuisAlejandro();
         $this->syncMessengerCreatedPackagesToCreatorClient();
         $this->syncDeliveredPackageDates();
         $this->syncFacturacionRows();
@@ -118,6 +119,14 @@ class FacturacionModels
     {
         $matchCondition = $this->clientRemitenteMatchSql('c_match', 'p.remitente_nombre');
         $currentMatchCondition = $this->clientRemitenteMatchSql('c_actual', 'p.remitente_nombre');
+        $sinRotuloConRemitenteReal = "(
+            (
+                COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
+                OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
+            )
+            AND TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')
+        )";
 
         $sql = "UPDATE paquetes p
                 INNER JOIN clientes c_actual ON c_actual.id = p.cliente_id
@@ -139,8 +148,36 @@ class FacturacionModels
                       SELECT 1
                       FROM mensajeros m_creador
                       WHERE m_creador.usuario_id = p.creado_por
+                        AND NOT {$sinRotuloConRemitenteReal}
                   )
                   AND NOT {$currentMatchCondition}";
+        $this->conn->exec($sql);
+    }
+
+    private function syncLuisTNoLabelPackagesToLuisAlejandro(): void
+    {
+        $sql = "UPDATE paquetes p
+                INNER JOIN (
+                    SELECT c.id
+                    FROM clientes c
+                    LEFT JOIN usuarios u ON u.id = c.usuario_id
+                    WHERE LOWER(REPLACE(REPLACE(TRIM(COALESCE(c.nombre_emprendimiento, '')), ' ', ''), CHAR(160), '')) LIKE '%luisalejandrotorresavila%'
+                       OR LOWER(REPLACE(REPLACE(TRIM(CONCAT(COALESCE(u.nombres, ''), COALESCE(u.apellidos, ''))), ' ', ''), CHAR(160), '')) = 'luisalejandrotorresavila'
+                    ORDER BY CASE
+                        WHEN LOWER(REPLACE(REPLACE(TRIM(CONCAT(COALESCE(u.nombres, ''), COALESCE(u.apellidos, ''))), ' ', ''), CHAR(160), '')) = 'luisalejandrotorresavila' THEN 0
+                        ELSE 1
+                    END,
+                    c.id ASC
+                    LIMIT 1
+                ) c_luis
+                SET p.cliente_id = c_luis.id
+                WHERE LOWER(REPLACE(REPLACE(TRIM(COALESCE(p.remitente_nombre, '')), ' ', ''), CHAR(160), '')) = 'luist'
+                  AND (
+                      COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                      OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
+                      OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
+                  )
+                  AND p.cliente_id <> c_luis.id";
         $this->conn->exec($sql);
     }
 
@@ -162,7 +199,15 @@ class FacturacionModels
                     GROUP BY usuario_id
                 ) c_creador ON c_creador.usuario_id = p.creado_por
                 SET p.cliente_id = c_creador.id
-                WHERE p.cliente_id <> c_creador.id";
+                WHERE p.cliente_id <> c_creador.id
+                  AND NOT (
+                      (
+                          COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                          OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
+                          OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
+                      )
+                      AND TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')
+                  )";
         $this->conn->exec($sql);
     }
 
@@ -1165,7 +1210,16 @@ class FacturacionModels
                     SELECT 1
                     FROM mensajeros m_creador_expr
                     WHERE m_creador_expr.usuario_id = p.creado_por
-                ) THEN c_creador.id
+                )
+                AND NOT (
+                    (
+                        COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                        OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
+                        OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
+                    )
+                    AND TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')
+                )
+                THEN c_creador.id
                 ELSE NULL
             END,
             c_match.id,
