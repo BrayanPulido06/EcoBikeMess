@@ -123,6 +123,24 @@ body.sidebar-collapsed .notas-admin-shell,
     padding: 0.9rem 0.9rem 0.55rem;
 }
 
+.notas-drag-list-btn {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    color: #7a8795;
+    cursor: grab;
+    line-height: 1;
+}
+
+.notas-drag-list-btn:active {
+    cursor: grabbing;
+}
+
+.notas-list.is-dragging {
+    opacity: 0.55;
+    transform: rotate(1deg);
+}
+
 .notas-list-title {
     flex: 1;
     min-width: 0;

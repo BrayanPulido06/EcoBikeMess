@@ -54,6 +54,13 @@ try {
             throw new InvalidArgumentException('Lista invalida.');
         }
         $model->eliminarLista($listaId);
+    } elseif ($action === 'reordenar_listas') {
+        $ordenRaw = (string) ($_POST['orden'] ?? '');
+        $orden = json_decode($ordenRaw, true);
+        if (!is_array($orden)) {
+            throw new InvalidArgumentException('Orden de listas invalido.');
+        }
+        $model->reordenarListas($orden);
     } elseif ($action === 'crear_tarjeta') {
         $listaId = (int) ($_POST['lista_id'] ?? 0);
         $titulo = notasAdminCleanText($_POST['titulo'] ?? '', 180);

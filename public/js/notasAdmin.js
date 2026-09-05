@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let state = { listas: [] };
     let searchText = '';
     let refreshInProgress = false;
+    let draggedListId = null;
 
     const setStatus = (message) => {
         if (statusEl) statusEl.textContent = message || '';
@@ -66,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return Boolean(
             isModalOpen()
             || board?.querySelector('[data-role="list-form"]')
+            || draggedListId
             || active?.closest?.('[data-role="list-title"]')
         );
     };
@@ -133,6 +135,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             <section class="notas-list" data-list-id="${list.id}">
                 <div class="notas-list-head">
+                    <button
+                        type="button"
+                        class="notas-icon-btn notas-drag-list-btn"
+                        data-role="drag-list"
+                        data-list-id="${list.id}"
+                        draggable="${searchText ? 'false' : 'true'}"
+                        title="${searchText ? 'Limpia el filtro para mover listas' : 'Mover lista'}"
+                        aria-label="Mover lista"
+                    >&#8942;&#8942;</button>
                     <input
                         class="notas-list-title"
                         type="text"
@@ -173,6 +184,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!board) return;
         const lists = filterLists(Array.isArray(state.listas) ? state.listas : []);
         board.innerHTML = `${lists.map(renderList).join('')}${renderAddList()}`;
+    };
+
+    const getListAfterPointer = (targetList, clientX) => {
+        const rect = targetList.getBoundingClientRect();
+        return clientX > rect.left + (rect.width / 2);
+    };
+
+    const getCurrentListOrder = () => Array.from(board?.querySelectorAll('.notas-list[data-list-id]') || [])
+        .map((listEl) => Number(listEl.dataset.listId))
+        .filter((id) => id > 0);
+
+    const saveListOrder = () => {
+        if (searchText) return;
+        const orden = getCurrentListOrder();
+        if (!orden.length) return;
+        postAction('reordenar_listas', { orden: JSON.stringify(orden) }).catch((error) => {
+            alert(error.message);
+            fetchBoard().catch((fetchError) => setStatus(fetchError.message));
+        });
     };
 
     const findCard = (cardId) => {
@@ -245,6 +275,49 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!confirm('Eliminar esta lista y sus tarjetas?')) return;
             postAction('eliminar_lista', { lista_id: deleteListButton.dataset.listId }).catch((error) => alert(error.message));
         }
+    });
+
+    board?.addEventListener('dragstart', (event) => {
+        const dragButton = event.target.closest('[data-role="drag-list"]');
+        if (!dragButton || searchText) {
+            event.preventDefault();
+            return;
+        }
+
+        const listEl = dragButton.closest('.notas-list');
+        if (!listEl) return;
+
+        draggedListId = listEl.dataset.listId;
+        listEl.classList.add('is-dragging');
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', draggedListId);
+    });
+
+    board?.addEventListener('dragover', (event) => {
+        if (!draggedListId || searchText) return;
+
+        const targetList = event.target.closest('.notas-list');
+        const draggedList = board.querySelector(`.notas-list[data-list-id="${draggedListId}"]`);
+        if (!targetList || !draggedList || targetList === draggedList) return;
+
+        event.preventDefault();
+        const shouldPlaceAfter = getListAfterPointer(targetList, event.clientX);
+        if (shouldPlaceAfter) {
+            targetList.after(draggedList);
+        } else {
+            targetList.before(draggedList);
+        }
+    });
+
+    board?.addEventListener('drop', (event) => {
+        if (!draggedListId || searchText) return;
+        event.preventDefault();
+        saveListOrder();
+    });
+
+    board?.addEventListener('dragend', () => {
+        board.querySelector('.notas-list.is-dragging')?.classList.remove('is-dragging');
+        draggedListId = null;
     });
 
     board?.addEventListener('submit', (event) => {

@@ -114,6 +114,38 @@ class NotasAdminModels
         return $stmt->execute([':id' => $listaId]);
     }
 
+    public function reordenarListas(array $listaIds): void
+    {
+        $listaIds = array_values(array_unique(array_filter(array_map('intval', $listaIds), fn($id) => $id > 0)));
+        if ($listaIds === []) {
+            throw new InvalidArgumentException('Orden de listas invalido.');
+        }
+
+        $placeholders = implode(',', array_fill(0, count($listaIds), '?'));
+        $stmtExiste = $this->conn->prepare("SELECT id FROM notas_admin_listas WHERE id IN ($placeholders)");
+        $stmtExiste->execute($listaIds);
+        $idsExistentes = array_map('intval', $stmtExiste->fetchAll(PDO::FETCH_COLUMN));
+
+        if (count($idsExistentes) !== count($listaIds)) {
+            throw new InvalidArgumentException('Una de las listas no existe.');
+        }
+
+        $this->conn->beginTransaction();
+        try {
+            $stmt = $this->conn->prepare("UPDATE notas_admin_listas SET posicion = :posicion WHERE id = :id");
+            foreach ($listaIds as $index => $listaId) {
+                $stmt->execute([
+                    ':posicion' => $index + 1,
+                    ':id' => $listaId,
+                ]);
+            }
+            $this->conn->commit();
+        } catch (Throwable $e) {
+            $this->conn->rollBack();
+            throw $e;
+        }
+    }
+
     public function crearTarjeta(int $listaId, string $titulo, string $descripcion, ?int $creadoPor): int
     {
         $this->asegurarListaExiste($listaId);
