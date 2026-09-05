@@ -22,6 +22,7 @@ class FacturacionModels
         $this->ensureClienteBankColumns();
         $this->ensurePerformanceIndexes();
         $this->syncPackageClientFromRemitente();
+        $this->syncMessengerCreatedPackagesToCreatorClient();
         $this->syncDeliveredPackageDates();
         $this->syncFacturacionRows();
     }
@@ -134,7 +135,34 @@ class FacturacionModels
                             AND cc_cliente.usuario_id = p.creado_por
                       )
                   )
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM mensajeros m_creador
+                      WHERE m_creador.usuario_id = p.creado_por
+                  )
                   AND NOT {$currentMatchCondition}";
+        $this->conn->exec($sql);
+    }
+
+    private function syncMessengerCreatedPackagesToCreatorClient(): void
+    {
+        $sql = "UPDATE paquetes p
+                INNER JOIN mensajeros m_creador ON m_creador.usuario_id = p.creado_por
+                INNER JOIN (
+                    SELECT usuario_id,
+                           COALESCE(
+                               MIN(CASE
+                                   WHEN COALESCE(NULLIF(nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero%' THEN id
+                                   ELSE NULL
+                               END),
+                               MIN(id)
+                           ) AS id
+                    FROM clientes
+                    WHERE usuario_id IS NOT NULL
+                    GROUP BY usuario_id
+                ) c_creador ON c_creador.usuario_id = p.creado_por
+                SET p.cliente_id = c_creador.id
+                WHERE p.cliente_id <> c_creador.id";
         $this->conn->exec($sql);
     }
 
@@ -1132,6 +1160,14 @@ class FacturacionModels
         $params = [];
         $conditions = ["p.estado = 'entregado'"];
         $clienteFacturacionExpr = "COALESCE(
+            CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM mensajeros m_creador_expr
+                    WHERE m_creador_expr.usuario_id = p.creado_por
+                ) THEN c_creador.id
+                ELSE NULL
+            END,
             c_match.id,
             CASE
                 WHEN COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') NOT LIKE 'Operativo Mensajero%' THEN c.id
@@ -1188,7 +1224,19 @@ class FacturacionModels
                 FROM paquetes p
                 INNER JOIN clientes c ON c.id = p.cliente_id
                 LEFT JOIN usuarios uc ON uc.id = c.usuario_id
-                LEFT JOIN clientes c_creador ON c_creador.usuario_id = p.creado_por
+                LEFT JOIN (
+                    SELECT usuario_id,
+                           COALESCE(
+                               MIN(CASE
+                                   WHEN COALESCE(NULLIF(nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero%' THEN id
+                                   ELSE NULL
+                               END),
+                               MIN(id)
+                           ) AS id
+                    FROM clientes
+                    WHERE usuario_id IS NOT NULL
+                    GROUP BY usuario_id
+                ) c_creador ON c_creador.usuario_id = p.creado_por
                 LEFT JOIN (
                     SELECT usuario_id, MIN(cliente_id) AS cliente_id
                     FROM colaboradores_cliente
@@ -1363,6 +1411,19 @@ class FacturacionModels
             $recaudoReal = (float) $row['recaudo_real'];
             $saldoRegistro = $recaudoReal - $valorEnvio;
             $agregadoRecaudo = ($row['envio_destinatario'] ?? 'no') === 'si';
+            $clienteNombreRaw = trim((string) ($row['cliente_nombre'] ?? ''));
+            $clienteContactoRaw = trim((string) ($row['cliente_contacto'] ?? ''));
+            $remitenteRaw = trim((string) ($row['remitente_nombre'] ?? ''));
+            $esOperativoMensajero = stripos($clienteNombreRaw, 'Operativo Mensajero') === 0;
+            $clienteNombreFacturacion = $clienteNombreRaw;
+            $clienteContactoFacturacion = $clienteContactoRaw;
+
+            if ($esOperativoMensajero) {
+                $clienteNombreFacturacion = $clienteContactoRaw !== ''
+                    ? $clienteContactoRaw
+                    : trim((string) preg_replace('/^Operativo Mensajero\s*-\s*/i', '', $clienteNombreRaw));
+                $clienteContactoFacturacion = '';
+            }
 
             $totales['saldo_actual'] += $saldoRegistro;
             $totales['total_envios'] += $valorEnvio;
@@ -1380,17 +1441,9 @@ class FacturacionModels
                 'estado' => $row['estado'],
                 'oculto' => $grupoOculto,
                 'cliente_id' => (int) $row['cliente_id'],
-                'remitente_nombre' => trim((string) ($row['remitente_nombre'] ?? '')),
-                'cliente_nombre' => (
-                    stripos(trim((string) $row['cliente_nombre']), 'Operativo Mensajero') === 0
-                    && trim((string) ($row['remitente_nombre'] ?? '')) !== ''
-                    && !in_array(trim((string) ($row['remitente_nombre'] ?? '')), ['-', 'Pendiente por definir'], true)
-                ) ? trim((string) $row['remitente_nombre']) : trim((string) $row['cliente_nombre']),
-                'cliente_contacto' => (
-                    stripos(trim((string) $row['cliente_nombre']), 'Operativo Mensajero') === 0
-                    && trim((string) ($row['remitente_nombre'] ?? '')) !== ''
-                    && !in_array(trim((string) ($row['remitente_nombre'] ?? '')), ['-', 'Pendiente por definir'], true)
-                ) ? '' : trim((string) $row['cliente_contacto']),
+                'remitente_nombre' => $remitenteRaw,
+                'cliente_nombre' => $clienteNombreFacturacion,
+                'cliente_contacto' => $clienteContactoFacturacion,
                 'cuenta_bancaria_principal' => trim((string) ($row['cuenta_bancaria_principal'] ?? '')),
                 'cuenta_bancaria_opcional_1' => trim((string) ($row['cuenta_bancaria_opcional_1'] ?? '')),
                 'cuenta_bancaria_opcional_2' => trim((string) ($row['cuenta_bancaria_opcional_2'] ?? '')),

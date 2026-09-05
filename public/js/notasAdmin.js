@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteCardModalButton = document.querySelector('[data-role="delete-card-modal"]');
     let state = { listas: [] };
     let searchText = '';
+    let refreshInProgress = false;
 
     const setStatus = (message) => {
         if (statusEl) statusEl.textContent = message || '';
@@ -58,16 +59,48 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
     };
 
-    const fetchBoard = async () => {
-        setStatus('Cargando notas...');
+    const isModalOpen = () => modal && !modal.classList.contains('notas-hidden');
+
+    const isEditingBoard = () => {
+        const active = document.activeElement;
+        return Boolean(
+            isModalOpen()
+            || board?.querySelector('[data-role="list-form"]')
+            || active?.closest?.('[data-role="list-title"]')
+        );
+    };
+
+    const fetchBoard = async ({ silent = false } = {}) => {
+        if (!silent) {
+            setStatus('Cargando notas...');
+        }
         const response = await fetch(endpoint, { credentials: 'same-origin' });
         const result = await response.json();
         if (!result.success) {
             throw new Error(result.message || 'No fue posible cargar las notas.');
         }
         state = result.data || { listas: [] };
-        setStatus('');
-        render();
+        if (!silent) {
+            setStatus('');
+        }
+        if (!silent || !isEditingBoard()) {
+            render();
+        }
+    };
+
+    const refreshBoardSilently = async () => {
+        if (refreshInProgress || document.hidden) {
+            return;
+        }
+
+        refreshInProgress = true;
+        try {
+            await fetchBoard({ silent: true });
+        } catch (error) {
+            console.warn(error);
+        } finally {
+            refreshInProgress = false;
+        }
     };
 
     const renderCard = (card) => `
@@ -293,4 +326,5 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchBoard().catch((error) => {
         setStatus(error.message);
     });
+    window.setInterval(refreshBoardSilently, 5000);
 });
