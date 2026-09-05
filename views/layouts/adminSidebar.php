@@ -3,13 +3,13 @@ require_once __DIR__ . '/../../includes/paths.php';
 require_once __DIR__ . '/../../includes/auth.php';
 
 $adminNavItems = [
-    ['permission' => 'admin_dashboard', 'route' => 'admin.dashboard', 'icon' => 'I', 'text' => 'Dashboard'],
-    ['permission' => 'admin_packages', 'route' => 'admin.packages', 'icon' => 'P', 'text' => 'Gestion Paquetes'],
-    ['permission' => 'admin_create_shipment', 'route' => 'admin.create-shipment', 'icon' => '+', 'text' => 'Digitar Envio'],
-    ['permission' => 'admin_collections', 'route' => 'admin.collections', 'icon' => 'R', 'text' => 'Recolecciones'],
-    ['permission' => 'admin_billing', 'route' => 'admin.billing', 'icon' => '$', 'text' => 'Facturacion'],
-    ['permission' => 'admin_notes', 'route' => 'admin.notes', 'icon' => 'N', 'text' => 'Notas Admin'],
-    ['permission' => 'admin_users', 'route' => 'admin.users', 'icon' => 'U', 'text' => 'Usuarios'],
+    ['permission' => 'admin_dashboard', 'route' => 'admin.dashboard', 'icon' => '📊', 'text' => 'Dashboard'],
+    ['permission' => 'admin_packages', 'route' => 'admin.packages', 'icon' => '📦', 'text' => 'Gestion Paquetes'],
+    ['permission' => 'admin_create_shipment', 'route' => 'admin.create-shipment', 'icon' => '📝', 'text' => 'Digitar Envio'],
+    ['permission' => 'admin_collections', 'route' => 'admin.collections', 'icon' => '🚚', 'text' => 'Recolecciones'],
+    ['permission' => 'admin_billing', 'route' => 'admin.billing', 'icon' => '💳', 'text' => 'Facturacion'],
+    ['permission' => 'admin_notes', 'route' => 'admin.notes', 'icon' => '🧾', 'text' => 'Notas Admin'],
+    ['permission' => 'admin_users', 'route' => 'admin.users', 'icon' => '👥', 'text' => 'Usuarios'],
 ];
 ?>
 <aside class="sidebar" id="sidebar">
@@ -19,7 +19,7 @@ $adminNavItems = [
             <span class="logo-text">EcoBikeMess</span>
         </div>
         <button class="sidebar-toggle" id="sidebarToggle">
-            <span class="toggle-icon">=</span>
+            <span class="toggle-icon">☰</span>
         </button>
     </div>
 
@@ -39,7 +39,7 @@ $adminNavItems = [
 
     <div class="sidebar-footer">
         <div class="user-plan">
-            <span class="plan-icon">A</span>
+            <span class="plan-icon">🛡️</span>
             <div class="plan-info">
                 <span class="plan-name">Administrador</span>
                 <span class="plan-status">En linea</span>
