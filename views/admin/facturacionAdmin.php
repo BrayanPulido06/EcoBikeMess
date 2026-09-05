@@ -53,7 +53,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                             <label>Estado</label>
                             <select data-panel-filter="cliente" data-filter-field="estado">
                                 <option value="">Todos</option>
-                                <option value="pendiente">Pendiente</option>
+                                <option value="pendiente" selected>Pendiente</option>
                                 <option value="pagado">Pagado</option>
                             </select>
                         </div>

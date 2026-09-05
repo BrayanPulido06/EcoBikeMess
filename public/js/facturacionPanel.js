@@ -6,13 +6,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const mode = app.dataset.mode || 'cliente';
     const endpoint = app.dataset.endpoint || '';
+    const defaultFiltersForPanel = (panel) => ({
+        q: '',
+        estado: mode === 'admin' && panel === 'cliente' ? 'pendiente' : '',
+        desde: '',
+        hasta: ''
+    });
     const state = {
         rawData: null,
         activePanel: mode === 'admin' ? 'cliente' : mode,
         filters: {
-            cliente: { q: '', estado: '', desde: '', hasta: '' },
-            mensajero: { q: '', estado: '', desde: '', hasta: '' },
-            ecobikemess: { q: '', estado: '', desde: '', hasta: '' }
+            cliente: defaultFiltersForPanel('cliente'),
+            mensajero: defaultFiltersForPanel('mensajero'),
+            ecobikemess: defaultFiltersForPanel('ecobikemess')
         },
         clienteGroups: [],
         selectedClienteGroups: new Set(),
@@ -1432,7 +1438,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const resetFilters = (panel) => {
-        state.filters[panel] = { q: '', estado: '', desde: '', hasta: '' };
+        state.filters[panel] = defaultFiltersForPanel(panel);
         if (panel === 'cliente') {
             state.selectedClienteFolderKey = null;
             state.selectedClienteGroups.clear();
@@ -1442,7 +1448,8 @@ document.addEventListener('DOMContentLoaded', () => {
             state.selectedMensajeroGroups.clear();
         }
         document.querySelectorAll(`[data-panel-filter="${panel}"]`).forEach((input) => {
-            input.value = '';
+            const field = input.dataset.filterField;
+            input.value = state.filters[panel][field] || '';
         });
         render();
     };
