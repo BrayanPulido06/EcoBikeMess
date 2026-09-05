@@ -74,6 +74,7 @@ function app_routes(): array
         'admin.create-shipment' => 'admin/digitar-envio',
         'admin.collections' => 'admin/asignar-recolecciones',
         'admin.billing' => 'admin/facturacion',
+        'admin.notes' => 'admin/notas',
         'admin.users' => 'admin/usuarios',
         'admin.profile' => 'admin/mi-perfil',
         'messenger.dashboard' => 'mensajero/inicio',

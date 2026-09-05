@@ -466,6 +466,34 @@ CREATE TABLE IF NOT EXISTS facturacion_estados_mensajero (
 
 CREATE INDEX idx_estado_mensajero_fecha ON facturacion_estados_mensajero(mensajero_id, fecha_grupo);
 
+CREATE TABLE IF NOT EXISTS notas_admin_listas (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    titulo VARCHAR(160) NOT NULL,
+    posicion INT NOT NULL DEFAULT 0,
+    creado_por INT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (creado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_notas_admin_listas_posicion ON notas_admin_listas(posicion, id);
+
+CREATE TABLE IF NOT EXISTS notas_admin_tarjetas (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    lista_id INT NOT NULL,
+    titulo VARCHAR(180) NOT NULL,
+    descripcion TEXT NULL,
+    completada TINYINT(1) NOT NULL DEFAULT 0,
+    posicion INT NOT NULL DEFAULT 0,
+    creado_por INT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (lista_id) REFERENCES notas_admin_listas(id) ON DELETE CASCADE,
+    FOREIGN KEY (creado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_notas_admin_tarjetas_lista ON notas_admin_tarjetas(lista_id, posicion, id);
+
 CREATE TABLE IF NOT EXISTS pagos (
     id INT PRIMARY KEY AUTO_INCREMENT,
     factura_id INT NOT NULL,

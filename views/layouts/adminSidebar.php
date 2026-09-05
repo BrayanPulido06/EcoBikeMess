@@ -48,6 +48,13 @@
             </li>
             
             <li class="nav-item">
+                <a href="<?php echo htmlspecialchars(route_url('admin.notes'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
+                    <span class="nav-icon">N</span>
+                    <span class="nav-text">Notas Admin</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
                 <a href="<?php echo htmlspecialchars(route_url('admin.users'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
                     <span class="nav-icon">👥</span>
                     <span class="nav-text">Usuarios</span>
