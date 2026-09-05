@@ -286,6 +286,9 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 <button type="button" class="btn btn-secondary is-disabled" id="btnAsignarSeleccionados" aria-disabled="true" onclick="if (window.abrirModalAsignacionMasiva) window.abrirModalAsignacionMasiva();">
                     Asignar Mensajero
                 </button>
+                <button type="button" class="btn btn-secondary is-disabled" id="btnAsignarRemitenteSeleccionados" aria-disabled="true">
+                    Asignar Remitente
+                </button>
                 <button class="btn btn-secondary" id="btnExportarGuias">
                     🧾 Descargar Guías
                 </button>
@@ -573,6 +576,36 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" id="btnCancelarEditar">Cancelar</button>
                             <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Asignar Remitente -->
+        <div class="modal" id="modalAsignarRemitente">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Asignar Remitente</h2>
+                    <button class="btn-close" id="btnCerrarAsignarRemitente">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAsignarRemitente">
+                        <div class="form-group">
+                            <label>Paquete(s)</label>
+                            <textarea id="asignarRemitenteGuias" readonly class="form-control" rows="4" style="resize: vertical;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Seleccionar Remitente *</label>
+                            <div class="search-select">
+                                <input type="text" id="asignarRemitenteInput" class="form-control" placeholder="Buscar cliente o remitente..." autocomplete="off" required>
+                                <input type="hidden" id="asignarRemitenteClienteId" name="cliente_id">
+                                <div id="asignarRemitenteOpciones" class="search-select-options"></div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="btnCancelarAsignarRemitente">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Asignar Remitente</button>
                         </div>
                     </form>
                 </div>

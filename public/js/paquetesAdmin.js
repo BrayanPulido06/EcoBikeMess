@@ -147,6 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnLimpiar = document.getElementById('btnLimpiarFiltros');
     const btnExportExcel = document.getElementById('btnExportarExcel');
     const btnAsignarSeleccionados = document.getElementById('btnAsignarSeleccionados');
+    const btnAsignarRemitenteSeleccionados = document.getElementById('btnAsignarRemitenteSeleccionados');
     const btnExportarGuias = document.getElementById('btnExportarGuias');
     const selectAllCheckbox = document.getElementById('selectAll');
     const btnNuevoPaquete = document.getElementById('btnNuevoPaquete');
@@ -232,6 +233,14 @@ document.addEventListener('DOMContentLoaded', function() {
         emptyLabel: 'Seleccionar...'
     });
 
+    configurarBuscadorFormulario({
+        input: document.getElementById('asignarRemitenteInput'),
+        hidden: document.getElementById('asignarRemitenteClienteId'),
+        optionsContainer: document.getElementById('asignarRemitenteOpciones'),
+        getItems: () => todosLosClientes.filter(cliente => Number(cliente.id) > 0),
+        emptyLabel: 'Seleccionar remitente...'
+    });
+
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.search-select')) {
             document.querySelectorAll('.search-select.open').forEach(el => el.classList.remove('open'));
@@ -275,8 +284,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    const formAsignarRemitente = document.getElementById('formAsignarRemitente');
+    if (formAsignarRemitente) {
+        formAsignarRemitente.addEventListener('submit', function(e) {
+            e.preventDefault();
+            asignarRemitenteAction();
+        });
+    }
+
     // Botones Cancelar en Modales
     document.getElementById('btnCancelarAsignar')?.addEventListener('click', () => closeModal('asignar'));
+    document.getElementById('btnCerrarAsignarRemitente')?.addEventListener('click', () => closeModal('asignarRemitente'));
+    document.getElementById('btnCancelarAsignarRemitente')?.addEventListener('click', () => closeModal('asignarRemitente'));
     document.getElementById('btnCancelarEditar')?.addEventListener('click', () => closeModal('editar'));
     document.getElementById('btnCancelarServicioCerrar')?.addEventListener('click', () => {
         const modal = document.getElementById('modalCancelarServicio');
@@ -295,6 +314,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnExportExcel) btnExportExcel.addEventListener('click', exportarExcel);
     if (btnAsignarSeleccionados) {
         btnAsignarSeleccionados.addEventListener('click', abrirModalAsignacionMasiva);
+    }
+    if (btnAsignarRemitenteSeleccionados) {
+        btnAsignarRemitenteSeleccionados.addEventListener('click', abrirModalAsignacionRemitenteMasiva);
     }
     if (btnExportarGuias) btnExportarGuias.addEventListener('click', descargarGuiasSeleccionadas);
 
@@ -575,20 +597,135 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function actualizarEstadoBotonAsignacionMasiva() {
-        if (!btnAsignarSeleccionados) return;
-
         const cantidad = getSelectedPackageIds().length;
         const deshabilitado = cantidad === 0;
-        btnAsignarSeleccionados.classList.toggle('is-disabled', deshabilitado);
-        btnAsignarSeleccionados.setAttribute('aria-disabled', deshabilitado ? 'true' : 'false');
-        btnAsignarSeleccionados.textContent = cantidad > 0
-            ? `Asignar Mensajero (${cantidad})`
-            : 'Asignar Mensajero';
+
+        if (btnAsignarSeleccionados) {
+            btnAsignarSeleccionados.classList.toggle('is-disabled', deshabilitado);
+            btnAsignarSeleccionados.setAttribute('aria-disabled', deshabilitado ? 'true' : 'false');
+            btnAsignarSeleccionados.textContent = cantidad > 0
+                ? `Asignar Mensajero (${cantidad})`
+                : 'Asignar Mensajero';
+        }
+
+        if (btnAsignarRemitenteSeleccionados) {
+            btnAsignarRemitenteSeleccionados.classList.toggle('is-disabled', deshabilitado);
+            btnAsignarRemitenteSeleccionados.setAttribute('aria-disabled', deshabilitado ? 'true' : 'false');
+            btnAsignarRemitenteSeleccionados.textContent = cantidad > 0
+                ? `Asignar Remitente (${cantidad})`
+                : 'Asignar Remitente';
+        }
     }
 
     function abrirModalAsignacionMasiva() {
         if (typeof window.abrirModalAsignacionMasiva === 'function') {
             window.abrirModalAsignacionMasiva();
+        }
+    }
+
+    function abrirModalAsignacionRemitenteMasiva() {
+        const seleccionados = getSelectedPackages();
+
+        if (seleccionados.length === 0) {
+            alert('Selecciona al menos un paquete para asignar remitente.');
+            return;
+        }
+
+        const modal = document.getElementById('modalAsignarRemitente');
+        const form = document.getElementById('formAsignarRemitente');
+        const inputGuias = document.getElementById('asignarRemitenteGuias');
+        const inputRemitente = document.getElementById('asignarRemitenteInput');
+        const inputClienteId = document.getElementById('asignarRemitenteClienteId');
+
+        if (!modal || !form || !inputGuias || !inputRemitente || !inputClienteId) {
+            alert('No se pudo abrir el modal de remitente.');
+            return;
+        }
+
+        form.dataset.paqueteIds = seleccionados.map((item) => item.id).join(',');
+        inputGuias.value = seleccionados.map((item) => item.guia).filter(Boolean).join('\n');
+        inputRemitente.value = '';
+        inputClienteId.value = '';
+
+        if (todosLosClientes.length === 0) {
+            cargarFiltros();
+        }
+
+        modal.style.display = 'flex';
+        window.setTimeout(() => inputRemitente.focus(), 50);
+    }
+
+    async function asignarRemitenteAction() {
+        const form = document.getElementById('formAsignarRemitente');
+        const inputRemitente = document.getElementById('asignarRemitenteInput');
+        const inputClienteId = document.getElementById('asignarRemitenteClienteId');
+        const paqueteIds = String(form?.dataset.paqueteIds || '')
+            .split(',')
+            .map(id => id.trim())
+            .filter(Boolean);
+        let remitenteNombre = String(inputRemitente?.value || '').trim();
+        let clienteId = String(inputClienteId?.value || '').trim();
+
+        if (paqueteIds.length === 0) {
+            alert('No se encontraron paquetes para asignar.');
+            return;
+        }
+
+        if (!remitenteNombre) {
+            alert('Selecciona o escribe un remitente.');
+            return;
+        }
+
+        if (!clienteId && Array.isArray(todosLosClientes)) {
+            const exacto = todosLosClientes.find(cliente => normalizarTexto(cliente.nombre) === normalizarTexto(remitenteNombre));
+            if (exacto) {
+                clienteId = String(exacto.id || '').trim();
+                remitenteNombre = exacto.nombre || remitenteNombre;
+                if (inputClienteId) inputClienteId.value = clienteId;
+                if (inputRemitente) inputRemitente.value = remitenteNombre;
+            }
+        }
+
+        const submitBtn = form?.querySelector('button[type="submit"]');
+        const originalText = submitBtn?.textContent || '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Asignando...';
+        }
+
+        try {
+            const formData = new FormData();
+            paqueteIds.forEach(id => formData.append('paquete_ids[]', id));
+            formData.append('cliente_id', clienteId);
+            formData.append('remitente_nombre', remitenteNombre);
+
+            const res = await fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=asignar_remitente_masivo`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.error || 'No se pudo asignar el remitente.');
+            }
+
+            const cantidad = Number(data.actualizados || paqueteIds.length);
+            alert(`Remitente asignado correctamente a ${cantidad} paquete(s).`);
+            paqueteIds.forEach(id => selectedPackageIds.delete(String(id)));
+            selectedPackagesMeta.clear();
+            if (form) form.dataset.paqueteIds = '';
+            closeModal('asignarRemitente');
+            if (inputRemitente) inputRemitente.value = '';
+            if (inputClienteId) inputClienteId.value = '';
+            if (typeof window.listarPaquetes === 'function') window.listarPaquetes();
+        } catch (error) {
+            console.error(error);
+            alert(error.message || 'Error de conexiÃ³n al asignar remitente.');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         }
     }
 

@@ -114,6 +114,33 @@ try {
             }
             break;
 
+        case 'asignar_remitente_masivo':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $paqueteIds = $_POST['paquete_ids'] ?? [];
+                $clienteId = (int) ($_POST['cliente_id'] ?? 0);
+                $remitenteNombre = trim((string) ($_POST['remitente_nombre'] ?? ''));
+                $userId = (int) ($_SESSION['user_id'] ?? 0);
+
+                if (!is_array($paqueteIds)) {
+                    $paqueteIds = [];
+                }
+
+                $paqueteIds = array_values(array_unique(array_filter(array_map('intval', $paqueteIds), static fn($id) => $id > 0)));
+
+                if (empty($paqueteIds) || $remitenteNombre === '') {
+                    echo json_encode(['success' => false, 'error' => 'Debes seleccionar paquetes y un remitente valido']);
+                    break;
+                }
+
+                $actualizados = $model->assignRemitenteBulk($paqueteIds, $remitenteNombre, $clienteId > 0 ? $clienteId : null, $userId);
+                echo json_encode([
+                    'success' => true,
+                    'actualizados' => $actualizados,
+                    'error' => null
+                ]);
+            }
+            break;
+
         case 'actualizar':
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 echo json_encode(['success' => false, 'error' => 'Método no permitido']);

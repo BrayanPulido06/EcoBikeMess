@@ -825,6 +825,81 @@ class PaquetesAdminModel {
         return $ok;
     }
 
+    public function assignRemitenteBulk(array $paqueteIds, string $remitenteNombre, ?int $clienteId, int $userId): int
+    {
+        $paqueteIds = array_values(array_unique(array_filter(array_map('intval', $paqueteIds), static fn($id) => $id > 0)));
+        $remitenteNombre = trim($remitenteNombre);
+
+        if (empty($paqueteIds) || $remitenteNombre === '') {
+            return 0;
+        }
+
+        $clienteIdFinal = $clienteId && $clienteId > 0 ? $clienteId : null;
+        $creadoPorFinal = null;
+
+        if ($clienteIdFinal === null) {
+            $clienteAsignado = $this->buscarClientePorRemitente($remitenteNombre);
+            $clienteIdFinal = $clienteAsignado['id'] ?? null;
+        }
+
+        $mensajeroAsignado = $this->buscarMensajeroPorNombre($remitenteNombre);
+        if ($mensajeroAsignado) {
+            $clienteIdFinal = $this->obtenerOCrearClienteOperativoMensajero($mensajeroAsignado);
+            $creadoPorFinal = (int) ($mensajeroAsignado['usuario_id'] ?? 0);
+        }
+
+        try {
+            $this->conn->beginTransaction();
+
+            $placeholders = implode(',', array_fill(0, count($paqueteIds), '?'));
+            $setParts = ['remitente_nombre = ?'];
+            $params = [$remitenteNombre];
+
+            if ($clienteIdFinal !== null && $clienteIdFinal > 0) {
+                $setParts[] = 'cliente_id = ?';
+                $params[] = $clienteIdFinal;
+            }
+
+            if ($creadoPorFinal !== null && $creadoPorFinal > 0) {
+                $setParts[] = 'creado_por = ?';
+                $params[] = $creadoPorFinal;
+            }
+
+            $sql = 'UPDATE paquetes SET ' . implode(', ', $setParts) . " WHERE id IN ($placeholders)";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute(array_merge($params, $paqueteIds));
+            $actualizados = (int) $stmt->rowCount();
+
+            if ($clienteIdFinal !== null && $clienteIdFinal > 0) {
+                $sqlFacturacion = "UPDATE facturacion SET cliente_id = ? WHERE paquete_id IN ($placeholders)";
+                $stmtFacturacion = $this->conn->prepare($sqlFacturacion);
+                $stmtFacturacion->execute(array_merge([$clienteIdFinal], $paqueteIds));
+            }
+
+            try {
+                $sqlHist = "INSERT INTO historial_paquetes (paquete_id, estado_anterior, estado_nuevo, usuario_id, observaciones, fecha_creacion)
+                            SELECT id, estado, estado, ?, ?, NOW()
+                            FROM paquetes
+                            WHERE id IN ($placeholders)";
+                $stmtHist = $this->conn->prepare($sqlHist);
+                $stmtHist->execute(array_merge([
+                    $userId ?: null,
+                    'Remitente asignado manualmente (masivo): ' . $remitenteNombre
+                ], $paqueteIds));
+            } catch (PDOException $e) {
+                // Continuar si falla el historial.
+            }
+
+            $this->conn->commit();
+            return $actualizados;
+        } catch (Exception $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            throw new Exception("Error en BD: " . $e->getMessage());
+        }
+    }
+
     public function updateEntregaInfo($paqueteId, $data) {
         $entregaId = $this->ensureEntregaRecord((int) $paqueteId, (int) ($data['mensajero_id'] ?? 0));
         if (!$entregaId) {
