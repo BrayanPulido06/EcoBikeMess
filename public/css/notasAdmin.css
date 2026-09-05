@@ -57,6 +57,35 @@ body.sidebar-collapsed .notas-admin-shell,
     color: var(--notas-muted);
 }
 
+.notas-search {
+    display: grid;
+    gap: 0.35rem;
+    min-width: min(320px, 100%);
+}
+
+.notas-search span {
+    color: var(--notas-muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.notas-search input {
+    width: 100%;
+    border: 1px solid var(--notas-border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--notas-text);
+    font: inherit;
+    padding: 0.72rem 0.85rem;
+    box-shadow: 0 1px 2px rgba(20, 30, 40, 0.06);
+}
+
+.notas-search input:focus {
+    outline: none;
+    border-color: #7bb7aa;
+    box-shadow: 0 0 0 3px rgba(36, 139, 120, 0.16);
+}
+
 .notas-admin-status {
     color: var(--notas-primary);
     font-weight: 600;
@@ -135,6 +164,15 @@ body.sidebar-collapsed .notas-admin-shell,
 .notas-icon-btn:hover {
     background: #e4ebef;
     color: var(--notas-text);
+}
+
+.notas-delete-list-btn {
+    color: var(--notas-danger);
+}
+
+.notas-delete-list-btn:hover {
+    background: #fdecef;
+    color: var(--notas-danger);
 }
 
 .notas-card-list {
@@ -349,5 +387,13 @@ body.sidebar-collapsed .notas-admin-shell,
     .notas-add-list,
     .notas-list-form {
         flex-basis: min(86vw, 340px);
+    }
+}
+
+@media (max-width: 768px) {
+    .notas-admin-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 1rem;
     }
 }

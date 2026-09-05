@@ -8,8 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('notasAdminModal');
     const modalTitle = document.getElementById('notasAdminModalTitle');
     const cardForm = document.getElementById('notasAdminCardForm');
+    const searchInput = document.getElementById('notasAdminSearch');
     const deleteCardModalButton = document.querySelector('[data-role="delete-card-modal"]');
     let state = { listas: [] };
+    let searchText = '';
 
     const setStatus = (message) => {
         if (statusEl) statusEl.textContent = message || '';
@@ -21,6 +23,20 @@ document.addEventListener('DOMContentLoaded', () => {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+
+    const normalizeText = (value) => String(value || '').trim().toLowerCase();
+
+    const filterLists = (lists) => {
+        if (!searchText) {
+            return lists;
+        }
+
+        return lists.filter((list) => {
+            const listTitle = normalizeText(list.titulo);
+            const cards = Array.isArray(list.tarjetas) ? list.tarjetas : [];
+            return listTitle.includes(searchText) || cards.some((card) => normalizeText(card.titulo).includes(searchText));
+        });
+    };
 
     const postAction = async (action, fields = {}) => {
         const formData = new FormData();
@@ -94,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         aria-label="Titulo de lista"
                     >
                     <span class="notas-count">${cards.length}</span>
-                    <button type="button" class="notas-icon-btn" data-role="delete-list" data-list-id="${list.id}" title="Eliminar lista" aria-label="Eliminar lista">...</button>
+                    <button type="button" class="notas-icon-btn notas-delete-list-btn" data-role="delete-list" data-list-id="${list.id}" title="Eliminar lista" aria-label="Eliminar lista">&#128465;</button>
                 </div>
                 <div class="notas-card-list">
                     ${cards.length ? cards.map(renderCard).join('') : '<div class="notas-empty">Sin tarjetas.</div>'}
@@ -122,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const render = () => {
         if (!board) return;
-        const lists = Array.isArray(state.listas) ? state.listas : [];
+        const lists = filterLists(Array.isArray(state.listas) ? state.listas : []);
         board.innerHTML = `${lists.map(renderList).join('')}${renderAddList()}`;
     };
 
@@ -252,6 +268,11 @@ document.addEventListener('DOMContentLoaded', () => {
         postAction(action, payload)
             .then(closeCardModal)
             .catch((error) => alert(error.message));
+    });
+
+    searchInput?.addEventListener('input', () => {
+        searchText = normalizeText(searchInput.value);
+        render();
     });
 
     deleteCardModalButton?.addEventListener('click', () => {

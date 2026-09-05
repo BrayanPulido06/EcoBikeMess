@@ -32,6 +32,10 @@ $notasAdminJsVersion = @filemtime(__DIR__ . '/../../public/js/notasAdmin.js') ?:
                     <h1>Notas Admin</h1>
                     <p>Organiza listas y tarjetas de seguimiento interno.</p>
                 </div>
+                <label class="notas-search">
+                    <span>Filtrar titulos</span>
+                    <input type="search" id="notasAdminSearch" placeholder="Buscar lista o tarjeta">
+                </label>
             </header>
 
             <div id="notasAdminStatus" class="notas-admin-status">Cargando notas...</div>
