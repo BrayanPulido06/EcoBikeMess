@@ -326,6 +326,10 @@ class PaquetesAdminModel {
                             UNION ALL
                             SELECT COALESCE(p.cliente_id, 0) AS id,
                                    TRIM(CASE
+                                       WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                                            OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
+                                            OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
+                                       THEN COALESCE(NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''), '-')
                                        WHEN COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero - %'
                                        THEN COALESCE(
                                            NULLIF(TRIM(CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, ''))), ''),
@@ -333,10 +337,6 @@ class PaquetesAdminModel {
                                            NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''),
                                            '-'
                                        )
-                                       WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
-                                            OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
-                                            OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
-                                       THEN COALESCE(NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''), '-')
                                        ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(u.nombres, ' ', u.apellidos), '-')
                                    END) AS nombre
                             FROM paquetes p
@@ -378,6 +378,10 @@ class PaquetesAdminModel {
                        COALESCE(p.fecha_entrega, e.fecha_entrega) as fecha_entrega,
                        COALESCE(p.checklist_verde, 0) as checklist_verde,
                        CASE
+                           WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                                OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
+                                OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
+                           THEN COALESCE(NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''), '-')
                            WHEN COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero - %'
                            THEN COALESCE(
                                NULLIF(TRIM(CONCAT(COALESCE(uc.nombres, ''), ' ', COALESCE(uc.apellidos, ''))), ''),
@@ -385,10 +389,6 @@ class PaquetesAdminModel {
                                NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''),
                                '-'
                            )
-                           WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
-                                OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
-                                OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
-                           THEN COALESCE(NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''), '-')
                            ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
                        END as remitente,
                        CASE
@@ -448,6 +448,10 @@ class PaquetesAdminModel {
         }
         if (!empty($filters['cliente'])) {
             $sql .= " AND CASE
+                            WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                                 OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
+                                 OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
+                            THEN COALESCE(NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''), '-')
                             WHEN COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero - %'
                             THEN COALESCE(
                                 NULLIF(TRIM(CONCAT(COALESCE(uc.nombres, ''), ' ', COALESCE(uc.apellidos, ''))), ''),
@@ -455,10 +459,6 @@ class PaquetesAdminModel {
                                 NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''),
                                 '-'
                             )
-                            WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
-                                 OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
-                                 OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
-                            THEN COALESCE(NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''), '-')
                             ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
                          END COLLATE utf8mb4_unicode_ci LIKE :cliente";
             $params[':cliente'] = '%' . trim((string) $filters['cliente']) . '%';
@@ -544,6 +544,10 @@ class PaquetesAdminModel {
                                p.id as paquete_id,
                                p.fecha_creacion,
                                CASE
+                                   WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                                        OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
+                                        OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
+                                   THEN COALESCE(NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''), '-')
                                    WHEN COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero - %'
                                    THEN COALESCE(
                                        NULLIF(TRIM(CONCAT(COALESCE(uc.nombres, ''), ' ', COALESCE(uc.apellidos, ''))), ''),
@@ -551,13 +555,13 @@ class PaquetesAdminModel {
                                        NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''),
                                        '-'
                                    )
-                                   WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
-                                        OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
-                                        OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
-                                   THEN COALESCE(NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''), '-')
                                    ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
                                END as tienda_nombre,
                                CASE
+                                   WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                                        OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
+                                        OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
+                                   THEN COALESCE(NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''), '-')
                                    WHEN COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero - %'
                                    THEN COALESCE(
                                        NULLIF(TRIM(CONCAT(COALESCE(uc.nombres, ''), ' ', COALESCE(uc.apellidos, ''))), ''),
@@ -565,10 +569,6 @@ class PaquetesAdminModel {
                                        NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''),
                                        '-'
                                    )
-                                   WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
-                                        OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
-                                        OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
-                                   THEN COALESCE(NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''), '-')
                                    ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
                                END as remitente,
                                CASE
