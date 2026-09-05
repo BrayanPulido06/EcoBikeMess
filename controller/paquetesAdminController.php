@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 requireApiAuth(['administrador', 'admin'], 'No autorizado');
+requireAdminPermission('admin_packages', 'No tienes permiso para gestionar paquetes');
 require_once __DIR__ . '/../models/paquetesAdminModels.php';
 require_once __DIR__ . '/../includes/upload.php';
 

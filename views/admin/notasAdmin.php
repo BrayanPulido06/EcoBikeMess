@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../includes/paths.php';
 require_once __DIR__ . '/../../includes/auth.php';
 requireWebAuth(['admin', 'administrador']);
+requireAdminPagePermission('admin_notes');
 $notasAdminCssVersion = @filemtime(__DIR__ . '/../../public/css/notasAdmin.css') ?: time();
 $notasAdminJsVersion = @filemtime(__DIR__ . '/../../public/js/notasAdmin.js') ?: time();
 ?>

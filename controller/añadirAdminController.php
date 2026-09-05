@@ -32,6 +32,7 @@ function normalizarCuentaBancariaAdmin($value) {
 
 require_once __DIR__ . '/../includes/auth.php';
 requireApiAuth(['administrador', 'admin'], 'Acceso denegado');
+requireAdminPermission('admin_users', 'No tienes permiso para gestionar usuarios');
 require_once '../models/añadirAdminModels.php';
 
 header('Content-Type: application/json');

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 requireApiAuth(['admin', 'administrador'], 'Acceso denegado.');
+requireAdminPermission('admin_notes', 'No tienes permiso para notas');
 require_once __DIR__ . '/../models/notasAdminModels.php';
 
 header('Content-Type: application/json; charset=utf-8');

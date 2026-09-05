@@ -1,5 +1,8 @@
 <?php
+require_once __DIR__ . '/../../includes/auth.php';
 session_start();
+requireWebAuth(['admin', 'administrador']);
+requireAdminPagePermission('admin_collections');
 if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' && ($_SESSION['user_role'] ?? '') !== 'administrador')) {
     header("Location: ../login.php?error=Debes iniciar sesión.");
     exit();

@@ -11,9 +11,19 @@ let userToReset = null;
 // Permisos por rol
 const PERMISOS_POR_ROL = {
     super_admin: ['todos'],
-    admin_operativo: ['crear_paquetes', 'editar_paquetes', 'asignar_mensajeros', 'gestionar_clientes'],
-    admin_reportes: ['ver_reportes'],
-    admin_mensajeros: ['asignar_mensajeros', 'gestionar_mensajeros']
+    admin_operativo: [
+        'admin_dashboard',
+        'admin_packages',
+        'admin_create_shipment',
+        'admin_collections',
+        'admin_billing',
+        'crear_paquetes',
+        'editar_paquetes',
+        'asignar_mensajeros',
+        'gestionar_clientes'
+    ],
+    admin_reportes: ['admin_dashboard', 'admin_billing', 'ver_reportes', 'facturacion'],
+    admin_mensajeros: ['admin_dashboard', 'admin_packages', 'admin_collections', 'asignar_mensajeros', 'gestionar_mensajeros']
 };
 
 // Helper para verificar si el usuario es administrador (cualquier tipo)
@@ -394,6 +404,9 @@ async function guardarAdministrador(e) {
     // Obtener permisos seleccionados
     const permisos = Array.from(document.querySelectorAll('input[name="permiso"]:checked'))
         .map(cb => cb.value);
+    if (!permisos.includes('admin_permissions_configured')) {
+        permisos.push('admin_permissions_configured');
+    }
     
     // Preparar datos para enviar
     const formData = new FormData();

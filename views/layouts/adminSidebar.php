@@ -1,74 +1,48 @@
-<?php require_once __DIR__ . '/../../includes/paths.php'; ?>
+<?php
+require_once __DIR__ . '/../../includes/paths.php';
+require_once __DIR__ . '/../../includes/auth.php';
+
+$adminNavItems = [
+    ['permission' => 'admin_dashboard', 'route' => 'admin.dashboard', 'icon' => 'I', 'text' => 'Dashboard'],
+    ['permission' => 'admin_packages', 'route' => 'admin.packages', 'icon' => 'P', 'text' => 'Gestion Paquetes'],
+    ['permission' => 'admin_create_shipment', 'route' => 'admin.create-shipment', 'icon' => '+', 'text' => 'Digitar Envio'],
+    ['permission' => 'admin_collections', 'route' => 'admin.collections', 'icon' => 'R', 'text' => 'Recolecciones'],
+    ['permission' => 'admin_billing', 'route' => 'admin.billing', 'icon' => '$', 'text' => 'Facturacion'],
+    ['permission' => 'admin_notes', 'route' => 'admin.notes', 'icon' => 'N', 'text' => 'Notas Admin'],
+    ['permission' => 'admin_users', 'route' => 'admin.users', 'icon' => 'U', 'text' => 'Usuarios'],
+];
+?>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="logo">
-            <img class="logo-icon" src="../../public/img/Logo_Circulo_Fondoblanco.png"  alt="EcoBikeMess" style="width: 55px; vertical-align: middle;">
+            <img class="logo-icon" src="../../public/img/Logo_Circulo_Fondoblanco.png" alt="EcoBikeMess" style="width: 55px; vertical-align: middle;">
             <span class="logo-text">EcoBikeMess</span>
         </div>
         <button class="sidebar-toggle" id="sidebarToggle">
-            <span class="toggle-icon">☰</span>
+            <span class="toggle-icon">=</span>
         </button>
     </div>
 
     <nav class="sidebar-nav">
         <ul class="nav-list">
-            <li class="nav-item">
-                <a href="<?php echo htmlspecialchars(route_url('admin.dashboard'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
-                    <span class="nav-icon">📊</span>
-                    <span class="nav-text">Dashboard</span>
-                </a>
-            </li>
-            
-            <li class="nav-item">
-                <a href="<?php echo htmlspecialchars(route_url('admin.packages'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
-                    <span class="nav-icon">📦</span>
-                    <span class="nav-text">Gestión Paquetes</span>
-                </a>
-            </li>
-            
-            <li class="nav-item">
-                <a href="<?php echo htmlspecialchars(route_url('admin.create-shipment'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
-                    <span class="nav-icon">📝</span>
-                    <span class="nav-text">Digitar Envío</span>
-                </a>
-            </li>
-            
-            <li class="nav-item">
-                <a href="<?php echo htmlspecialchars(route_url('admin.collections'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
-                    <span class="nav-icon">🚚</span>
-                    <span class="nav-text">Recolecciones</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="<?php echo htmlspecialchars(route_url('admin.billing'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
-                    <span class="nav-icon">f</span>
-                    <span class="nav-text">Facturación</span>
-                </a>
-            </li>
-            
-            <li class="nav-item">
-                <a href="<?php echo htmlspecialchars(route_url('admin.notes'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
-                    <span class="nav-icon">N</span>
-                    <span class="nav-text">Notas Admin</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="<?php echo htmlspecialchars(route_url('admin.users'), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
-                    <span class="nav-icon">👥</span>
-                    <span class="nav-text">Usuarios</span>
-                </a>
-            </li>
+            <?php foreach ($adminNavItems as $item): ?>
+                <?php if (!adminCanAccess($item['permission'])) continue; ?>
+                <li class="nav-item">
+                    <a href="<?php echo htmlspecialchars(route_url($item['route']), ENT_QUOTES, 'UTF-8'); ?>" class="nav-link">
+                        <span class="nav-icon"><?php echo htmlspecialchars($item['icon'], ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span class="nav-text"><?php echo htmlspecialchars($item['text'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    </a>
+                </li>
+            <?php endforeach; ?>
         </ul>
     </nav>
 
     <div class="sidebar-footer">
         <div class="user-plan">
-            <span class="plan-icon">🛡️</span>
+            <span class="plan-icon">A</span>
             <div class="plan-info">
                 <span class="plan-name">Administrador</span>
-                <span class="plan-status">En línea</span>
+                <span class="plan-status">En linea</span>
             </div>
         </div>
     </div>

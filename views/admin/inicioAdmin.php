@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../../includes/paths.php';
-session_start();
+require_once __DIR__ . '/../../includes/auth.php';
+requireWebAuth(['admin', 'administrador']);
+requireAdminPagePermission('admin_dashboard');
 
 // Verificar permisos de administrador
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'admin' && $_SESSION['user_role'] !== 'administrador')) {

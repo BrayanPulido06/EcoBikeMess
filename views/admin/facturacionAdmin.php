@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../includes/paths.php';
 require_once __DIR__ . '/../../includes/auth.php';
 requireWebAuth(['admin', 'administrador']);
+requireAdminPagePermission('admin_billing');
 $facturacionPanelCssVersion = @filemtime(__DIR__ . '/../../public/css/facturacionPanel.css') ?: time();
 $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionPanel.js') ?: time();
 ?>

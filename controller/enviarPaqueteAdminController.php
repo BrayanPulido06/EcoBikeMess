@@ -1,6 +1,7 @@
 ﻿<?php
 require_once __DIR__ . '/../includes/auth.php';
 requireWebAuth(['administrador', 'admin'], route_url('login', ['error' => 'Debes iniciar sesion.']));
+requireAdminPagePermission('admin_create_shipment');
 
 require_once '../models/enviarPaqueteModels.php';
 

@@ -10,6 +10,7 @@ session_set_cookie_params($sessionLifetime, "/");
 session_start();
 
 require_once __DIR__ . '/../models/conexionGlobal.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $correo = filter_var(trim($_POST['correo']), FILTER_SANITIZE_EMAIL);
@@ -58,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             switch ($rol) {
                 case 'admin':
                 case 'administrador':
-                    redirect_route('admin.dashboard');
+                    redirect_route(firstAllowedAdminRoute());
                     break;
                 case 'mensajero':
                     redirect_route('messenger.dashboard');

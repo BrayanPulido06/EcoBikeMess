@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 requireApiAuth(['administrador', 'admin'], 'No autorizado');
+requireAdminPermission('admin_collections', 'No tienes permiso para recolecciones');
 require_once '../models/asignarRecoleccionesModels.php';
 
 header('Content-Type: application/json');

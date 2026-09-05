@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 requireApiAuth(['administrador', 'admin'], 'Acceso denegado. Permisos insuficientes.');
+requireAdminPermission('admin_dashboard', 'No tienes permiso para inicio');
 header('Content-Type: application/json');
 
 // Incluir el modelo

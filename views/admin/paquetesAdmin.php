@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . '/../../includes/paths.php';
+require_once __DIR__ . '/../../includes/auth.php';
 session_start();
+requireWebAuth(['admin', 'administrador']);
+requireAdminPagePermission('admin_packages');
 $paquetesAdminJsVersion = @filemtime(__DIR__ . '/../../public/js/paquetesAdmin.js') ?: time();
 $rotuloSharedJsVersion = @filemtime(__DIR__ . '/../../public/js/rotuloShared.js') ?: time();
 if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' && ($_SESSION['user_role'] ?? '') !== 'administrador')) {

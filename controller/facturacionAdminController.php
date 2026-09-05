@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 requireApiAuth(['admin', 'administrador'], 'No autorizado');
+requireAdminPermission('admin_billing', 'No tienes permiso para facturacion');
 require_once __DIR__ . '/../models/facturacionModels.php';
 
 header('Content-Type: application/json; charset=utf-8');

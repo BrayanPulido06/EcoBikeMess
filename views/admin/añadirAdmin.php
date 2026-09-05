@@ -1,5 +1,8 @@
 <?php
+require_once __DIR__ . '/../../includes/auth.php';
 session_start();
+requireWebAuth(['admin', 'administrador']);
+requireAdminPagePermission('admin_users');
 if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' && ($_SESSION['user_role'] ?? '') !== 'administrador')) {
     header("Location: ../login.php?error=Debes iniciar sesión.");
     exit();
@@ -364,6 +367,31 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                                 <h4>Permisos Específicos</h4>
                                 <div class="permisos-grid">
                                     <label class="checkbox-label">
+                                        <input type="checkbox" name="permiso" value="admin_dashboard"> Inicio
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="permiso" value="admin_packages"> Paquetes
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="permiso" value="admin_create_shipment"> Digitar Envio
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="permiso" value="admin_collections"> Recolecciones
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="permiso" value="admin_billing"> Facturacion
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="permiso" value="admin_notes"> Notas Admin
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="permiso" value="admin_users"> Usuarios
+                                    </label>
+                                </div>
+
+                                <h4>Permisos Operativos</h4>
+                                <div class="permisos-grid">
+                                    <label class="checkbox-label">
                                         <input type="checkbox" name="permiso" value="crear_paquetes"> Crear Paquetes
                                     </label>
                                     <label class="checkbox-label">
@@ -468,7 +496,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
     <script>
         window.serverUser = {
             id: <?php echo $_SESSION['user_id'] ?? 0; ?>,
-            rol: '<?php echo $_SESSION['user_role'] ?? 'guest'; ?>',
+            rol: '<?php echo currentAdminRole() ?: ($_SESSION['user_role'] ?? 'guest'); ?>',
             nombre: '<?php echo $_SESSION['user_name'] ?? 'Usuario'; ?>'
         };
     </script>
