@@ -1,6 +1,6 @@
 :root {
-    --notas-bg: #2f9d88;
-    --notas-bg-deep: #247b70;
+    --notas-bg: #edf7f4;
+    --notas-bg-deep: #dff0eb;
     --notas-panel: #f3f5f7;
     --notas-card: #ffffff;
     --notas-text: #172536;
@@ -43,7 +43,7 @@ body.sidebar-collapsed .notas-admin-shell,
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: #fff;
+    color: var(--notas-text);
 }
 
 .notas-admin-header h1 {
@@ -54,11 +54,11 @@ body.sidebar-collapsed .notas-admin-shell,
 
 .notas-admin-header p {
     margin: 0.25rem 0 0;
-    color: rgba(255, 255, 255, 0.82);
+    color: var(--notas-muted);
 }
 
 .notas-admin-status {
-    color: #fff;
+    color: var(--notas-primary);
     font-weight: 600;
 }
 
@@ -242,12 +242,12 @@ body.sidebar-collapsed .notas-admin-shell,
     flex: 0 0 340px;
     min-height: 56px;
     text-align: left;
-    background: rgba(255, 255, 255, 0.24);
-    color: #fff;
+    background: rgba(36, 139, 120, 0.16);
+    color: var(--notas-primary);
 }
 
 .notas-add-list:hover {
-    background: rgba(255, 255, 255, 0.34);
+    background: rgba(36, 139, 120, 0.24);
 }
 
 .notas-empty {
