@@ -915,6 +915,55 @@ class FacturacionModels
         ]);
     }
 
+    public function actualizarEstadosGruposCliente(array $grupos, string $estado, ?int $actualizadoPor): int
+    {
+        if (!in_array($estado, ['pendiente', 'pagado'], true)) {
+            throw new InvalidArgumentException('Estado de facturacion invalido.');
+        }
+
+        $sql = "INSERT INTO facturacion_estados_cliente (
+                    cliente_id, fecha_grupo, estado, actualizado_por
+                ) VALUES (
+                    :cliente_id, :fecha_grupo, :estado, :actualizado_por
+                )
+                ON DUPLICATE KEY UPDATE
+                    estado = VALUES(estado),
+                    actualizado_por = VALUES(actualizado_por)";
+        $stmt = $this->conn->prepare($sql);
+        $actualizados = 0;
+
+        $this->conn->beginTransaction();
+        try {
+            foreach ($grupos as $grupo) {
+                $clienteId = (int) ($grupo['cliente_id'] ?? 0);
+                $fechaGrupo = trim((string) ($grupo['fecha_grupo'] ?? ''));
+
+                if ($clienteId <= 0) {
+                    throw new InvalidArgumentException('Cliente invalido.');
+                }
+
+                if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+                    throw new InvalidArgumentException('La fecha del grupo no es valida.');
+                }
+
+                $stmt->execute([
+                    ':cliente_id' => $clienteId,
+                    ':fecha_grupo' => $fechaGrupo,
+                    ':estado' => $estado,
+                    ':actualizado_por' => $actualizadoPor,
+                ]);
+                $actualizados++;
+            }
+
+            $this->conn->commit();
+        } catch (Throwable $e) {
+            $this->conn->rollBack();
+            throw $e;
+        }
+
+        return $actualizados;
+    }
+
     public function actualizarEstadoGrupoMensajero(int $mensajeroId, string $fechaGrupo, string $estado, ?int $actualizadoPor): bool
     {
         if (!in_array($estado, ['pendiente', 'pagado'], true)) {
@@ -936,6 +985,55 @@ class FacturacionModels
             ':estado' => $estado,
             ':actualizado_por' => $actualizadoPor,
         ]);
+    }
+
+    public function actualizarEstadosGruposMensajero(array $grupos, string $estado, ?int $actualizadoPor): int
+    {
+        if (!in_array($estado, ['pendiente', 'pagado'], true)) {
+            throw new InvalidArgumentException('Estado de facturacion invalido.');
+        }
+
+        $sql = "INSERT INTO facturacion_estados_mensajero (
+                    mensajero_id, fecha_grupo, estado, actualizado_por
+                ) VALUES (
+                    :mensajero_id, :fecha_grupo, :estado, :actualizado_por
+                )
+                ON DUPLICATE KEY UPDATE
+                    estado = VALUES(estado),
+                    actualizado_por = VALUES(actualizado_por)";
+        $stmt = $this->conn->prepare($sql);
+        $actualizados = 0;
+
+        $this->conn->beginTransaction();
+        try {
+            foreach ($grupos as $grupo) {
+                $mensajeroId = (int) ($grupo['mensajero_id'] ?? 0);
+                $fechaGrupo = trim((string) ($grupo['fecha_grupo'] ?? ''));
+
+                if ($mensajeroId <= 0) {
+                    throw new InvalidArgumentException('Mensajero invalido.');
+                }
+
+                if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
+                    throw new InvalidArgumentException('La fecha del grupo no es valida.');
+                }
+
+                $stmt->execute([
+                    ':mensajero_id' => $mensajeroId,
+                    ':fecha_grupo' => $fechaGrupo,
+                    ':estado' => $estado,
+                    ':actualizado_por' => $actualizadoPor,
+                ]);
+                $actualizados++;
+            }
+
+            $this->conn->commit();
+        } catch (Throwable $e) {
+            $this->conn->rollBack();
+            throw $e;
+        }
+
+        return $actualizados;
     }
 
     private function obtenerGruposClienteOcultos(): array

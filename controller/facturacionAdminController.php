@@ -49,6 +49,22 @@ function parseAbonoSplitInput(): array
     return [$montoPositivo, $descripcionPositiva, $montoNegativo, $descripcionNegativa];
 }
 
+function parseGroupsInput(): array
+{
+    $raw = (string) ($_POST['grupos'] ?? '[]');
+    $groups = json_decode($raw, true);
+
+    if (!is_array($groups) || !$groups) {
+        throw new InvalidArgumentException('No hay grupos seleccionados.');
+    }
+
+    if (count($groups) > 500) {
+        throw new InvalidArgumentException('Selecciona maximo 500 grupos por operacion.');
+    }
+
+    return $groups;
+}
+
 try {
     if ($method === 'GET') {
         $panel = isset($_GET['panel']) ? trim((string) $_GET['panel']) : null;
@@ -542,6 +558,7 @@ try {
         $clienteId = (int) ($_POST['cliente_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
         $estado = trim((string) ($_POST['estado'] ?? ''));
+        $panel = trim((string) ($_POST['panel'] ?? ''));
         $actualizadoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
         if ($clienteId <= 0) {
@@ -561,7 +578,25 @@ try {
         echo json_encode([
             'success' => true,
             'message' => 'Estado actualizado correctamente.',
-            'data' => $model->obtenerVistaAdmin(),
+            'data' => $model->obtenerVistaAdmin($panel === 'cliente' ? 'cliente' : null),
+        ]);
+        exit;
+    }
+
+    if ($method === 'POST' && $action === 'actualizar_estado_grupos_cliente') {
+        $estado = trim((string) ($_POST['estado'] ?? ''));
+        $actualizadoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+
+        if (!in_array($estado, ['pendiente', 'pagado'], true)) {
+            throw new InvalidArgumentException('Estado invalido.');
+        }
+
+        $actualizados = $model->actualizarEstadosGruposCliente(parseGroupsInput(), $estado, $actualizadoPor);
+
+        echo json_encode([
+            'success' => true,
+            'message' => "Estado actualizado en {$actualizados} cuenta(s).",
+            'data' => $model->obtenerVistaAdmin('cliente'),
         ]);
         exit;
     }
@@ -570,6 +605,7 @@ try {
         $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
         $estado = trim((string) ($_POST['estado'] ?? ''));
+        $panel = trim((string) ($_POST['panel'] ?? ''));
         $actualizadoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
         if ($mensajeroId <= 0) {
@@ -589,7 +625,25 @@ try {
         echo json_encode([
             'success' => true,
             'message' => 'Estado actualizado correctamente.',
-            'data' => $model->obtenerVistaAdmin(),
+            'data' => $model->obtenerVistaAdmin($panel === 'mensajero' ? 'mensajero' : null),
+        ]);
+        exit;
+    }
+
+    if ($method === 'POST' && $action === 'actualizar_estado_grupos_mensajero') {
+        $estado = trim((string) ($_POST['estado'] ?? ''));
+        $actualizadoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+
+        if (!in_array($estado, ['pendiente', 'pagado'], true)) {
+            throw new InvalidArgumentException('Estado invalido.');
+        }
+
+        $actualizados = $model->actualizarEstadosGruposMensajero(parseGroupsInput(), $estado, $actualizadoPor);
+
+        echo json_encode([
+            'success' => true,
+            'message' => "Estado actualizado en {$actualizados} cuenta(s).",
+            'data' => $model->obtenerVistaAdmin('mensajero'),
         ]);
         exit;
     }

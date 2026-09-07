@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const endpoint = app.dataset.endpoint || '';
     const defaultFiltersForPanel = (panel) => ({
         q: '',
-        estado: mode === 'admin' && panel === 'cliente' ? 'pendiente' : '',
+        estado: mode === 'admin' && ['cliente', 'mensajero'].includes(panel) ? 'pendiente' : '',
         desde: '',
         hasta: ''
     });
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return false;
         }
 
-        if (filter.estado && item.estado !== filter.estado && !(mode === 'admin' && panel === 'cliente')) {
+        if (filter.estado && item.estado !== filter.estado && !(mode === 'admin' && ['cliente', 'mensajero'].includes(panel))) {
             return false;
         }
 
@@ -617,9 +617,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        return Array.from(folders.values()).sort((a, b) => (
-            a.mensajeroNombre.localeCompare(b.mensajeroNombre, 'es', { sensitivity: 'base' })
-        ));
+        const estadoFilter = state.filters.mensajero?.estado || '';
+        return Array.from(folders.values())
+            .filter((folder) => {
+                if (!estadoFilter) {
+                    return true;
+                }
+
+                const messengerGroups = groups.filter((group) => group.messengerKey === folder.key);
+                const hasPending = messengerGroups.some((group) => group.estado !== 'pagado');
+                return estadoFilter === 'pendiente' ? hasPending : !hasPending;
+            })
+            .sort((a, b) => (
+                a.mensajeroNombre.localeCompare(b.mensajeroNombre, 'es', { sensitivity: 'base' })
+            ));
     };
 
     const renderMensajeroFolders = (folders) => {
@@ -1437,6 +1448,13 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
     };
 
+    const mergeApiData = (data) => {
+        state.rawData = {
+            ...(state.rawData || {}),
+            ...(data || {})
+        };
+    };
+
     const resetFilters = (panel) => {
         state.filters[panel] = defaultFiltersForPanel(panel);
         if (panel === 'cliente') {
@@ -1547,6 +1565,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('cliente_id', String(group.clienteId));
         formData.append('fecha_grupo', group.dateKey);
         formData.append('estado', estado);
+        formData.append('panel', 'cliente');
 
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -1559,7 +1578,36 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error(result.message || 'No se pudo actualizar el estado.');
         }
 
-        state.rawData = result.data;
+        mergeApiData(result.data);
+        return result;
+    };
+
+    const postClientGroupsStatus = async (groups, estado) => {
+        if (!Array.isArray(groups) || !groups.length || mode !== 'admin') {
+            return null;
+        }
+
+        const formData = new FormData();
+        formData.append('action', 'actualizar_estado_grupos_cliente');
+        formData.append('estado', estado);
+        formData.append('panel', 'cliente');
+        formData.append('grupos', JSON.stringify(groups.map((group) => ({
+            cliente_id: group.clienteId,
+            fecha_grupo: group.dateKey
+        }))));
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.message || 'No se pudo actualizar el estado.');
+        }
+
+        mergeApiData(result.data);
         return result;
     };
 
@@ -1582,6 +1630,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('mensajero_id', String(group.mensajeroId));
         formData.append('fecha_grupo', group.dateKey);
         formData.append('estado', estado);
+        formData.append('panel', 'mensajero');
 
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -1594,7 +1643,36 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error(result.message || 'No se pudo actualizar el estado.');
         }
 
-        state.rawData = result.data;
+        mergeApiData(result.data);
+        return result;
+    };
+
+    const postMessengerGroupsStatus = async (groups, estado) => {
+        if (!Array.isArray(groups) || !groups.length || mode !== 'admin') {
+            return null;
+        }
+
+        const formData = new FormData();
+        formData.append('action', 'actualizar_estado_grupos_mensajero');
+        formData.append('estado', estado);
+        formData.append('panel', 'mensajero');
+        formData.append('grupos', JSON.stringify(groups.map((group) => ({
+            mensajero_id: group.mensajeroId,
+            fecha_grupo: group.dateKey
+        }))));
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.message || 'No se pudo actualizar el estado.');
+        }
+
+        mergeApiData(result.data);
         return result;
     };
 
@@ -3187,10 +3265,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            for (const group of groups) {
-                await postClientGroupStatus(group, estado);
-                state.selectedClienteGroups.delete(group.key);
-            }
+            await postClientGroupsStatus(groups, estado);
+            groups.forEach((group) => state.selectedClienteGroups.delete(group.key));
             closeClientDetailModal();
             render();
         } finally {
@@ -3233,10 +3309,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            for (const group of groups) {
-                await postMessengerGroupStatus(group, estado);
-                state.selectedMensajeroGroups.delete(group.key);
-            }
+            await postMessengerGroupsStatus(groups, estado);
+            groups.forEach((group) => state.selectedMensajeroGroups.delete(group.key));
             closeClientDetailModal();
             render();
         } finally {
