@@ -70,6 +70,24 @@ $notasAdminJsVersion = @filemtime(__DIR__ . '/../../public/js/notasAdmin.js') ?:
         </div>
     </div>
 
+    <div id="notasPermissionsModal" class="notas-modal-backdrop notas-hidden" aria-hidden="true">
+        <div class="notas-modal" role="dialog" aria-modal="true" aria-labelledby="notasPermissionsTitle">
+            <div class="notas-modal-head">
+                <h2 id="notasPermissionsTitle">Permisos de lista</h2>
+                <button type="button" class="notas-icon-btn" data-close-permissions-modal aria-label="Cerrar">x</button>
+            </div>
+            <form id="notasPermissionsForm" class="notas-card-form">
+                <input type="hidden" name="lista_id" value="">
+                <p class="notas-permissions-note" id="notasPermissionsListName"></p>
+                <div class="notas-permissions-list" id="notasPermissionsList"></div>
+                <div class="notas-modal-actions">
+                    <button type="button" class="notas-btn ghost" data-close-permissions-modal>Cancelar</button>
+                    <button type="submit" class="notas-btn primary">Guardar permisos</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="<?php echo htmlspecialchars(app_asset_url('js/notasAdmin.js') . '?v=' . $notasAdminJsVersion, ENT_QUOTES, 'UTF-8'); ?>"></script>
 </body>
 </html>

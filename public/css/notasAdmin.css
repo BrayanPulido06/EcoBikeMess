@@ -392,6 +392,58 @@ body.sidebar-collapsed .notas-admin-shell,
     font-weight: 700;
 }
 
+.notas-permissions-note {
+    margin: 0;
+    color: var(--notas-text);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.notas-permissions-list {
+    display: grid;
+    gap: 0.55rem;
+    max-height: min(420px, 55vh);
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.notas-permission-row {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    align-items: start;
+    gap: 0.65rem;
+    border: 1px solid var(--notas-border);
+    border-radius: 10px;
+    padding: 0.75rem;
+    background: #fff;
+}
+
+.notas-permission-row input {
+    width: 18px;
+    height: 18px;
+    margin-top: 0.1rem;
+    accent-color: var(--notas-primary);
+}
+
+.notas-permission-row span {
+    display: grid;
+    gap: 0.15rem;
+}
+
+.notas-permission-row strong {
+    color: var(--notas-text);
+    font-size: 0.95rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.notas-permission-row small {
+    color: var(--notas-muted);
+    font-size: 0.78rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
 @media (max-width: 992px) {
     .notas-admin-shell,
     body.sidebar-collapsed .notas-admin-shell,

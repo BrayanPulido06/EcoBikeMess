@@ -8,9 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('notasAdminModal');
     const modalTitle = document.getElementById('notasAdminModalTitle');
     const cardForm = document.getElementById('notasAdminCardForm');
+    const permissionsModal = document.getElementById('notasPermissionsModal');
+    const permissionsForm = document.getElementById('notasPermissionsForm');
+    const permissionsList = document.getElementById('notasPermissionsList');
+    const permissionsListName = document.getElementById('notasPermissionsListName');
     const searchInput = document.getElementById('notasAdminSearch');
     const deleteCardModalButton = document.querySelector('[data-role="delete-card-modal"]');
-    let state = { listas: [] };
+    let state = { listas: [], admins: [], current_user_id: null };
     let searchText = '';
     let refreshInProgress = false;
     let draggedListId = null;
@@ -60,7 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
     };
 
-    const isModalOpen = () => modal && !modal.classList.contains('notas-hidden');
+    const isModalOpen = () => (
+        Boolean(modal && !modal.classList.contains('notas-hidden'))
+        || Boolean(permissionsModal && !permissionsModal.classList.contains('notas-hidden'))
+    );
 
     const isEditingBoard = () => {
         const active = document.activeElement;
@@ -154,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         aria-label="Titulo de lista"
                     >
                     <span class="notas-count">${cards.length}</span>
+                    <button type="button" class="notas-icon-btn" data-role="list-permissions" data-list-id="${list.id}" title="Permisos de lista" aria-label="Permisos de lista">&#128274;</button>
                     <button type="button" class="notas-icon-btn notas-delete-list-btn" data-role="delete-list" data-list-id="${list.id}" title="Eliminar lista" aria-label="Eliminar lista">&#128465;</button>
                 </div>
                 <div class="notas-card-list">
@@ -214,6 +222,55 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     };
 
+    const findList = (listId) => (state.listas || []).find((item) => Number(item.id) === Number(listId)) || null;
+
+    const closePermissionsModal = () => {
+        if (!permissionsModal) return;
+        permissionsModal.classList.add('notas-hidden');
+        permissionsModal.setAttribute('aria-hidden', 'true');
+    };
+
+    const openPermissionsModal = (listId) => {
+        if (!permissionsModal || !permissionsForm || !permissionsList) return;
+        const list = findList(listId);
+        if (!list) return;
+
+        const admins = Array.isArray(state.admins) ? state.admins : [];
+        const selectedIds = new Set((Array.isArray(list.permisos) ? list.permisos : []).map((id) => Number(id)));
+        permissionsForm.reset();
+        permissionsForm.elements.lista_id.value = String(list.id);
+        if (permissionsListName) {
+            permissionsListName.textContent = list.titulo || 'Lista';
+        }
+
+        permissionsList.innerHTML = admins.length
+            ? admins.map((admin) => {
+                const adminId = Number(admin.id);
+                const isCurrentUser = adminId === Number(state.current_user_id || 0);
+                const checked = !list.permisos_configurados || selectedIds.has(adminId) || isCurrentUser;
+                return `
+                    <label class="notas-permission-row">
+                        <input
+                            type="checkbox"
+                            name="permiso_admin"
+                            value="${adminId}"
+                            ${checked ? 'checked' : ''}
+                            ${isCurrentUser ? 'disabled' : ''}
+                        >
+                        <span>
+                            <strong>${escapeHtml(admin.nombre || 'Administrador')}</strong>
+                            ${admin.correo ? `<small>${escapeHtml(admin.correo)}</small>` : ''}
+                            ${isCurrentUser ? '<small>Tu usuario siempre conserva acceso.</small>' : ''}
+                        </span>
+                    </label>
+                `;
+            }).join('')
+            : '<div class="notas-empty">No hay administradores activos disponibles.</div>';
+
+        permissionsModal.classList.remove('notas-hidden');
+        permissionsModal.setAttribute('aria-hidden', 'false');
+    };
+
     const openCardModal = (listId, cardId = null) => {
         if (!modal || !cardForm || !modalTitle) return;
         cardForm.reset();
@@ -267,6 +324,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const editCardButton = event.target.closest('[data-role="edit-card"]');
         if (editCardButton) {
             openCardModal(null, editCardButton.dataset.cardId);
+            return;
+        }
+
+        const permissionsButton = event.target.closest('[data-role="list-permissions"]');
+        if (permissionsButton) {
+            openPermissionsModal(permissionsButton.dataset.listId);
             return;
         }
 
@@ -360,6 +423,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    permissionsModal?.addEventListener('click', (event) => {
+        if (event.target === permissionsModal || event.target.closest('[data-close-permissions-modal]')) {
+            closePermissionsModal();
+        }
+    });
+
     cardForm?.addEventListener('submit', (event) => {
         event.preventDefault();
         const tarjetaId = cardForm.elements.tarjeta_id.value;
@@ -373,6 +442,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const action = tarjetaId ? 'actualizar_tarjeta' : 'crear_tarjeta';
         postAction(action, payload)
             .then(closeCardModal)
+            .catch((error) => alert(error.message));
+    });
+
+    permissionsForm?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const checkedIds = Array.from(permissionsForm.querySelectorAll('input[name="permiso_admin"]:checked'))
+            .map((input) => Number(input.value))
+            .filter((id) => id > 0);
+        const currentUserId = Number(state.current_user_id || 0);
+        if (currentUserId > 0 && !checkedIds.includes(currentUserId)) {
+            checkedIds.push(currentUserId);
+        }
+
+        postAction('actualizar_permisos_lista', {
+            lista_id: permissionsForm.elements.lista_id.value,
+            permisos: JSON.stringify(checkedIds)
+        })
+            .then(closePermissionsModal)
             .catch((error) => alert(error.message));
     });
 
@@ -393,6 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
             closeCardModal();
+            closePermissionsModal();
         }
     });
 

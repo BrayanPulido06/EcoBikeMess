@@ -471,6 +471,7 @@ CREATE TABLE IF NOT EXISTS notas_admin_listas (
     titulo VARCHAR(160) NOT NULL,
     posicion INT NOT NULL DEFAULT 0,
     creado_por INT NULL,
+    permisos_configurados TINYINT(1) NOT NULL DEFAULT 0,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (creado_por) REFERENCES usuarios(id) ON DELETE SET NULL
@@ -493,6 +494,20 @@ CREATE TABLE IF NOT EXISTS notas_admin_tarjetas (
 );
 
 CREATE INDEX idx_notas_admin_tarjetas_lista ON notas_admin_tarjetas(lista_id, posicion, id);
+
+CREATE TABLE IF NOT EXISTS notas_admin_lista_permisos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    lista_id INT NOT NULL,
+    usuario_id INT NOT NULL,
+    asignado_por INT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_notas_lista_usuario (lista_id, usuario_id),
+    FOREIGN KEY (lista_id) REFERENCES notas_admin_listas(id) ON DELETE CASCADE,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (asignado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_notas_lista_permisos_usuario ON notas_admin_lista_permisos(usuario_id, lista_id);
 
 CREATE TABLE IF NOT EXISTS pagos (
     id INT PRIMARY KEY AUTO_INCREMENT,
