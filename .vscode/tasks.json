@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "PHP: revisar sintaxis",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$php = 'C:\\xampp\\php\\php.exe'; $files = rg --files -g '*.php'; $failed = $false; foreach ($file in $files) { $output = & $php -l $file 2>&1; if ($LASTEXITCODE -ne 0) { $failed = $true; Write-Output $output; } }; if (-not $failed) { Write-Output 'No syntax errors detected in PHP files.' }; if ($failed) { exit 1 }"
+      ],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "PHP: servidor local",
+      "type": "shell",
+      "command": "C:\\xampp\\php\\php.exe",
+      "args": [
+        "-S",
+        "127.0.0.1:8000",
+        "-t",
+        "${workspaceFolder}"
+      ],
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

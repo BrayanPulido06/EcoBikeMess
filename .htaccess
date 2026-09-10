@@ -5,9 +5,15 @@ AddCharset UTF-8 .php .html .css .js .json
 # Forzar HTTPS en Hostinger
 RewriteEngine On
 
+# Usar siempre un solo dominio canonico
+RewriteCond %{HTTP_HOST} ^www\.ecobikemess\.com$ [NC]
+RewriteRule ^ https://ecobikemess.com%{REQUEST_URI} [L,R=301,NE]
+
 # Bloquear ejecucion de scripts dentro de archivos subidos
 RewriteRule ^uploads/.*\.(php|phtml|phar|pl|py|jsp|asp|sh|cgi)$ - [F,L,NC]
+
 RewriteCond %{HTTPS} off
+RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # Redirecciones desde rutas físicas antiguas hacia URLs amigables
