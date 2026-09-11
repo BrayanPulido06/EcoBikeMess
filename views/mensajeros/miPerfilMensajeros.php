@@ -4,8 +4,7 @@ require_once '../../models/conexionGlobal.php';
 require_once __DIR__ . '/../../includes/paths.php';
 
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajero') {
-    header('Location: ../login.php?error=Debes iniciar sesion.');
-    exit();
+    redirect_route('login', ['error' => 'Debes iniciar sesion.']);
 }
 
 $user_id = $_SESSION['user_id'];
