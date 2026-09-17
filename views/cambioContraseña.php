@@ -10,7 +10,7 @@ function tokenRecuperacionExiste(string $token): bool
 
     try {
         $conn = conexionDB();
-        $stmt = $conn->prepare("SELECT id FROM usuarios WHERE token = :token LIMIT 1");
+        $stmt = $conn->prepare("SELECT id FROM usuarios WHERE token = :token AND token_expiracion >= NOW() LIMIT 1");
         $stmt->execute([':token' => $token]);
         return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (Throwable $e) {

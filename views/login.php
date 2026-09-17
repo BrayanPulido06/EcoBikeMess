@@ -102,7 +102,7 @@
                     <div class="form-group">
                         <label for="loginPassword">Contraseña</label>
                         <div class="password-input">
-                            <input type="password" id="loginPassword" name="password" placeholder="••••••••" value="<?php echo isset($_COOKIE['remember_password']) ? htmlspecialchars($_COOKIE['remember_password']) : ''; ?>" required>
+                            <input type="password" id="loginPassword" name="password" placeholder="••••••••" required>
                             <button type="button" class="toggle-password" data-target="loginPassword">
                                 <span class="eye-icon">👁️</span>
                             </button>

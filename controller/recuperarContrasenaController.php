@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 redirect_route('reset-password', ['token' => $token, 'error' => 'La contrasena debe tener al menos 8 caracteres']);
             }
 
-            $sql = "SELECT id FROM usuarios WHERE token = :token LIMIT 1";
+            $sql = "SELECT id FROM usuarios WHERE token = :token AND token_expiracion >= NOW() LIMIT 1";
             $stmt = $conn->prepare($sql);
             $stmt->execute([':token' => $token]);
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
