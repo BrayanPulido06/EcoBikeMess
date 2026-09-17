@@ -73,6 +73,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     break;
             }
         } else {
+            if (isset($_COOKIE['remember_password'])) {
+                setcookie('remember_password', '', time() - 3600, "/");
+            }
             redirect_route('login', ['error' => 'Correo o contrasena incorrectos']);
         }
     } catch (Exception $e) {
