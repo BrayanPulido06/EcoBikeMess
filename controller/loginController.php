@@ -46,14 +46,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if (isset($_POST['remember_me'])) {
                 setcookie('remember_email', $correo, time() + $sessionLifetime, "/");
+                setcookie('remember_password', $password, time() + $sessionLifetime, "/");
             } else {
                 if (isset($_COOKIE['remember_email'])) {
                     setcookie('remember_email', '', time() - 3600, "/");
                 }
-            }
-
-            if (isset($_COOKIE['remember_password'])) {
-                setcookie('remember_password', '', time() - 3600, "/");
+                if (isset($_COOKIE['remember_password'])) {
+                    setcookie('remember_password', '', time() - 3600, "/");
+                }
             }
 
             switch ($rol) {
