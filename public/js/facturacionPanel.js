@@ -528,9 +528,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const hasPending = clientGroups.some((group) => group.estado !== 'pagado');
                 return estadoFilter === 'pendiente' ? hasPending : !hasPending;
             })
-            .sort((a, b) => (
-                a.clienteNombre.localeCompare(b.clienteNombre, 'es', { sensitivity: 'base' })
-            ));
+            .sort((a, b) => {
+                const fechaCompare = String(b.ultimaFecha || '').localeCompare(String(a.ultimaFecha || ''));
+                if (fechaCompare !== 0) {
+                    return fechaCompare;
+                }
+
+                return a.clienteNombre.localeCompare(b.clienteNombre, 'es', { sensitivity: 'base' });
+            });
     };
 
     const renderClienteFolders = (folders) => {
@@ -628,9 +633,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const hasPending = messengerGroups.some((group) => group.estado !== 'pagado');
                 return estadoFilter === 'pendiente' ? hasPending : !hasPending;
             })
-            .sort((a, b) => (
-                a.mensajeroNombre.localeCompare(b.mensajeroNombre, 'es', { sensitivity: 'base' })
-            ));
+            .sort((a, b) => {
+                const fechaCompare = String(b.ultimaFecha || '').localeCompare(String(a.ultimaFecha || ''));
+                if (fechaCompare !== 0) {
+                    return fechaCompare;
+                }
+
+                return a.mensajeroNombre.localeCompare(b.mensajeroNombre, 'es', { sensitivity: 'base' });
+            });
     };
 
     const renderMensajeroFolders = (folders) => {
