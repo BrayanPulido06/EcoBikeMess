@@ -324,7 +324,7 @@ table {
 
 #tablaFacturas th:last-child,
 #tablaFacturas td:last-child {
-    min-width: 240px;
+    min-width: 290px;
 }
 
 #tablaFacturas .btn {
@@ -427,9 +427,26 @@ tbody tr.por-vencer {
 /* Action Buttons in Table */
 .action-buttons {
     display: flex;
-    gap: 5px;
+    gap: 7px;
     flex-wrap: wrap;
-    min-width: 220px;
+    min-width: 270px;
+    align-items: center;
+}
+
+.btn-cancelar-pedido {
+    min-width: 104px;
+    justify-content: center;
+    background: #e11d48;
+    border: 2px solid #be123c;
+    color: #fff;
+    font-weight: 800;
+    box-shadow: 0 3px 8px rgba(190, 18, 60, 0.24);
+}
+
+.btn-cancelar-pedido:hover {
+    background: #be123c;
+    border-color: #9f1239;
+    box-shadow: 0 5px 12px rgba(190, 18, 60, 0.32);
 }
 
 /* Pagination */
@@ -825,7 +842,7 @@ tbody tr.por-vencer {
 
     #tablaFacturas th:last-child,
     #tablaFacturas td:last-child {
-        min-width: 260px;
+        min-width: 300px;
     }
 
     .action-buttons {

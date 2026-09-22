@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="action-buttons">
                             <button class="btn btn-sm btn-warning" onclick="cargarRotulo(${f.id})" title="Ver Rótulo">🏷️ Rótulo</button>
                             <button class="btn btn-sm btn-info" onclick="verDetalle(${f.id})" title="Ver Detalle">👁️</button>
-                            ${f.estado !== 'entregado' && f.estado !== 'cancelado' ? `<button class="btn btn-sm btn-danger" onclick="cancelarPedido(${f.id}, '${f.numero_guia}')" title="Cancelar Pedido">🗑️</button>` : ''}
+                            ${f.estado !== 'entregado' && f.estado !== 'cancelado' ? `<button class="btn btn-sm btn-danger btn-cancelar-pedido" onclick="cancelarPedido(${f.id}, '${f.numero_guia}')" title="Cancelar Pedido" aria-label="Cancelar Pedido">Cancelar</button>` : ''}
                         </div>
                     </td>
                 </tr>
