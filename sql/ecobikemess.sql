@@ -152,6 +152,7 @@ CREATE TABLE IF NOT EXISTS paquetes (
     envio_mismo_dia TINYINT(1) NOT NULL DEFAULT 0,
     zona_periferica TINYINT(1) NOT NULL DEFAULT 0,
     recoger_cambios TINYINT(1) NOT NULL DEFAULT 0,
+    embalaje TINYINT(1) NOT NULL DEFAULT 0,
     envio_destinatario ENUM('si', 'no') DEFAULT 'no',
     tipo_servicio ENUM('entrega_simple', 'contraentrega') DEFAULT 'entrega_simple',
     costo_envio DECIMAL(10,2) NOT NULL,

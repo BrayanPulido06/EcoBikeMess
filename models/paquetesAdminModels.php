@@ -6,6 +6,7 @@ class PaquetesAdminModel {
 
     public function __construct() {
         $this->conn = conexionDB();
+        $this->ensurePaquetesAdditionalColumns();
         $this->ensureEntregaAdditionalColumns();
         $this->ensureChecklistVerdeColumn();
         $this->ensureNovedadesAdminSupport();
@@ -50,6 +51,23 @@ class PaquetesAdminModel {
             }
         } catch (Throwable $e) {
             // No bloquear la app si falla el ajuste.
+        }
+    }
+
+    private function ensurePaquetesAdditionalColumns(): void
+    {
+        $columns = [
+            'embalaje' => "ALTER TABLE paquetes ADD COLUMN embalaje TINYINT(1) NOT NULL DEFAULT 0 AFTER recoger_cambios"
+        ];
+
+        foreach ($columns as $column => $sql) {
+            if (!$this->columnExists('paquetes', $column)) {
+                try {
+                    $this->conn->exec($sql);
+                } catch (Throwable $e) {
+                    // No bloqueamos la app si la alteracion falla.
+                }
+            }
         }
     }
 
@@ -408,6 +426,7 @@ class PaquetesAdminModel {
                        CONCAT(um_rec.nombres, ' ', um_rec.apellidos) as mensajero_recoleccion,
                        r.estado as estado_recoleccion,
                        p.envio_destinatario as envio_destinatario,
+                       p.embalaje as embalaje,
                        p.costo_envio as costo_envio,
                        p.recaudo_esperado as recaudo_esperado,
                        COALESCE(e.recaudo_real, 0) as recaudo_real,
@@ -539,6 +558,7 @@ class PaquetesAdminModel {
             $hasEnvioMismoDia = $this->columnExists('paquetes', 'envio_mismo_dia');
             $hasZonaPeriferica = $this->columnExists('paquetes', 'zona_periferica');
             $hasRecogerCambios = $this->columnExists('paquetes', 'recoger_cambios');
+            $hasEmbalaje = $this->columnExists('paquetes', 'embalaje');
 
             $sqlInfo = "SELECT p.numero_guia, 
                                p.id as paquete_id,
@@ -594,6 +614,7 @@ class PaquetesAdminModel {
                                " . ($hasEnvioMismoDia ? "p.envio_mismo_dia" : "0") . " as envio_mismo_dia,
                                " . ($hasZonaPeriferica ? "p.zona_periferica" : "0") . " as zona_periferica,
                                " . ($hasRecogerCambios ? "p.recoger_cambios" : "0") . " as recoger_cambios,
+                               " . ($hasEmbalaje ? "p.embalaje" : "0") . " as embalaje,
                                p.envio_destinatario,
                                p.tipo_servicio as tipo_paquete,
                                p.costo_envio,
@@ -769,6 +790,7 @@ class PaquetesAdminModel {
                     envio_mismo_dia = :envio_mismo_dia,
                     zona_periferica = :zona_periferica,
                     recoger_cambios = :recoger_cambios,
+                    embalaje = :embalaje,
                     envio_destinatario = :envio_destinatario,
                     estado = :estado,
                     mensajero_id = :mensajero_id,
@@ -796,6 +818,7 @@ class PaquetesAdminModel {
             ':envio_mismo_dia' => !empty($data['envio_mismo_dia']) ? 1 : 0,
             ':zona_periferica' => !empty($data['zona_periferica']) ? 1 : 0,
             ':recoger_cambios' => !empty($data['recoger_cambios']) ? 1 : 0,
+            ':embalaje' => !empty($data['embalaje']) ? 1 : 0,
             ':envio_destinatario' => (($data['envio_destinatario'] ?? 'no') === 'si') ? 'si' : 'no',
             ':estado' => $data['estado'],
             ':mensajero_id' => $data['mensajero_id'] ?: null,

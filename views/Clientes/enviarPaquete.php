@@ -563,6 +563,12 @@ $remitente_data = [
                                 </div>
                                 <div class="form-group">
                                     <label class="checkbox-label">
+                                        <input type="checkbox" id="embalaje" name="embalaje">
+                                        <span>Embalaje (+$1.000)</span>
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label class="checkbox-label">
                                         <input type="checkbox" id="recoger_cambios" name="recoger_cambios">
                                         <span>¿Hay cambios por recoger? (+$5.000)</span>
                                     </label>
@@ -597,6 +603,10 @@ $remitente_data = [
                                 <div class="cost-item">
                                     <span>Cambios por recoger:</span>
                                     <span id="recargoCambios">$0</span>
+                                </div>
+                                <div class="cost-item">
+                                    <span>Embalaje:</span>
+                                    <span id="recargoEmbalaje">$0</span>
                                 </div>
                                 <div class="cost-item">
                                     <span>Recaudo (si aplica):</span>
@@ -801,6 +811,6 @@ $remitente_data = [
 
     <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/rotuloShared.js?v=20260721-4"></script>
-    <script src="../../public/js/enviarPaquete.js?v=20260804-1"></script>
+    <script src="../../public/js/enviarPaquete.js?v=20260922-1"></script>
 </body>
 </html>

@@ -981,6 +981,7 @@ document.addEventListener('DOMContentLoaded', function() {
             "Recaudo": p.recaudo_esperado || 0,
             "Recaudo Real": p.recaudo_real || 0,
             "Cambios Recogidos": Number(p.recibio_cambios) === 1 ? 'Sí' : 'No',
+            "Embalaje": Number(p.embalaje) === 1 ? 'Si' : 'No',
             "Valor Envio": p.costo_envio || 0,
             "Envio Agregado": p.envio_destinatario || 'no'
         }));
@@ -1749,6 +1750,12 @@ function verDetalle(id, options = {}) {
                                     </select>
                                 </div>
                                 <div class="detalle-item">
+                                    <div class="detalle-label">Embalaje</div>
+                                    <select class="form-control" name="embalaje">
+                                        ${yesNoOptions(info.embalaje)}
+                                    </select>
+                                </div>
+                                <div class="detalle-item">
                                     <div class="detalle-label">Sumar envío al recaudo</div>
                                     <select class="form-control" name="envio_destinatario">
                                         ${envioDestinatarioOptions(info.envio_destinatario)}
@@ -1894,6 +1901,7 @@ function verDetalle(id, options = {}) {
                             + (Number(form.querySelector('select[name="envio_mismo_dia"]')?.value || 0) === 1 ? 2000 : 0)
                             + (Number(form.querySelector('select[name="zona_periferica"]')?.value || 0) === 1 ? 4000 : 0)
                             + (Number(form.querySelector('select[name="recoger_cambios"]')?.value || 0) === 1 ? 5000 : 0)
+                            + (Number(form.querySelector('select[name="embalaje"]')?.value || 0) === 1 ? 1000 : 0)
                             + recargoRecaudo;
 
                         if (costoInput) {
@@ -1906,6 +1914,7 @@ function verDetalle(id, options = {}) {
                         'select[name="envio_mismo_dia"]',
                         'select[name="zona_periferica"]',
                         'select[name="recoger_cambios"]',
+                        'select[name="embalaje"]',
                         'select[name="tipo_servicio"]',
                         'input[name="recaudo_esperado"]'
                     ].join(',')).forEach((field) => {
@@ -1965,6 +1974,7 @@ function verDetalle(id, options = {}) {
                             envio_mismo_dia: parseInt(formData.get('envio_mismo_dia') || '0', 10) === 1 ? 1 : 0,
                             zona_periferica: parseInt(formData.get('zona_periferica') || '0', 10) === 1 ? 1 : 0,
                             recoger_cambios: parseInt(formData.get('recoger_cambios') || '0', 10) === 1 ? 1 : 0,
+                            embalaje: parseInt(formData.get('embalaje') || '0', 10) === 1 ? 1 : 0,
                             envio_destinatario: formData.get('envio_destinatario') === 'si' ? 'si' : 'no'
                         };
 

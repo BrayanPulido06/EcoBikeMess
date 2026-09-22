@@ -179,6 +179,7 @@ try {
                 'envio_mismo_dia' => (int) ($input['envio_mismo_dia'] ?? 0) === 1 ? 1 : 0,
                 'zona_periferica' => (int) ($input['zona_periferica'] ?? 0) === 1 ? 1 : 0,
                 'recoger_cambios' => (int) ($input['recoger_cambios'] ?? 0) === 1 ? 1 : 0,
+                'embalaje' => (int) ($input['embalaje'] ?? 0) === 1 ? 1 : 0,
                 'envio_destinatario' => strtolower((string) ($input['envio_destinatario'] ?? 'no')) === 'si' ? 'si' : 'no'
             ];
 

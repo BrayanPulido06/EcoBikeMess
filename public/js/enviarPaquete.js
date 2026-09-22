@@ -523,13 +523,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     const zonaPeriferica = parseSiNo(getStructuredValue(12, getValue('zona periferica')));
                     const recogerCambios = parseSiNo(getStructuredValue(13, getValue('recoger cambios')));
                     const sumarEnvio = parseSiNo(getStructuredValue(14, getValue('sumar envio')));
+                    const embalaje = parseSiNo(getStructuredValue(15, getValue('embalaje')));
 
                     const chkMismoDia = document.getElementById('envio_mismo_dia');
                     const chkZona = document.getElementById('zona_periferica');
                     const chkCambios = document.getElementById('recoger_cambios');
+                    const chkEmbalaje = document.getElementById('embalaje');
                     if (chkMismoDia) chkMismoDia.checked = mismoDia;
                     if (chkZona) chkZona.checked = zonaPeriferica;
                     if (chkCambios) chkCambios.checked = recogerCambios;
+                    if (chkEmbalaje) chkEmbalaje.checked = embalaje;
 
                     // Dimensiones - El usuario debe seleccionarlo manualmente ya que la lógica es compleja.
                     // Se podría implementar una lógica para mapear cm a la opción correcta si se desea.
@@ -596,6 +599,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const zonaPeriferica = parseSiNo(getStructuredValue(12, getValue('zona periferica')));
             const recogerCambios = parseSiNo(getStructuredValue(13, getValue('recoger cambios')));
             const sumarEnvio = parseSiNo(getStructuredValue(14, getValue('sumar envio')));
+            const embalaje = parseSiNo(getStructuredValue(15, getValue('embalaje')));
             const valorRecaudo = parseFloat(getStructuredValue(9, getValue('valor recaudo') || getValue('recaudo') || 0)) || 0;
             const tieneRecaudo = parseSiNo(getStructuredValue(8, getValue('tiene recaudo') || getValue('pago contra entrega'))) || valorRecaudo > 0;
 
@@ -604,6 +608,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const recargoMismoDia = modoMensajeroFijo ? 0 : (mismoDia ? 2000 : 0);
             const recargoZona = modoMensajeroFijo ? 0 : (zonaPeriferica ? 4000 : 0);
             const recargoCambios = modoMensajeroFijo ? 0 : (recogerCambios ? 5000 : 0);
+            const recargoEmbalaje = modoMensajeroFijo ? 0 : (embalaje ? 1000 : 0);
             const fijoContraentrega = 3000;
             const extraRecaudo = modoMensajeroFijo
                 ? 0
@@ -612,7 +617,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     : 0);
             const recargoRecaudo = modoMensajeroFijo ? 0 : (tieneRecaudo ? (fijoContraentrega + Math.max(0, extraRecaudo)) : 0);
             const costoBase = getFixedShippingCost();
-            const total = costoBase + recargoDimensiones + recargoMismoDia + recargoZona + recargoCambios + recargoRecaudo;
+            const total = costoBase + recargoDimensiones + recargoMismoDia + recargoZona + recargoCambios + recargoEmbalaje + recargoRecaudo;
             const valorRecaudoFinal = sumarEnvio ? (valorRecaudo + total) : valorRecaudo;
 
             // Preparar objeto de datos
@@ -633,6 +638,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 envio_mismo_dia: mismoDia ? 'on' : '',
                 zona_periferica: zonaPeriferica ? 'on' : '',
                 recoger_cambios: recogerCambios ? 'on' : '',
+                embalaje: embalaje ? 'on' : '',
                 tiene_recaudo: tieneRecaudo ? 'on' : '',
                 valor_recaudo: valorRecaudoFinal || 0,
                 envio_destinatario: sumarEnvio ? 'si' : 'no',
@@ -666,7 +672,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="bulk-cell-stack">
                         <strong>${descripcionDimension(item.dimensiones_paquete)}</strong>
                         <small>Recaudo: $${Number(item.valor_recaudo || 0).toLocaleString('es-CO')}</small>
-                        <small>Mismo día: ${item.envio_mismo_dia ? 'Sí' : 'No'} | Cambios: ${item.recoger_cambios ? 'Sí' : 'No'}</small>
+                        <small>Mismo día: ${item.envio_mismo_dia ? 'Sí' : 'No'} | Cambios: ${item.recoger_cambios ? 'Sí' : 'No'} | Embalaje: ${item.embalaje ? 'Sí' : 'No'}</small>
                     </div>
                 </td>
                 <td><strong>$${total.toLocaleString('es-CO')}</strong></td>
@@ -883,9 +889,9 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
             [6, "Entre 46x46 y 49x49 cm", 12000],
             [7, "Igual o mayor a 50 x 50 cm", "Notificar"],
             [],
-            ["Datos Remitente", "", "", "", "Datos Destinatario", "", "", "", "Información del Paquete", "", "", "", "", "", ""],
-            ["Nombre Completo", "Telefono", "Observaciones de Recoleccion", "Direccion de Origen", "Nombre Completo", "Telefono", "Direccion de Destino", "Observaciones y/o Descripciones", "Pago Contra Entrega (si/no)", "Valor recaudo", "Dimensiones del paquete", "Entrega Mismo Dia (si/no)", "Zona Periferica (si/no)", "Recoger Cambios (si/no)", "Sumar envio al recaudo (si/no)"],
-            ["Ej: Pepito Perez", "1234567890", "", "Carrera 5 #33-22", "Maria Perez", "1234567890", "Calle 4 #23-10 Este", "Ninguna", "si", 100000, 3, "no", "no", "si", "si"]
+            ["Datos Remitente", "", "", "", "Datos Destinatario", "", "", "", "Información del Paquete", "", "", "", "", "", "", ""],
+            ["Nombre Completo", "Telefono", "Observaciones de Recoleccion", "Direccion de Origen", "Nombre Completo", "Telefono", "Direccion de Destino", "Observaciones y/o Descripciones", "Pago Contra Entrega (si/no)", "Valor recaudo", "Dimensiones del paquete", "Entrega Mismo Dia (si/no)", "Zona Periferica (si/no)", "Recoger Cambios (si/no)", "Sumar envio al recaudo (si/no)", "Embalaje (si/no)"],
+            ["Ej: Pepito Perez", "1234567890", "", "Carrera 5 #33-22", "Maria Perez", "1234567890", "Calle 4 #23-10 Este", "Ninguna", "si", 100000, 3, "no", "no", "si", "si", "no"]
         ];
 
         rows.forEach(row => sheet.addRow(row));
@@ -893,12 +899,12 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
             { width: 18 }, { width: 26 }, { width: 16 }, { width: 22 },
             { width: 18 }, { width: 14 }, { width: 20 }, { width: 24 },
             { width: 18 }, { width: 14 }, { width: 16 }, { width: 18 },
-            { width: 16 }, { width: 16 }, { width: 20 }
+            { width: 16 }, { width: 16 }, { width: 20 }, { width: 16 }
         ];
 
         sheet.mergeCells('A10:D10');
         sheet.mergeCells('E10:H10');
-        sheet.mergeCells('I10:O10');
+        sheet.mergeCells('I10:P10');
 
         const border = {
             top: { style: 'thin', color: { argb: 'FF000000' } },
@@ -930,8 +936,8 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         };
 
         styleRange(1, 8, 1, 3, 'FFFFF2CC', true);
-        styleRange(10, 10, 1, 15, 'FFD9EAF7', true);
-        styleRange(11, 11, 1, 15, 'FFDFF0D0', true);
+        styleRange(10, 10, 1, 16, 'FFD9EAF7', true);
+        styleRange(11, 11, 1, 16, 'FFDFF0D0', true);
 
         for (let row = 1; row <= 11; row++) {
             sheet.getRow(row).height = row === 10 ? 24 : 20;
@@ -993,6 +999,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                         "Recoger Cambios (si/no)": "no",
                         "Tiene Recaudo (si/no)": "no",
                         "Valor Recaudo": 0,
+                        "Embalaje (si/no)": "no",
                         "Sumar Envío al Recaudo (si/no)": "no"
                     }
                 ];
@@ -1007,19 +1014,19 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                         [6, "Entre 46x46 y 49x49 cm", 12000],
                         [7, "Igual o mayor a 50 x 50 cm", "Notificar"],
                         [],
-                        ["Datos Remitente", "", "", "", "Datos Destinatario", "", "", "", "Información Del Paquete", "", "", "", "", "", ""],
-                        ["Nombre Completo", "Telefono", "Observaciones de Recoleccion", "Direccion de Origen", "Nombre Completo", "Telefono", "Direccion de Destino", "Observaciones y/o Descripciones", "Pago Contra Entrega (si/no)", "Valor recaudo", "Dimensiones del paquete", "Entrega Mismo Dia (si/no)", "Zona Periferica (si/no)", "Recoger Cambios (si/no)", "Sumar envio al recaudo (si/no)"]
+                        ["Datos Remitente", "", "", "", "Datos Destinatario", "", "", "", "Información Del Paquete", "", "", "", "", "", "", ""],
+                        ["Nombre Completo", "Telefono", "Observaciones de Recoleccion", "Direccion de Origen", "Nombre Completo", "Telefono", "Direccion de Destino", "Observaciones y/o Descripciones", "Pago Contra Entrega (si/no)", "Valor recaudo", "Dimensiones del paquete", "Entrega Mismo Dia (si/no)", "Zona Periferica (si/no)", "Recoger Cambios (si/no)", "Sumar envio al recaudo (si/no)", "Embalaje (si/no)"]
                     ]);
                     sheet['!cols'] = [
                         { wch: 18 }, { wch: 26 }, { wch: 16 }, { wch: 22 },
                         { wch: 18 }, { wch: 14 }, { wch: 20 }, { wch: 24 },
                         { wch: 18 }, { wch: 14 }, { wch: 16 }, { wch: 18 },
-                        { wch: 16 }, { wch: 16 }, { wch: 20 }
+                        { wch: 16 }, { wch: 16 }, { wch: 20 }, { wch: 16 }
                     ];
                     sheet['!merges'] = [
                         { s: { r: 9, c: 0 }, e: { r: 9, c: 3 } },
                         { s: { r: 9, c: 4 }, e: { r: 9, c: 7 } },
-                        { s: { r: 9, c: 8 }, e: { r: 9, c: 14 } }
+                        { s: { r: 9, c: 8 }, e: { r: 9, c: 15 } }
                     ];
                     const border = {
                         top: { style: 'thin', color: { rgb: '000000' } },
@@ -1045,8 +1052,8 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
                         }
                     };
                     paintRange(0, 7, 0, 2, 'FFF2CC', true);
-                    paintRange(9, 9, 0, 14, 'D9EAF7', true);
-                    paintRange(10, 10, 0, 14, 'DFF0D0', true);
+                    paintRange(9, 9, 0, 15, 'D9EAF7', true);
+                    paintRange(10, 10, 0, 15, 'DFF0D0', true);
                     return sheet;
                 })();
                 const wb = XLSX.utils.book_new();
@@ -1104,6 +1111,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         const mismoDiaCheckbox = document.getElementById('envio_mismo_dia');
         const zonaPerifericaCheckbox = document.getElementById('zona_periferica');
         const recogerCambiosCheckbox = document.getElementById('recoger_cambios');
+        const embalajeCheckbox = document.getElementById('embalaje');
         const dimensionesSelect = document.getElementById('dimensiones_paquete');
 
         let recargoDimensionesValue = dimensionesSelect ? dimensionesSelect.value : '0';
@@ -1130,6 +1138,7 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         let recargoMismoDia = (mismoDiaCheckbox && mismoDiaCheckbox.checked) ? 2000 : 0;
         let recargoZona = (zonaPerifericaCheckbox && zonaPerifericaCheckbox.checked) ? 4000 : 0;
         let recargoCambios = (recogerCambiosCheckbox && recogerCambiosCheckbox.checked) ? 5000 : 0;
+        let recargoEmbalaje = (embalajeCheckbox && embalajeCheckbox.checked) ? 1000 : 0;
         let recargoDimensiones = modoMensajeroFijo ? 0 : (parseInt(recargoDimensionesValue, 10) || 0);
         
         let recargoRecaudo = 0;
@@ -1142,13 +1151,14 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
 
         const total = modoMensajeroFijo
             ? getFixedShippingCost()
-            : (costoBase + recargoRecaudo + recargoMismoDia + recargoZona + recargoDimensiones + recargoCambios);
+            : (costoBase + recargoRecaudo + recargoMismoDia + recargoZona + recargoDimensiones + recargoCambios + recargoEmbalaje);
 
         if (modoMensajeroFijo) {
             recargoDimensiones = 0;
             recargoMismoDia = 0;
             recargoZona = 0;
             recargoCambios = 0;
+            recargoEmbalaje = 0;
             recargoRecaudo = 0;
         }
 
@@ -1172,6 +1182,11 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
         const recargoCambiosDisplay = document.getElementById('recargoCambios');
         if(recargoCambiosDisplay) {
             recargoCambiosDisplay.textContent = `$${recargoCambios.toLocaleString('es-CO')}`;
+        }
+
+        const recargoEmbalajeDisplay = document.getElementById('recargoEmbalaje');
+        if(recargoEmbalajeDisplay) {
+            recargoEmbalajeDisplay.textContent = `$${recargoEmbalaje.toLocaleString('es-CO')}`;
         }
         
         const recaudoDisplay = document.getElementById('valorRecaudoDisplay');
@@ -1239,11 +1254,13 @@ Recaudo: ${item.valor_recaudo > 0 ? '$' + item.valor_recaudo : 'No aplica'}
     const mismoDiaInput = document.getElementById('envio_mismo_dia');
     const zonaPerifericaInput = document.getElementById('zona_periferica');
     const recogerCambiosInput = document.getElementById('recoger_cambios');
+    const embalajeInput = document.getElementById('embalaje');
     const dimensionesInput = document.getElementById('dimensiones_paquete');
 
     if (mismoDiaInput) mismoDiaInput.addEventListener('change', calcularCostoAutomatico);
     if (zonaPerifericaInput) zonaPerifericaInput.addEventListener('change', calcularCostoAutomatico);
     if (recogerCambiosInput) recogerCambiosInput.addEventListener('change', calcularCostoAutomatico);
+    if (embalajeInput) embalajeInput.addEventListener('change', calcularCostoAutomatico);
     if (dimensionesInput) dimensionesInput.addEventListener('change', calcularCostoAutomatico);
     
     // Listeners para los radios de sumar envío

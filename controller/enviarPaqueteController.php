@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $datos['tiene_recaudo'] = isset($_POST['tiene_recaudo']) ? 1 : 0;
         $datos['tiene_cambios'] = isset($_POST['recoger_cambios']) ? 1 : 0;
+        $datos['embalaje'] = isset($_POST['embalaje']) ? 1 : 0;
         $datos['envio_destinatario'] = $_POST['envio_destinatario'] ?? 'no';
 
         $dimensionesMap = [
