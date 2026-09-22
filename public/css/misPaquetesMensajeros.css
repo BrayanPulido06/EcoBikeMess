@@ -409,7 +409,7 @@ input, select, textarea, button {
 
 .paquete-acciones-secundarias {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 0.5rem;
 }
 
@@ -432,6 +432,7 @@ input, select, textarea, button {
 }
 
 .btn-cancelar-paquete {
+    width: 100%;
     background: #fef2f2;
     color: #b91c1c;
     border: 2px solid #fca5a5;

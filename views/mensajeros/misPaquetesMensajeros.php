@@ -26,7 +26,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>EB</text></svg>">
     
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
-    <link rel="stylesheet" href="../../public/css/misPaquetesMensajeros.css?v=20260922-1">
+    <link rel="stylesheet" href="../../public/css/misPaquetesMensajeros.css?v=20260922-2">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css?v=20260528-1">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <style>

@@ -330,10 +330,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                         <option value="">Todos los estados</option>
                         <option value="sin_asignar">Sin asignar</option>
                         <option value="pendiente">Pendiente</option>
-                        <option value="asignado">Asignado</option>
-                        <option value="en_transito">En Tránsito</option>
                         <option value="entregado">Entregado</option>
-                        <option value="devuelto">Devuelto</option>
                         <option value="cancelado">Cancelado</option>
                     </select>
                 </div>
