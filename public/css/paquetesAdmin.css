@@ -774,6 +774,36 @@ tbody tr.problema {
     margin-top: 12px;
 }
 
+.preview-imagen-cierre {
+    flex: 1 1 100%;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border: 1px solid #dbeafe;
+    border-radius: 10px;
+    background: #f8fbff;
+}
+
+.preview-imagen-cierre img {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+}
+
+.preview-imagen-cierre strong,
+.preview-imagen-cierre span {
+    display: block;
+    word-break: break-word;
+}
+
+.preview-imagen-cierre span {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
 /* Historial */
 .historial-timeline {
     position: relative;

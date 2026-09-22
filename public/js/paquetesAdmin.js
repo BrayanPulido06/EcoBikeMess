@@ -1860,6 +1860,7 @@ function verDetalle(id, options = {}) {
                                     <option value="recoleccion">Recolección</option>
                                 </select>
                                 <input class="form-control" type="file" id="imagenesNueva" multiple accept="image/*">
+                                <div id="previewImagenCierre" class="preview-imagen-cierre" style="display:none;"></div>
                                 <button type="button" class="btn btn-primary" id="btnSubirImagenes">Subir imágenes</button>
                             </div>
                         </div>
@@ -1960,6 +1961,7 @@ function verDetalle(id, options = {}) {
                         const tipoImagenNueva = document.getElementById('tipoImagenNueva');
                         const btnSubirImagenes = document.getElementById('btnSubirImagenes');
                         const inputImagenes = document.getElementById('imagenesNueva');
+                        const previewImagenCierre = document.getElementById('previewImagenCierre');
                         if (tipoImagenNueva) {
                             tipoImagenNueva.value = 'entrega';
                             tipoImagenNueva.disabled = true;
@@ -1970,6 +1972,30 @@ function verDetalle(id, options = {}) {
                         if (inputImagenes) {
                             inputImagenes.multiple = false;
                             inputImagenes.insertAdjacentHTML('afterend', '<small class="text-muted" style="display:block;margin-top:6px;">Selecciona la evidencia de entrega. Se subira automaticamente al guardar el cierre.</small>');
+                            inputImagenes.addEventListener('change', () => {
+                                if (!previewImagenCierre) return;
+                                const file = inputImagenes.files?.[0];
+                                const previousUrl = previewImagenCierre.dataset.objectUrl;
+                                if (previousUrl) {
+                                    URL.revokeObjectURL(previousUrl);
+                                    delete previewImagenCierre.dataset.objectUrl;
+                                }
+                                if (!file) {
+                                    previewImagenCierre.style.display = 'none';
+                                    previewImagenCierre.innerHTML = '';
+                                    return;
+                                }
+                                const objectUrl = URL.createObjectURL(file);
+                                previewImagenCierre.dataset.objectUrl = objectUrl;
+                                previewImagenCierre.style.display = 'flex';
+                                previewImagenCierre.innerHTML = `
+                                    <img src="${objectUrl}" alt="Vista previa de evidencia">
+                                    <div>
+                                        <strong>${escapeHtml(file.name)}</strong>
+                                        <span>${(file.size / 1024).toFixed(1)} KB</span>
+                                    </div>
+                                `;
+                            });
                         }
                         if (guardarBtn) {
                             guardarBtn.textContent = 'Finalizar servicio';
