@@ -349,15 +349,13 @@ function mostrarPaquetes(filtro = 'todos') {
         const referenciaPaquete = paquete.id === null ? `'virtual_${paquete.guia}'` : paquete.id;
         const bloqueado = paquete.estado === 'entregado' || paquete.estado === 'cancelado';
         const botonEntregar = bloqueado
-            ? `<button class="btn-entregar-rapido" disabled>${paquete.estado === 'cancelado' ? '✕ Cancelado' : '✓ Entregado'}</button>`
-            : `<button class="btn-entregar-rapido" onclick="abrirFormularioEntrega(${referenciaPaquete})">✓ Entregar</button>`;
+            ? `<button class="btn-entregar-rapido" disabled>${paquete.estado === 'cancelado' ? 'Cancelado' : 'Gestionado'}</button>`
+            : `<button class="btn-entregar-rapido" onclick="abrirFormularioEntrega(${referenciaPaquete})">Gestionado</button>`;
         const botonesNovedad = bloqueado
             ? `
-                <button class="btn-aplazar" disabled>Aplazado</button>
                 <button class="btn-cancelar-paquete" disabled>Cancelado</button>
             `
             : `
-                <button class="btn-aplazar" onclick="abrirFormularioNovedad(${referenciaPaquete}, 'aplazado')">Aplazado</button>
                 <button class="btn-cancelar-paquete" onclick="abrirFormularioNovedad(${referenciaPaquete}, 'cancelado')">Cancelado</button>
             `;
         
@@ -404,6 +402,7 @@ function mostrarPaquetes(filtro = 'todos') {
             </div>
         `;
     }).join('');
+
 }
 
 // ============================================
@@ -1121,7 +1120,12 @@ function abrirFormularioNovedad(id, tipo) {
         : '⏳ Aplazar Entrega';
     document.getElementById('novedadGuia').textContent = `Guía: ${paqueteActual.guia}`;
     document.getElementById('btnEnviarNovedad').textContent = tipoNovedadActual === 'cancelado' ? 'Cancelar paquete' : 'Registrar aplazamiento';
-    document.getElementById('descripcionNovedad').value = '';
+    document.getElementById('avisoCancelacionNovedad')?.classList.toggle('oculto', tipoNovedadActual !== 'cancelado');
+    const descripcionNovedad = document.getElementById('descripcionNovedad');
+    descripcionNovedad.value = '';
+    descripcionNovedad.placeholder = tipoNovedadActual === 'cancelado'
+        ? 'Describe por que se cancela la entrega...'
+        : 'Describe por que se aplaza la entrega...';
     document.getElementById('previsualizacionFotoNovedad').innerHTML = '';
     const prevNovedadAdicional = document.getElementById('previsualizacionFotoNovedadAdicional');
     if (prevNovedadAdicional) prevNovedadAdicional.innerHTML = '';

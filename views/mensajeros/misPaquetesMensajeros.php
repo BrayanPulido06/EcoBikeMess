@@ -26,7 +26,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>EB</text></svg>">
     
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
-    <link rel="stylesheet" href="../../public/css/misPaquetesMensajeros.css?v=20260724-1">
+    <link rel="stylesheet" href="../../public/css/misPaquetesMensajeros.css?v=20260922-1">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css?v=20260528-1">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <style>
@@ -204,7 +204,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
             <!-- Botón de Entrega -->
             <div id="btnEntregarContainer" class="accion-entrega-container">
                 <button id="btnEntregar" class="btn-entregar">
-                    Entregar Paquete
+                    Gestionado
                 </button>
             </div>
 
@@ -239,7 +239,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <div id="vistaFormularioEntrega" class="vista-formulario oculto">
         <div class="formulario-header">
             <button type="button" id="btnVolverEntrega" class="btn-volver formulario-volver">Volver</button>
-            <h2>Entregar Paquete</h2>
+            <h2>Gestionar Paquete</h2>
             <p id="formGuia">Guía #</p>
         </div>
 
@@ -376,6 +376,11 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
         </div>
 
         <form id="formNovedad" class="formulario-entrega">
+            <div id="avisoCancelacionNovedad" class="aviso-cancelacion oculto">
+                <strong>Antes de cancelar</strong>
+                <p>Usa la cancelaci&oacute;n solo cuando el cliente confirme que no recibir&aacute; el pedido antes de que te dirijas a la direcci&oacute;n. Si ya est&aacute;s en la direcci&oacute;n y el cliente no recibe, registra la gesti&oacute;n desde el bot&oacute;n Gestionado.</p>
+            </div>
+
             <div class="form-group">
                 <label for="descripcionNovedad" class="obligatorio">Descripción</label>
                 <textarea id="descripcionNovedad" name="descripcionNovedad" rows="4"
@@ -526,7 +531,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <script src="../../public/js/mensajeroLayout.js?v=20260528-1"></script>
     <script src="../../public/js/uiToast.js"></script>
     <script src="../../public/js/mensajeroBackGuard.js?v=20260615-1"></script>
-    <script src="../../public/js/misPaquetesMensajeros.js?v=20260724-1"></script>
+    <script src="../../public/js/misPaquetesMensajeros.js?v=20260922-1"></script>
 
     <script>
         // Garantizar que todos los botones "Volver" regresen a la lista principal
