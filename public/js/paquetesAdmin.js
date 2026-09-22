@@ -1371,7 +1371,9 @@ function verDetalle(id, options = {}) {
                     return estados.map(o => `<option value="${o.value}" ${o.value === value ? 'selected' : ''}>${o.label}</option>`).join('');
                 };
 
-                const entregaInfo = info.infoEntrega || (options.modoCierre ? {
+                const entregaInfoRegistrada = info.infoEntrega || null;
+                const puedeGestionarEntregaInline = String(info.estado || '').toLowerCase() !== 'cancelado';
+                const entregaInfo = entregaInfoRegistrada || (puedeGestionarEntregaInline ? {
                     nombreRecibe: '',
                     parentesco: '',
                     documento: '',
@@ -1384,6 +1386,7 @@ function verDetalle(id, options = {}) {
                     fotoPrincipalData: '',
                     fotoAdicionalData: ''
                 } : null);
+                const usarFlujoEntregaInline = Boolean(entregaInfo);
                 const tieneFotoEntregaPrincipal = Boolean(entregaInfo?.fotoPrincipal);
 
                 const evidenciaItems = [];
@@ -1504,13 +1507,13 @@ function verDetalle(id, options = {}) {
                     const fullPath = hasImage ? buildEvidenceUrl(item) : '';
                     const safeFullPath = escapeHtml(fullPath);
 
-                    const blockEmptyCierreAction = options.modoCierre && item.empty && !hasImage;
-                    const canDelete = !blockEmptyCierreAction && (item.allowDelete !== false) && (item.imageId || item.target);
+                    const blockEmptyEntregaAction = usarFlujoEntregaInline && item.empty && !hasImage;
+                    const canDelete = !blockEmptyEntregaAction && (item.allowDelete !== false) && (item.imageId || item.target);
                     const deleteAttrs = item.imageId
                         ? `data-action="eliminar-imagen" data-image-id="${item.imageId}"`
                         : (item.target ? `data-action="eliminar-imagen" data-target="${item.target}"` : '');
 
-                    const replaceInput = item.target && !blockEmptyCierreAction ? `
+                    const replaceInput = item.target && !blockEmptyEntregaAction ? `
                         <label class="btn btn-sm btn-secondary">
                             Reemplazar
                             <input type="file" class="input-reemplazar" data-target="${item.target}" data-paquete-id="${info.paquete_id}" accept="image/*" hidden>
@@ -1939,29 +1942,12 @@ function verDetalle(id, options = {}) {
                         field.addEventListener('input', recalcularCostoDetalleAdmin);
                     });
 
-                    if (options.modoCierre) {
-                        const estadoSelect = form.querySelector('select[name="estado"]');
-                        const fechaEntregaInput = form.querySelector('input[name="entrega_fecha"]');
-                        const receptorInput = form.querySelector('input[name="entrega_nombre_receptor"]');
-                        const guardarBtn = form.querySelector('button[type="submit"]');
-
-                        if (estadoSelect) {
-                            estadoSelect.value = 'entregado';
-                        }
-
-                        if (fechaEntregaInput && !fechaEntregaInput.value) {
-                            const now = new Date();
-                            const tzOffset = now.getTimezoneOffset() * 60000;
-                            fechaEntregaInput.value = new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
-                        }
-
-                        form.querySelector('.detalle-section[style*="#f8fff9"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        receptorInput?.focus();
-
+                    if (usarFlujoEntregaInline) {
                         const tipoImagenNueva = document.getElementById('tipoImagenNueva');
                         const btnSubirImagenes = document.getElementById('btnSubirImagenes');
                         const inputImagenes = document.getElementById('imagenesNueva');
                         const previewImagenCierre = document.getElementById('previewImagenCierre');
+
                         if (tipoImagenNueva) {
                             tipoImagenNueva.value = 'entrega';
                             tipoImagenNueva.disabled = true;
@@ -1971,7 +1957,7 @@ function verDetalle(id, options = {}) {
                         }
                         if (inputImagenes) {
                             inputImagenes.multiple = false;
-                            inputImagenes.insertAdjacentHTML('afterend', '<small class="text-muted" style="display:block;margin-top:6px;">Selecciona la evidencia de entrega. Se subira automaticamente al guardar el cierre.</small>');
+                            inputImagenes.insertAdjacentHTML('afterend', `<small class="text-muted" style="display:block;margin-top:6px;">Selecciona la evidencia de entrega. Se subira automaticamente al guardar ${options.modoCierre ? 'el cierre' : 'los cambios'}.</small>`);
                             inputImagenes.addEventListener('change', () => {
                                 if (!previewImagenCierre) return;
                                 const file = inputImagenes.files?.[0];
@@ -1997,6 +1983,27 @@ function verDetalle(id, options = {}) {
                                 `;
                             });
                         }
+                    }
+
+                    if (options.modoCierre) {
+                        const estadoSelect = form.querySelector('select[name="estado"]');
+                        const fechaEntregaInput = form.querySelector('input[name="entrega_fecha"]');
+                        const receptorInput = form.querySelector('input[name="entrega_nombre_receptor"]');
+                        const guardarBtn = form.querySelector('button[type="submit"]');
+
+                        if (estadoSelect) {
+                            estadoSelect.value = 'entregado';
+                        }
+
+                        if (fechaEntregaInput && !fechaEntregaInput.value) {
+                            const now = new Date();
+                            const tzOffset = now.getTimezoneOffset() * 60000;
+                            fechaEntregaInput.value = new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
+                        }
+
+                        form.querySelector('.detalle-section[style*="#f8fff9"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        receptorInput?.focus();
+
                         if (guardarBtn) {
                             guardarBtn.textContent = 'Finalizar servicio';
                         }
@@ -2015,11 +2022,11 @@ function verDetalle(id, options = {}) {
                         }
 
                         const formData = new FormData(form);
-                        const imagenesCierreInput = document.getElementById('imagenesNueva');
-                        const imagenesCierre = options.modoCierre && imagenesCierreInput?.files?.length
-                            ? Array.from(imagenesCierreInput.files)
+                        const imagenesEntregaInput = document.getElementById('imagenesNueva');
+                        const imagenesEntrega = usarFlujoEntregaInline && imagenesEntregaInput?.files?.length
+                            ? Array.from(imagenesEntregaInput.files)
                             : [];
-                        if (options.modoCierre && !tieneFotoEntregaPrincipal && imagenesCierre.length === 0) {
+                        if (options.modoCierre && !tieneFotoEntregaPrincipal && imagenesEntrega.length === 0) {
                             alert('Selecciona una imagen de evidencia para finalizar el cierre.');
                             guardandoCambios = false;
                             if (submitBtn) {
@@ -2067,7 +2074,19 @@ function verDetalle(id, options = {}) {
                             envio_destinatario: formData.get('envio_destinatario') === 'si' ? 'si' : 'no'
                         };
 
-                        if (formData.get('entrega_nombre_receptor') !== null) {
+                        const entregaFieldsPresent = formData.get('entrega_nombre_receptor') !== null;
+                        const entregaTieneDatos = entregaFieldsPresent && (
+                            String(formData.get('entrega_nombre_receptor') || '').trim() !== '' ||
+                            String(formData.get('entrega_parentesco') || '').trim() !== '' ||
+                            String(formData.get('entrega_documento') || '').trim() !== '' ||
+                            String(formData.get('entrega_fecha') || '').trim() !== '' ||
+                            String(formData.get('entrega_observaciones') || '').trim() !== '' ||
+                            parseFloat(formData.get('entrega_recaudo_real') || '0') > 0 ||
+                            parseInt(formData.get('entrega_recibio_cambios') || '0', 10) === 1 ||
+                            imagenesEntrega.length > 0
+                        );
+
+                        if (entregaFieldsPresent && (options.modoCierre || entregaInfoRegistrada || entregaTieneDatos)) {
                             payload.entrega = {
                                 nombre_receptor: formData.get('entrega_nombre_receptor') || '',
                                 parentesco_cargo: formData.get('entrega_parentesco') || '',
@@ -2094,11 +2113,11 @@ function verDetalle(id, options = {}) {
                             const result = await resp.json();
                             if (result.success) {
                                 let uploadError = '';
-                                if (imagenesCierre.length > 0) {
+                                if (imagenesEntrega.length > 0) {
                                     const fdImagenes = new FormData();
                                     fdImagenes.append('paquete_id', id);
                                     fdImagenes.append('tipo', 'entrega');
-                                    imagenesCierre.forEach(file => fdImagenes.append('imagenes[]', file));
+                                    imagenesEntrega.forEach(file => fdImagenes.append('imagenes[]', file));
 
                                     try {
                                         const respImagenes = await fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=imagen_subir`, {
@@ -2116,7 +2135,7 @@ function verDetalle(id, options = {}) {
                                 }
 
                                 if (uploadError) {
-                                    alert('El paquete quedo entregado, pero falta revisar la evidencia: ' + uploadError);
+                                    alert((options.modoCierre ? 'El paquete quedo entregado' : 'Los cambios se guardaron') + ', pero falta revisar la evidencia: ' + uploadError);
                                 } else {
                                     alert(options.modoCierre ? 'Servicio finalizado correctamente' : 'Cambios guardados correctamente');
                                 }
