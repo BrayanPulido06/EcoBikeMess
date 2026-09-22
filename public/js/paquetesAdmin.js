@@ -1504,12 +1504,13 @@ function verDetalle(id, options = {}) {
                     const fullPath = hasImage ? buildEvidenceUrl(item) : '';
                     const safeFullPath = escapeHtml(fullPath);
 
-                    const canDelete = (item.allowDelete !== false) && (item.imageId || item.target);
+                    const blockEmptyCierreAction = options.modoCierre && item.empty && !hasImage;
+                    const canDelete = !blockEmptyCierreAction && (item.allowDelete !== false) && (item.imageId || item.target);
                     const deleteAttrs = item.imageId
                         ? `data-action="eliminar-imagen" data-image-id="${item.imageId}"`
                         : (item.target ? `data-action="eliminar-imagen" data-target="${item.target}"` : '');
 
-                    const replaceInput = item.target ? `
+                    const replaceInput = item.target && !blockEmptyCierreAction ? `
                         <label class="btn btn-sm btn-secondary">
                             Reemplazar
                             <input type="file" class="input-reemplazar" data-target="${item.target}" data-paquete-id="${info.paquete_id}" accept="image/*" hidden>
