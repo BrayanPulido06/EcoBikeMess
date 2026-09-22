@@ -288,7 +288,7 @@ class PaquetesAdminModel {
         }
 
         try {
-            $stmt = $this->conn->prepare("INSERT INTO entregas (paquete_id, mensajero_id, fecha_entrega) VALUES (:paquete_id, :mensajero_id, NOW())");
+            $stmt = $this->conn->prepare("INSERT INTO entregas (paquete_id, mensajero_id, foto_entrega, fecha_entrega) VALUES (:paquete_id, :mensajero_id, '', NOW())");
             $stmt->execute([
                 ':paquete_id' => $paqueteId,
                 ':mensajero_id' => $mensajeroId ?: null

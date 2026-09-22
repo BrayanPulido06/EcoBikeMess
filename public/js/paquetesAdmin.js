@@ -1371,25 +1371,40 @@ function verDetalle(id, options = {}) {
                     return estados.map(o => `<option value="${o.value}" ${o.value === value ? 'selected' : ''}>${o.label}</option>`).join('');
                 };
 
+                const entregaInfo = info.infoEntrega || (options.modoCierre ? {
+                    nombreRecibe: '',
+                    parentesco: '',
+                    documento: '',
+                    fecha: '',
+                    recaudo: 0,
+                    recibioCambios: 0,
+                    observaciones: '',
+                    fotoPrincipal: '',
+                    fotoAdicional: '',
+                    fotoPrincipalData: '',
+                    fotoAdicionalData: ''
+                } : null);
+                const tieneFotoEntregaPrincipal = Boolean(entregaInfo?.fotoPrincipal);
+
                 const evidenciaItems = [];
-                if (info.infoEntrega) {
+                if (entregaInfo) {
                     evidenciaItems.push({
                         tipo: 'entrega',
                         label: 'Entrega principal',
-                        ruta: info.infoEntrega.fotoPrincipal || '',
-                        dataUrl: info.infoEntrega.fotoPrincipalData || '',
+                        ruta: entregaInfo.fotoPrincipal || '',
+                        dataUrl: entregaInfo.fotoPrincipalData || '',
                         target: 'entrega_principal',
                         allowDelete: true,
-                        empty: !info.infoEntrega.fotoPrincipal
+                        empty: !entregaInfo.fotoPrincipal
                     });
                     evidenciaItems.push({
                         tipo: 'entrega',
                         label: 'Entrega adicional',
-                        ruta: info.infoEntrega.fotoAdicional || '',
-                        dataUrl: info.infoEntrega.fotoAdicionalData || '',
+                        ruta: entregaInfo.fotoAdicional || '',
+                        dataUrl: entregaInfo.fotoAdicionalData || '',
                         target: 'entrega_adicional',
                         allowDelete: true,
-                        empty: !info.infoEntrega.fotoAdicional
+                        empty: !entregaInfo.fotoAdicional
                     });
                 }
                 if (info.infoCancelacion && info.infoCancelacion.foto) {
@@ -1764,7 +1779,7 @@ function verDetalle(id, options = {}) {
                             </div>
                         </div>
 
-                        ${info.infoEntrega ? `
+                        ${entregaInfo ? `
                         <div class="detalle-section" style="margin-top: 20px; background-color: #f8fff9; border: 1px solid #c3e6cb;">
                             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
                                 <h3 style="color: #155724; margin:0;">? Detalles de la Entrega</h3>
@@ -1773,34 +1788,34 @@ function verDetalle(id, options = {}) {
                             <div class="detalle-grid">
                                 <div class="detalle-item">
                                     <div class="detalle-label">Recibido por</div>
-                                    <input class="form-control" name="entrega_nombre_receptor" value="${escapeHtml(info.infoEntrega.nombreRecibe || '')}">
+                                    <input class="form-control" name="entrega_nombre_receptor" value="${escapeHtml(entregaInfo.nombreRecibe || '')}">
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Parentesco/Cargo</div>
-                                    <input class="form-control" name="entrega_parentesco" value="${escapeHtml(info.infoEntrega.parentesco || '')}">
+                                    <input class="form-control" name="entrega_parentesco" value="${escapeHtml(entregaInfo.parentesco || '')}">
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Documento</div>
-                                    <input class="form-control" name="entrega_documento" value="${escapeHtml(info.infoEntrega.documento || '')}">
+                                    <input class="form-control" name="entrega_documento" value="${escapeHtml(entregaInfo.documento || '')}">
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Fecha Entrega</div>
-                                    <input class="form-control" type="datetime-local" name="entrega_fecha" value="${escapeHtml(toInputDateTime(info.infoEntrega.fecha || ''))}">
+                                    <input class="form-control" type="datetime-local" name="entrega_fecha" value="${escapeHtml(toInputDateTime(entregaInfo.fecha || ''))}">
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Total recaudado</div>
-                                    <input class="form-control" type="number" name="entrega_recaudo_real" step="0.01" min="0" value="${escapeHtml(info.infoEntrega.recaudo || 0)}">
+                                    <input class="form-control" type="number" name="entrega_recaudo_real" step="0.01" min="0" value="${escapeHtml(entregaInfo.recaudo || 0)}">
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Cambios recogidos</div>
                                     <select class="form-control" name="entrega_recibio_cambios">
-                                        <option value="0" ${Number(info.infoEntrega.recibioCambios || 0) === 0 ? 'selected' : ''}>No</option>
-                                        <option value="1" ${Number(info.infoEntrega.recibioCambios || 0) === 1 ? 'selected' : ''}>Sí</option>
+                                        <option value="0" ${Number(entregaInfo.recibioCambios || 0) === 0 ? 'selected' : ''}>No</option>
+                                        <option value="1" ${Number(entregaInfo.recibioCambios || 0) === 1 ? 'selected' : ''}>Sí</option>
                                     </select>
                                 </div>
                                 <div class="detalle-item" style="grid-column: span 2;">
                                     <div class="detalle-label">Observaciones de Entrega</div>
-                                    <textarea class="form-control" name="entrega_observaciones" rows="2">${escapeHtml(info.infoEntrega.observaciones || '')}</textarea>
+                                    <textarea class="form-control" name="entrega_observaciones" rows="2">${escapeHtml(entregaInfo.observaciones || '')}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -1926,6 +1941,7 @@ function verDetalle(id, options = {}) {
                         const estadoSelect = form.querySelector('select[name="estado"]');
                         const fechaEntregaInput = form.querySelector('input[name="entrega_fecha"]');
                         const receptorInput = form.querySelector('input[name="entrega_nombre_receptor"]');
+                        const guardarBtn = form.querySelector('button[type="submit"]');
 
                         if (estadoSelect) {
                             estadoSelect.value = 'entregado';
@@ -1939,6 +1955,24 @@ function verDetalle(id, options = {}) {
 
                         form.querySelector('.detalle-section[style*="#f8fff9"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         receptorInput?.focus();
+
+                        const tipoImagenNueva = document.getElementById('tipoImagenNueva');
+                        const btnSubirImagenes = document.getElementById('btnSubirImagenes');
+                        const inputImagenes = document.getElementById('imagenesNueva');
+                        if (tipoImagenNueva) {
+                            tipoImagenNueva.value = 'entrega';
+                            tipoImagenNueva.disabled = true;
+                        }
+                        if (btnSubirImagenes) {
+                            btnSubirImagenes.style.display = 'none';
+                        }
+                        if (inputImagenes) {
+                            inputImagenes.multiple = false;
+                            inputImagenes.insertAdjacentHTML('afterend', '<small class="text-muted" style="display:block;margin-top:6px;">Selecciona la evidencia de entrega. Se subira automaticamente al guardar el cierre.</small>');
+                        }
+                        if (guardarBtn) {
+                            guardarBtn.textContent = 'Finalizar servicio';
+                        }
                     }
 
                     form.addEventListener('submit', async (e) => {
@@ -1954,10 +1988,38 @@ function verDetalle(id, options = {}) {
                         }
 
                         const formData = new FormData(form);
+                        const imagenesCierreInput = document.getElementById('imagenesNueva');
+                        const imagenesCierre = options.modoCierre && imagenesCierreInput?.files?.length
+                            ? Array.from(imagenesCierreInput.files)
+                            : [];
+                        if (options.modoCierre && !tieneFotoEntregaPrincipal && imagenesCierre.length === 0) {
+                            alert('Selecciona una imagen de evidencia para finalizar el cierre.');
+                            guardandoCambios = false;
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.textContent = originalSubmitText;
+                            }
+                            return;
+                        }
+                        if (options.modoCierre) {
+                            const nombreReceptor = String(formData.get('entrega_nombre_receptor') || '').trim();
+                            const documentoReceptor = String(formData.get('entrega_documento') || '').trim();
+                            const fechaEntrega = String(formData.get('entrega_fecha') || '').trim();
+                            if (!nombreReceptor || !documentoReceptor || !fechaEntrega) {
+                                alert('Completa recibido por, documento y fecha de entrega para finalizar el servicio.');
+                                guardandoCambios = false;
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    submitBtn.textContent = originalSubmitText;
+                                }
+                                return;
+                            }
+                        }
+
                         const payload = {
                             paquete_id: id,
                             numero_guia: formData.get('numero_guia') || '',
-                            estado: formData.get('estado') || '',
+                            estado: options.modoCierre ? 'entregado' : (formData.get('estado') || ''),
                             fecha_creacion: toDbDateTime(formData.get('fecha_creacion') || ''),
                             remitente_nombre: formData.get('remitente_nombre') || '',
                             destinatario_nombre: formData.get('destinatario_nombre') || '',
@@ -2004,7 +2066,33 @@ function verDetalle(id, options = {}) {
                             });
                             const result = await resp.json();
                             if (result.success) {
-                                alert('Cambios guardados correctamente');
+                                let uploadError = '';
+                                if (imagenesCierre.length > 0) {
+                                    const fdImagenes = new FormData();
+                                    fdImagenes.append('paquete_id', id);
+                                    fdImagenes.append('tipo', 'entrega');
+                                    imagenesCierre.forEach(file => fdImagenes.append('imagenes[]', file));
+
+                                    try {
+                                        const respImagenes = await fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=imagen_subir`, {
+                                            method: 'POST',
+                                            body: fdImagenes
+                                        });
+                                        const resultImagenes = await respImagenes.json();
+                                        if (!resultImagenes.success) {
+                                            uploadError = resultImagenes.error || 'No se pudo subir la evidencia.';
+                                        }
+                                    } catch (uploadErr) {
+                                        console.error(uploadErr);
+                                        uploadError = 'No se pudo subir la evidencia por un error de conexion.';
+                                    }
+                                }
+
+                                if (uploadError) {
+                                    alert('El paquete quedo entregado, pero falta revisar la evidencia: ' + uploadError);
+                                } else {
+                                    alert(options.modoCierre ? 'Servicio finalizado correctamente' : 'Cambios guardados correctamente');
+                                }
                                 verDetalle(id);
                                 if (typeof window.listarPaquetes === 'function') window.listarPaquetes();
                             } else {
@@ -2503,5 +2591,6 @@ function closeModal(name) {
     const modal = document.getElementById(`modal${name.charAt(0).toUpperCase() + name.slice(1)}`);
     if (modal) modal.style.display = 'none';
 }
+
 
 
