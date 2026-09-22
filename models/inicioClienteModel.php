@@ -12,15 +12,21 @@ class InicioClienteModel {
     public function obtenerIdCliente($usuario_id, $rol) {
         try {
             if ($rol === 'cliente') {
-                $sql = "SELECT id FROM clientes WHERE usuario_id = :uid";
+                $sql = "SELECT id FROM clientes WHERE usuario_id = :uid LIMIT 1";
                 $stmt = $this->conn->prepare($sql);
                 $stmt->execute([':uid' => $usuario_id]);
                 return $stmt->fetchColumn();
             } elseif ($rol === 'colaborador') {
-                $sql = "SELECT cliente_id FROM colaboradores_cliente WHERE usuario_id = :uid";
+                $sql = "SELECT cliente_id FROM colaboradores_cliente WHERE usuario_id = :uid AND estado = 'activo'";
                 $stmt = $this->conn->prepare($sql);
                 $stmt->execute([':uid' => $usuario_id]);
-                return $stmt->fetchColumn();
+                $clientes = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+                if (count($clientes) !== 1) {
+                    return null;
+                }
+
+                return $clientes[0];
             }
         } catch (PDOException $e) {
             return null;

@@ -137,11 +137,20 @@ class FacturacionModels
                 WHERE TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')
                   AND (
                       COALESCE(NULLIF(c_actual.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero%'
-                      OR c_actual.id NOT IN (
-                          SELECT cc_cliente.cliente_id
-                          FROM colaboradores_cliente cc_cliente
-                          WHERE cc_cliente.cliente_id = c_actual.id
-                            AND cc_cliente.usuario_id = p.creado_por
+                      OR (
+                          c_actual.usuario_id <> p.creado_por
+                          AND EXISTS (
+                              SELECT 1
+                              FROM mensajeros m_creador_autofix
+                              WHERE m_creador_autofix.usuario_id = p.creado_por
+                          )
+                          AND NOT EXISTS (
+                              SELECT 1
+                              FROM colaboradores_cliente cc_cliente
+                              WHERE cc_cliente.cliente_id = c_actual.id
+                                AND cc_cliente.usuario_id = p.creado_por
+                                AND cc_cliente.estado = 'activo'
+                          )
                       )
                   )
                   AND NOT EXISTS (
