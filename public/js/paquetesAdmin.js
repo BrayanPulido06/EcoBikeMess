@@ -31,6 +31,45 @@ function escaparAtributoHtmlDetallePaquete(valor) {
         .replace(/>/g, '&gt;');
 }
 
+function formatearMilesDetallePaquete(valor) {
+    const numero = Number(valor || 0);
+    if (!Number.isFinite(numero)) {
+        return '0';
+    }
+    return new Intl.NumberFormat('es-CO', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(Math.round(numero));
+}
+
+function parsearMilesDetallePaquete(valor) {
+    const texto = String(valor ?? '').trim();
+    if (texto === '') {
+        return 0;
+    }
+
+    const normalizado = texto
+        .replace(/\s/g, '')
+        .replace(/\$/g, '')
+        .replace(/\./g, '')
+        .replace(',', '.');
+    const numero = Number(normalizado);
+    return Number.isFinite(numero) ? numero : 0;
+}
+
+function configurarCampoMilesDetallePaquete(input) {
+    if (!input) return;
+
+    input.value = formatearMilesDetallePaquete(parsearMilesDetallePaquete(input.value));
+    input.addEventListener('focus', () => {
+        input.value = String(Math.round(parsearMilesDetallePaquete(input.value)) || '');
+        input.select();
+    });
+    input.addEventListener('blur', () => {
+        input.value = formatearMilesDetallePaquete(parsearMilesDetallePaquete(input.value));
+    });
+}
+
 function nombreMensajeroPorIdDetallePaquete(id) {
     const mensajero = todosLosMensajeros.find(item => String(item.id) === String(id));
     return mensajero ? mensajero.nombre : '';
@@ -1813,11 +1852,11 @@ function verDetalle(id, options = {}) {
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Costo Envío</div>
-                                    <input class="form-control" type="number" name="costo_envio" step="0.01" min="0" value="${escapeHtml(info.costo_envio || 0)}">
+                                    <input class="form-control" type="text" inputmode="numeric" name="costo_envio" value="${escapeHtml(formatearMilesDetallePaquete(info.costo_envio || 0))}">
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Pago Mensajero</div>
-                                    <input class="form-control" type="number" name="valor_pago_mensajero" step="0.01" min="0" value="${escapeHtml(info.valor_pago_mensajero ?? 7000)}">
+                                    <input class="form-control" type="text" inputmode="numeric" name="valor_pago_mensajero" value="${escapeHtml(formatearMilesDetallePaquete(info.valor_pago_mensajero ?? 7000))}">
                                 </div>
                                 <div class="detalle-item">
                                     <div class="detalle-label">Valor a Recaudar</div>
@@ -1989,6 +2028,9 @@ function verDetalle(id, options = {}) {
                 const form = document.getElementById('formEditarDetalles');
                 if (form) {
                     let guardandoCambios = false;
+                    configurarCampoMilesDetallePaquete(form.querySelector('input[name="costo_envio"]'));
+                    configurarCampoMilesDetallePaquete(form.querySelector('input[name="valor_pago_mensajero"]'));
+
                     const recalcularCostoDetalleAdmin = () => {
                         const dimensionSelect = form.querySelector('select[name="dimensiones"]');
                         const selectedDimension = dimensionSelect?.selectedOptions?.[0] || null;
@@ -2014,7 +2056,7 @@ function verDetalle(id, options = {}) {
                             + recargoRecaudo;
 
                         if (costoInput) {
-                            costoInput.value = total;
+                            costoInput.value = formatearMilesDetallePaquete(total);
                         }
                     };
 
@@ -2194,8 +2236,8 @@ function verDetalle(id, options = {}) {
                             direccion_destino: formData.get('direccion_destino') || '',
                             tipo_servicio: formData.get('tipo_servicio') || '',
                             descripcion_contenido: formData.get('descripcion_contenido') || '',
-                            costo_envio: parseFloat(formData.get('costo_envio') || '0'),
-                            valor_pago_mensajero: parseFloat(formData.get('valor_pago_mensajero') || '7000'),
+                            costo_envio: parsearMilesDetallePaquete(formData.get('costo_envio')),
+                            valor_pago_mensajero: parsearMilesDetallePaquete(formData.get('valor_pago_mensajero') || '7000'),
                             recaudo_esperado: parseFloat(formData.get('recaudo_esperado') || '0'),
                             instrucciones_entrega: formData.get('instrucciones_entrega') || '',
                             mensajero_id: formData.get('mensajero_id') || '',

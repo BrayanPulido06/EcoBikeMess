@@ -4,6 +4,7 @@ require_once __DIR__ . '/conexionGlobal.php';
 class FacturacionModels
 {
     private const FECHA_INICIO_FACTURACION = '2026-07-13';
+    private const FECHA_INICIO_FACTURACION_MENSAJERO = '2026-09-25';
 
     private $conn;
 
@@ -485,6 +486,7 @@ class FacturacionModels
     public function obtenerVistaAdmin(?string $panel = null): array
     {
         $fechaInicioFacturacionAdmin = self::FECHA_INICIO_FACTURACION;
+        $fechaInicioFacturacionMensajero = self::FECHA_INICIO_FACTURACION_MENSAJERO;
 
         if ($panel === 'cliente') {
             return [
@@ -494,7 +496,7 @@ class FacturacionModels
 
         if ($panel === 'mensajero') {
             return [
-                'mensajero' => $this->obtenerResumenMensajeros(false, null, true, $fechaInicioFacturacionAdmin),
+                'mensajero' => $this->obtenerResumenMensajeros(false, null, true, $fechaInicioFacturacionMensajero),
             ];
         }
 
@@ -506,7 +508,7 @@ class FacturacionModels
 
         return [
             'cliente' => $this->obtenerResumenClientes(null, true, $fechaInicioFacturacionAdmin),
-            'mensajero' => $this->obtenerResumenMensajeros(false, null, true, $fechaInicioFacturacionAdmin),
+            'mensajero' => $this->obtenerResumenMensajeros(false, null, true, $fechaInicioFacturacionMensajero),
             'ecobikemess' => $this->obtenerResumenEcoBikeMess($fechaInicioFacturacionAdmin),
         ];
     }
@@ -522,7 +524,7 @@ class FacturacionModels
 
     public function obtenerVistaMensajero(int $mensajeroId): array
     {
-        $fechaInicioFacturacionMensajero = self::FECHA_INICIO_FACTURACION;
+        $fechaInicioFacturacionMensajero = self::FECHA_INICIO_FACTURACION_MENSAJERO;
 
         return [
             'mensajero' => $this->obtenerResumenMensajeros(false, $mensajeroId, false, $fechaInicioFacturacionMensajero),
