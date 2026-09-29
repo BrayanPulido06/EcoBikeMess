@@ -2027,6 +2027,7 @@ function verDetalle(id, options = {}) {
                         field.addEventListener('input', recalcularCostoDetalleAdmin);
                     });
 
+                    let pendingEntregaFiles = [];
                     if (usarFlujoEntregaInline) {
                         const tipoImagenNueva = document.getElementById('tipoImagenNueva');
                         const btnSubirImagenes = document.getElementById('btnSubirImagenes');
@@ -2042,6 +2043,27 @@ function verDetalle(id, options = {}) {
                             previewImagenCierre.style.display = 'none';
                             previewImagenCierre.innerHTML = '';
                         };
+                        const renderPreviewImagenCierre = () => {
+                            if (!previewImagenCierre) return;
+                            limpiarPreviewImagenCierre();
+
+                            if (pendingEntregaFiles.length === 0) {
+                                return;
+                            }
+
+                            const objectUrls = pendingEntregaFiles.map((file) => URL.createObjectURL(file));
+                            previewImagenCierre.dataset.objectUrls = objectUrls.join('|');
+                            previewImagenCierre.style.display = 'flex';
+                            previewImagenCierre.innerHTML = pendingEntregaFiles.map((file, index) => `
+                                <div class="preview-imagen-cierre-item">
+                                    <img src="${objectUrls[index]}" alt="Vista previa de evidencia ${index + 1}">
+                                    <div>
+                                        <strong>${escapeHtml(file.name)}</strong>
+                                        <span>${(file.size / 1024).toFixed(1)} KB</span>
+                                    </div>
+                                </div>
+                            `).join('');
+                        };
 
                         if (tipoImagenNueva) {
                             tipoImagenNueva.value = 'entrega';
@@ -2056,31 +2078,20 @@ function verDetalle(id, options = {}) {
                             inputImagenes.insertAdjacentHTML('afterend', `<small class="text-muted" style="display:block;margin-top:6px;">Selecciona hasta ${Math.max(cuposFotosEntrega, 1)} foto(s) de evidencia de entrega. Se subiran automaticamente al guardar ${options.modoCierre ? 'el cierre' : 'los cambios'}.</small>`);
                             inputImagenes.addEventListener('change', () => {
                                 if (!previewImagenCierre) return;
-                                limpiarPreviewImagenCierre();
+                                const nuevasFotos = Array.from(inputImagenes.files || []);
+                                if (nuevasFotos.length === 0) {
+                                    return;
+                                }
 
-                                const files = Array.from(inputImagenes.files || []);
-                                if (files.length > cuposFotosEntrega) {
+                                if (pendingEntregaFiles.length + nuevasFotos.length > cuposFotosEntrega) {
                                     alert(`Solo puedes cargar ${cuposFotosEntrega} foto(s) de entrega en este pedido.`);
                                     inputImagenes.value = '';
                                     return;
                                 }
 
-                                if (files.length === 0) {
-                                    return;
-                                }
-
-                                const objectUrls = files.map((file) => URL.createObjectURL(file));
-                                previewImagenCierre.dataset.objectUrls = objectUrls.join('|');
-                                previewImagenCierre.style.display = 'flex';
-                                previewImagenCierre.innerHTML = files.map((file, index) => `
-                                    <div class="preview-imagen-cierre-item">
-                                        <img src="${objectUrls[index]}" alt="Vista previa de evidencia ${index + 1}">
-                                        <div>
-                                            <strong>${escapeHtml(file.name)}</strong>
-                                            <span>${(file.size / 1024).toFixed(1)} KB</span>
-                                        </div>
-                                    </div>
-                                `).join('');
+                                pendingEntregaFiles = pendingEntregaFiles.concat(nuevasFotos);
+                                inputImagenes.value = '';
+                                renderPreviewImagenCierre();
                             });
                         }
                     }
@@ -2122,9 +2133,8 @@ function verDetalle(id, options = {}) {
                         }
 
                         const formData = new FormData(form);
-                        const imagenesEntregaInput = document.getElementById('imagenesNueva');
-                        const imagenesEntrega = usarFlujoEntregaInline && imagenesEntregaInput?.files?.length
-                            ? Array.from(imagenesEntregaInput.files)
+                        const imagenesEntrega = usarFlujoEntregaInline
+                            ? pendingEntregaFiles
                             : [];
                         if (imagenesEntrega.length > cuposFotosEntrega) {
                             alert(`Solo puedes cargar ${cuposFotosEntrega} foto(s) de entrega en este pedido.`);
@@ -2148,6 +2158,16 @@ function verDetalle(id, options = {}) {
                             const nombreReceptor = String(formData.get('entrega_nombre_receptor') || '').trim();
                             const documentoReceptor = String(formData.get('entrega_documento') || '').trim();
                             const fechaEntrega = String(formData.get('entrega_fecha') || '').trim();
+                            const mensajeroEntrega = String(formData.get('mensajero_id') || '').trim();
+                            if (!mensajeroEntrega) {
+                                alert('Selecciona el mensajero de entrega para finalizar el servicio.');
+                                guardandoCambios = false;
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    submitBtn.textContent = originalSubmitText;
+                                }
+                                return;
+                            }
                             if (!nombreReceptor || !documentoReceptor || !fechaEntrega) {
                                 alert('Completa recibido por, documento y fecha de entrega para finalizar el servicio.');
                                 guardandoCambios = false;

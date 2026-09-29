@@ -924,34 +924,41 @@ class PaquetesAdminModel {
     }
 
     public function updateEntregaInfo($paqueteId, $data) {
-        $entregaId = $this->ensureEntregaRecord((int) $paqueteId, (int) ($data['mensajero_id'] ?? 0));
-        if (!$entregaId) {
+        $paqueteId = (int) $paqueteId;
+        $mensajeroId = (int) ($data['mensajero_id'] ?? 0);
+        if ($paqueteId <= 0 || $mensajeroId <= 0) {
             return false;
         }
 
-        $sql = "UPDATE entregas SET
-                    paquete_id = :paquete_id,
-                    mensajero_id = :mensajero_id,
-                    nombre_receptor = :nombre_receptor,
-                    parentesco_cargo = :parentesco,
-                    documento_receptor = :documento,
-                    recaudo_real = :recaudo,
-                    recibio_cambios = :recibio_cambios,
-                    fecha_entrega = :fecha_entrega,
-                    observaciones = :observaciones
-                WHERE id = :entrega_id";
+        $sql = "INSERT INTO entregas (
+                    paquete_id, mensajero_id, nombre_receptor, parentesco_cargo,
+                    documento_receptor, recaudo_real, recibio_cambios, fecha_entrega,
+                    foto_entrega, foto_adicional, observaciones
+                ) VALUES (
+                    :paquete_id, :mensajero_id, :nombre_receptor, :parentesco,
+                    :documento, :recaudo, :recibio_cambios, :fecha_entrega,
+                    '', NULL, :observaciones
+                )
+                ON DUPLICATE KEY UPDATE
+                    mensajero_id = VALUES(mensajero_id),
+                    nombre_receptor = VALUES(nombre_receptor),
+                    parentesco_cargo = VALUES(parentesco_cargo),
+                    documento_receptor = VALUES(documento_receptor),
+                    recaudo_real = VALUES(recaudo_real),
+                    recibio_cambios = VALUES(recibio_cambios),
+                    fecha_entrega = VALUES(fecha_entrega),
+                    observaciones = VALUES(observaciones)";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
             ':paquete_id' => $paqueteId,
-            ':mensajero_id' => $data['mensajero_id'] ?: null,
+            ':mensajero_id' => $mensajeroId,
             ':nombre_receptor' => $data['nombre_receptor'],
             ':parentesco' => $data['parentesco_cargo'] ?: null,
             ':documento' => $data['documento_receptor'] ?: null,
             ':recaudo' => $data['recaudo_real'],
             ':recibio_cambios' => !empty($data['recibio_cambios']) ? 1 : 0,
             ':fecha_entrega' => $data['fecha_entrega'] ?: null,
-            ':observaciones' => $data['observaciones'] ?: null,
-            ':entrega_id' => $entregaId
+            ':observaciones' => $data['observaciones'] ?: null
         ]);
     }
 
