@@ -1816,6 +1816,10 @@ function verDetalle(id, options = {}) {
                                     <input class="form-control" type="number" name="costo_envio" step="0.01" min="0" value="${escapeHtml(info.costo_envio || 0)}">
                                 </div>
                                 <div class="detalle-item">
+                                    <div class="detalle-label">Pago Mensajero</div>
+                                    <input class="form-control" type="number" name="valor_pago_mensajero" step="0.01" min="0" value="${escapeHtml(info.valor_pago_mensajero ?? 7000)}">
+                                </div>
+                                <div class="detalle-item">
                                     <div class="detalle-label">Valor a Recaudar</div>
                                     <input class="form-control" type="number" name="recaudo_esperado" step="0.01" min="0" value="${escapeHtml(info.recaudo_esperado || 0)}">
                                 </div>
@@ -2191,6 +2195,7 @@ function verDetalle(id, options = {}) {
                             tipo_servicio: formData.get('tipo_servicio') || '',
                             descripcion_contenido: formData.get('descripcion_contenido') || '',
                             costo_envio: parseFloat(formData.get('costo_envio') || '0'),
+                            valor_pago_mensajero: parseFloat(formData.get('valor_pago_mensajero') || '7000'),
                             recaudo_esperado: parseFloat(formData.get('recaudo_esperado') || '0'),
                             instrucciones_entrega: formData.get('instrucciones_entrega') || '',
                             mensajero_id: formData.get('mensajero_id') || '',

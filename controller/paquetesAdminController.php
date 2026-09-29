@@ -169,6 +169,7 @@ try {
                 'descripcion_contenido' => trim((string) ($input['descripcion_contenido'] ?? '')),
                 'tipo_servicio' => trim((string) ($input['tipo_servicio'] ?? '')),
                 'costo_envio' => (float) ($input['costo_envio'] ?? 0),
+                'valor_pago_mensajero' => max(0, (float) ($input['valor_pago_mensajero'] ?? 7000)),
                 'recaudo_esperado' => (float) ($input['recaudo_esperado'] ?? 0),
                 'instrucciones_entrega' => trim((string) ($input['instrucciones_entrega'] ?? '')),
                 'estado' => trim((string) ($input['estado'] ?? '')),
@@ -223,6 +224,7 @@ try {
             }
 
             $res = $model->updatePaqueteAdmin($paqueteId, $payload);
+            $actualizoPagoMensajero = $model->updatePagoMensajeroPaquete($paqueteId, (float) $payload['valor_pago_mensajero']);
 
             if (!empty($payloadEntrega)) {
                 $actualizoEntrega = $model->updateEntregaInfo($paqueteId, $payloadEntrega);
@@ -238,6 +240,7 @@ try {
             }
 
             $success = (bool) $res;
+            $success = $success && (bool) $actualizoPagoMensajero;
             if (!empty($payloadEntrega)) {
                 $success = $success && (bool) $actualizoEntrega;
             }
@@ -247,6 +250,7 @@ try {
 
             echo json_encode([
                 'success' => $success,
+                'actualizoPagoMensajero' => $actualizoPagoMensajero,
                 'actualizoEntrega' => $actualizoEntrega,
                 'actualizoCancelacion' => $actualizoCancelacion,
                 'error' => $success ? null : 'No se pudo guardar toda la información del cierre.'

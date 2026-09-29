@@ -624,6 +624,7 @@ class PaquetesAdminModel {
                                p.fecha_entrega as paquete_fecha_entrega,
                                p.mensajero_id,
                                p.mensajero_recoleccion_id,
+                               COALESCE(f.valor_pago_mensajero, 7000.00) as valor_pago_mensajero,
                                CONCAT(um.nombres, ' ', um.apellidos) as mensajero,
                                CONCAT(um_rec.nombres, ' ', um_rec.apellidos) as mensajero_recoleccion
                         FROM paquetes p
@@ -633,6 +634,7 @@ class PaquetesAdminModel {
                         LEFT JOIN usuarios um ON m.usuario_id = um.id
                         LEFT JOIN mensajeros m_rec ON p.mensajero_recoleccion_id = m_rec.id
                         LEFT JOIN usuarios um_rec ON m_rec.usuario_id = um_rec.id
+                        LEFT JOIN facturacion f ON f.paquete_id = p.id
                         WHERE p.id = :id";
             
             $stmtInfo = $this->conn->prepare($sqlInfo);
@@ -846,6 +848,27 @@ class PaquetesAdminModel {
             $this->sincronizarFacturacionPaquete((int) $id);
         }
         return $ok;
+    }
+
+    public function updatePagoMensajeroPaquete(int $paqueteId, float $valorPago): bool
+    {
+        if ($paqueteId <= 0 || $valorPago < 0) {
+            return false;
+        }
+
+        $this->sincronizarFacturacionPaquete($paqueteId);
+
+        $sql = "UPDATE facturacion f
+                INNER JOIN paquetes p ON p.id = f.paquete_id
+                SET f.valor_pago_mensajero = :valor_pago_mensajero,
+                    f.cliente_id = p.cliente_id,
+                    f.mensajero_id = p.mensajero_id
+                WHERE f.paquete_id = :paquete_id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':valor_pago_mensajero' => $valorPago,
+            ':paquete_id' => $paqueteId
+        ]);
     }
 
     public function assignRemitenteBulk(array $paqueteIds, string $remitenteNombre, ?int $clienteId, int $userId): int
