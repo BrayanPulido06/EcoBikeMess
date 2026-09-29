@@ -292,6 +292,9 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                 <button type="button" class="btn btn-secondary is-disabled" id="btnAsignarRemitenteSeleccionados" aria-disabled="true">
                     Asignar Remitente
                 </button>
+                <button type="button" class="btn btn-danger is-disabled" id="btnEliminarSeleccionados" aria-disabled="true" disabled>
+                    Eliminar Seleccionados
+                </button>
                 <button class="btn btn-secondary" id="btnExportarGuias">
                     🧾 Descargar Guías
                 </button>

@@ -148,6 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnExportExcel = document.getElementById('btnExportarExcel');
     const btnAsignarSeleccionados = document.getElementById('btnAsignarSeleccionados');
     const btnAsignarRemitenteSeleccionados = document.getElementById('btnAsignarRemitenteSeleccionados');
+    const btnEliminarSeleccionados = document.getElementById('btnEliminarSeleccionados');
     const btnExportarGuias = document.getElementById('btnExportarGuias');
     const selectAllCheckbox = document.getElementById('selectAll');
     const btnNuevoPaquete = document.getElementById('btnNuevoPaquete');
@@ -156,6 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const filtroMensajeroInput = document.getElementById('filtroMensajeroInput');
     const filtroMensajeroOpciones = document.getElementById('filtroMensajeroOpciones');
     const resultLimitSelect = document.getElementById('resultLimit');
+    let eliminandoPaquetesSeleccionados = false;
     
     // Referencias a los filtros (Asegúrate de que los IDs en tu HTML coincidan)
     const inputs = {
@@ -317,6 +319,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (btnAsignarRemitenteSeleccionados) {
         btnAsignarRemitenteSeleccionados.addEventListener('click', abrirModalAsignacionRemitenteMasiva);
+    }
+    if (btnEliminarSeleccionados) {
+        btnEliminarSeleccionados.addEventListener('click', eliminarPaquetesSeleccionados);
     }
     if (btnExportarGuias) btnExportarGuias.addEventListener('click', descargarGuiasSeleccionadas);
 
@@ -614,6 +619,84 @@ document.addEventListener('DOMContentLoaded', function() {
             btnAsignarRemitenteSeleccionados.textContent = cantidad > 0
                 ? `Asignar Remitente (${cantidad})`
                 : 'Asignar Remitente';
+        }
+
+        if (btnEliminarSeleccionados) {
+            btnEliminarSeleccionados.classList.toggle('is-disabled', deshabilitado);
+            btnEliminarSeleccionados.disabled = deshabilitado;
+            btnEliminarSeleccionados.setAttribute('aria-disabled', deshabilitado ? 'true' : 'false');
+            btnEliminarSeleccionados.textContent = cantidad > 0
+                ? `Eliminar (${cantidad})`
+                : 'Eliminar Seleccionados';
+        }
+    }
+
+    async function eliminarPaquetesSeleccionados() {
+        if (eliminandoPaquetesSeleccionados) {
+            return;
+        }
+
+        const seleccionados = getSelectedPackageIds().map(id => selectedPackagesMeta.get(String(id)) || { id: String(id), guia: '' });
+
+        if (seleccionados.length === 0) {
+            alert('Selecciona al menos un paquete para eliminar.');
+            return;
+        }
+
+        const guias = seleccionados
+            .map((item) => item.guia)
+            .filter(Boolean);
+        const resumenGuias = guias.slice(0, 8).join(', ');
+        const restante = guias.length > 8 ? `\n... y ${guias.length - 8} mas` : '';
+        const confirmacion = confirm(
+            `Seguro que deseas eliminar ${seleccionados.length} paquete(s) seleccionado(s)?\n\n` +
+            `Esta accion eliminara los registros y evidencias asociadas.\n` +
+            (resumenGuias ? `\nGuias: ${resumenGuias}${restante}` : '')
+        );
+
+        if (!confirmacion) {
+            return;
+        }
+
+        if (btnEliminarSeleccionados) {
+            btnEliminarSeleccionados.classList.add('is-disabled');
+            btnEliminarSeleccionados.disabled = true;
+            btnEliminarSeleccionados.setAttribute('aria-disabled', 'true');
+            btnEliminarSeleccionados.textContent = 'Eliminando...';
+        }
+
+        eliminandoPaquetesSeleccionados = true;
+        try {
+            const ids = seleccionados.map((item) => item.id);
+            const response = await fetch(`${PAQUETES_ADMIN_CONTROLLER}?action=eliminar_masivo`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paquete_ids: ids })
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                ids.forEach(id => {
+                    selectedPackageIds.delete(String(id));
+                    selectedPackagesMeta.delete(String(id));
+                });
+                if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                const eliminados = Number(result.eliminados || ids.length);
+                const fallidos = Array.isArray(result.errores) ? result.errores.length : 0;
+                alert(fallidos > 0
+                    ? `Se eliminaron ${eliminados} paquete(s). ${fallidos} no se pudieron eliminar.`
+                    : `Se eliminaron ${eliminados} paquete(s) correctamente.`);
+                listarPaquetes();
+                return;
+            }
+
+            alert('Error al eliminar: ' + (result.error || 'Desconocido'));
+        } catch (error) {
+            console.error(error);
+            alert('Error de conexion al eliminar los paquetes.');
+        } finally {
+            eliminandoPaquetesSeleccionados = false;
+            actualizarEstadoBotonAsignacionMasiva();
         }
     }
 
@@ -2372,6 +2455,8 @@ window.eliminarPaqueteAdmin = async function(id, guia, nombrePaquete) {
         const result = await response.json();
 
         if (result.success) {
+            selectedPackageIds.delete(String(id));
+            selectedPackagesMeta.delete(String(id));
             alert('Paquete eliminado correctamente.');
             if (typeof window.listarPaquetes === 'function') window.listarPaquetes();
             return;

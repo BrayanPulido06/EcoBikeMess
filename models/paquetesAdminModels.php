@@ -1273,6 +1273,40 @@ class PaquetesAdminModel {
         }
     }
 
+    public function eliminarPaquetesAdmin(array $paqueteIds): array
+    {
+        $paqueteIds = array_values(array_unique(array_filter(array_map('intval', $paqueteIds), static fn($id) => $id > 0)));
+        $rutas = [];
+        $resumenes = [];
+        $errores = [];
+
+        foreach ($paqueteIds as $paqueteId) {
+            try {
+                $result = $this->eliminarPaqueteAdmin($paqueteId);
+                if (!empty($result['resumen'])) {
+                    $resumenes[] = $result['resumen'];
+                }
+                foreach (($result['rutas'] ?? []) as $ruta) {
+                    if (!empty($ruta)) {
+                        $rutas[] = $ruta;
+                    }
+                }
+            } catch (Throwable $e) {
+                $errores[] = [
+                    'paquete_id' => $paqueteId,
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        return [
+            'eliminados' => count($resumenes),
+            'resumenes' => $resumenes,
+            'errores' => $errores,
+            'rutas' => array_values(array_unique(array_filter($rutas)))
+        ];
+    }
+
     public function addPaqueteImagen($paqueteId, $tipo, $ruta, $userId) {
         $sql = "INSERT INTO paquete_imagenes (paquete_id, tipo, ruta_archivo, creado_por)
                 VALUES (:paquete_id, :tipo, :ruta, :creado_por)";

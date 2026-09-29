@@ -409,6 +409,45 @@ try {
             ]);
             break;
 
+        case 'eliminar_masivo':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                echo json_encode(['success' => false, 'error' => 'Metodo no permitido']);
+                break;
+            }
+
+            $raw = file_get_contents('php://input');
+            $input = json_decode($raw, true);
+            if (!is_array($input)) {
+                echo json_encode(['success' => false, 'error' => 'Payload invalido']);
+                break;
+            }
+
+            $paqueteIds = $input['paquete_ids'] ?? [];
+            if (!is_array($paqueteIds)) {
+                $paqueteIds = [];
+            }
+
+            $paqueteIds = array_values(array_unique(array_filter(array_map('intval', $paqueteIds), static fn($id) => $id > 0)));
+
+            if (empty($paqueteIds)) {
+                echo json_encode(['success' => false, 'error' => 'Debes seleccionar al menos un paquete']);
+                break;
+            }
+
+            $result = $model->eliminarPaquetesAdmin($paqueteIds);
+            foreach (($result['rutas'] ?? []) as $ruta) {
+                eliminarArchivoSiExiste($ruta);
+            }
+
+            echo json_encode([
+                'success' => ((int) ($result['eliminados'] ?? 0)) > 0,
+                'eliminados' => $result['eliminados'] ?? 0,
+                'resumenes' => $result['resumenes'] ?? [],
+                'errores' => $result['errores'] ?? [],
+                'error' => ((int) ($result['eliminados'] ?? 0)) > 0 ? null : 'No se pudieron eliminar los paquetes seleccionados'
+            ]);
+            break;
+
         case 'imagen_subir':
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 echo json_encode(['success' => false, 'error' => 'Método no permitido']);

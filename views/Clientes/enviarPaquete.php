@@ -564,7 +564,7 @@ $remitente_data = [
                                 <div class="form-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="embalaje" name="embalaje">
-                                        <span>Embalaje (+$1.000)</span>
+                                        <span>Packing (+$1.000)</span>
                                     </label>
                                 </div>
                                 <div class="form-group">
