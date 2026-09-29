@@ -777,11 +777,19 @@ tbody tr.problema {
 .preview-imagen-cierre {
     flex: 1 1 100%;
     align-items: center;
+    flex-wrap: wrap;
     gap: 12px;
     padding: 10px;
     border: 1px solid #dbeafe;
     border-radius: 10px;
     background: #f8fbff;
+}
+
+.preview-imagen-cierre-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: min(100%, 260px);
 }
 
 .preview-imagen-cierre img {

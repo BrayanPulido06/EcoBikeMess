@@ -1471,6 +1471,8 @@ function verDetalle(id, options = {}) {
                 } : null);
                 const usarFlujoEntregaInline = Boolean(entregaInfo);
                 const tieneFotoEntregaPrincipal = Boolean(entregaInfo?.fotoPrincipal);
+                const tieneFotoEntregaAdicional = Boolean(entregaInfo?.fotoAdicional);
+                const cuposFotosEntrega = (tieneFotoEntregaPrincipal ? 0 : 1) + (tieneFotoEntregaAdicional ? 0 : 1);
 
                 const evidenciaItems = [];
                 if (entregaInfo) {
@@ -2030,6 +2032,16 @@ function verDetalle(id, options = {}) {
                         const btnSubirImagenes = document.getElementById('btnSubirImagenes');
                         const inputImagenes = document.getElementById('imagenesNueva');
                         const previewImagenCierre = document.getElementById('previewImagenCierre');
+                        const limpiarPreviewImagenCierre = () => {
+                            if (!previewImagenCierre) return;
+                            const urls = String(previewImagenCierre.dataset.objectUrls || '')
+                                .split('|')
+                                .filter(Boolean);
+                            urls.forEach((url) => URL.revokeObjectURL(url));
+                            delete previewImagenCierre.dataset.objectUrls;
+                            previewImagenCierre.style.display = 'none';
+                            previewImagenCierre.innerHTML = '';
+                        };
 
                         if (tipoImagenNueva) {
                             tipoImagenNueva.value = 'entrega';
@@ -2039,31 +2051,36 @@ function verDetalle(id, options = {}) {
                             btnSubirImagenes.style.display = 'none';
                         }
                         if (inputImagenes) {
-                            inputImagenes.multiple = false;
-                            inputImagenes.insertAdjacentHTML('afterend', `<small class="text-muted" style="display:block;margin-top:6px;">Selecciona la evidencia de entrega. Se subira automaticamente al guardar ${options.modoCierre ? 'el cierre' : 'los cambios'}.</small>`);
+                            inputImagenes.multiple = cuposFotosEntrega > 1;
+                            inputImagenes.disabled = cuposFotosEntrega === 0;
+                            inputImagenes.insertAdjacentHTML('afterend', `<small class="text-muted" style="display:block;margin-top:6px;">Selecciona hasta ${Math.max(cuposFotosEntrega, 1)} foto(s) de evidencia de entrega. Se subiran automaticamente al guardar ${options.modoCierre ? 'el cierre' : 'los cambios'}.</small>`);
                             inputImagenes.addEventListener('change', () => {
                                 if (!previewImagenCierre) return;
-                                const file = inputImagenes.files?.[0];
-                                const previousUrl = previewImagenCierre.dataset.objectUrl;
-                                if (previousUrl) {
-                                    URL.revokeObjectURL(previousUrl);
-                                    delete previewImagenCierre.dataset.objectUrl;
-                                }
-                                if (!file) {
-                                    previewImagenCierre.style.display = 'none';
-                                    previewImagenCierre.innerHTML = '';
+                                limpiarPreviewImagenCierre();
+
+                                const files = Array.from(inputImagenes.files || []);
+                                if (files.length > cuposFotosEntrega) {
+                                    alert(`Solo puedes cargar ${cuposFotosEntrega} foto(s) de entrega en este pedido.`);
+                                    inputImagenes.value = '';
                                     return;
                                 }
-                                const objectUrl = URL.createObjectURL(file);
-                                previewImagenCierre.dataset.objectUrl = objectUrl;
+
+                                if (files.length === 0) {
+                                    return;
+                                }
+
+                                const objectUrls = files.map((file) => URL.createObjectURL(file));
+                                previewImagenCierre.dataset.objectUrls = objectUrls.join('|');
                                 previewImagenCierre.style.display = 'flex';
-                                previewImagenCierre.innerHTML = `
-                                    <img src="${objectUrl}" alt="Vista previa de evidencia">
-                                    <div>
-                                        <strong>${escapeHtml(file.name)}</strong>
-                                        <span>${(file.size / 1024).toFixed(1)} KB</span>
+                                previewImagenCierre.innerHTML = files.map((file, index) => `
+                                    <div class="preview-imagen-cierre-item">
+                                        <img src="${objectUrls[index]}" alt="Vista previa de evidencia ${index + 1}">
+                                        <div>
+                                            <strong>${escapeHtml(file.name)}</strong>
+                                            <span>${(file.size / 1024).toFixed(1)} KB</span>
+                                        </div>
                                     </div>
-                                `;
+                                `).join('');
                             });
                         }
                     }
@@ -2109,6 +2126,15 @@ function verDetalle(id, options = {}) {
                         const imagenesEntrega = usarFlujoEntregaInline && imagenesEntregaInput?.files?.length
                             ? Array.from(imagenesEntregaInput.files)
                             : [];
+                        if (imagenesEntrega.length > cuposFotosEntrega) {
+                            alert(`Solo puedes cargar ${cuposFotosEntrega} foto(s) de entrega en este pedido.`);
+                            guardandoCambios = false;
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.textContent = originalSubmitText;
+                            }
+                            return;
+                        }
                         if (options.modoCierre && !tieneFotoEntregaPrincipal && imagenesEntrega.length === 0) {
                             alert('Selecciona una imagen de evidencia para finalizar el cierre.');
                             guardandoCambios = false;

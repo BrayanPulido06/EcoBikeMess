@@ -293,7 +293,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                     Asignar Remitente
                 </button>
                 <button type="button" class="btn btn-danger is-disabled" id="btnEliminarSeleccionados" aria-disabled="true" disabled>
-                    Eliminar Seleccionados
+                    Eliminar
                 </button>
                 <button class="btn btn-secondary" id="btnExportarGuias">
                     🧾 Descargar Guías

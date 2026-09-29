@@ -490,6 +490,18 @@ try {
                     'size' => $files['size'][$i]
                 ];
 
+                $campoEntrega = null;
+                if ($tipo === 'entrega') {
+                    $fotosActuales = $model->getEntregaFotos($paqueteId) ?: [];
+                    if (empty($fotosActuales['foto_entrega'])) {
+                        $campoEntrega = 'foto_entrega';
+                    } elseif (empty($fotosActuales['foto_adicional'])) {
+                        $campoEntrega = 'foto_adicional';
+                    } else {
+                        continue;
+                    }
+                }
+
                 $basename = saveUploadedFileSafe($file, dirname(__DIR__) . '/uploads/' . $subdir, $allowedMimes, 'ebm', true);
                 if (!$basename) {
                     continue;
@@ -497,14 +509,14 @@ try {
                 $ruta = '/uploads/' . $subdir . '/' . $basename;
 
                 if ($tipo === 'entrega') {
-                    $fotosActuales = $model->getEntregaFotos($paqueteId) ?: [];
-                    $campo = empty($fotosActuales['foto_entrega']) ? 'foto_entrega' : 'foto_adicional';
-                    if ($model->updateEntregaFoto($paqueteId, $campo, $ruta)) {
+                    if ($campoEntrega && $model->updateEntregaFoto($paqueteId, $campoEntrega, $ruta)) {
                         $added[] = [
                             'tipo' => $tipo,
                             'ruta_archivo' => $ruta,
-                            'target' => $campo === 'foto_entrega' ? 'entrega_principal' : 'entrega_adicional'
+                            'target' => $campoEntrega === 'foto_entrega' ? 'entrega_principal' : 'entrega_adicional'
                         ];
+                    } else {
+                        eliminarArchivoSiExiste($ruta);
                     }
                     continue;
                 }
