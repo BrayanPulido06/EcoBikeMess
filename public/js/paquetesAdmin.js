@@ -70,6 +70,40 @@ function configurarCampoMilesDetallePaquete(input) {
     });
 }
 
+function configurarEnterAvanzaDetallePaquete(form) {
+    if (!form || form.dataset.enterNavConfigured === '1') return;
+
+    form.dataset.enterNavConfigured = '1';
+    const fieldSelector = 'input:not([type="hidden"]):not([type="file"]):not([type="button"]):not([type="submit"]), select, textarea';
+    const getFields = () => Array.from(form.querySelectorAll(fieldSelector))
+        .filter(field => !field.disabled && !field.readOnly && field.offsetParent !== null);
+
+    form.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' || event.isComposing || event.ctrlKey || event.altKey || event.metaKey) {
+            return;
+        }
+
+        const target = event.target;
+        if (!(target instanceof HTMLElement) || !target.matches(fieldSelector)) {
+            return;
+        }
+
+        event.preventDefault();
+        const fields = getFields();
+        const currentIndex = fields.indexOf(target);
+        if (currentIndex === -1) return;
+
+        const nextIndex = currentIndex + (event.shiftKey ? -1 : 1);
+        const nextField = fields[nextIndex];
+        if (!nextField) return;
+
+        nextField.focus();
+        if (typeof nextField.select === 'function' && nextField.tagName !== 'SELECT' && nextField.tagName !== 'TEXTAREA') {
+            nextField.select();
+        }
+    });
+}
+
 function nombreMensajeroPorIdDetallePaquete(id) {
     const mensajero = todosLosMensajeros.find(item => String(item.id) === String(id));
     return mensajero ? mensajero.nombre : '';
@@ -1645,7 +1679,7 @@ function verDetalle(id, options = {}) {
                     ` : '';
 
                     const deleteButton = canDelete
-                        ? `<button class="btn btn-sm btn-danger" ${deleteAttrs}>Eliminar</button>`
+                        ? `<button type="button" class="btn btn-sm btn-danger" ${deleteAttrs}>Eliminar</button>`
                         : '';
 
                     const actions = (replaceInput || deleteButton) ? `
@@ -2028,6 +2062,7 @@ function verDetalle(id, options = {}) {
                 const form = document.getElementById('formEditarDetalles');
                 if (form) {
                     let guardandoCambios = false;
+                    configurarEnterAvanzaDetallePaquete(form);
                     configurarCampoMilesDetallePaquete(form.querySelector('input[name="costo_envio"]'));
                     configurarCampoMilesDetallePaquete(form.querySelector('input[name="valor_pago_mensajero"]'));
 
@@ -2406,7 +2441,8 @@ function verDetalle(id, options = {}) {
                 }
 
                 container.querySelectorAll('[data-action="eliminar-imagen"]').forEach(btn => {
-                    btn.addEventListener('click', async () => {
+                    btn.addEventListener('click', async (event) => {
+                        event.preventDefault();
                         if (!confirm('¿Eliminar esta imagen?')) return;
                         const imageId = btn.getAttribute('data-image-id');
                         const target = btn.getAttribute('data-target');
