@@ -188,10 +188,41 @@ document.addEventListener('DOMContentLoaded', () => {
         </form>
     `;
 
+    const getBoardScrollState = () => {
+        const listScroll = new Map();
+        board?.querySelectorAll('.notas-list[data-list-id]').forEach((listEl) => {
+            const cardList = listEl.querySelector('.notas-card-list');
+            if (!cardList) return;
+            listScroll.set(String(listEl.dataset.listId), cardList.scrollTop);
+        });
+
+        return {
+            boardScrollLeft: board?.scrollLeft || 0,
+            listScroll
+        };
+    };
+
+    const restoreBoardScrollState = ({ boardScrollLeft = 0, listScroll = new Map() } = {}) => {
+        if (!board) return;
+
+        board.scrollLeft = boardScrollLeft;
+        board.querySelectorAll('.notas-list[data-list-id]').forEach((listEl) => {
+            const cardList = listEl.querySelector('.notas-card-list');
+            if (!cardList) return;
+
+            const savedScrollTop = listScroll.get(String(listEl.dataset.listId));
+            if (typeof savedScrollTop === 'number') {
+                cardList.scrollTop = savedScrollTop;
+            }
+        });
+    };
+
     const render = () => {
         if (!board) return;
+        const scrollState = getBoardScrollState();
         const lists = filterLists(Array.isArray(state.listas) ? state.listas : []);
         board.innerHTML = `${lists.map(renderList).join('')}${renderAddList()}`;
+        restoreBoardScrollState(scrollState);
     };
 
     const getListAfterPointer = (targetList, clientX) => {
