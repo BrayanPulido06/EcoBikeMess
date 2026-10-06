@@ -1219,8 +1219,8 @@ function pintarDetallesCliente(cliente) {
                     <input class="form-control" type="tel" name="telefono" value="${escapeHtml(cliente.telefono || '')}" autocomplete="tel" required>
                 </div>
                 <div class="detail-item">
-                    <div class="detail-label">Cuenta principal / Nequi / llave bancaria *</div>
-                    <input class="form-control" type="text" name="cuenta_bancaria_principal" value="${escapeHtml(cliente.cuentaBancariaPrincipal || '')}" required>
+                    <div class="detail-label">Cuenta principal / Nequi / llave bancaria</div>
+                    <input class="form-control" type="text" name="cuenta_bancaria_principal" value="${escapeHtml(cliente.cuentaBancariaPrincipal || '')}">
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Cuenta adicional 1</div>
@@ -1282,11 +1282,6 @@ async function manejarGuardarClientePersonal(event) {
 
     if (!validatePersonName(apellidos)) {
         showNotification('Ingresa apellidos reales, no un numero de documento', 'warning');
-        return;
-    }
-
-    if (!cuentaPrincipal.trim()) {
-        showNotification('La cuenta bancaria principal es obligatoria', 'warning');
         return;
     }
 

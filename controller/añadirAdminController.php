@@ -122,10 +122,6 @@ try {
                 throw new Exception("El telefono es obligatorio.");
             }
 
-            if ($datos['cuenta_bancaria_principal'] === '') {
-                throw new Exception("La cuenta bancaria principal es obligatoria.");
-            }
-
             $res = $model->actualizarClienteDatosPersonales($id, $datos);
             $cliente = $model->getClienteById($id);
             echo json_encode([
