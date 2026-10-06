@@ -102,7 +102,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                                     <th>Total recaudado</th>
                                     <th>Abono</th>
                                     <th>Estado</th>
-                                    <th>Saldo</th>
+                                    <th>Saldo del dia</th>
                                     <th>Total acumulado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -177,7 +177,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                                     <th>Total recaudado</th>
                                     <th>Abono</th>
                                     <th>Estado</th>
-                                    <th>Saldo</th>
+                                    <th>Saldo del dia</th>
                                     <th>Total acumulado</th>
                                     <th>Acciones</th>
                                 </tr>

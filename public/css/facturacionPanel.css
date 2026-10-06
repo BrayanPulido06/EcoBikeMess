@@ -375,6 +375,7 @@ body.sidebar-collapsed .facturacion-shell,
     border-radius: 12px;
     border: 1px solid transparent;
     background-clip: padding-box;
+    white-space: nowrap;
 }
 
 .amount-cell.is-pending {

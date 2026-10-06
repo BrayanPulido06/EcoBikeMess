@@ -2367,7 +2367,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'Recaudado',
             'Recaudo esperado',
             'Contraentrega',
-            'Saldo',
+            'Saldo del dia',
             'Observaciones'
         ];
 
