@@ -258,6 +258,7 @@ class FacturacionModels
                     id INT PRIMARY KEY AUTO_INCREMENT,
                     cliente_id INT NOT NULL,
                     fecha_grupo DATE NOT NULL,
+                    fecha_abono DATE NULL,
                     monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                     monto_positivo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                     descripcion_positiva TEXT NULL,
@@ -272,6 +273,7 @@ class FacturacionModels
                     INDEX idx_abonos_cliente_fecha (cliente_id, fecha_grupo)
                 )";
         $this->conn->exec($sql);
+        $this->ensureColumn('facturacion_abonos_cliente', 'fecha_abono', "ALTER TABLE facturacion_abonos_cliente ADD COLUMN fecha_abono DATE NULL AFTER fecha_grupo");
         $this->ensureColumn('facturacion_abonos_cliente', 'monto_positivo', "ALTER TABLE facturacion_abonos_cliente ADD COLUMN monto_positivo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER monto");
         $this->ensureColumn('facturacion_abonos_cliente', 'descripcion_positiva', "ALTER TABLE facturacion_abonos_cliente ADD COLUMN descripcion_positiva TEXT NULL AFTER monto_positivo");
         $this->ensureColumn('facturacion_abonos_cliente', 'monto_negativo', "ALTER TABLE facturacion_abonos_cliente ADD COLUMN monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER descripcion_positiva");
@@ -372,6 +374,7 @@ class FacturacionModels
                     id INT PRIMARY KEY AUTO_INCREMENT,
                     mensajero_id INT NOT NULL,
                     fecha_grupo DATE NOT NULL,
+                    fecha_abono DATE NULL,
                     monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                     monto_positivo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                     descripcion_positiva TEXT NULL,
@@ -386,6 +389,7 @@ class FacturacionModels
                     INDEX idx_abonos_mensajero_fecha (mensajero_id, fecha_grupo)
                 )";
         $this->conn->exec($sql);
+        $this->ensureColumn('facturacion_abonos_mensajero', 'fecha_abono', "ALTER TABLE facturacion_abonos_mensajero ADD COLUMN fecha_abono DATE NULL AFTER fecha_grupo");
         $this->ensureColumn('facturacion_abonos_mensajero', 'monto_positivo', "ALTER TABLE facturacion_abonos_mensajero ADD COLUMN monto_positivo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER monto");
         $this->ensureColumn('facturacion_abonos_mensajero', 'descripcion_positiva', "ALTER TABLE facturacion_abonos_mensajero ADD COLUMN descripcion_positiva TEXT NULL AFTER monto_positivo");
         $this->ensureColumn('facturacion_abonos_mensajero', 'monto_negativo', "ALTER TABLE facturacion_abonos_mensajero ADD COLUMN monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER descripcion_positiva");
@@ -548,6 +552,7 @@ class FacturacionModels
     public function registrarAbonoCliente(
         int $clienteId,
         string $fechaGrupo,
+        string $fechaAbono,
         float $montoPositivo,
         ?string $descripcionPositiva,
         float $montoNegativo,
@@ -557,10 +562,10 @@ class FacturacionModels
         ?int $registradoPor
     ): bool {
         $sql = "INSERT INTO facturacion_abonos_cliente (
-                    cliente_id, fecha_grupo, monto, monto_positivo, descripcion_positiva,
+                    cliente_id, fecha_grupo, fecha_abono, monto, monto_positivo, descripcion_positiva,
                     monto_negativo, descripcion_negativa, metodo_pago, observaciones, registrado_por
                 ) VALUES (
-                    :cliente_id, :fecha_grupo, :monto, :monto_positivo, :descripcion_positiva,
+                    :cliente_id, :fecha_grupo, :fecha_abono, :monto, :monto_positivo, :descripcion_positiva,
                     :monto_negativo, :descripcion_negativa, :metodo_pago, :observaciones, :registrado_por
                 )";
         $stmt = $this->conn->prepare($sql);
@@ -568,6 +573,7 @@ class FacturacionModels
         return $stmt->execute([
             ':cliente_id' => $clienteId,
             ':fecha_grupo' => $fechaGrupo,
+            ':fecha_abono' => $fechaAbono,
             ':monto' => $monto,
             ':monto_positivo' => $montoPositivo,
             ':descripcion_positiva' => $descripcionPositiva,
@@ -582,6 +588,7 @@ class FacturacionModels
     public function registrarAbonoMensajero(
         int $mensajeroId,
         string $fechaGrupo,
+        string $fechaAbono,
         float $montoPositivo,
         ?string $descripcionPositiva,
         float $montoNegativo,
@@ -591,10 +598,10 @@ class FacturacionModels
         ?int $registradoPor
     ): bool {
         $sql = "INSERT INTO facturacion_abonos_mensajero (
-                    mensajero_id, fecha_grupo, monto, monto_positivo, descripcion_positiva,
+                    mensajero_id, fecha_grupo, fecha_abono, monto, monto_positivo, descripcion_positiva,
                     monto_negativo, descripcion_negativa, metodo_pago, observaciones, registrado_por
                 ) VALUES (
-                    :mensajero_id, :fecha_grupo, :monto, :monto_positivo, :descripcion_positiva,
+                    :mensajero_id, :fecha_grupo, :fecha_abono, :monto, :monto_positivo, :descripcion_positiva,
                     :monto_negativo, :descripcion_negativa, :metodo_pago, :observaciones, :registrado_por
                 )";
         $stmt = $this->conn->prepare($sql);
@@ -602,6 +609,7 @@ class FacturacionModels
         return $stmt->execute([
             ':mensajero_id' => $mensajeroId,
             ':fecha_grupo' => $fechaGrupo,
+            ':fecha_abono' => $fechaAbono,
             ':monto' => $monto,
             ':monto_positivo' => $montoPositivo,
             ':descripcion_positiva' => $descripcionPositiva,
@@ -617,6 +625,7 @@ class FacturacionModels
         int $abonoId,
         int $clienteId,
         string $fechaGrupo,
+        string $fechaAbono,
         float $montoPositivo,
         ?string $descripcionPositiva,
         float $montoNegativo,
@@ -626,6 +635,7 @@ class FacturacionModels
     ): bool {
         $sql = "UPDATE facturacion_abonos_cliente
                 SET monto = :monto,
+                    fecha_abono = :fecha_abono,
                     monto_positivo = :monto_positivo,
                     descripcion_positiva = :descripcion_positiva,
                     monto_negativo = :monto_negativo,
@@ -641,6 +651,7 @@ class FacturacionModels
             ':id' => $abonoId,
             ':cliente_id' => $clienteId,
             ':fecha_grupo' => $fechaGrupo,
+            ':fecha_abono' => $fechaAbono,
             ':monto' => $monto,
             ':monto_positivo' => $montoPositivo,
             ':descripcion_positiva' => $descripcionPositiva,
@@ -655,6 +666,7 @@ class FacturacionModels
         int $abonoId,
         int $mensajeroId,
         string $fechaGrupo,
+        string $fechaAbono,
         float $montoPositivo,
         ?string $descripcionPositiva,
         float $montoNegativo,
@@ -664,6 +676,7 @@ class FacturacionModels
     ): bool {
         $sql = "UPDATE facturacion_abonos_mensajero
                 SET monto = :monto,
+                    fecha_abono = :fecha_abono,
                     monto_positivo = :monto_positivo,
                     descripcion_positiva = :descripcion_positiva,
                     monto_negativo = :monto_negativo,
@@ -679,6 +692,7 @@ class FacturacionModels
             ':id' => $abonoId,
             ':mensajero_id' => $mensajeroId,
             ':fecha_grupo' => $fechaGrupo,
+            ':fecha_abono' => $fechaAbono,
             ':monto' => $monto,
             ':monto_positivo' => $montoPositivo,
             ':descripcion_positiva' => $descripcionPositiva,
@@ -1112,6 +1126,7 @@ class FacturacionModels
                     a.id,
                     a.cliente_id,
                     a.fecha_grupo,
+                    COALESCE(a.fecha_abono, DATE(a.fecha_registro), a.fecha_grupo) AS fecha_abono,
                     a.monto,
                     a.monto_positivo,
                     a.descripcion_positiva,
@@ -1133,6 +1148,7 @@ class FacturacionModels
                 'id' => (int) $row['id'],
                 'cliente_id' => (int) $row['cliente_id'],
                 'fecha_grupo' => $row['fecha_grupo'],
+                'fecha_abono' => $row['fecha_abono'],
                 'monto' => (float) $row['monto'],
                 'monto_positivo' => (float) ($row['monto_positivo'] ?? 0),
                 'descripcion_positiva' => $row['descripcion_positiva'] ?? null,
@@ -1229,6 +1245,7 @@ class FacturacionModels
                     a.id,
                     a.mensajero_id,
                     a.fecha_grupo,
+                    COALESCE(a.fecha_abono, DATE(a.fecha_registro), a.fecha_grupo) AS fecha_abono,
                     a.monto,
                     a.monto_positivo,
                     a.descripcion_positiva,
@@ -1250,6 +1267,7 @@ class FacturacionModels
                 'id' => (int) $row['id'],
                 'mensajero_id' => (int) $row['mensajero_id'],
                 'fecha_grupo' => $row['fecha_grupo'],
+                'fecha_abono' => $row['fecha_abono'],
                 'monto' => (float) $row['monto'],
                 'monto_positivo' => (float) ($row['monto_positivo'] ?? 0),
                 'descripcion_positiva' => $row['descripcion_positiva'] ?? null,

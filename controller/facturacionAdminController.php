@@ -65,6 +65,30 @@ function parseGroupsInput(): array
     return $groups;
 }
 
+function defaultAbonoDate(): string
+{
+    return (new DateTimeImmutable('now', new DateTimeZone('America/Bogota')))->format('Y-m-d');
+}
+
+function parseDateInput($value, string $message, ?string $default = null): string
+{
+    $date = trim((string) $value);
+    if ($date === '' && $default !== null) {
+        $date = $default;
+    }
+
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+        throw new InvalidArgumentException($message);
+    }
+
+    [$year, $month, $day] = array_map('intval', explode('-', $date));
+    if (!checkdate($month, $day, $year)) {
+        throw new InvalidArgumentException($message);
+    }
+
+    return $date;
+}
+
 try {
     if ($method === 'GET') {
         $panel = isset($_GET['panel']) ? trim((string) $_GET['panel']) : null;
@@ -105,6 +129,7 @@ try {
     if ($method === 'POST' && $action === 'registrar_abono_cliente') {
         $clienteId = (int) ($_POST['cliente_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+        $fechaAbono = parseDateInput($_POST['fecha_abono'] ?? '', 'La fecha real del abono no es valida.', defaultAbonoDate());
         [$montoPositivo, $descripcionPositiva, $montoNegativo, $descripcionNegativa] = parseAbonoSplitInput();
         $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
         $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
@@ -125,6 +150,7 @@ try {
         $model->registrarAbonoCliente(
             $clienteId,
             $fechaGrupo,
+            $fechaAbono,
             $montoPositivo,
             $montoPositivo > 0 ? $descripcionPositiva : null,
             $montoNegativo,
@@ -145,6 +171,7 @@ try {
     if ($method === 'POST' && $action === 'registrar_abono_mensajero') {
         $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+        $fechaAbono = parseDateInput($_POST['fecha_abono'] ?? '', 'La fecha real del abono no es valida.', defaultAbonoDate());
         [$montoPositivo, $descripcionPositiva, $montoNegativo, $descripcionNegativa] = parseAbonoSplitInput();
         $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
         $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
@@ -165,6 +192,7 @@ try {
         $model->registrarAbonoMensajero(
             $mensajeroId,
             $fechaGrupo,
+            $fechaAbono,
             $montoPositivo,
             $montoPositivo > 0 ? $descripcionPositiva : null,
             $montoNegativo,
@@ -186,6 +214,7 @@ try {
         $abonoId = (int) ($_POST['abono_id'] ?? 0);
         $clienteId = (int) ($_POST['cliente_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+        $fechaAbono = parseDateInput($_POST['fecha_abono'] ?? '', 'La fecha real del abono no es valida.', defaultAbonoDate());
         [$montoPositivo, $descripcionPositiva, $montoNegativo, $descripcionNegativa] = parseAbonoSplitInput();
         $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
         $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
@@ -206,6 +235,7 @@ try {
             $abonoId,
             $clienteId,
             $fechaGrupo,
+            $fechaAbono,
             $montoPositivo,
             $montoPositivo > 0 ? $descripcionPositiva : null,
             $montoNegativo,
@@ -226,6 +256,7 @@ try {
         $abonoId = (int) ($_POST['abono_id'] ?? 0);
         $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+        $fechaAbono = parseDateInput($_POST['fecha_abono'] ?? '', 'La fecha real del abono no es valida.', defaultAbonoDate());
         [$montoPositivo, $descripcionPositiva, $montoNegativo, $descripcionNegativa] = parseAbonoSplitInput();
         $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
         $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
@@ -246,6 +277,7 @@ try {
             $abonoId,
             $mensajeroId,
             $fechaGrupo,
+            $fechaAbono,
             $montoPositivo,
             $montoPositivo > 0 ? $descripcionPositiva : null,
             $montoNegativo,

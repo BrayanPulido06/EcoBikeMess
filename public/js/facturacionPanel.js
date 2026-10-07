@@ -50,13 +50,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const shortDate = (value) => {
         if (!value) return 'Sin fecha';
-        const date = new Date(value);
+        const rawValue = String(value);
+        const normalizedValue = /^\d{4}-\d{2}-\d{2}$/.test(rawValue)
+            ? `${rawValue}T12:00:00`
+            : rawValue.replace(' ', 'T');
+        const date = new Date(normalizedValue);
         return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('es-CO');
     };
 
     const dateKeyFromValue = (value) => {
         if (!value) return 'sin-fecha';
         return String(value).slice(0, 10);
+    };
+
+    const todayDateKey = () => {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     };
 
     const normalizeText = (value) => String(value || '').trim().toLowerCase();
@@ -1701,6 +1713,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         formData.append('cliente_id', form.cliente_id.value);
         formData.append('fecha_grupo', form.fecha_grupo.value);
+        formData.append('fecha_abono', form.fecha_abono.value);
         formData.append('monto_positivo', form.monto_positivo.value || '0');
         formData.append('descripcion_positiva', form.descripcion_positiva.value || '');
         formData.append('monto_negativo', form.monto_negativo.value || '0');
@@ -1763,6 +1776,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         formData.append('mensajero_id', form.mensajero_id.value);
         formData.append('fecha_grupo', form.fecha_grupo.value);
+        formData.append('fecha_abono', form.fecha_abono.value);
         formData.append('monto_positivo', form.monto_positivo.value || '0');
         formData.append('descripcion_positiva', form.descripcion_positiva.value || '');
         formData.append('monto_negativo', form.monto_negativo.value || '0');
@@ -2188,7 +2202,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <strong>${escapeHtml(abono.metodo_pago)}</strong>
                                 </div>
                                 <div class="package-data">
-                                    <span class="package-label">Fecha de registro</span>
+                                    <span class="package-label">Fecha del abono</span>
+                                    <strong>${shortDate(abono.fecha_abono || abono.fecha_registro)}</strong>
+                                </div>
+                                <div class="package-data">
+                                    <span class="package-label">Registrado en sistema</span>
                                     <strong>${shortDate(abono.fecha_registro)}</strong>
                                 </div>
                                 <div class="package-data">
@@ -2231,6 +2249,8 @@ document.addEventListener('DOMContentLoaded', () => {
         form.monto_positivo_display.value = getPositiveAbonoAmount(abono) > 0 ? money(getPositiveAbonoAmount(abono)) : '';
         form.monto_negativo.value = getNegativeAbonoAmount(abono) > 0 ? String(Math.round(getNegativeAbonoAmount(abono))) : '';
         form.monto_negativo_display.value = getNegativeAbonoAmount(abono) > 0 ? money(getNegativeAbonoAmount(abono)) : '';
+        const fechaAbono = abono.fecha_abono || dateKeyFromValue(abono.fecha_registro);
+        form.fecha_abono.value = /^\d{4}-\d{2}-\d{2}$/.test(fechaAbono) ? fechaAbono : todayDateKey();
         form.descripcion_positiva.value = getPositiveAbonoDescription(abono);
         form.descripcion_negativa.value = getNegativeAbonoDescription(abono);
         form.metodo_pago.value = abono.metodo_pago || 'efectivo';
@@ -2640,6 +2660,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             <option value="transferencia">Transferencia</option>
                         </select>
                     </label>
+                    <label class="facturacion-field">
+                        <span>Fecha del abono</span>
+                        <input type="date" name="fecha_abono" value="${todayDateKey()}" required>
+                    </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Observacion abono positivo</span>
                         <textarea name="descripcion_positiva" rows="2" placeholder="Ej: pago recibido, transferencia, efectivo"></textarea>
@@ -2658,7 +2682,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button type="button" class="fact-btn tertiary" data-role="open-messenger-detail" data-group-key="${escapeHtml(group.key)}">Ver entregas</button>
                 </div>
             </form>
-            <div class="facturacion-footnote">Historial de abonos registrados para este mensajero en esta fecha.</div>
+            <div class="facturacion-footnote">Historial de abonos aplicados a esta cuenta. La fecha del abono indica cuando se recibio o realizo el pago.</div>
             ${renderAbonoHistory(group)}
         `;
 
@@ -2829,6 +2853,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             <option value="transferencia">Transferencia</option>
                         </select>
                     </label>
+                    <label class="facturacion-field">
+                        <span>Fecha del abono</span>
+                        <input type="date" name="fecha_abono" value="${todayDateKey()}" required>
+                    </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Observacion abono positivo</span>
                         <textarea name="descripcion_positiva" rows="2" placeholder="Ej: pago recibido, transferencia, efectivo"></textarea>
@@ -2847,7 +2875,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button type="button" class="fact-btn tertiary" data-role="open-client-detail" data-group-key="${escapeHtml(group.key)}">Ver paquetes entregados</button>
                 </div>
             </form>
-            <div class="facturacion-footnote">Historial de abonos registrados para este cliente en esta fecha.</div>
+            <div class="facturacion-footnote">Historial de abonos aplicados a esta cuenta. La fecha del abono indica cuando se recibio el pago.</div>
             ${renderAbonoHistory(group)}
         `;
 
@@ -3686,6 +3714,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Ingresa la observacion del abono positivo.');
                 return;
             }
+            if (!String(form.fecha_abono.value || '').trim()) {
+                alert('Ingresa la fecha real del abono.');
+                return;
+            }
             if (montoNegativo > 0 && !String(form.descripcion_negativa.value || '').trim()) {
                 alert('Ingresa la observacion del abono negativo.');
                 return;
@@ -3725,6 +3757,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (montoPositivo > 0 && !String(form.descripcion_positiva.value || '').trim()) {
                 alert('Ingresa la observacion del abono positivo.');
+                return;
+            }
+            if (!String(form.fecha_abono.value || '').trim()) {
+                alert('Ingresa la fecha real del abono.');
                 return;
             }
             if (montoNegativo > 0 && !String(form.descripcion_negativa.value || '').trim()) {

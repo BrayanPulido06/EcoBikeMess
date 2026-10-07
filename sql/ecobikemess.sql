@@ -360,6 +360,7 @@ CREATE TABLE IF NOT EXISTS facturacion_abonos_cliente (
     id INT PRIMARY KEY AUTO_INCREMENT,
     cliente_id INT NOT NULL,
     fecha_grupo DATE NOT NULL,
+    fecha_abono DATE NULL,
     monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     metodo_pago ENUM('efectivo', 'transferencia') NOT NULL,
     observaciones TEXT,
@@ -370,6 +371,7 @@ CREATE TABLE IF NOT EXISTS facturacion_abonos_cliente (
 );
 
 CREATE INDEX idx_abonos_cliente_fecha ON facturacion_abonos_cliente(cliente_id, fecha_grupo);
+CREATE INDEX idx_abonos_cliente_fecha_abono ON facturacion_abonos_cliente(cliente_id, fecha_abono);
 
 CREATE TABLE IF NOT EXISTS facturacion_adicionales_cliente (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -395,6 +397,7 @@ CREATE TABLE IF NOT EXISTS facturacion_abonos_mensajero (
     id INT PRIMARY KEY AUTO_INCREMENT,
     mensajero_id INT NOT NULL,
     fecha_grupo DATE NOT NULL,
+    fecha_abono DATE NULL,
     monto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     metodo_pago ENUM('efectivo', 'transferencia') NOT NULL,
     observaciones TEXT,
@@ -405,6 +408,7 @@ CREATE TABLE IF NOT EXISTS facturacion_abonos_mensajero (
 );
 
 CREATE INDEX idx_abonos_mensajero_fecha ON facturacion_abonos_mensajero(mensajero_id, fecha_grupo);
+CREATE INDEX idx_abonos_mensajero_fecha_abono ON facturacion_abonos_mensajero(mensajero_id, fecha_abono);
 
 CREATE TABLE IF NOT EXISTS facturacion_adicionales_mensajero (
     id INT PRIMARY KEY AUTO_INCREMENT,
