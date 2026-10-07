@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedEcoBikeGroupKey: null,
         activeClientModalView: 'detail',
         activeMensajeroModalView: 'detail',
+        clienteFolders: [],
         mensajeroGroups: [],
         ecobikemessGroups: []
     };
@@ -92,10 +93,20 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const getGroupAbonos = (clienteId, fechaGrupo) => getClienteAbonos()
-        .filter((abono) => Number(abono.cliente_id) === Number(clienteId) && String(abono.fecha_grupo) === String(fechaGrupo));
+        .filter((abono) => {
+            const fechaMovimiento = abono.fecha_abono || abono.fecha_grupo;
+            return Number(abono.cliente_id) === Number(clienteId) && String(fechaMovimiento) === String(fechaGrupo);
+        });
 
     const getGroupAbonoTotal = (clienteId, fechaGrupo) => getGroupAbonos(clienteId, fechaGrupo)
         .reduce((sum, abono) => sum + Number(abono.monto || 0), 0);
+
+    const getClienteAbonosForDisplay = () => getClienteAbonos()
+        .map((abono) => ({
+            ...abono,
+            fecha_movimiento: abono.fecha_abono || abono.fecha_grupo
+        }))
+        .filter((abono) => abono.fecha_movimiento);
 
     const getClienteAdicionales = () => {
         const adicionales = state.rawData?.cliente?.adicionales;
@@ -501,6 +512,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     key,
                     clienteNombre: group.clienteNombre,
                     clienteId: group.clienteId,
+                    cuentaBancariaPrincipal: group.cuentaBancariaPrincipal || '',
+                    cuentaBancariaOpcional1: group.cuentaBancariaOpcional1 || '',
+                    cuentaBancariaOpcional2: group.cuentaBancariaOpcional2 || '',
+                    cuentaBancariaOpcional3: group.cuentaBancariaOpcional3 || '',
                     registros: 0,
                     paquetesEntregados: 0,
                     totalServicio: 0,
@@ -516,6 +531,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isCompleteClientDisplayName(group.clienteNombre) && !isCompleteClientDisplayName(folder.clienteNombre)) {
                 folder.clienteNombre = group.clienteNombre;
             }
+            folder.cuentaBancariaPrincipal = folder.cuentaBancariaPrincipal || group.cuentaBancariaPrincipal || '';
+            folder.cuentaBancariaOpcional1 = folder.cuentaBancariaOpcional1 || group.cuentaBancariaOpcional1 || '';
+            folder.cuentaBancariaOpcional2 = folder.cuentaBancariaOpcional2 || group.cuentaBancariaOpcional2 || '';
+            folder.cuentaBancariaOpcional3 = folder.cuentaBancariaOpcional3 || group.cuentaBancariaOpcional3 || '';
             folder.registros += 1;
             folder.paquetesEntregados += Number(group.paquetesEntregados || 0);
             folder.totalServicio += Number(group.totalServicio || 0);
@@ -736,6 +755,25 @@ document.addEventListener('DOMContentLoaded', () => {
             .filter((item) => matchesFilter(item, 'cliente'))
             .filter((item) => !item.oculto);
         const groupsMap = new Map();
+        const clientMetaById = new Map();
+
+        items.forEach((item) => {
+            const clientId = Number(item.cliente_id || 0);
+            if (!clientId || clientMetaById.has(clientId)) {
+                return;
+            }
+
+            const displayName = clientDisplayName(item);
+            const clientNameKey = normalizeClientStoreKey(clientBusinessGroupName(item) || displayName || '');
+            clientMetaById.set(clientId, {
+                clientKey: clientNameKey || `cliente:${clientId}`,
+                clienteNombre: displayName,
+                cuentaBancariaPrincipal: item.cuenta_bancaria_principal || '',
+                cuentaBancariaOpcional1: item.cuenta_bancaria_opcional_1 || '',
+                cuentaBancariaOpcional2: item.cuenta_bancaria_opcional_2 || '',
+                cuentaBancariaOpcional3: item.cuenta_bancaria_opcional_3 || ''
+            });
+        });
 
         filtered.forEach((item) => {
             const baseDate = item.fecha_entrega || item.fecha_ingreso;
@@ -798,8 +836,67 @@ document.addEventListener('DOMContentLoaded', () => {
             group.statuses.add(item.estado || 'pendiente');
         });
 
+        getClienteAbonosForDisplay().forEach((abono) => {
+            const clientId = Number(abono.cliente_id || 0);
+            const dateKey = String(abono.fecha_movimiento || '');
+            if (!clientId || !dateKey) {
+                return;
+            }
+
+            const existingGroup = Array.from(groupsMap.values()).find((group) => Number(group.clienteId) === clientId);
+            const meta = clientMetaById.get(clientId) || {};
+            const displayName = existingGroup?.clienteNombre || meta.clienteNombre || 'Cliente';
+            const filter = state.filters.cliente || {};
+            const haystack = `${displayName} abono ${abono.observaciones || ''} ${getPositiveAbonoDescription(abono)} ${getNegativeAbonoDescription(abono)}`.toLowerCase();
+            if (filter.q && !haystack.includes(normalizeText(filter.q))) {
+                return;
+            }
+            if (mode !== 'admin' && filter.estado && filter.estado !== 'pendiente') {
+                return;
+            }
+            if (filter.desde && dateKey < filter.desde) {
+                return;
+            }
+            if (filter.hasta && dateKey > filter.hasta) {
+                return;
+            }
+
+            const clientKey = existingGroup?.clientKey || meta.clientKey || `cliente:${clientId}`;
+            const groupKey = `${dateKey}__${clientKey}`;
+
+            if (!groupsMap.has(groupKey)) {
+                groupsMap.set(groupKey, {
+                    key: groupKey,
+                    dateKey,
+                    clientKey,
+                    fechaLabel: shortDate(dateKey),
+                    clienteNombre: displayName,
+                    clienteId: clientId,
+                    cuentaBancariaPrincipal: existingGroup?.cuentaBancariaPrincipal || meta.cuentaBancariaPrincipal || '',
+                    cuentaBancariaOpcional1: existingGroup?.cuentaBancariaOpcional1 || meta.cuentaBancariaOpcional1 || '',
+                    cuentaBancariaOpcional2: existingGroup?.cuentaBancariaOpcional2 || meta.cuentaBancariaOpcional2 || '',
+                    cuentaBancariaOpcional3: existingGroup?.cuentaBancariaOpcional3 || meta.cuentaBancariaOpcional3 || '',
+                    paquetesEntregados: 0,
+                    totalServicio: 0,
+                    subtotalServicio: 0,
+                    totalAdicionalesPaquetes: 0,
+                    adicionalGeneral: null,
+                    totalAdicionales: 0,
+                    adicionalObservacion: '',
+                    totalRecaudado: 0,
+                    abono: 0,
+                    saldo: 0,
+                    balance: 0,
+                    totalAcumulado: 0,
+                    packages: [],
+                    statuses: new Set(),
+                    isAbonoOnly: true
+                });
+            }
+        });
+
         const groups = Array.from(groupsMap.values())
-            .filter((group) => group.paquetesEntregados > 0)
+            .filter((group) => group.paquetesEntregados > 0 || getGroupAbonos(group.clienteId, group.dateKey).length > 0)
             .map((group) => {
                 const abonos = getGroupAbonos(group.clienteId, group.dateKey);
                 const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
@@ -1079,6 +1176,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const groups = buildClienteGroups(items);
         const folders = mode === 'admin' ? buildClienteFolders(groups) : [];
+        state.clienteFolders = folders;
         const selectedFolder = folders.find((folder) => folder.key === state.selectedClienteFolderKey) || null;
         const visibleFolderKeys = new Set(folders.map((folder) => folder.key));
         const visibleGroups = mode === 'admin' && selectedFolder
@@ -1118,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `
                     <tr>
                         <td>${group.fechaLabel}</td>
-                        <td>${group.paquetesEntregados}</td>
+                        <td>${group.isAbonoOnly ? `Abono ${money(group.abono)}` : group.paquetesEntregados}</td>
                         <td>${adicionalesCell(
                             Number(group.totalAdicionalesPaquetes || 0) + Number(group.adicionalGeneralPositivo || 0),
                             group.adicionalGeneralDescripcionPositiva || packageAdditionalSummary(group.packages, 'observaciones_admin'),
@@ -1138,7 +1236,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 data-role="open-client-detail"
                                 data-group-key="${escapeHtml(group.key)}"
                             >
-                                Ver paquetes
+                                ${group.isAbonoOnly ? 'Ver abono' : 'Ver paquetes'}
                             </button>
                         </td>
                     </tr>
@@ -1158,7 +1256,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td>${escapeHtml(group.clienteNombre)}</td>
                     <td>${group.fechaLabel}</td>
-                    <td>${group.paquetesEntregados}</td>
+                    <td>${group.isAbonoOnly ? `Abono ${money(group.abono)}` : group.paquetesEntregados}</td>
                     <td>${adicionalesCell(
                         Number(group.totalAdicionalesPaquetes || 0) + Number(group.adicionalGeneralPositivo || 0),
                         group.adicionalGeneralDescripcionPositiva || packageAdditionalSummary(group.packages, 'observaciones_admin'),
@@ -1179,7 +1277,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 data-role="open-client-detail"
                                 data-group-key="${escapeHtml(group.key)}"
                             >
-                                Ver paquetes
+                                ${group.isAbonoOnly ? 'Ver abono' : 'Ver paquetes'}
                             </button>
                             <button
                                 type="button"
@@ -1707,12 +1805,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveClientAbono = async (form) => {
         const formData = new FormData();
         const abonoId = Number(form.abono_id?.value || 0);
+        const currentGroup = getClienteGroupByKey(state.selectedClienteGroupKey);
+        const nextGroupKey = currentGroup && form.fecha_abono.value
+            ? `${form.fecha_abono.value}__${currentGroup.clientKey}`
+            : state.selectedClienteGroupKey;
         formData.append('action', abonoId > 0 ? 'actualizar_abono_cliente' : 'registrar_abono_cliente');
         if (abonoId > 0) {
             formData.append('abono_id', String(abonoId));
         }
         formData.append('cliente_id', form.cliente_id.value);
-        formData.append('fecha_grupo', form.fecha_grupo.value);
+        formData.append('fecha_grupo', form.fecha_abono.value);
         formData.append('fecha_abono', form.fecha_abono.value);
         formData.append('monto_positivo', form.monto_positivo.value || '0');
         formData.append('descripcion_positiva', form.descripcion_positiva.value || '');
@@ -1734,7 +1836,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         state.rawData = result.data;
         render();
-        if (state.selectedClienteGroupKey) {
+        if (nextGroupKey) {
+            state.selectedClienteGroupKey = nextGroupKey;
             openClientAbonoModal(state.selectedClienteGroupKey);
         }
     };
@@ -1862,7 +1965,11 @@ document.addEventListener('DOMContentLoaded', () => {
             cliente_id: group.clienteId,
             fecha_grupo: group.dateKey
         });
-        openClientAbonoModal(state.selectedClienteGroupKey);
+        if (getClienteGroupByKey(state.selectedClienteGroupKey)) {
+            openClientAbonoModal(state.selectedClienteGroupKey);
+        } else {
+            closeClientDetailModal();
+        }
     };
 
     const deleteMessengerAbono = async (abonoId) => {
@@ -1988,6 +2095,61 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const getClienteGroupByKey = (groupKey) => state.clienteGroups.find((group) => group.key === groupKey) || null;
+
+    const createEmptyClientAbonoGroup = (folder, dateKey) => ({
+        key: `${dateKey}__${folder.key}`,
+        dateKey,
+        clientKey: folder.key,
+        fechaLabel: shortDate(dateKey),
+        clienteNombre: folder.clienteNombre,
+        clienteId: folder.clienteId,
+        cuentaBancariaPrincipal: folder.cuentaBancariaPrincipal || '',
+        cuentaBancariaOpcional1: folder.cuentaBancariaOpcional1 || '',
+        cuentaBancariaOpcional2: folder.cuentaBancariaOpcional2 || '',
+        cuentaBancariaOpcional3: folder.cuentaBancariaOpcional3 || '',
+        paquetesEntregados: 0,
+        totalServicio: 0,
+        subtotalServicio: 0,
+        totalAdicionalesPaquetes: 0,
+        adicionalGeneral: null,
+        adicionalGeneralMonto: 0,
+        adicionalGeneralPositivo: 0,
+        adicionalGeneralNegativo: 0,
+        adicionalGeneralDescripcionPositiva: '',
+        adicionalGeneralDescripcionNegativa: '',
+        totalAdicionales: 0,
+        adicionalObservacion: '',
+        totalRecaudado: 0,
+        abonos: [],
+        abono: 0,
+        saldo: 0,
+        saldoCalculado: 0,
+        balance: 0,
+        totalAcumulado: Number(folder.totalAcumulado || 0),
+        totalAcumuladoEstado: groupStatusFromBalance(folder.totalAcumulado || 0),
+        packages: [],
+        statuses: new Set(),
+        estado: 'pendiente',
+        isAbonoOnly: true
+    });
+
+    const openClientCreateAbonoModal = () => {
+        const folder = state.clienteFolders.find((item) => item.key === state.selectedClienteFolderKey);
+        if (!folder) {
+            return;
+        }
+
+        const dateKey = todayDateKey();
+        const existingGroup = state.clienteGroups.find((group) => group.clientKey === folder.key && group.dateKey === dateKey);
+        if (existingGroup) {
+            openClientAbonoModal(existingGroup.key);
+            return;
+        }
+
+        const group = createEmptyClientAbonoGroup(folder, dateKey);
+        state.clienteGroups.push(group);
+        openClientAbonoModal(group.key);
+    };
 
     const syncClienteSelectionControls = () => {
         const selectAll = document.querySelector('[data-role="select-all-client-groups"]');
@@ -2591,7 +2753,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><span>Saldo del dia</span><strong>${moneyAbs(group.saldo)}</strong></div>
                 <div><span>Total acumulado</span><strong>${moneyAbs(group.totalAcumulado)}</strong></div>
             </div>
-            ${mode === 'admin' ? `
+            ${mode === 'admin' && !group.isAbonoOnly ? `
                 <div class="facturacion-abono-actions">
                     <button
                         type="button"
@@ -2796,8 +2958,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             ` : ''}
             ${renderClienteBankInfo(group)}
-            <h3 class="package-list-title">Detalle de paquetes facturados</h3>
-            ${renderClientPackagesTable(group.packages)}
+            <h3 class="package-list-title">${group.isAbonoOnly ? 'Detalle del abono' : 'Detalle de paquetes facturados'}</h3>
+            ${group.isAbonoOnly ? renderAbonoHistory(group) : renderClientPackagesTable(group.packages)}
         `;
 
         modal.classList.remove('modal-hidden');
@@ -3373,6 +3535,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.selectedClienteFolderKey = null;
                 state.selectedClienteGroups.clear();
                 render();
+                return;
+            }
+
+            if (event.target.closest('[data-role="open-client-create-abono"]')) {
+                openClientCreateAbonoModal();
                 return;
             }
 

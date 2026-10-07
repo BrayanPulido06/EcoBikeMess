@@ -635,6 +635,7 @@ class FacturacionModels
     ): bool {
         $sql = "UPDATE facturacion_abonos_cliente
                 SET monto = :monto,
+                    fecha_grupo = :fecha_grupo,
                     fecha_abono = :fecha_abono,
                     monto_positivo = :monto_positivo,
                     descripcion_positiva = :descripcion_positiva,
@@ -643,8 +644,7 @@ class FacturacionModels
                     metodo_pago = :metodo_pago,
                     observaciones = :observaciones
                 WHERE id = :id
-                  AND cliente_id = :cliente_id
-                  AND fecha_grupo = :fecha_grupo";
+                  AND cliente_id = :cliente_id";
         $stmt = $this->conn->prepare($sql);
         $monto = $montoPositivo - $montoNegativo;
         return $stmt->execute([
@@ -707,13 +707,11 @@ class FacturacionModels
     {
         $sql = "DELETE FROM facturacion_abonos_cliente
                 WHERE id = :id
-                  AND cliente_id = :cliente_id
-                  AND fecha_grupo = :fecha_grupo";
+                  AND cliente_id = :cliente_id";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
             ':id' => $abonoId,
             ':cliente_id' => $clienteId,
-            ':fecha_grupo' => $fechaGrupo,
         ]);
     }
 
