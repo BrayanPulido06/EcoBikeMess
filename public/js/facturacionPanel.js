@@ -1216,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `
                     <tr>
                         <td>${group.fechaLabel}</td>
-                        <td>${group.isAbonoOnly ? `Abono ${money(group.abono)}` : group.paquetesEntregados}</td>
+                        <td>${group.paquetesEntregados}</td>
                         <td>${adicionalesCell(
                             Number(group.totalAdicionalesPaquetes || 0) + Number(group.adicionalGeneralPositivo || 0),
                             group.adicionalGeneralDescripcionPositiva || packageAdditionalSummary(group.packages, 'observaciones_admin'),
@@ -1256,7 +1256,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td>${escapeHtml(group.clienteNombre)}</td>
                     <td>${group.fechaLabel}</td>
-                    <td>${group.isAbonoOnly ? `Abono ${money(group.abono)}` : group.paquetesEntregados}</td>
+                    <td>${group.paquetesEntregados}</td>
                     <td>${adicionalesCell(
                         Number(group.totalAdicionalesPaquetes || 0) + Number(group.adicionalGeneralPositivo || 0),
                         group.adicionalGeneralDescripcionPositiva || packageAdditionalSummary(group.packages, 'observaciones_admin'),
