@@ -4,6 +4,7 @@ session_start();
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajero') {
     redirect_route('login', ['error' => 'Debes iniciar sesión.']);
 }
+$historialMensajeroJsVersion = filemtime(__DIR__ . '/../../public/js/historialMensajero.js');
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -49,13 +50,6 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
                     <div class="stat-info">
                         <span class="stat-label">Entregas Totales</span>
                         <span class="stat-value" id="totalHistorico">0</span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">💰</div>
-                    <div class="stat-info">
-                        <span class="stat-label">Recaudo Total</span>
-                        <span class="stat-value" id="totalRecaudoHistorico">$0</span>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -200,6 +194,6 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
 
     <script src="../../public/js/mensajeroLayout.js?v=20260528-1"></script>
     <script src="../../public/js/mensajeroBackGuard.js?v=20260615-1"></script>
-    <script src="../../public/js/historialMensajero.js"></script>
+    <script src="../../public/js/historialMensajero.js?v=<?php echo $historialMensajeroJsVersion; ?>"></script>
 </body>
 </html>

@@ -55,7 +55,8 @@ function aplicarFiltros() {
     renderTablaHistorial(paquetesFiltrados);
     renderCardsHistorial(paquetesFiltrados);
     actualizarConteoTabla(paquetesFiltrados.length);
-    actualizarRecaudoRango(paquetesFiltrados);
+    const hayFiltrosActivos = filtroActual !== 'todos' || Boolean(searchValue || nombreValue || fechaInicio || fechaFin);
+    actualizarRecaudoRango(hayFiltrosActivos ? paquetesFiltrados : []);
 }
 
 function filtrarHistorial(filtro, searchValue, nombreValue, fechaInicio, fechaFin) {
@@ -225,11 +226,8 @@ function verDetalleHistorial(id) {
 
 function actualizarEstadisticas() {
     const total = historialPaquetes.length;
-    const recaudo = historialPaquetes.reduce((sum, p) => sum + (p.infoEntrega.recaudo || 0), 0);
     const elTotal = document.getElementById('totalHistorico');
-    const elRecaudo = document.getElementById('totalRecaudoHistorico');
     if (elTotal) elTotal.textContent = total;
-    if (elRecaudo) elRecaudo.textContent = formatearMoneda(recaudo);
 }
 
 function actualizarRecaudoRango(paquetes) {
