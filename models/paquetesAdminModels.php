@@ -381,6 +381,16 @@ class PaquetesAdminModel {
     }
 
     public function getPaquetes($filters) {
+        $pagoMensajeroExpr = '7000.00';
+        $facturacionJoin = '';
+        if ($this->columnExists('facturacion', 'valor_pago_mensajero')) {
+            $pagoMensajeroExpr = 'CASE WHEN f.valor_pago_mensajero > 0 THEN f.valor_pago_mensajero ELSE 7000.00 END';
+            if ($this->columnExists('facturacion', 'adicional_pago_mensajero')) {
+                $pagoMensajeroExpr .= ' + COALESCE(f.adicional_pago_mensajero, 0)';
+            }
+            $facturacionJoin = 'LEFT JOIN facturacion f ON f.paquete_id = p.id';
+        }
+
         $hasRecibioCambiosEntrega = $this->columnExists('entregas', 'recibio_cambios');
 
         // Consulta principal mapeando columnas de BD a lo que espera el JS
@@ -428,6 +438,7 @@ class PaquetesAdminModel {
                        p.envio_destinatario as envio_destinatario,
                        p.embalaje as embalaje,
                        p.costo_envio as costo_envio,
+                       {$pagoMensajeroExpr} as pago_mensajero,
                        p.recaudo_esperado as recaudo_esperado,
                        COALESCE(e.recaudo_real, 0) as recaudo_real,
                        p.descripcion_contenido as nombre_paquete,
@@ -445,6 +456,7 @@ class PaquetesAdminModel {
                 LEFT JOIN usuarios um_rec ON m_rec.usuario_id = um_rec.id
                 LEFT JOIN recolecciones r ON p.recoleccion_id = r.id
                 LEFT JOIN entregas e ON e.paquete_id = p.id
+                {$facturacionJoin}
                 WHERE 1=1";
         
         $params = [];

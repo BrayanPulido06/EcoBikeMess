@@ -392,6 +392,7 @@ if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? '') !== 'admin' 
                             <th>Recaudo Real</th>
                             <th>Cambios</th>
                             <th>Valor Envío Agregado</th>
+                            <th>Pago mjs</th>
                             <th class="sortable" data-column="guia">N° Guía <span class="sort-icon">↕</span></th>
                             <th>Acciones 2</th>
                         </tr>

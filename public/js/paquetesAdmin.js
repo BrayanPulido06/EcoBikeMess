@@ -454,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function listarPaquetes() {
         // Mostrar indicador de carga
         if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="19" style="text-align:center;">Cargando datos...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="20" style="text-align:center;">Cargando datos...</td></tr>';
         }
 
         // Construir URL con los parámetros de los filtros
@@ -478,12 +478,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     renderizarTabla(response.data);
                 } else if (response.error) {
                     console.error('Error del servidor:', response.error);
-                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="19" class="text-danger text-center">Error: ${response.error}</td></tr>`;
+                    if (tableBody) tableBody.innerHTML = `<tr><td colspan="20" class="text-danger text-center">Error: ${response.error}</td></tr>`;
                 }
             })
             .catch(error => {
                 console.error('Error en la petición:', error);
-                if (tableBody) tableBody.innerHTML = `<tr><td colspan="19" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
+                if (tableBody) tableBody.innerHTML = `<tr><td colspan="20" class="text-danger text-center">Error de conexión al cargar datos.</td></tr>`;
             });
     }
     window.listarPaquetes = listarPaquetes;
@@ -493,7 +493,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!tableBody) return;
 
         if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="19" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="20" style="text-align:center;">No se encontraron paquetes con estos filtros.</td></tr>';
             if (selectAllCheckbox) {
                 selectAllCheckbox.checked = false;
             }
@@ -599,6 +599,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${recaudoRealFormateado}</td>
                     <td>${cambiosRecogidos}</td>
                     <td>${envioAgregado}</td>
+                    <td>${formatMoney(p.pago_mensajero ?? 7000)}</td>
                     <td>${p.guia}</td>
                     <td>
                         <div class="action-buttons">
@@ -1139,7 +1140,8 @@ document.addEventListener('DOMContentLoaded', function() {
             "Cambios Recogidos": Number(p.recibio_cambios) === 1 ? 'Sí' : 'No',
             "Embalaje": Number(p.embalaje) === 1 ? 'Si' : 'No',
             "Valor Envio": p.costo_envio || 0,
-            "Envio Agregado": p.envio_destinatario || 'no'
+            "Envio Agregado": p.envio_destinatario || 'no',
+            "Pago mjs": Number(p.pago_mensajero ?? 7000)
         }));
 
         const ws = XLSX.utils.json_to_sheet(exportData);
