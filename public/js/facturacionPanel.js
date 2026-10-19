@@ -373,6 +373,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isAdminMessengerPanel = mode === 'admin' && panel === 'mensajero';
         const isEcoBikePanel = panel === 'ecobikemess';
+        const mostrarTotales = mode !== 'mensajero' || panel !== 'mensajero'
+            || Object.values(state.filters.mensajero).some((value) => normalizeText(value));
         const saldoLabel = isEcoBikePanel ? 'Ganancia total' : panel === 'mensajero' ? 'Total a pagar' : 'Saldo actual';
         const saldoNote = isAdminMessengerPanel
             ? 'Pendiente acumulado por pagar a mensajeros.'
@@ -398,12 +400,12 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="summary-card">
                 <span class="summary-label">${totalEnviosLabel}</span>
-                <div class="summary-value">${money(summary.total_envios)}</div>
+                <div class="summary-value">${money(mostrarTotales ? summary.total_envios : 0)}</div>
                 <div class="summary-note">${totalEnviosNote}</div>
             </div>
             <div class="summary-card">
                 <span class="summary-label">${totalRecaudosLabel}</span>
-                <div class="summary-value">${money(summary.total_recaudos)}</div>
+                <div class="summary-value">${money(mostrarTotales ? summary.total_recaudos : 0)}</div>
                 <div class="summary-note">${totalRecaudosNote}</div>
             </div>
             <div class="summary-card">
