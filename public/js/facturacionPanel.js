@@ -1498,12 +1498,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (state.rawData.cliente) {
             renderClienteTable(state.rawData.cliente.items);
-            renderSummary(buildClienteSummaryFromGroups(state.clienteSummaryGroups || state.clienteGroups), 'cliente');
+            const gruposResumenCliente = mode === 'admin' && !state.selectedClienteFolderKey
+                ? []
+                : (state.clienteSummaryGroups || state.clienteGroups);
+            renderSummary(buildClienteSummaryFromGroups(gruposResumenCliente), 'cliente');
         }
 
         if (state.rawData.mensajero) {
             renderMensajeroTable(state.rawData.mensajero.items);
-            renderSummary(buildMensajeroSummaryFromGroups(state.mensajeroSummaryGroups || state.mensajeroGroups), 'mensajero');
+            const gruposResumenMensajero = mode === 'admin' && !state.selectedMensajeroFolderKey
+                ? []
+                : (state.mensajeroSummaryGroups || state.mensajeroGroups);
+            renderSummary(buildMensajeroSummaryFromGroups(gruposResumenMensajero), 'mensajero');
         }
 
         if (state.rawData.ecobikemess) {
