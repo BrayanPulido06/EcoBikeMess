@@ -238,6 +238,17 @@ class MisPaquetesMensajerosModels
                 ':fecha_entrega' => $fechaEntrega
             ]);
 
+            if (!empty($payload['recibio_cambios'])) {
+                // Marcar el adicional junto con su cobro evita duplicarlo al reenviar la entrega.
+                $stmtCambios = $this->conn->prepare(
+                    "UPDATE paquetes
+                     SET costo_envio = costo_envio + 5000,
+                         recoger_cambios = 1
+                     WHERE id = :id AND COALESCE(recoger_cambios, 0) = 0"
+                );
+                $stmtCambios->execute([':id' => (int) $paquete['id']]);
+            }
+
             $sqlEntrega = "INSERT INTO entregas (
                                 paquete_id, mensajero_id, nombre_receptor, parentesco_cargo,
                                 documento_receptor, recaudo_real, recibio_cambios, coordenadas_entrega_lat,
