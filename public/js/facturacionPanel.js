@@ -2633,11 +2633,8 @@ document.addEventListener('DOMContentLoaded', () => {
             'Cliente',
             'Destinatario',
             'Estado',
-            'Pago base',
             'Adicional',
             'Total pago',
-            'Servicio cliente',
-            'Contraentrega',
             'Recaudo esperado',
             'Recaudo real',
             'Observaciones'
@@ -2666,11 +2663,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 escapeHtml(item.cliente_nombre || 'Sin cliente'),
                 escapeHtml(item.destinatario_nombre || 'Sin destinatario'),
                 statusBadge(item.estado),
-                money(pagoBase),
                 money(adicional),
                 `<strong>${money(pagoTotal)}</strong>`,
-                money(item.valor_envio),
-                item.agregado_al_recaudo ? 'Si' : 'No',
                 money(item.valor_recaudo),
                 money(item.valor_recaudo_real),
                 observaciones
