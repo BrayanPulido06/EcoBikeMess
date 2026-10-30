@@ -134,8 +134,6 @@ class PaquetesAdminModel {
         return "(
                     {$clienteNombre} = {$remitente}
                     OR {$clienteFallback} = {$remitente}
-                    OR (CHAR_LENGTH({$clienteNombre}) >= 4 AND {$remitente} LIKE CONCAT('%', {$clienteNombre}, '%'))
-                    OR (CHAR_LENGTH({$clienteFallback}) >= 4 AND {$remitente} LIKE CONCAT('%', {$clienteFallback}, '%'))
                 )";
     }
 

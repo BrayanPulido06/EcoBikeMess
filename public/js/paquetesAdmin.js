@@ -313,7 +313,8 @@ document.addEventListener('DOMContentLoaded', function() {
         hidden: document.getElementById('asignarRemitenteClienteId'),
         optionsContainer: document.getElementById('asignarRemitenteOpciones'),
         getItems: () => todosLosClientes.filter(cliente => Number(cliente.id) > 0),
-        emptyLabel: 'Seleccionar remitente...'
+        emptyLabel: 'Seleccionar remitente...',
+        allowCustom: true
     });
 
     document.addEventListener('click', (e) => {
@@ -991,7 +992,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- FUNCIONES DE EXPORTACIÓN ---
-    function configurarBuscadorFormulario({ input, hidden, optionsContainer, getItems, emptyLabel }) {
+    function configurarBuscadorFormulario({ input, hidden, optionsContainer, getItems, emptyLabel, allowCustom = false }) {
         if (!input || !hidden || !optionsContainer) return;
 
         const wrapper = input.closest('.search-select');
@@ -1049,7 +1050,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     seleccionarOpcion('', emptyLabel);
                 } else if (exacta) {
                     seleccionarOpcion(String(exacta.id), exacta.nombre);
-                } else if (!hidden.value) {
+                } else if (!hidden.value && !allowCustom) {
                     input.value = '';
                 }
                 wrapper?.classList.remove('open');
