@@ -2630,7 +2630,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const headers = [
             'Guia',
             'Fecha',
-            'Cliente',
+            ...(mode === 'admin' ? ['Cliente'] : []),
             'Destinatario',
             'Estado',
             'Adicional',
@@ -2660,7 +2660,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const cells = [
                 `<strong>${escapeHtml(item.numero_guia)}</strong>`,
                 shortDate(item.fecha_entrega || item.fecha_ingreso),
-                escapeHtml(item.cliente_nombre || 'Sin cliente'),
+                ...(mode === 'admin' ? [escapeHtml(item.cliente_nombre || 'Sin cliente')] : []),
                 escapeHtml(item.destinatario_nombre || 'Sin destinatario'),
                 statusBadge(item.estado),
                 money(adicional),

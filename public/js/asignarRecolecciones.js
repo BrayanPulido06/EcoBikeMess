@@ -291,6 +291,7 @@ function renderAccionesRecoleccion(rec) {
 
 function setupEventListeners() {
     document.getElementById('busqueda').addEventListener('input', applyFilters);
+    document.getElementById('busquedaDireccionOrigen').addEventListener('input', applyFilters);
     document.getElementById('filtroEstado').addEventListener('change', applyFilters);
     document.getElementById('filtroFecha').addEventListener('change', applyFilters);
 
@@ -453,22 +454,25 @@ function updateStats(stats) {
 
 function applyFilters() {
     const busqueda = document.getElementById('busqueda').value.toLowerCase();
+    const busquedaDireccionOrigen = document.getElementById('busquedaDireccionOrigen').value.trim().toLocaleLowerCase();
     const estado = document.getElementById('filtroEstado').value;
     const fecha = document.getElementById('filtroFecha').value;
 
     const filtered = recolecciones.filter(rec => {
+        const direccionOrigen = String(rec.direccion_origen || '').toLocaleLowerCase();
         const coincideBusqueda = !busqueda ||
             rec.cliente_nombre.toLowerCase().includes(busqueda) ||
-            rec.direccion_origen.toLowerCase().includes(busqueda) ||
+            direccionOrigen.includes(busqueda) ||
             (rec.remitente_nombre || '').toLowerCase().includes(busqueda) ||
             (rec.remitente_telefono || '').toLowerCase().includes(busqueda) ||
             (rec.mensajero_nombre || '').toLowerCase().includes(busqueda);
+        const coincideDireccionOrigen = !busquedaDireccionOrigen || direccionOrigen.includes(busquedaDireccionOrigen);
 
         const coincideEstado = !estado || getEstadoFiltro(rec.estado) === estado;
         const fechaGestion = rec.fecha_gestion_recoleccion || rec.fecha_programada_recoleccion || rec.fecha_creacion;
         const coincideFecha = !fecha || String(fechaGestion || '').slice(0, 10) === fecha;
 
-        return coincideBusqueda && coincideEstado && coincideFecha;
+        return coincideBusqueda && coincideDireccionOrigen && coincideEstado && coincideFecha;
     });
 
     const tbody = document.getElementById('tablaRecoleccionesBody');

@@ -346,6 +346,9 @@ $recolecciones = $model->listarRecolecciones([]);
                     <input type="text" id="busqueda" placeholder="🔍 Buscar por cliente, dirección o mensajero...">
                 </div>
                 <div class="form-group">
+                    <input type="text" id="busquedaDireccionOrigen" placeholder="🔍 Buscar lugar de recogida..." aria-label="Buscar por lugar de recogida">
+                </div>
+                <div class="form-group">
                     <select id="filtroEstado">
                         <option value="">Todos los estados</option>
                         <option value="pendiente">Pendiente</option>
