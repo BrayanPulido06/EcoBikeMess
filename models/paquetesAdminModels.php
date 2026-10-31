@@ -10,7 +10,6 @@ class PaquetesAdminModel {
         $this->ensureEntregaAdditionalColumns();
         $this->ensureChecklistVerdeColumn();
         $this->ensureNovedadesAdminSupport();
-        $this->sincronizarFechasEntrega();
     }
 
     private function columnExists(string $table, string $column): bool

@@ -22,11 +22,6 @@ class FacturacionModels
         $this->ensureMessengerGroupStatusTable();
         $this->ensureClienteBankColumns();
         $this->ensurePerformanceIndexes();
-        $this->syncPackageClientFromRemitente();
-        $this->syncLuisTNoLabelPackagesToLuisAlejandro();
-        $this->syncMessengerCreatedPackagesToCreatorClient();
-        $this->syncDeliveredPackageDates();
-        $this->syncFacturacionRows();
     }
 
     private function ensureFacturacionTable(): void
@@ -278,12 +273,6 @@ class FacturacionModels
         $this->ensureColumn('facturacion_abonos_cliente', 'descripcion_positiva', "ALTER TABLE facturacion_abonos_cliente ADD COLUMN descripcion_positiva TEXT NULL AFTER monto_positivo");
         $this->ensureColumn('facturacion_abonos_cliente', 'monto_negativo', "ALTER TABLE facturacion_abonos_cliente ADD COLUMN monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER descripcion_positiva");
         $this->ensureColumn('facturacion_abonos_cliente', 'descripcion_negativa', "ALTER TABLE facturacion_abonos_cliente ADD COLUMN descripcion_negativa TEXT NULL AFTER monto_negativo");
-        $this->conn->exec("UPDATE facturacion_abonos_cliente
-                           SET monto_positivo = monto,
-                               descripcion_positiva = observaciones
-                           WHERE monto > 0
-                             AND monto_positivo = 0
-                             AND monto_negativo = 0");
     }
 
     private function ensureHiddenClientGroupsTable(): void
@@ -327,12 +316,6 @@ class FacturacionModels
         $this->ensureColumn('facturacion_adicionales_cliente', 'descripcion_positiva', "ALTER TABLE facturacion_adicionales_cliente ADD COLUMN descripcion_positiva TEXT NULL AFTER monto_positivo");
         $this->ensureColumn('facturacion_adicionales_cliente', 'monto_negativo', "ALTER TABLE facturacion_adicionales_cliente ADD COLUMN monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER descripcion_positiva");
         $this->ensureColumn('facturacion_adicionales_cliente', 'descripcion_negativa', "ALTER TABLE facturacion_adicionales_cliente ADD COLUMN descripcion_negativa TEXT NULL AFTER monto_negativo");
-        $this->conn->exec("UPDATE facturacion_adicionales_cliente
-                           SET monto_positivo = monto,
-                               descripcion_positiva = descripcion
-                           WHERE monto > 0
-                             AND monto_positivo = 0
-                             AND monto_negativo = 0");
     }
 
     private function ensureHiddenMessengerGroupsTable(): void
@@ -394,12 +377,6 @@ class FacturacionModels
         $this->ensureColumn('facturacion_abonos_mensajero', 'descripcion_positiva', "ALTER TABLE facturacion_abonos_mensajero ADD COLUMN descripcion_positiva TEXT NULL AFTER monto_positivo");
         $this->ensureColumn('facturacion_abonos_mensajero', 'monto_negativo', "ALTER TABLE facturacion_abonos_mensajero ADD COLUMN monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER descripcion_positiva");
         $this->ensureColumn('facturacion_abonos_mensajero', 'descripcion_negativa', "ALTER TABLE facturacion_abonos_mensajero ADD COLUMN descripcion_negativa TEXT NULL AFTER monto_negativo");
-        $this->conn->exec("UPDATE facturacion_abonos_mensajero
-                           SET monto_positivo = monto,
-                               descripcion_positiva = observaciones
-                           WHERE monto > 0
-                             AND monto_positivo = 0
-                             AND monto_negativo = 0");
     }
 
     private function ensureAdicionalesMensajeroTable(): void
@@ -427,12 +404,6 @@ class FacturacionModels
         $this->ensureColumn('facturacion_adicionales_mensajero', 'descripcion_positiva', "ALTER TABLE facturacion_adicionales_mensajero ADD COLUMN descripcion_positiva TEXT NULL AFTER monto_positivo");
         $this->ensureColumn('facturacion_adicionales_mensajero', 'monto_negativo', "ALTER TABLE facturacion_adicionales_mensajero ADD COLUMN monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER descripcion_positiva");
         $this->ensureColumn('facturacion_adicionales_mensajero', 'descripcion_negativa', "ALTER TABLE facturacion_adicionales_mensajero ADD COLUMN descripcion_negativa TEXT NULL AFTER monto_negativo");
-        $this->conn->exec("UPDATE facturacion_adicionales_mensajero
-                           SET monto_negativo = monto,
-                               descripcion_negativa = descripcion
-                           WHERE monto > 0
-                             AND monto_positivo = 0
-                             AND monto_negativo = 0");
     }
 
     private function ensureMessengerGroupStatusTable(): void

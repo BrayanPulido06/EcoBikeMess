@@ -57,7 +57,7 @@ class InicioAdminModel {
             if ($checkTable->rowCount() > 0) {
                 $sql = "SELECT 
                             SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END) as pendientes,
-                            SUM(CASE WHEN estado = 'completada' AND DATE(fecha_recoleccion) = :hoy THEN 1 ELSE 0 END) as completadas
+                            SUM(CASE WHEN estado = 'completada' AND DATE(fecha_completada) = :hoy THEN 1 ELSE 0 END) as completadas
                         FROM recolecciones";
                 $stmt = $this->conn->prepare($sql);
                 $stmt->execute([':hoy' => $hoy]);

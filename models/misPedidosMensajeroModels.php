@@ -116,30 +116,60 @@ class MisPedidosMensajeroModel
 
     public function obtenerEstadisticas(int $usuarioId, array $filtros = []): array
     {
-        $rows = $this->listarPedidos($usuarioId, $filtros);
+        $clienteId = $this->obtenerClienteOperativoPorUsuario($usuarioId);
+        $nombreCompleto = $this->obtenerNombreCompletoUsuario($usuarioId);
+        $params = [];
+        $filtroPropietario = $this->construirFiltroPropietario($usuarioId, $clienteId, $nombreCompleto, $params);
+        $filtroRemitenteAsignado = $this->construirFiltroRemitenteAsignado($nombreCompleto, $params);
+        $esEntregaManual = $this->condicionEntregaManual();
+        $tieneRemitenteReal = $this->condicionRemitenteReal();
 
-        $stats = [
-            'total' => count($rows),
-            'pendientes' => 0,
-            'entregados' => 0,
-            'cancelados' => 0,
-            'valor_envios' => 0.0,
-            'valor_recaudos' => 0.0
-        ];
+        $sql = "SELECT COUNT(*) AS total,
+                       COALESCE(SUM(CASE WHEN p.estado IN ('pendiente', 'asignado', 'en_transito', 'en_ruta') THEN 1 ELSE 0 END), 0) AS pendientes,
+                       COALESCE(SUM(CASE WHEN p.estado = 'entregado' THEN 1 ELSE 0 END), 0) AS entregados,
+                       COALESCE(SUM(CASE WHEN p.estado = 'cancelado' THEN 1 ELSE 0 END), 0) AS cancelados,
+                       COALESCE(SUM(p.costo_envio), 0) AS valor_envios,
+                       COALESCE(SUM(p.recaudo_esperado), 0) AS valor_recaudos
+                FROM paquetes p
+                LEFT JOIN clientes c ON p.cliente_id = c.id
+                LEFT JOIN usuarios uc ON c.usuario_id = uc.id
+                WHERE (
+                    (NOT {$esEntregaManual} AND {$filtroPropietario})
+                    OR ({$esEntregaManual} AND {$tieneRemitenteReal} AND {$filtroRemitenteAsignado})
+                )";
 
-        foreach ($rows as $row) {
-            $estado = strtolower((string) ($row['estado'] ?? ''));
-            if (isset($stats[$estado])) {
-                $stats[$estado] += 1;
-            } elseif ($estado === 'pendiente' || $estado === 'asignado' || $estado === 'en_transito' || $estado === 'en_ruta') {
-                $stats['pendientes'] += 1;
-            }
-
-            $stats['valor_envios'] += (float) ($row['costo_envio'] ?? 0);
-            $stats['valor_recaudos'] += (float) ($row['recaudo_esperado'] ?? 0);
+        if (!empty($filtros['search'])) {
+            $sql .= " AND (p.numero_guia LIKE :search_guia OR p.destinatario_nombre LIKE :search_destinatario OR p.direccion_destino LIKE :search_direccion)";
+            $search = '%' . $filtros['search'] . '%';
+            $params[':search_guia'] = $search;
+            $params[':search_destinatario'] = $search;
+            $params[':search_direccion'] = $search;
+        }
+        if (!empty($filtros['estado'])) {
+            $sql .= " AND p.estado = :estado";
+            $params[':estado'] = $filtros['estado'];
+        }
+        if (!empty($filtros['fechaDesde'])) {
+            $sql .= " AND p.fecha_creacion >= :fecha_desde";
+            $params[':fecha_desde'] = $filtros['fechaDesde'] . ' 00:00:00';
+        }
+        if (!empty($filtros['fechaHasta'])) {
+            $sql .= " AND p.fecha_creacion <= :fecha_hasta";
+            $params[':fecha_hasta'] = $filtros['fechaHasta'] . ' 23:59:59';
         }
 
-        return $stats;
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+        return [
+            'total' => (int) ($row['total'] ?? 0),
+            'pendientes' => (int) ($row['pendientes'] ?? 0),
+            'entregados' => (int) ($row['entregados'] ?? 0),
+            'cancelados' => (int) ($row['cancelados'] ?? 0),
+            'valor_envios' => (float) ($row['valor_envios'] ?? 0),
+            'valor_recaudos' => (float) ($row['valor_recaudos'] ?? 0),
+        ];
     }
 
     public function obtenerDetalle(int $paqueteId, int $usuarioId): ?array

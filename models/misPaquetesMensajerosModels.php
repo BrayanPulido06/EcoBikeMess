@@ -11,7 +11,6 @@ class MisPaquetesMensajerosModels
         $this->asegurarTablaNovedades();
         $this->asegurarTablaCierresJornada();
         $this->asegurarColumnasEntrega();
-        $this->sincronizarFechasEntrega();
     }
 
     private function columnaExiste(string $table, string $column): bool
