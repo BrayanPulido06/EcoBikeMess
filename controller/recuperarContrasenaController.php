@@ -6,7 +6,6 @@ session_set_cookie_params($sessionLifetime, "/");
 session_start();
 
 require_once __DIR__ . '/../includes/paths.php';
-require_once __DIR__ . '/../includes/mail.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['email'])) {
@@ -14,6 +13,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             redirect_route('forgot-password', ['error' => 'Ingresa un correo electrónico válido.']);
         }
+
+        $mailHelperPath = __DIR__ . '/../includes/mail.php';
+        if (!is_file($mailHelperPath)) {
+            error_log('Falta includes/mail.php para procesar la recuperación de contraseña.');
+            redirect_route('forgot-password', [
+                'error' => 'El servicio de recuperación no está completo. Contacta a soporte.',
+            ]);
+        }
+        require_once $mailHelperPath;
 
         try {
             $mailConfig = obtenerConfiguracionCorreo();
