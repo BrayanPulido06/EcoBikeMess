@@ -70,9 +70,17 @@ if (!function_exists('ecoBikeLogSlowSql')) {
 function conexionDB(){
     try {
         // IMPORTANTE: Si tu XAMPP dice Port: 3307, cambia el 3306 de abajo por 3307
-        $dsn = "mysql:host=localhost;dbname=u478643953_ecobikemess;charset=utf8";
+        $dsn = "mysql:host=localhost;dbname=u478643953_ecobikemess;charset=utf8mb4;connect_timeout=5";
         $connectionStartedAt = hrtime(true);
-        $db = new EcoBikeInstrumentedPDO($dsn, 'u478643953_ecobikemess', '/EcoBikeMess0310');
+        $db = new EcoBikeInstrumentedPDO(
+            $dsn,
+            'u478643953_ecobikemess',
+            '/EcoBikeMess0310',
+            [
+                PDO::ATTR_TIMEOUT => 5,
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            ]
+        );
         $db->setAttribute(PDO::ATTR_STATEMENT_CLASS, [EcoBikeSlowQueryStatement::class, []]);
         $connectionDurationMs = (hrtime(true) - $connectionStartedAt) / 1_000_000;
         if ($connectionDurationMs >= 1000) {
