@@ -1,2 +1,3 @@
 # Archivos subidos por usuarios: no deben versionarse ni desplegarse desde Git.
 uploads/
+/includes/mail-config.local.php

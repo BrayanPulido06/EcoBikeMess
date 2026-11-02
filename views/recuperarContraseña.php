@@ -33,18 +33,13 @@
 
                     <?php if (isset($_GET['mensaje'])): ?>
                         <p class="success-message" style="color: green; text-align: center; margin-bottom: 10px;">
-                            <?php echo htmlspecialchars($_GET['mensaje']); ?>
+                            <?php echo htmlspecialchars($_GET['mensaje'], ENT_QUOTES, 'UTF-8'); ?>
                         </p>
-                        <?php if (isset($_GET['debug_link'])): ?>
-                            <p style="font-size: 0.8em; text-align: center; background: #f0f0f0; padding: 5px; word-break: break-all;">
-                                <a href="<?php echo htmlspecialchars($_GET['debug_link']); ?>">LINK DE PRUEBA (Click aquí)</a>
-                            </p>
-                        <?php endif; ?>
                     <?php endif; ?>
 
                     <?php if (isset($_GET['error'])): ?>
                         <p class="error-message" style="color: #c62828; background: #ffebee; padding: 10px; border-radius: 5px; text-align: center; margin-bottom: 10px; display: block;">
-                            <?php echo htmlspecialchars($_GET['error']); ?>
+                            <?php echo htmlspecialchars($_GET['error'], ENT_QUOTES, 'UTF-8'); ?>
                         </p>
                     <?php endif; ?>
 

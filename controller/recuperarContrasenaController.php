@@ -5,16 +5,28 @@ session_set_cookie_params($sessionLifetime, "/");
 
 session_start();
 
-require_once '../models/conexionGlobal.php';
 require_once __DIR__ . '/../includes/paths.php';
+require_once __DIR__ . '/../includes/mail.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $conn = conexionDB();
-
     if (isset($_POST['email'])) {
-        $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+        $email = trim((string) $_POST['email']);
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            redirect_route('forgot-password', ['error' => 'Ingresa un correo electrónico válido.']);
+        }
 
         try {
+            $mailConfig = obtenerConfiguracionCorreo();
+        } catch (Throwable $e) {
+            error_log('Configuración SMTP de recuperación incompleta: ' . $e->getMessage());
+            redirect_route('forgot-password', [
+                'error' => 'La recuperación por correo no está disponible en este momento. Intenta más tarde o contacta a soporte.',
+            ]);
+        }
+
+        try {
+            require_once __DIR__ . '/../models/conexionGlobal.php';
+            $conn = conexionDB();
             $sql = "SELECT id, nombres FROM usuarios WHERE correo = :correo";
             $stmt = $conn->prepare($sql);
             $stmt->execute([':correo' => $email]);
@@ -22,33 +34,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if ($usuario) {
                 $token = bin2hex(random_bytes(32));
-                $expiracion = date('Y-m-d H:i:s', strtotime('+30 days'));
+                $tokenHash = hash('sha256', $token);
+                $expiracion = (new DateTimeImmutable('+30 minutes'))->format('Y-m-d H:i:s');
 
+                $conn->beginTransaction();
                 $updateSql = "UPDATE usuarios SET token = :token, token_expiracion = :expiracion WHERE id = :id";
                 $updateStmt = $conn->prepare($updateSql);
                 $updateStmt->execute([
-                    ':token' => $token,
+                    ':token' => $tokenHash,
                     ':expiracion' => $expiracion,
                     ':id' => $usuario['id']
                 ]);
 
-                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-                $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-                $link = $scheme . '://' . $host . route_url('reset-password', ['token' => $token]);
-
-                redirect_route('forgot-password', [
-                    'mensaje' => 'Enlace generado (Ver URL)',
-                    'debug_link' => $link,
-                ]);
+                $baseUrl = $mailConfig['app_url'] . app_url(route_path('reset-password'));
+                $link = $baseUrl . '?token=' . rawurlencode($token);
+                enviarCorreoRecuperacion($email, (string) ($usuario['nombres'] ?? ''), $link);
+                $conn->commit();
             }
 
-            redirect_route('forgot-password', ['mensaje' => 'Si el correo esta registrado, recibiras instrucciones.']);
-        } catch (Exception $e) {
-            error_log("Error recuperacion: " . $e->getMessage());
-            redirect_route('forgot-password', ['mensaje' => 'Ocurrio un error inesperado.']);
+            redirect_route('forgot-password', [
+                'mensaje' => 'Si el correo está registrado, recibirás un enlace de recuperación. Revisa también la carpeta de correo no deseado.',
+            ]);
+        } catch (Throwable $e) {
+            if (isset($conn) && $conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            error_log('Error en solicitud de recuperación de contraseña: ' . $e->getMessage());
+            redirect_route('forgot-password', [
+                'mensaje' => 'Si el correo está registrado, recibirás un enlace de recuperación. Revisa también la carpeta de correo no deseado.',
+            ]);
         }
     } elseif (isset($_POST['token']) && isset($_POST['password'])) {
+        require_once __DIR__ . '/../models/conexionGlobal.php';
+        $conn = conexionDB();
         $token = (string) $_POST['token'];
+        $tokenHash = hash('sha256', $token);
         $password = (string) $_POST['password'];
         $confirm_password = (string) ($_POST['confirm_password'] ?? '');
 
@@ -61,9 +81,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 redirect_route('reset-password', ['token' => $token, 'error' => 'La contrasena debe tener al menos 8 caracteres']);
             }
 
-            $sql = "SELECT id FROM usuarios WHERE token = :token AND token_expiracion >= NOW() LIMIT 1";
+            $sql = "SELECT id FROM usuarios WHERE (token = :token_hash OR token = :token_legacy) AND token_expiracion >= NOW() LIMIT 1";
             $stmt = $conn->prepare($sql);
-            $stmt->execute([':token' => $token]);
+            $stmt->execute([':token_hash' => $tokenHash, ':token_legacy' => $token]);
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($usuario) {

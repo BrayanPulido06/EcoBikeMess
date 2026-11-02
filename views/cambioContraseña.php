@@ -10,8 +10,9 @@ function tokenRecuperacionExiste(string $token): bool
 
     try {
         $conn = conexionDB();
-        $stmt = $conn->prepare("SELECT id FROM usuarios WHERE token = :token AND token_expiracion >= NOW() LIMIT 1");
-        $stmt->execute([':token' => $token]);
+        $tokenHash = hash('sha256', $token);
+        $stmt = $conn->prepare("SELECT id FROM usuarios WHERE (token = :token_hash OR token = :token_legacy) AND token_expiracion >= NOW() LIMIT 1");
+        $stmt->execute([':token_hash' => $tokenHash, ':token_legacy' => $token]);
         return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (Throwable $e) {
         error_log('Error validando token de recuperacion: ' . $e->getMessage());
