@@ -220,14 +220,8 @@ if (!isset($_SESSION['user_id']) || !in_array(($_SESSION['user_role'] ?? ''), ['
                 <p>Gestiona y consulta todos tus envíos</p>
             </div>
             <div class="header-actions">
-                <button class="btn btn-secondary" id="btnExportarExcel">
-                    Exportar Excel
-                </button>
                 <button class="btn btn-secondary" id="btnExportarGuias">
                     Descargar Guías
-                </button>
-                <button class="btn btn-primary" id="btnNuevaFactura">
-                    + Nueva Factura
                 </button>
             </div>
         </header>

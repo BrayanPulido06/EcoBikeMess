@@ -2,11 +2,8 @@
 let administradores = [];
 let mensajeros = [];
 let clientes = [];
-let logs = [];
-let solicitudesPendientes = [];
 let currentUser = window.serverUser || { rol: 'guest' }; // Obtener usuario de la vista
 let adminEnEdicion = null;
-let userToReset = null;
 
 // Permisos por rol
 const PERMISOS_POR_ROL = {
@@ -68,15 +65,12 @@ function setupEventListeners() {
     document.getElementById('adminFoto').addEventListener('change', previsualizarFoto);
 
     // Mensajeros
-    document.getElementById('btnSolicitudesPendientes').addEventListener('click', () => openModal('modalSolicitudes'));
-    document.getElementById('btnReporteMensajeros').addEventListener('click', generarReporteMensajeros);
     document.getElementById('searchMensajero').addEventListener('input', filtrarMensajeros);
     document.getElementById('filtroEstadoMensajero').addEventListener('change', filtrarMensajeros);
     document.getElementById('tablaMensajerosBody')?.addEventListener('click', manejarClickTablaMensajeros);
     document.getElementById('btnCerrarModalMensajero').addEventListener('click', () => closeModal('modalMensajero'));
     document.getElementById('btnCerrarModalCliente').addEventListener('click', () => closeModal('modalCliente'));
-    document.getElementById('btnCerrarModalSolicitudes').addEventListener('click', () => closeModal('modalSolicitudes'));
-    ['modalAdmin', 'modalMensajero', 'modalCliente', 'modalSolicitudes', 'modalResetPassword'].forEach(modalId => {
+    ['modalAdmin', 'modalMensajero', 'modalCliente'].forEach(modalId => {
         const modal = document.getElementById(modalId);
         modal?.addEventListener('click', function(event) {
             if (event.target === modal) {
@@ -95,18 +89,7 @@ function setupEventListeners() {
 
     // Clientes
     document.getElementById('searchCliente')?.addEventListener('input', filtrarClientes);
-    document.getElementById('btnReporteClientes')?.addEventListener('click', () => alert('Funcionalidad de reporte en desarrollo'));
     document.getElementById('detallesCliente')?.addEventListener('submit', manejarGuardarClientePersonal);
-
-    // Reset Password
-    document.getElementById('btnCerrarModalReset').addEventListener('click', () => closeModal('modalResetPassword'));
-    document.getElementById('btnCancelarReset').addEventListener('click', () => closeModal('modalResetPassword'));
-    document.getElementById('btnConfirmarReset').addEventListener('click', confirmarResetPassword);
-
-    // Logs
-    document.getElementById('filtroUsuarioLog').addEventListener('change', filtrarLogs);
-    document.getElementById('filtroAccionLog').addEventListener('change', filtrarLogs);
-    document.getElementById('filtroFechaLog').addEventListener('change', filtrarLogs);
 }
 
 // Cambiar de tab
@@ -117,97 +100,6 @@ function switchTab(tabId) {
     document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
     document.getElementById(`tab-${tabId}`).classList.add('active');
     
-    if (tabId === 'logs') {
-        renderLogs();
-    }
-}
-
-// Cargar datos iniciales
-async function loadInitialData() {
-    try {
-        // 1. Cargar Administradores
-        const respAdmins = await fetch('../../controller/añadirAdminController.php?action=listar_admins');
-        const dataAdmins = await respAdmins.json();
-        if (dataAdmins.success) {
-            administradores = dataAdmins.data;
-            renderAdministradores();
-        } else {
-            console.error('Error admins:', dataAdmins.message);
-        }
-
-        // 2. Cargar Mensajeros
-        const respMensajeros = await fetch('../../controller/añadirAdminController.php?action=listar_mensajeros');
-        const dataMensajeros = await respMensajeros.json();
-        if (dataMensajeros.success) {
-            mensajeros = dataMensajeros.data;
-            renderMensajeros();
-        }
-
-        // 3. Cargar Clientes
-        const respClientes = await fetch('../../controller/añadirAdminController.php?action=listar_clientes');
-        const dataClientes = await respClientes.json();
-        if (dataClientes.success) {
-            clientes = dataClientes.data;
-            renderClientes();
-        }
-
-        // Logs y Solicitudes (Simulados por ahora si no hay endpoint)
-        logs = generateMockLogs(); 
-        solicitudesPendientes = generateMockSolicitudes();
-        
-        actualizarEstadisticas();
-        cargarUsuariosEnFiltros();
-        
-    } catch (error) {
-        console.error('Error al cargar datos:', error);
-        showNotification('Error al cargar los datos', 'error');
-    }
-}
-
-// Generar logs de ejemplo
-function generateMockLogs() {
-    const acciones = ['login', 'logout', 'crear', 'editar', 'eliminar'];
-    const logs = [];
-    
-    for (let i = 0; i < 50; i++) {
-        logs.push({
-            id: i + 1,
-            usuario: administradores[Math.floor(Math.random() * administradores.length)].nombre,
-            usuarioId: Math.floor(Math.random() * administradores.length) + 1,
-            accion: acciones[Math.floor(Math.random() * acciones.length)],
-            descripcion: 'Acción realizada en el sistema',
-            fecha: new Date(Date.now() - Math.random() * 7 * 86400000).toISOString(),
-            ip: `192.168.1.${Math.floor(Math.random() * 255)}`
-        });
-    }
-    
-    return logs.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-}
-
-// Generar solicitudes de ejemplo
-function generateMockSolicitudes() {
-    return [
-        {
-            id: 1,
-            nombre: 'Pedro Rodríguez',
-            telefono: '3001112233',
-            email: 'pedro@email.com',
-            cedula: '1234567890',
-            direccion: 'Calle 123 # 45-67',
-            fechaSolicitud: new Date().toISOString(),
-            documentos: ['cedula.pdf', 'antecedentes.pdf']
-        },
-        {
-            id: 2,
-            nombre: 'Ana Martínez',
-            telefono: '3004445566',
-            email: 'ana@email.com',
-            cedula: '9876543210',
-            direccion: 'Carrera 7 # 12-34',
-            fechaSolicitud: new Date(Date.now() - 86400000).toISOString(),
-            documentos: ['cedula.pdf', 'antecedentes.pdf']
-        }
-    ];
 }
 
 // Renderizar administradores
@@ -238,106 +130,13 @@ function renderAdministradores() {
                         <button class="btn btn-sm btn-warning" onclick="toggleEstadoAdmin(${admin.id})" title="Cambiar estado">
                             ${admin.estado === 'activo' ? '🔒' : '🔓'}
                         </button>
-                        <button class="btn btn-sm btn-secondary" onclick="resetPassword(${admin.id})" title="Resetear contraseña">🔑</button>
                         ${admin.id !== currentUser.id ? `
                             <button class="btn btn-sm btn-danger" onclick="eliminarAdmin(${admin.id})" title="Eliminar">🗑️</button>
                         ` : ''}
-                    ` : `
-                        <button class="btn btn-sm btn-info" onclick="verDetallesAdmin(${admin.id})">👁️</button>
-                    `}
-                </div>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// Renderizar mensajeros - version anterior conservada como referencia
-function renderMensajerosLegacy() {
-    const tbody = document.getElementById('tablaMensajerosBody');
-    
-    if (mensajeros.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px;">No hay mensajeros registrados</td></tr>';
-        return;
-    }
-    
-    tbody.innerHTML = mensajeros.map(m => `
-        <tr>
-            <td><strong>M${String(m.id).padStart(3, '0')}</strong></td>
-            <td>${m.nombre}</td>
-            <td>${m.telefono}</td>
-            <td><span class="status-badge status-${m.estado}">${formatEstadoMensajero(m.estado)}</span></td>
-            <td>${m.ubicacionActual}</td>
-            <td><strong>${m.paquetesAsignados}</strong></td>
-            <td><strong>${m.entregasHoy}</strong></td>
-            <td>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 60px; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
-                        <div style="width: ${m.rendimiento}%; height: 100%; background: ${m.rendimiento > 80 ? '#28a745' : m.rendimiento > 60 ? '#ffc107' : '#dc3545'};"></div>
-                    </div>
-                    <span>${m.rendimiento}%</span>
-                </div>
-            </td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn btn-sm btn-info" onclick="verDetallesMensajero(${m.id})">👁️</button>
-                    <button class="btn btn-sm btn-warning" onclick="toggleEstadoMensajero(${m.id})">
-                        ${m.estado === 'activo' || m.estado === 'en_ruta' ? '⏸️' : '▶️'}
-                    </button>
-                    ${currentUser.rol === 'super_admin' ? `
-                        <button class="btn btn-sm btn-danger" onclick="eliminarMensajero(${m.id})">🗑️</button>
                     ` : ''}
                 </div>
             </td>
         </tr>
-    `).join('');
-}
-
-// Renderizar clientes - version anterior conservada como referencia
-function renderClientesLegacy() {
-    const tbody = document.getElementById('tablaClientesBody');
-    if (!tbody) return;
-
-    if (clientes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">No hay clientes registrados</td></tr>';
-        return;
-    }
-
-    tbody.innerHTML = clientes.map(c => `
-        <tr>
-            <td><strong>C${String(c.id).padStart(3, '0')}</strong></td>
-            <td>${c.emprendimiento}</td>
-            <td>${c.nombreContacto}</td>
-            <td>${c.telefono}</td>
-            <td>${c.direccion}</td>
-            <td><span class="status-badge status-${c.estado}">${c.estado === 'activo' ? 'Activo' : 'Inactivo'}</span></td>
-            <td>${formatDate(c.fechaRegistro)}</td>
-            <td>
-                <button class="btn btn-sm btn-info" onclick="verDetallesCliente(${c.id})">👁️</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// Renderizar logs
-function renderLogs() {
-    const container = document.getElementById('logsContainer');
-    
-    if (logs.length === 0) {
-        container.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">No hay registros de actividad</p>';
-        return;
-    }
-    
-    container.innerHTML = logs.slice(0, 50).map(log => `
-        <div class="log-item">
-            <div class="log-item-header">
-                <span class="log-user">${log.usuario}</span>
-                <span class="log-time">${formatDateTime(log.fecha)}</span>
-            </div>
-            <div class="log-action">
-                <strong>${log.accion.toUpperCase()}</strong>: ${log.descripcion}
-            </div>
-            <div style="font-size: 0.85em; color: #999; margin-top: 5px;">IP: ${log.ip}</div>
-        </div>
     `).join('');
 }
 
@@ -512,150 +311,6 @@ async function eliminarAdmin(id) {
     }
 }
 
-// Reset password
-function resetPassword(id) {
-    const admin = administradores.find(a => a.id === id);
-    if (!admin) return;
-    
-    userToReset = admin;
-    document.getElementById('resetUserName').textContent = admin.nombre;
-    openModal('modalResetPassword');
-}
-
-// Confirmar reset password
-function confirmarResetPassword() {
-    if (!userToReset) return;
-    
-    const tempPassword = 'Temp' + Math.random().toString(36).substr(2, 8);
-    
-    userToReset.cambiarPassword = true;
-    
-    registrarLog('editar', `Contraseña de ${userToReset.nombre} reseteada`);
-    showNotification(`Contraseña temporal generada: ${tempPassword}`, 'success');
-    
-    closeModal('modalResetPassword');
-    userToReset = null;
-}
-
-// Ver detalles mensajero - version anterior conservada como referencia
-function verDetallesMensajeroLegacy(id) {
-    const mensajero = mensajeros.find(m => m.id === id);
-    if (!mensajero) return;
-    
-    const html = `
-        <div class="mensajero-detail-section">
-            <h3>Información Personal</h3>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <div class="detail-label">Nombre</div>
-                    <div class="detail-value">${mensajero.nombre}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Teléfono</div>
-                    <div class="detail-value">${mensajero.telefono}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Email</div>
-                    <div class="detail-value">${mensajero.email}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Fecha Registro</div>
-                    <div class="detail-value">${formatDate(mensajero.fechaRegistro)}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="mensajero-detail-section">
-            <h3>Estado Actual</h3>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <div class="detail-label">Estado</div>
-                    <div class="detail-value"><span class="status-badge status-${mensajero.estado}">${formatEstadoMensajero(mensajero.estado)}</span></div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Ubicación Actual</div>
-                    <div class="detail-value">${mensajero.ubicacionActual}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Paquetes Asignados</div>
-                    <div class="detail-value">${mensajero.paquetesAsignados}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="mensajero-detail-section">
-            <h3>Rendimiento del Día</h3>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <div class="detail-label">Entregas Completadas</div>
-                    <div class="detail-value">${mensajero.entregasHoy}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Porcentaje de Éxito</div>
-                    <div class="detail-value">${mensajero.rendimiento}%</div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('detallesMensajero').innerHTML = html;
-    openModal('modalMensajero');
-}
-
-function verDetallesClienteLegacy(id) {
-    const cliente = clientes.find(c => c.id === id);
-    if (!cliente) return;
-
-    const html = `
-        <div class="mensajero-detail-section">
-            <h3>InformaciÃ³n del Cliente</h3>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <div class="detail-label">ID Cliente</div>
-                    <div class="detail-value">C${String(cliente.id).padStart(3, '0')}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Emprendimiento</div>
-                    <div class="detail-value">${cliente.emprendimiento || 'No registrado'}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Estado</div>
-                    <div class="detail-value"><span class="status-badge status-${cliente.estado}">${cliente.estado === 'activo' ? 'Activo' : 'Inactivo'}</span></div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Fecha Registro</div>
-                    <div class="detail-value">${formatDate(cliente.fechaRegistro)}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="mensajero-detail-section">
-            <h3>InformaciÃ³n de Contacto</h3>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <div class="detail-label">Nombre de Contacto</div>
-                    <div class="detail-value">${cliente.nombreContacto || 'No registrado'}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">TelÃ©fono</div>
-                    <div class="detail-value">${cliente.telefono || 'No registrado'}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Correo</div>
-                    <div class="detail-value">${cliente.email || 'No registrado'}</div>
-                </div>
-                <div class="detail-item" style="grid-column: span 2;">
-                    <div class="detail-label">DirecciÃ³n</div>
-                    <div class="detail-value">${cliente.direccion || 'No registrada'}</div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    document.getElementById('detallesCliente').innerHTML = html;
-    openModal('modalCliente');
-}
-
 // Toggle estado mensajero
 async function toggleEstadoMensajero(id) {
     // Si isAdmin falla, intentamos validar contra los roles de BD directamente
@@ -700,31 +355,6 @@ async function toggleEstadoMensajero(id) {
 }
 
 // Eliminar mensajero
-function eliminarMensajero(id) {
-    if (!isAdmin()) {
-        showNotification('No tiene permisos para esta acción', 'error');
-        return;
-    }
-    
-    const mensajero = mensajeros.find(m => m.id === id);
-    if (!mensajero) return;
-    
-    if (confirm(`¿Está seguro de eliminar al mensajero ${mensajero.nombre}?`)) {
-        const index = mensajeros.findIndex(m => m.id === id);
-        mensajeros.splice(index, 1);
-        
-        registrarLog('eliminar', `Mensajero ${mensajero.nombre} eliminado`);
-        renderMensajeros();
-        actualizarEstadisticas();
-        showNotification('Mensajero eliminado', 'success');
-    }
-}
-
-// Generar reporte mensajeros
-function generarReporteMensajeros() {
-    alert('Funcionalidad de reporte en desarrollo');
-}
-
 // Actualizar permisos según rol
 function actualizarPermisosSegunRol() {
     const rol = document.getElementById('adminRol').value;
@@ -792,18 +422,6 @@ function filtrarClientes() {
     });
 }
 
-// Filtrar logs
-function filtrarLogs() {
-    renderLogs();
-}
-
-// Cargar usuarios en filtros
-function cargarUsuariosEnFiltros() {
-    const select = document.getElementById('filtroUsuarioLog');
-    select.innerHTML = '<option value="">Todos los usuarios</option>' +
-        administradores.map(a => `<option value="${a.id}">${a.nombre}</option>`).join('');
-}
-
 // Actualizar estadísticas
 function actualizarEstadisticas() {
     // Administradores
@@ -823,23 +441,9 @@ function actualizarEstadisticas() {
     document.getElementById('clientesActivos').textContent = clientes.filter(c => c.estado === 'activo').length;
     document.getElementById('clientesNuevos').textContent = clientes.filter(c => new Date(c.fechaRegistro) > new Date(Date.now() - 30 * 86400000)).length;
 
-    // Solicitudes
-    document.getElementById('countSolicitudes').textContent = solicitudesPendientes.length;
 }
 
 // Registrar log
-function registrarLog(accion, descripcion) {
-    logs.unshift({
-        id: logs.length + 1,
-        usuario: currentUser.nombre || 'Super Admin',
-        usuarioId: currentUser.id || 1,
-        accion,
-        descripcion,
-        fecha: new Date().toISOString(),
-        ip: '192.168.1.100'
-    });
-}
-
 // Formatear rol
 function formatRol(rol) {
     const roles = {
@@ -1061,7 +665,6 @@ function renderMensajeros() {
                     <div class="action-buttons">
                         <button class="btn btn-sm btn-info btn-ver-mensajero" data-mensajero-id="${m.id}" type="button" title="Ver detalles">Ver</button>
                         <button class="btn btn-sm btn-warning" onclick="toggleEstadoMensajero(${m.id})" type="button">${m.estado === 'activo' || m.estado === 'en_ruta' ? 'Pausar' : 'Activar'}</button>
-                        ${currentUser.rol === 'super_admin' ? `<button class="btn btn-sm btn-danger" onclick="eliminarMensajero(${m.id})" type="button">Eliminar</button>` : ''}
                     </div>
                 </td>
             </tr>
@@ -1340,7 +943,7 @@ async function manejarGuardarClientePersonal(event) {
     }
 }
 
-loadInitialData = async function() {
+async function loadInitialData() {
     try {
         const controllerUrl = getAdminControllerUrl();
 
@@ -1377,11 +980,8 @@ loadInitialData = async function() {
             console.error('Error clientes:', dataClientes.message);
         }
 
-        logs = administradores.length > 0 ? generateMockLogs() : [];
-        solicitudesPendientes = generateMockSolicitudes();
 
         actualizarEstadisticas();
-        cargarUsuariosEnFiltros();
     } catch (error) {
         console.error('Error al cargar datos:', error);
         administradores = [];
@@ -1393,5 +993,5 @@ loadInitialData = async function() {
         actualizarEstadisticas();
         showNotification('Error al cargar los datos', 'error');
     }
-};
+}
 

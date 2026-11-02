@@ -418,12 +418,6 @@ function renderEvidenciaRecoleccion() {
     `;
 }
 
-function calcularRutaOptimizada() {
-    // En producción, esto usaría una API de mapas real
-    console.log('Calculando ruta desde:', ubicacionActual, 'hasta:', recoleccionActual.coordenadas);
-    // Aquí se integraría con Google Maps, Mapbox, etc.
-}
-
 // ============================================
 // ACCIONES DE RECOLECCIÓN
 // ============================================

@@ -1,12 +1,10 @@
 let currentData = [];
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Script facturacionCliente.js cargado');
 
     // --- REFERENCIAS DOM ---
     const tableBody = document.getElementById('tablaFacturasBody');
     const btnLimpiar = document.getElementById('btnLimpiarFiltros');
-    const btnExportExcel = document.getElementById('btnExportarExcel');
     const btnExportarGuias = document.getElementById('btnExportarGuias');
     const selectAllCheckbox = document.getElementById('selectAll');
     
@@ -19,8 +17,6 @@ document.addEventListener('DOMContentLoaded', function() {
         monto: document.getElementById('filtroMonto')
     };
 
-    const btnNueva = document.getElementById('btnNuevaFactura');
-    if (btnNueva) btnNueva.style.display = 'none'; 
 
     // --- INICIALIZACIÓN ---
     cargarEstadisticas();
@@ -49,9 +45,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (btnExportExcel) {
-        btnExportExcel.addEventListener('click', exportarExcel);
-    }
     if (btnExportarGuias) {
         btnExportarGuias.addEventListener('click', descargarGuiasSeleccionadas);
     }
@@ -401,10 +394,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.closest('.modal').style.display = 'none';
             });
         });
-    }
-
-    function exportarExcel() {
-        alert('Funcionalidad de exportación en desarrollo.');
     }
 
     function formatMoney(val) {

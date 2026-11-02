@@ -202,9 +202,6 @@ if ($nombreCompleto === '') {
         <div class="qr-counter-card">
             <div class="counter-header">
                 <h3>📱 QR Escaneados Hoy</h3>
-                <button class="btn-reset" id="btnResetCounter" style="display: none;">
-                    Limpiar
-                </button>
             </div>
             <div class="counter-display">
                 <div class="counter-number" id="qrCounter">0</div>

@@ -21,8 +21,6 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <title>Mis Paquetes - Sistema de Mensajería</title>
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest-paquetes.json">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>EB</text></svg>">
     
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">

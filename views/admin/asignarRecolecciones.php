@@ -122,7 +122,6 @@ $recolecciones = $model->listarRecolecciones([]);
                 <p>Asignar y administrar recolecciones de paquetes</p>
             </div>
             <div class="header-actions">
-                <button class="btn btn-secondary" id="btnReportes">📊 Reportes</button>
                 <button class="btn btn-primary" id="btnNuevaRecoleccion">+ Nueva Recolección</button>
             </div>
         </header>
