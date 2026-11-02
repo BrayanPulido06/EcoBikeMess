@@ -17,6 +17,9 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'mensajer
     <title>Recolecciones - Sistema de Mensajería</title>
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
     <link rel="stylesheet" href="../../public/css/inicioMensajero.css">
     <link rel="stylesheet" href="../../public/css/recoleccionesMensajero.css?v=20260411-1">
     <link rel="stylesheet" href="../../public/css/mensajeroSidebar.css?v=20260528-1">

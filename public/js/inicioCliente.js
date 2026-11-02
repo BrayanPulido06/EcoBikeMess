@@ -6,7 +6,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('activityChart');
     
     if (ctx) {
-        const chartData = window.dashboardChartData || { labels: [], total: [], entregados: [] };
+        // Usar datos dinámicos si existen, sino usar datos de ejemplo
+        const chartData = window.dashboardChartData || {
+            labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+            total: [12, 19, 15, 25, 22, 30, 28, 32, 26, 35, 29, 24],
+            entregados: [10, 17, 13, 23, 20, 28, 25, 30, 24, 33, 27, 22]
+        };
 
         const activityChart = new Chart(ctx, {
             type: 'line',
@@ -140,6 +145,82 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ============================================
+    // ACCIONES DE LA TABLA
+    // ============================================
+    const iconButtons = document.querySelectorAll('.icon-btn');
+    
+    iconButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const title = this.getAttribute('title');
+            const row = this.closest('tr');
+            const orderId = row?.querySelector('.order-id')?.textContent;
+            
+            if (title === 'Ver detalles') {
+                console.log('Ver detalles del pedido:', orderId);
+                // window.location.href = `detallePedido.php?id=${orderId}`;
+                alert(`Ver detalles del pedido ${orderId}`);
+            } else if (title === 'Descargar') {
+                console.log('Descargar comprobante:', orderId);
+                alert(`Descargando comprobante ${orderId}...`);
+            } else if (title === 'Rastrear') {
+                console.log('Rastrear pedido:', orderId);
+                // window.location.href = `seguimiento.php?id=${orderId}`;
+                alert(`Rastreando pedido ${orderId}...`);
+            } else if (title === 'Cancelar') {
+                if (confirm(`¿Estás seguro de cancelar el pedido ${orderId}?`)) {
+                    console.log('Cancelar pedido:', orderId);
+                    alert(`Pedido ${orderId} cancelado`);
+                }
+            }
+        });
+    });
+    
+    // ============================================
+    // CLICK EN FILA DE LA TABLA
+    // ============================================
+    const tableRows = document.querySelectorAll('.data-table tbody tr');
+    
+    tableRows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            // No hacer nada si se hizo click en un botón
+            if (e.target.closest('.icon-btn')) return;
+            
+            const orderId = this.querySelector('.order-id')?.textContent;
+            console.log('Click en fila:', orderId);
+            // window.location.href = `detallePedido.php?id=${orderId}`;
+        });
+        
+        // Estilo de hover cursor
+        row.style.cursor = 'pointer';
+    });
+    
+    // ============================================
+    // DESCARGAR COMPROBANTES
+    // ============================================
+    const receiptItems = document.querySelectorAll('.receipt-item');
+    
+    receiptItems.forEach(item => {
+        const downloadBtn = item.querySelector('.icon-btn');
+        
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const receiptTitle = item.querySelector('.receipt-title').textContent;
+                console.log('Descargar:', receiptTitle);
+                alert(`Descargando ${receiptTitle}...`);
+            });
+        }
+        
+        // Click en toda la fila del comprobante
+        item.addEventListener('click', function() {
+            const receiptTitle = this.querySelector('.receipt-title').textContent;
+            console.log('Ver comprobante:', receiptTitle);
+            // window.location.href = `verComprobante.php?id=${receiptId}`;
+        });
+    });
+    
+    // ============================================
     // ANIMACIÓN DE NÚMEROS (CONTADOR)
     // ============================================
     function animateValue(element, start, end, duration) {
@@ -184,6 +265,27 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 100);
         }
     });
+    
+    // ============================================
+    // ACTUALIZAR DATOS EN TIEMPO REAL (SIMULADO)
+    // ============================================
+    function updateRealtimeData() {
+        // Aquí irían las llamadas AJAX para actualizar datos
+        console.log('Actualizando datos en tiempo real...');
+        
+        // Ejemplo: actualizar badge de en tránsito
+        const enTransitoValue = document.querySelectorAll('.stat-value')[1];
+        if (enTransitoValue) {
+            const currentValue = parseInt(enTransitoValue.textContent);
+            // Simular cambio aleatorio
+            const change = Math.random() > 0.5 ? 1 : -1;
+            const newValue = Math.max(0, currentValue + change);
+            enTransitoValue.textContent = newValue.toString();
+        }
+    }
+    
+    // Actualizar cada 30 segundos (en producción esto vendría del servidor)
+    // setInterval(updateRealtimeData, 30000);
     
     // ============================================
     // EFECTOS VISUALES

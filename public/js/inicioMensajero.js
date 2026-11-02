@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const deliverSection = document.getElementById('deliverSection');
     const btnDeliver = document.getElementById('btnDeliver');
     const deliverCount = document.getElementById('deliverCount');
+    const btnResetCounter = document.getElementById('btnResetCounter');
     const routeDetailModal = document.getElementById('routeDetailModal');
     const closeRouteDetailModal = document.getElementById('closeRouteDetailModal');
     const btnCloseRouteDetail = document.getElementById('btnCloseRouteDetail');
@@ -1471,6 +1472,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }));
         
         renderDeliveries();
+    }
+
+    if (btnResetCounter) {
+        btnResetCounter.addEventListener('click', function() {
+            if (confirm('¿Limpiar la lista de escaneados?')) {
+                scannedQRs = [];
+                updateQRCounter();
+                renderScannedList();
+                if (isRouteMode) {
+                    routeDeliveriesData = [];
+                    renderDeliveries();
+                }
+                guardarEstadoEscaneoLocal();
+            }
+        });
     }
 
     if (btnDeliver) {

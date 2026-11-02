@@ -5,16 +5,49 @@ session_set_cookie_params($sessionLifetime, "/");
 
 session_start();
 
+require_once '../models/conexionGlobal.php';
 require_once __DIR__ . '/../includes/paths.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $conn = conexionDB();
+
     if (isset($_POST['email'])) {
-        redirect_route('forgot-password', [
-            'error' => 'La recuperacion por correo no esta configurada. Contacta al equipo de soporte.',
-        ]);
+        $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+
+        try {
+            $sql = "SELECT id, nombres FROM usuarios WHERE correo = :correo";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([':correo' => $email]);
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($usuario) {
+                $token = bin2hex(random_bytes(32));
+                $expiracion = date('Y-m-d H:i:s', strtotime('+30 days'));
+
+                $updateSql = "UPDATE usuarios SET token = :token, token_expiracion = :expiracion WHERE id = :id";
+                $updateStmt = $conn->prepare($updateSql);
+                $updateStmt->execute([
+                    ':token' => $token,
+                    ':expiracion' => $expiracion,
+                    ':id' => $usuario['id']
+                ]);
+
+                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                $link = $scheme . '://' . $host . route_url('reset-password', ['token' => $token]);
+
+                redirect_route('forgot-password', [
+                    'mensaje' => 'Enlace generado (Ver URL)',
+                    'debug_link' => $link,
+                ]);
+            }
+
+            redirect_route('forgot-password', ['mensaje' => 'Si el correo esta registrado, recibiras instrucciones.']);
+        } catch (Exception $e) {
+            error_log("Error recuperacion: " . $e->getMessage());
+            redirect_route('forgot-password', ['mensaje' => 'Ocurrio un error inesperado.']);
+        }
     } elseif (isset($_POST['token']) && isset($_POST['password'])) {
-        require_once __DIR__ . '/../models/conexionGlobal.php';
-        $conn = conexionDB();
         $token = (string) $_POST['token'];
         $password = (string) $_POST['password'];
         $confirm_password = (string) ($_POST['confirm_password'] ?? '');

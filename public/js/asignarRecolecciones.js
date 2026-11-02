@@ -344,6 +344,10 @@ function setupEventListeners() {
         });
     }
 
+    const btnReportes = document.getElementById('btnReportes');
+    if (btnReportes) {
+        btnReportes.addEventListener('click', () => alert('Funcionalidad de reportes en desarrollo'));
+    }
 }
 
 function manejarClickTabla(event) {

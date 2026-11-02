@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Elementos del DOM
     const loginForm = document.getElementById('loginForm');
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
     
     // Toggle para mostrar/ocultar contraseñas
     const togglePasswordButtons = document.querySelectorAll('.toggle-password');
@@ -25,6 +26,28 @@ document.addEventListener('DOMContentLoaded', function() {
     function validateEmail(email) {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return re.test(email);
+    }
+    
+    // Función para mostrar mensajes de éxito
+    function showSuccessMessage(message) {
+        // Crear elemento de mensaje si no existe
+        let successDiv = document.querySelector('.success-message');
+        if (!successDiv) {
+            successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            const activeForm = document.querySelector('.form-container.active');
+            if (activeForm) {
+                activeForm.insertBefore(successDiv, activeForm.firstChild);
+            }
+        }
+        
+        successDiv.textContent = message;
+        successDiv.classList.add('show');
+        
+        // Ocultar después de 5 segundos
+        setTimeout(() => {
+            successDiv.classList.remove('show');
+        }, 5000);
     }
     
     // ============================================
@@ -74,6 +97,23 @@ document.addEventListener('DOMContentLoaded', function() {
         if (emailParam && document.getElementById('loginEmail')) {
             document.getElementById('loginEmail').value = emailParam;
         }
+    }
+    
+    // ============================================
+    // MANEJO DEL FORMULARIO DE RECUPERACIÓN
+    // ============================================
+    if (forgotPasswordForm) {
+        forgotPasswordForm.addEventListener('submit', function(e) {
+            const emailInput = document.getElementById('forgotEmail');
+            const email = emailInput.value;
+            const errorSpan = document.getElementById('forgotEmailError');
+            
+            if (!validateEmail(email)) {
+                e.preventDefault(); // Solo detenemos el envío si el formato es inválido
+                errorSpan.textContent = 'Por favor ingresa un email válido';
+            }
+            // Si es válido, el formulario continuará hacia recovery.php
+        });
     }
     
     console.log('Sistema de autenticación EcoBikeMess cargado ✓');
