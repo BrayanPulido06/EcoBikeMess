@@ -2909,11 +2909,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Descripcion adicional positivo</span>
-                        <textarea name="descripcion_positiva" rows="2" placeholder="a favor de eco: describe el motivo del adicional"></textarea>
+                        <textarea name="descripcion_positiva" rows="2" placeholder="a favor de eco: describe el motivo del adicional">${escapeHtml(getPositiveAdditionalDescription(adicional))}</textarea>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Descripcion adicional negativo</span>
-                        <textarea name="descripcion_negativa" rows="2" placeholder="en contra de eco: describe el motivo del descuento"></textarea>
+                        <textarea name="descripcion_negativa" rows="2" placeholder="en contra de eco: describe el motivo del descuento">${escapeHtml(getNegativeAdditionalDescription(adicional))}</textarea>
                     </label>
                 </div>
                 <div class="facturacion-abono-actions">
