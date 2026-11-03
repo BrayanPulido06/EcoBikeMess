@@ -208,8 +208,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const getPositiveAdditionalAmount = (adicional) => Number(adicional?.monto_positivo ?? Math.max(Number(adicional?.monto || 0), 0));
     const getNegativeAdditionalAmount = (adicional) => Number(adicional?.monto_negativo || 0);
-    const getPositiveAdditionalDescription = (adicional) => String(adicional?.descripcion_positiva || (getPositiveAdditionalAmount(adicional) > 0 ? adicional?.descripcion || '' : '')).trim();
-    const getNegativeAdditionalDescription = (adicional) => String(adicional?.descripcion_negativa || '').trim();
+    const getLegacyAdditionalDescription = (adicional, type) => {
+        const legacy = String(adicional?.descripcion || '').trim();
+        const label = type === 'positive' ? 'Positivo' : 'Negativo';
+        const match = legacy.match(new RegExp(`(?:^|\\s*\\|\\s*)${label}:\\s*(.*?)(?=\\s*\\|\\s*(?:Positivo|Negativo):|$)`, 'i'));
+        if (match) return match[1].trim();
+        const onlyMatchingAmount = type === 'positive'
+            ? getPositiveAdditionalAmount(adicional) > 0 && getNegativeAdditionalAmount(adicional) <= 0
+            : getNegativeAdditionalAmount(adicional) > 0 && getPositiveAdditionalAmount(adicional) <= 0;
+        return onlyMatchingAmount ? legacy : '';
+    };
+    const getPositiveAdditionalDescription = (adicional) => String(adicional?.descripcion_positiva || getLegacyAdditionalDescription(adicional, 'positive')).trim();
+    const getNegativeAdditionalDescription = (adicional) => String(adicional?.descripcion_negativa || getLegacyAdditionalDescription(adicional, 'negative')).trim();
     const getPositiveAbonoAmount = (abono) => Number(abono?.monto_positivo ?? Math.max(Number(abono?.monto || 0), 0));
     const getNegativeAbonoAmount = (abono) => Number(abono?.monto_negativo || 0);
     const getPositiveAbonoDescription = (abono) => String(abono?.descripcion_positiva || (getPositiveAbonoAmount(abono) > 0 ? abono?.observaciones || '' : '')).trim();
@@ -1334,7 +1344,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${group.fechaLabel}</td>
                     <td>${group.entregas}</td>
                     <td>${messengerAdditionalCell(group)}</td>
-                    <td>${money(group.totalPago)}</td>
+                    <td class="currency-cell">${money(group.totalPago)}</td>
                     <td>${money(group.totalRecaudado)}</td>
                     <td>${money(group.abono)}</td>
                     <td>${clientGroupStatusBadge(group.estado)}</td>
@@ -1402,7 +1412,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${group.fechaLabel}</td>
                     <td>${group.entregas}</td>
                     <td>${messengerAdditionalCell(group)}</td>
-                    <td>${money(group.totalPago)}</td>
+                    <td class="currency-cell">${money(group.totalPago)}</td>
                     <td>${money(group.totalRecaudado)}</td>
                     <td>${money(group.abono)}</td>
                     <td>${messengerGroupStatusSelect(group)}</td>
@@ -3020,11 +3030,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Observacion abono positivo</span>
-                        <textarea name="descripcion_positiva" rows="2" placeholder="Ej: pago recibido, transferencia, efectivo"></textarea>
+                        <textarea name="descripcion_positiva" rows="2" placeholder="a favor de eco: describe el motivo del abono"></textarea>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Observacion abono negativo</span>
-                        <textarea name="descripcion_negativa" rows="2" placeholder="Ej: ajuste, descuento revertido, novedad"></textarea>
+                        <textarea name="descripcion_negativa" rows="2" placeholder="en contra de eco: describe el motivo del descuento"></textarea>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Observaciones</span>
@@ -3089,11 +3099,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Observacion adicional positivo</span>
-                        <textarea name="descripcion_positiva" rows="2" placeholder="Ej: tiempo de espera, parqueadero, gestion adicional">${escapeHtml(getPositiveAdditionalDescription(adicional))}</textarea>
+                        <textarea name="descripcion_positiva" rows="2" placeholder="a favor de eco: describe el motivo del adicional">${escapeHtml(getPositiveAdditionalDescription(adicional))}</textarea>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Observacion adicional negativo</span>
-                        <textarea name="descripcion_negativa" rows="2" placeholder="Ej: descuento, ajuste, novedad">${escapeHtml(getNegativeAdditionalDescription(adicional))}</textarea>
+                        <textarea name="descripcion_negativa" rows="2" placeholder="en contra de eco: describe el motivo del descuento">${escapeHtml(getNegativeAdditionalDescription(adicional))}</textarea>
                     </label>
                 </div>
                 <div class="facturacion-abono-actions">

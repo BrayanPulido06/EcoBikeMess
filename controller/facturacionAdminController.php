@@ -321,7 +321,7 @@ try {
             throw new InvalidArgumentException('Debes ingresar la observacion del adicional negativo.');
         }
 
-        $model->guardarAdicionalClienteGrupo(
+        if (!$model->guardarAdicionalClienteGrupo(
             $clienteId,
             $fechaGrupo,
             $montoPositivo,
@@ -329,7 +329,9 @@ try {
             $montoNegativo,
             $montoNegativo > 0 ? $descripcionNegativa : null,
             $registradoPor
-        );
+        )) {
+            throw new RuntimeException('No se pudieron guardar los montos y descripciones del adicional del cliente.');
+        }
 
         echo json_encode([
             'success' => true,
@@ -458,7 +460,7 @@ try {
             throw new InvalidArgumentException('Debes ingresar la descripcion del adicional negativo.');
         }
 
-        $model->guardarAdicionalMensajeroGrupo(
+        if (!$model->guardarAdicionalMensajeroGrupo(
             $mensajeroId,
             $fechaGrupo,
             $montoPositivo,
@@ -466,7 +468,9 @@ try {
             $montoNegativo,
             $montoNegativo > 0 ? $descripcionNegativa : null,
             $registradoPor
-        );
+        )) {
+            throw new RuntimeException('No se pudieron guardar los montos y descripciones del adicional del mensajero.');
+        }
 
         echo json_encode([
             'success' => true,

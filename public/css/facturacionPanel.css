@@ -267,6 +267,10 @@ body.sidebar-collapsed .facturacion-shell,
     vertical-align: middle;
 }
 
+.facturacion-table .currency-cell {
+    white-space: nowrap;
+}
+
 .facturacion-table th {
     background: #f9fbf9;
     font-size: 0.82rem;
