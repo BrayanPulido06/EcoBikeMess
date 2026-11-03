@@ -27,7 +27,7 @@ function parseMoneyInput($value): float
     return is_numeric($normalized) ? (float) $normalized : 0.0;
 }
 
-function parseAbonoSplitInput(): array
+function parseAbonoSplitInput(bool $requireDescriptions = true): array
 {
     $montoPositivo = parseMoneyInput($_POST['monto_positivo'] ?? ($_POST['monto'] ?? 0));
     $descripcionPositiva = trim((string) ($_POST['descripcion_positiva'] ?? ($_POST['observaciones'] ?? '')));
@@ -38,11 +38,11 @@ function parseAbonoSplitInput(): array
         throw new InvalidArgumentException('El abono debe ser mayor a cero.');
     }
 
-    if ($montoPositivo > 0 && $descripcionPositiva === '') {
+    if ($requireDescriptions && $montoPositivo > 0 && $descripcionPositiva === '') {
         throw new InvalidArgumentException('Debes ingresar la observacion del abono positivo.');
     }
 
-    if ($montoNegativo > 0 && $descripcionNegativa === '') {
+    if ($requireDescriptions && $montoNegativo > 0 && $descripcionNegativa === '') {
         throw new InvalidArgumentException('Debes ingresar la observacion del abono negativo.');
     }
 
@@ -172,9 +172,10 @@ try {
         $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
         $fechaAbono = parseDateInput($_POST['fecha_abono'] ?? '', 'La fecha real del abono no es valida.', defaultAbonoDate());
-        [$montoPositivo, $descripcionPositiva, $montoNegativo, $descripcionNegativa] = parseAbonoSplitInput();
+        [$montoPositivo, $descripcionPositiva, $montoNegativo, $descripcionNegativa] = parseAbonoSplitInput(false);
+        $descripcionPositiva = $montoPositivo > 0 ? 'a favor de eco' : null;
+        $descripcionNegativa = $montoNegativo > 0 ? 'en contra de eco' : null;
         $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
-        $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
         $registradoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
         if ($mensajeroId <= 0) {
@@ -198,7 +199,7 @@ try {
             $montoNegativo,
             $montoNegativo > 0 ? $descripcionNegativa : null,
             $metodoPago,
-            $observaciones !== '' ? $observaciones : null,
+            null,
             $registradoPor
         );
 
@@ -257,9 +258,10 @@ try {
         $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
         $fechaAbono = parseDateInput($_POST['fecha_abono'] ?? '', 'La fecha real del abono no es valida.', defaultAbonoDate());
-        [$montoPositivo, $descripcionPositiva, $montoNegativo, $descripcionNegativa] = parseAbonoSplitInput();
+        [$montoPositivo, $descripcionPositiva, $montoNegativo, $descripcionNegativa] = parseAbonoSplitInput(false);
+        $descripcionPositiva = $montoPositivo > 0 ? 'a favor de eco' : null;
+        $descripcionNegativa = $montoNegativo > 0 ? 'en contra de eco' : null;
         $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
-        $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
 
         if ($abonoId <= 0 || $mensajeroId <= 0) {
             throw new InvalidArgumentException('Abono o mensajero invalido.');
@@ -283,7 +285,7 @@ try {
             $montoNegativo,
             $montoNegativo > 0 ? $descripcionNegativa : null,
             $metodoPago,
-            $observaciones !== '' ? $observaciones : null
+            null
         );
 
         echo json_encode([
@@ -435,9 +437,9 @@ try {
         $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
         $montoPositivo = parseMoneyInput($_POST['monto_positivo'] ?? 0);
-        $descripcionPositiva = trim((string) ($_POST['descripcion_positiva'] ?? ''));
+        $descripcionPositiva = $montoPositivo > 0 ? 'a favor de eco' : '';
         $montoNegativo = parseMoneyInput($_POST['monto_negativo'] ?? 0);
-        $descripcionNegativa = trim((string) ($_POST['descripcion_negativa'] ?? ''));
+        $descripcionNegativa = $montoNegativo > 0 ? 'en contra de eco' : '';
         $registradoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
         if ($mensajeroId <= 0) {
@@ -450,14 +452,6 @@ try {
 
         if ($montoPositivo < 0 || $montoNegativo < 0) {
             throw new InvalidArgumentException('El adicional no puede ser negativo.');
-        }
-
-        if ($montoPositivo > 0 && $descripcionPositiva === '') {
-            throw new InvalidArgumentException('Debes ingresar la observacion del adicional positivo.');
-        }
-
-        if ($montoNegativo > 0 && $descripcionNegativa === '') {
-            throw new InvalidArgumentException('Debes ingresar la observacion del adicional negativo.');
         }
 
         $model->guardarAdicionalMensajeroGrupo(

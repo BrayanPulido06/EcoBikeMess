@@ -1893,7 +1893,6 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('monto_negativo', form.monto_negativo.value || '0');
         formData.append('descripcion_negativa', form.descripcion_negativa.value || '');
         formData.append('metodo_pago', form.metodo_pago.value);
-        formData.append('observaciones', form.observaciones.value || '');
 
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -2421,10 +2420,16 @@ document.addEventListener('DOMContentLoaded', () => {
         form.monto_negativo_display.value = getNegativeAbonoAmount(abono) > 0 ? money(getNegativeAbonoAmount(abono)) : '';
         const fechaAbono = abono.fecha_abono || dateKeyFromValue(abono.fecha_registro);
         form.fecha_abono.value = /^\d{4}-\d{2}-\d{2}$/.test(fechaAbono) ? fechaAbono : todayDateKey();
-        form.descripcion_positiva.value = getPositiveAbonoDescription(abono);
-        form.descripcion_negativa.value = getNegativeAbonoDescription(abono);
+        form.descripcion_positiva.value = kind === 'mensajero'
+            ? (getPositiveAbonoAmount(abono) > 0 ? 'a favor de eco' : '')
+            : getPositiveAbonoDescription(abono);
+        form.descripcion_negativa.value = kind === 'mensajero'
+            ? (getNegativeAbonoAmount(abono) > 0 ? 'en contra de eco' : '')
+            : getNegativeAbonoDescription(abono);
         form.metodo_pago.value = abono.metodo_pago || 'efectivo';
-        form.observaciones.value = abono.observaciones || '';
+        if (form.elements.namedItem('observaciones')) {
+            form.observaciones.value = abono.observaciones || '';
+        }
 
         const submitButton = form.querySelector(kind === 'cliente'
             ? '[data-role="submit-client-abono"]'
@@ -2829,16 +2834,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <input type="date" name="fecha_abono" value="${todayDateKey()}" required>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
-                        <span>Observacion abono positivo</span>
-                        <textarea name="descripcion_positiva" rows="2" placeholder="Ej: pago recibido, transferencia, efectivo"></textarea>
+                        <span>Descripcion abono positivo</span>
+                        <textarea name="descripcion_positiva" rows="2" readonly>a favor de eco</textarea>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
-                        <span>Observacion abono negativo</span>
-                        <textarea name="descripcion_negativa" rows="2" placeholder="Ej: ajuste, descuento revertido, novedad"></textarea>
-                    </label>
-                    <label class="facturacion-field facturacion-field-full">
-                        <span>Observaciones</span>
-                        <textarea name="observaciones" rows="3" placeholder="Detalle del pago al mensajero"></textarea>
+                        <span>Descripcion abono negativo</span>
+                        <textarea name="descripcion_negativa" rows="2" readonly>en contra de eco</textarea>
                     </label>
                 </div>
                 <div class="facturacion-abono-actions">
@@ -2897,12 +2898,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <input type="text" name="monto_negativo_display" inputmode="numeric" autocomplete="off" placeholder="$ 4.000" value="${montoNegativo > 0 ? money(montoNegativo) : ''}">
                     </label>
                     <label class="facturacion-field facturacion-field-full">
-                        <span>Observacion adicional positivo</span>
-                        <textarea name="descripcion_positiva" rows="2" placeholder="Ej: entrega extra, tarifa especial">${escapeHtml(getPositiveAdditionalDescription(adicional))}</textarea>
+                        <span>Descripcion adicional positivo</span>
+                        <textarea name="descripcion_positiva" rows="2" readonly>a favor de eco</textarea>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
-                        <span>Observacion adicional negativo</span>
-                        <textarea name="descripcion_negativa" rows="2" placeholder="Ej: jugo, parqueadero, descuento">${escapeHtml(getNegativeAdditionalDescription(adicional))}</textarea>
+                        <span>Descripcion adicional negativo</span>
+                        <textarea name="descripcion_negativa" rows="2" readonly>en contra de eco</textarea>
                     </label>
                 </div>
                 <div class="facturacion-abono-actions">
