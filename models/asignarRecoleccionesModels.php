@@ -78,7 +78,7 @@ class AsignarRecoleccionesModel {
 
     public function listarRecolecciones($filtros) {
                 $sql = "SELECT 
-                    p.direccion_origen,
+                    COALESCE(NULLIF(TRIM(p.direccion_origen), ''), NULLIF(TRIM(c.direccion_principal), ''), '') AS direccion_origen,
                     GROUP_CONCAT(DISTINCT NULLIF(TRIM(p.remitente_nombre), '') SEPARATOR ' | ') as remitente_nombre,
                     GROUP_CONCAT(DISTINCT NULLIF(TRIM(p.remitente_telefono), '') SEPARATOR ' | ') as remitente_telefono,
                     GROUP_CONCAT(DISTINCT NULLIF(TRIM(p.observaciones_recoleccion), '') SEPARATOR ' | ') as observaciones_recoleccion,
@@ -116,18 +116,17 @@ class AsignarRecoleccionesModel {
                 LEFT JOIN usuarios u_mens_rec ON m_rec.usuario_id = u_mens_rec.id
                 LEFT JOIN recolecciones r ON p.recoleccion_id = r.id
                 WHERE p.estado IN ('pendiente', 'asignado', 'en_transito', 'en_ruta', 'entregado')
-                  AND COALESCE(TRIM(p.direccion_origen), '') <> ''
                   AND COALESCE(p.ocultar_recoleccion_admin, 0) = 0
                   AND COALESCE(r.fecha_completada, r.fecha_asignacion, COALESCE(p.fecha_programada_recoleccion, DATE(p.fecha_creacion))) >= DATE_SUB(NOW(), INTERVAL 5 DAY)";
 
         $params = [];
 
         if (!empty($filtros['busqueda'])) {
-            $sql .= " AND (p.direccion_origen LIKE :search OR u_cli.nombres LIKE :search OR c.nombre_emprendimiento LIKE :search OR u_mens.nombres LIKE :search)";
+            $sql .= " AND (p.direccion_origen LIKE :search OR c.direccion_principal LIKE :search OR u_cli.nombres LIKE :search OR c.nombre_emprendimiento LIKE :search OR u_mens.nombres LIKE :search)";
             $params[':search'] = '%' . $filtros['busqueda'] . '%';
         }
 
-        $sql .= " GROUP BY p.direccion_origen, 
+        $sql .= " GROUP BY COALESCE(NULLIF(TRIM(p.direccion_origen), ''), NULLIF(TRIM(c.direccion_principal), ''), ''), 
                            IFNULL(p.recoleccion_id, p.estado), 
                            p.mensajero_id,
                            p.mensajero_recoleccion_id,
@@ -170,7 +169,7 @@ class AsignarRecoleccionesModel {
 
             $sqlInfo = "SELECT
                             p.cliente_id,
-                            p.direccion_origen,
+                            COALESCE(NULLIF(TRIM(p.direccion_origen), ''), NULLIF(TRIM(c.direccion_principal), ''), '') AS direccion_origen,
                             p.remitente_nombre,
                             p.remitente_telefono,
                             c.nombre_emprendimiento,
@@ -187,6 +186,10 @@ class AsignarRecoleccionesModel {
 
             if (!$info) {
                 throw new Exception('No se encontraron paquetes para asignar.');
+            }
+
+            if (trim((string) ($info['direccion_origen'] ?? '')) === '') {
+                throw new Exception('El paquete no tiene dirección de origen ni dirección principal registrada para la tienda. Completa una dirección antes de asignar la recolección.');
             }
 
             $sqlObservaciones = "SELECT GROUP_CONCAT(DISTINCT NULLIF(TRIM(observaciones_recoleccion), '') SEPARATOR ' | ')

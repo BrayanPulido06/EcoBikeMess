@@ -271,6 +271,7 @@ function renderAccionesRecoleccion(rec) {
     const telefono = escapeHtml(rec.remitente_telefono || '');
     const observaciones = escapeHtml(rec.observaciones_recoleccion || '');
     const esPendiente = rec.estado === 'pendiente';
+    const sinDireccion = !String(rec.direccion_origen || '').trim();
 
     if (['entregado', 'completada', 'cancelado'].includes(rec.estado)) {
         return `
@@ -283,7 +284,7 @@ function renderAccionesRecoleccion(rec) {
     return `
         <div class="actions">
             <button class="btn btn-sm btn-info btn-ver-detalles" title="Ver Paquetes" data-ids="${ids}">Ver</button>
-            <button class="btn btn-sm ${esPendiente ? 'btn-warning' : 'btn-secondary'} btn-asignar-recoleccion" title="${esPendiente ? 'Asignar Recoleccion' : 'Reasignar'}" data-ids="${ids}" data-direccion="${direccion}" data-cliente="${cliente}" data-contacto="${contacto}" data-telefono="${telefono}" data-observaciones="${observaciones}">${esPendiente ? 'Asignar' : 'Reasignar'}</button>
+            <button class="btn btn-sm ${esPendiente ? 'btn-warning' : 'btn-secondary'} btn-asignar-recoleccion" title="${sinDireccion ? 'Registra la dirección de la tienda antes de asignar' : (esPendiente ? 'Asignar Recoleccion' : 'Reasignar')}" data-ids="${ids}" data-direccion="${direccion}" data-cliente="${cliente}" data-contacto="${contacto}" data-telefono="${telefono}" data-observaciones="${observaciones}" ${sinDireccion ? 'disabled' : ''}>${esPendiente ? 'Asignar' : 'Reasignar'}</button>
             <button class="btn btn-sm btn-danger btn-cancelar-recoleccion" title="Cancelar" data-ids="${ids}">Cancelar</button>
         </div>
     `;
@@ -533,7 +534,7 @@ function buildRows(items) {
     return items.map(rec => `
         <tr class="prioridad-${rec.color_prioridad || 'verde'}">
             <td>
-                ${escapeHtml(rec.direccion_origen || '')}
+                ${escapeHtml(rec.direccion_origen || 'Sin dirección de origen; revisa la dirección principal de la tienda')}
                 <br><small>${escapeHtml(rec.remitente_nombre || 'Sin contacto')} | ${escapeHtml(rec.remitente_telefono || 'Sin telefono')}</small>
             </td>
             <td>${escapeHtml(rec.cliente_nombre || '')}</td>
