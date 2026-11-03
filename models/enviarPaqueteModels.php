@@ -55,6 +55,24 @@ class EnvioModel {
             throw new Exception("Error de validación: No se ha identificado el ID del cliente para este envío.");
         }
 
+        $fechaProgramada = trim((string) ($datos['fecha_programada_recoleccion'] ?? ''));
+        if ($fechaProgramada !== '') {
+            $fecha = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaProgramada, new DateTimeZone('America/Bogota'));
+            $erroresFecha = DateTimeImmutable::getLastErrors();
+            $fechaValida = $fecha !== false
+                && ($erroresFecha === false || ($erroresFecha['warning_count'] === 0 && $erroresFecha['error_count'] === 0))
+                && $fecha->format('Y-m-d') === $fechaProgramada;
+
+            if (!$fechaValida) {
+                throw new Exception('La fecha programada de recolección no es válida.');
+            }
+
+            $hoy = new DateTimeImmutable('today', new DateTimeZone('America/Bogota'));
+            if ($fecha < $hoy) {
+                throw new Exception('La fecha programada de recolección no puede ser anterior a hoy.');
+            }
+        }
+
         // Determinar el tipo de servicio basado en si hay recaudo
         $tipo_servicio = (!empty($datos['tiene_recaudo']) && $datos['tiene_recaudo'] == 1) ? 'contraentrega' : 'entrega_simple';
 
@@ -104,7 +122,7 @@ class EnvioModel {
                 ':remitente_telefono' => $datos['remitente_telefono'],
                 ':remitente_direccion' => $datos['remitente_direccion'],
                 ':observaciones_recoleccion' => trim((string) ($datos['observaciones_recoleccion'] ?? '')),
-                ':fecha_programada_recoleccion' => !empty($datos['fecha_programada_recoleccion']) ? $datos['fecha_programada_recoleccion'] : null,
+                ':fecha_programada_recoleccion' => $fechaProgramada !== '' ? $fechaProgramada : null,
                 ':destinatario_nombre' => $datos['destinatario_nombre'],
                 ':destinatario_telefono' => $datos['destinatario_telefono'],
                 ':destinatario_direccion' => $datos['destinatario_direccion'],

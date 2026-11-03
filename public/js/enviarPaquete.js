@@ -245,6 +245,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (envioConfirmado) return;
 
+            const fechaProgramadaInput = document.getElementById('fecha_programada_recoleccion');
+            if (fechaProgramadaInput?.value && fechaProgramadaInput.min && fechaProgramadaInput.value < fechaProgramadaInput.min) {
+                event.preventDefault();
+                alert('La fecha programada de recolección no puede ser anterior a hoy.');
+                fechaProgramadaInput.focus();
+                return;
+            }
+
             for (let stepNumber = 1; stepNumber <= 3; stepNumber += 1) {
                 if (!validateStep(stepNumber)) {
                     goToStep(stepNumber);

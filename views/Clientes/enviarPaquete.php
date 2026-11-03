@@ -467,7 +467,7 @@ $remitente_data = [
                             </div>
                             <div class="form-group">
                                 <label for="fecha_programada_recoleccion">Fecha programada de recolección</label>
-                                <input type="date" id="fecha_programada_recoleccion" name="fecha_programada_recoleccion">
+                                <input type="date" id="fecha_programada_recoleccion" name="fecha_programada_recoleccion" min="<?php echo (new DateTimeImmutable('today', new DateTimeZone('America/Bogota')))->format('Y-m-d'); ?>">
                                 <small>Opcional. Úsala si quieres que la recolección se gestione otro día.</small>
                                 <span class="error-message"></span>
                             </div>
