@@ -12,6 +12,7 @@ class FacturacionModels
     {
         $this->conn = conexionDB();
         $this->ensureFacturacionTable();
+        $this->sincronizarFacturacionEntregasSinRegistro();
         $this->ensureAbonosClienteTable();
         $this->ensureAdicionalesClienteTable();
         $this->ensureHiddenClientGroupsTable();
@@ -51,6 +52,18 @@ class FacturacionModels
         $this->ensureFacturacionColumn('observaciones_admin', "ALTER TABLE facturacion ADD COLUMN observaciones_admin TEXT NULL AFTER costo_adicional_servicio");
         $this->ensureFacturacionColumn('adicional_pago_mensajero', "ALTER TABLE facturacion ADD COLUMN adicional_pago_mensajero DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER observaciones_admin");
         $this->ensureFacturacionColumn('observaciones_mensajero', "ALTER TABLE facturacion ADD COLUMN observaciones_mensajero TEXT NULL AFTER adicional_pago_mensajero");
+    }
+
+    private function sincronizarFacturacionEntregasSinRegistro(): void
+    {
+        $sql = "INSERT IGNORE INTO facturacion (paquete_id, cliente_id, mensajero_id, valor_pago_mensajero)
+                SELECT p.id, p.cliente_id, p.mensajero_id, 7000.00
+                FROM paquetes p
+                INNER JOIN clientes c ON c.id = p.cliente_id
+                LEFT JOIN facturacion f ON f.paquete_id = p.id
+                WHERE p.estado = 'entregado'
+                  AND f.paquete_id IS NULL";
+        $this->conn->exec($sql);
     }
 
     private function ensureFacturacionColumn(string $column, string $alterSql): void
@@ -1451,7 +1464,7 @@ class FacturacionModels
                     COALESCE(f.adicional_pago_mensajero, 0) AS adicional_pago_mensajero,
                     COALESCE(f.observaciones_mensajero, '') AS observaciones_mensajero
                 FROM paquetes p
-                INNER JOIN facturacion f ON f.paquete_id = p.id
+                LEFT JOIN facturacion f ON f.paquete_id = p.id
                 LEFT JOIN entregas e ON e.paquete_id = p.id
                 LEFT JOIN clientes c ON c.id = p.cliente_id
                 LEFT JOIN mensajeros m ON m.id = p.mensajero_id
