@@ -1036,6 +1036,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const descripcionAdicionalGeneralPositiva = getPositiveAdditionalDescription(adicionalGeneral);
                 const descripcionAdicionalGeneralNegativa = getNegativeAdditionalDescription(adicionalGeneral);
                 const totalAdicionales = Number(group.totalAdicionalesPaquetes || 0) + montoAdicionalGeneralPositivo;
+                const gananciasMensajero = Number(group.totalPagoBase || 0) + Number(group.totalAdicionalesPaquetes || 0);
                 const totalPago = Number(group.totalPagoBase || 0) + totalAdicionales - montoAdicionalGeneralNegativo;
                 const saldoCalculado = totalPago - Number(group.totalRecaudado || 0) - abono;
                 const estadoManual = getMensajeroGroupEstadoManual(group.mensajeroId, group.dateKey);
@@ -1051,6 +1052,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     adicionalGeneralDescripcionNegativa: descripcionAdicionalGeneralNegativa,
                     descuentoGeneral: montoAdicionalGeneralNegativo,
                     totalAdicionales,
+                    gananciasMensajero,
                     totalPago,
                     adicionalObservacion: descripcionAdicionalGeneralPositiva || descripcionAdicionalGeneralNegativa || packageAdditionalSummary(group.packages, 'observaciones_mensajero'),
                     abonos,
@@ -1183,7 +1185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const groupStatusFromBalance = (value) => Math.round(Number(value || 0)) === 0 ? 'pagado' : 'pendiente';
 
     const clienteTableColspan = () => mode === 'admin' ? 12 : 10;
-    const mensajeroTableColspan = () => mode === 'admin' ? 12 : 10;
+    const mensajeroTableColspan = () => mode === 'admin' ? 13 : 11;
     const ecobikemessTableColspan = () => 8;
 
     const renderClienteTable = (items) => {
@@ -1348,6 +1350,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${group.fechaLabel}</td>
                     <td>${group.entregas}</td>
                     <td>${messengerAdditionalCell(group)}</td>
+                    <td class="currency-cell">${money(group.gananciasMensajero)}</td>
                     <td class="currency-cell">${money(group.totalPago)}</td>
                     <td>${money(group.totalRecaudado)}</td>
                     <td>${money(group.abono)}</td>
@@ -1416,6 +1419,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${group.fechaLabel}</td>
                     <td>${group.entregas}</td>
                     <td>${messengerAdditionalCell(group)}</td>
+                    <td class="currency-cell">${money(group.gananciasMensajero)}</td>
                     <td class="currency-cell">${money(group.totalPago)}</td>
                     <td>${money(group.totalRecaudado)}</td>
                     <td>${money(group.abono)}</td>
