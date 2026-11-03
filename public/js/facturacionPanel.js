@@ -2420,12 +2420,8 @@ document.addEventListener('DOMContentLoaded', () => {
         form.monto_negativo_display.value = getNegativeAbonoAmount(abono) > 0 ? money(getNegativeAbonoAmount(abono)) : '';
         const fechaAbono = abono.fecha_abono || dateKeyFromValue(abono.fecha_registro);
         form.fecha_abono.value = /^\d{4}-\d{2}-\d{2}$/.test(fechaAbono) ? fechaAbono : todayDateKey();
-        form.descripcion_positiva.value = kind === 'mensajero'
-            ? (getPositiveAbonoAmount(abono) > 0 ? 'a favor de eco' : '')
-            : getPositiveAbonoDescription(abono);
-        form.descripcion_negativa.value = kind === 'mensajero'
-            ? (getNegativeAbonoAmount(abono) > 0 ? 'en contra de eco' : '')
-            : getNegativeAbonoDescription(abono);
+        form.descripcion_positiva.value = getPositiveAbonoDescription(abono);
+        form.descripcion_negativa.value = getNegativeAbonoDescription(abono);
         form.metodo_pago.value = abono.metodo_pago || 'efectivo';
         if (form.elements.namedItem('observaciones')) {
             form.observaciones.value = abono.observaciones || '';
@@ -2835,11 +2831,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Descripcion abono positivo</span>
-                        <textarea name="descripcion_positiva" rows="2" readonly>a favor de eco</textarea>
+                        <textarea name="descripcion_positiva" rows="2" placeholder="a favor de eco: describe el motivo del abono"></textarea>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Descripcion abono negativo</span>
-                        <textarea name="descripcion_negativa" rows="2" readonly>en contra de eco</textarea>
+                        <textarea name="descripcion_negativa" rows="2" placeholder="en contra de eco: describe el motivo del descuento"></textarea>
                     </label>
                 </div>
                 <div class="facturacion-abono-actions">
@@ -2899,11 +2895,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Descripcion adicional positivo</span>
-                        <textarea name="descripcion_positiva" rows="2" readonly>a favor de eco</textarea>
+                        <textarea name="descripcion_positiva" rows="2" placeholder="a favor de eco: describe el motivo del adicional"></textarea>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Descripcion adicional negativo</span>
-                        <textarea name="descripcion_negativa" rows="2" readonly>en contra de eco</textarea>
+                        <textarea name="descripcion_negativa" rows="2" placeholder="en contra de eco: describe el motivo del descuento"></textarea>
                     </label>
                 </div>
                 <div class="facturacion-abono-actions">
