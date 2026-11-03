@@ -43,6 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const money = (value) => `$ ${formatCurrencyNumber(value)}`;
     const moneyAbs = (value) => `$ ${formatCurrencyNumber(Math.abs(Number(value || 0)))}`;
+    const getFormFieldValue = (form, name) => {
+        const field = form.elements.namedItem(name);
+        return field && 'value' in field ? String(field.value || '') : '';
+    };
 
     const parseCurrencyInput = (value) => {
         const digits = String(value || '').replace(/[^\d]/g, '');
@@ -1835,9 +1839,9 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('fecha_grupo', form.fecha_abono.value);
         formData.append('fecha_abono', form.fecha_abono.value);
         formData.append('monto_positivo', form.monto_positivo.value || '0');
-        formData.append('descripcion_positiva', form.descripcion_positiva.value || '');
+        formData.append('descripcion_positiva', getFormFieldValue(form, 'descripcion_positiva'));
         formData.append('monto_negativo', form.monto_negativo.value || '0');
-        formData.append('descripcion_negativa', form.descripcion_negativa.value || '');
+        formData.append('descripcion_negativa', getFormFieldValue(form, 'descripcion_negativa'));
         formData.append('metodo_pago', form.metodo_pago.value);
         formData.append('observaciones', form.observaciones.value || '');
 
@@ -1866,9 +1870,9 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('cliente_id', form.cliente_id.value);
         formData.append('fecha_grupo', form.fecha_grupo.value);
         formData.append('monto_positivo', form.monto_positivo.value || '0');
-        formData.append('descripcion_positiva', form.descripcion_positiva.value || '');
+        formData.append('descripcion_positiva', getFormFieldValue(form, 'descripcion_positiva'));
         formData.append('monto_negativo', form.monto_negativo.value || '0');
-        formData.append('descripcion_negativa', form.descripcion_negativa.value || '');
+        formData.append('descripcion_negativa', getFormFieldValue(form, 'descripcion_negativa'));
 
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -1899,9 +1903,9 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('fecha_grupo', form.fecha_grupo.value);
         formData.append('fecha_abono', form.fecha_abono.value);
         formData.append('monto_positivo', form.monto_positivo.value || '0');
-        formData.append('descripcion_positiva', form.descripcion_positiva.value || '');
+        formData.append('descripcion_positiva', getFormFieldValue(form, 'descripcion_positiva'));
         formData.append('monto_negativo', form.monto_negativo.value || '0');
-        formData.append('descripcion_negativa', form.descripcion_negativa.value || '');
+        formData.append('descripcion_negativa', getFormFieldValue(form, 'descripcion_negativa'));
         formData.append('metodo_pago', form.metodo_pago.value);
 
         const response = await fetch(endpoint, {
@@ -1928,9 +1932,9 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('mensajero_id', form.mensajero_id.value);
         formData.append('fecha_grupo', form.fecha_grupo.value);
         formData.append('monto_positivo', form.monto_positivo.value || '0');
-        formData.append('descripcion_positiva', form.descripcion_positiva.value || '');
+        formData.append('descripcion_positiva', getFormFieldValue(form, 'descripcion_positiva'));
         formData.append('monto_negativo', form.monto_negativo.value || '0');
-        formData.append('descripcion_negativa', form.descripcion_negativa.value || '');
+        formData.append('descripcion_negativa', getFormFieldValue(form, 'descripcion_negativa'));
 
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -3886,7 +3890,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Ingresa un monto de abono valido.');
                 return;
             }
-            if (montoPositivo > 0 && !String(form.descripcion_positiva.value || '').trim()) {
+            if (montoPositivo > 0 && !getFormFieldValue(form, 'descripcion_positiva').trim()) {
                 alert('Ingresa la observacion del abono positivo.');
                 return;
             }
@@ -3894,7 +3898,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Ingresa la fecha real del abono.');
                 return;
             }
-            if (montoNegativo > 0 && !String(form.descripcion_negativa.value || '').trim()) {
+            if (montoNegativo > 0 && !getFormFieldValue(form, 'descripcion_negativa').trim()) {
                 alert('Ingresa la observacion del abono negativo.');
                 return;
             }
@@ -3931,7 +3935,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Ingresa un monto de abono valido.');
                 return;
             }
-            if (montoPositivo > 0 && !String(form.descripcion_positiva.value || '').trim()) {
+            if (montoPositivo > 0 && !getFormFieldValue(form, 'descripcion_positiva').trim()) {
                 alert('Ingresa la observacion del abono positivo.');
                 return;
             }
@@ -3939,7 +3943,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Ingresa la fecha real del abono.');
                 return;
             }
-            if (montoNegativo > 0 && !String(form.descripcion_negativa.value || '').trim()) {
+            if (montoNegativo > 0 && !getFormFieldValue(form, 'descripcion_negativa').trim()) {
                 alert('Ingresa la observacion del abono negativo.');
                 return;
             }
@@ -3972,11 +3976,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const montoPositivo = Number(form.monto_positivo.value || 0);
             const montoNegativo = Number(form.monto_negativo.value || 0);
-            if (montoPositivo > 0 && !String(form.descripcion_positiva.value || '').trim()) {
+            if (montoPositivo > 0 && !getFormFieldValue(form, 'descripcion_positiva').trim()) {
                 alert('Ingresa la observacion del adicional positivo.');
                 return;
             }
-            if (montoNegativo > 0 && !String(form.descripcion_negativa.value || '').trim()) {
+            if (montoNegativo > 0 && !getFormFieldValue(form, 'descripcion_negativa').trim()) {
                 alert('Ingresa la observacion del adicional negativo.');
                 return;
             }
@@ -4009,11 +4013,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const montoPositivo = Number(form.monto_positivo.value || 0);
             const montoNegativo = Number(form.monto_negativo.value || 0);
-            if (montoPositivo > 0 && !String(form.descripcion_positiva.value || '').trim()) {
+            if (montoPositivo > 0 && !getFormFieldValue(form, 'descripcion_positiva').trim()) {
                 alert('Ingresa la observacion del adicional positivo.');
                 return;
             }
-            if (montoNegativo > 0 && !String(form.descripcion_negativa.value || '').trim()) {
+            if (montoNegativo > 0 && !getFormFieldValue(form, 'descripcion_negativa').trim()) {
                 alert('Ingresa la observacion del adicional negativo.');
                 return;
             }
