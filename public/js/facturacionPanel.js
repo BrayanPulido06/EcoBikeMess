@@ -859,9 +859,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const existingGroup = Array.from(groupsMap.values()).find((group) => Number(group.clienteId) === clientId);
             const meta = clientMetaById.get(clientId) || {};
-            const displayName = existingGroup?.clienteNombre || meta.clienteNombre || 'Cliente';
+            const displayName = meta.clienteNombre || 'Cliente';
             const filter = state.filters.cliente || {};
             const haystack = `${displayName} abono ${abono.observaciones || ''} ${getPositiveAbonoDescription(abono)} ${getNegativeAbonoDescription(abono)}`.toLowerCase();
             if (filter.q && !haystack.includes(normalizeText(filter.q))) {
@@ -877,7 +876,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const clientKey = existingGroup?.clientKey || meta.clientKey || `cliente:${clientId}`;
+            const clientKey = meta.clientKey || `cliente:${clientId}`;
             const groupKey = `${dateKey}__${clientKey}`;
 
             if (!groupsMap.has(groupKey)) {
@@ -888,10 +887,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     fechaLabel: shortDate(dateKey),
                     clienteNombre: displayName,
                     clienteId: clientId,
-                    cuentaBancariaPrincipal: existingGroup?.cuentaBancariaPrincipal || meta.cuentaBancariaPrincipal || '',
-                    cuentaBancariaOpcional1: existingGroup?.cuentaBancariaOpcional1 || meta.cuentaBancariaOpcional1 || '',
-                    cuentaBancariaOpcional2: existingGroup?.cuentaBancariaOpcional2 || meta.cuentaBancariaOpcional2 || '',
-                    cuentaBancariaOpcional3: existingGroup?.cuentaBancariaOpcional3 || meta.cuentaBancariaOpcional3 || '',
+                    cuentaBancariaPrincipal: meta.cuentaBancariaPrincipal || '',
+                    cuentaBancariaOpcional1: meta.cuentaBancariaOpcional1 || '',
+                    cuentaBancariaOpcional2: meta.cuentaBancariaOpcional2 || '',
+                    cuentaBancariaOpcional3: meta.cuentaBancariaOpcional3 || '',
                     paquetesEntregados: 0,
                     totalServicio: 0,
                     subtotalServicio: 0,
