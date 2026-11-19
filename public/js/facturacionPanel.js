@@ -2220,6 +2220,22 @@ document.addEventListener('DOMContentLoaded', () => {
         openClientAbonoModal(group.key);
     };
 
+    const openClientCreateAdditionalModal = () => {
+        const folder = state.clienteFolders.find((item) => item.key === state.selectedClienteFolderKey);
+        if (!folder) return;
+
+        const dateKey = todayDateKey();
+        let group = state.clienteGroups.find((item) => item.clientKey === folder.key && item.dateKey === dateKey);
+        if (!group) {
+            group = createEmptyClientAbonoGroup(folder, dateKey);
+            group.isAbonoOnly = false;
+            state.clienteGroups.push(group);
+        }
+
+        state.selectedClienteGroupKey = group.key;
+        openClientAdditionalModal(group.key);
+    };
+
     const createEmptyMessengerGroup = (sourceGroup, dateKey) => ({
         key: `${dateKey}__${sourceGroup.messengerKey}`,
         dateKey,
@@ -3647,6 +3663,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (event.target.closest('[data-role="open-client-create-abono"]')) {
                 openClientCreateAbonoModal();
+                return;
+            }
+
+            if (event.target.closest('[data-role="open-client-create-additional"]')) {
+                openClientCreateAdditionalModal();
                 return;
             }
 
