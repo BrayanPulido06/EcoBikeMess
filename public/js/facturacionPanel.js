@@ -2239,6 +2239,22 @@ document.addEventListener('DOMContentLoaded', () => {
         openClientAbonoModal(group.key);
     };
 
+    const openClientCreateAdditionalModal = () => {
+        const folder = state.clienteFolders.find((item) => item.key === state.selectedClienteFolderKey);
+        if (!folder) return;
+
+        const dateKey = todayDateKey();
+        let group = state.clienteGroups.find((item) => item.clientKey === folder.key && item.dateKey === dateKey);
+        if (!group) {
+            group = createEmptyClientAbonoGroup(folder, dateKey);
+            group.isAbonoOnly = false;
+            state.clienteGroups.push(group);
+        }
+
+        state.selectedClienteGroupKey = group.key;
+        openClientAdditionalModal(group.key);
+    };
+
     const createEmptyMessengerGroup = (sourceGroup, dateKey) => ({
         key: `${dateKey}__${sourceGroup.messengerKey}`,
         dateKey,
@@ -2266,7 +2282,7 @@ document.addEventListener('DOMContentLoaded', () => {
         hasFinancialRecords: true
     });
 
-    const openMessengerCreateAbonoModal = () => {
+    const openMessengerCreateGroupModal = (view) => {
         const sourceGroup = state.mensajeroGroups.find((group) => group.messengerKey === state.selectedMensajeroFolderKey);
         if (!sourceGroup) return;
 
@@ -2278,7 +2294,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         state.selectedMensajeroGroupKey = group.key;
-        openMessengerAbonoModal(group.key);
+        if (view === 'additional') {
+            openMessengerAdditionalModal(group.key);
+        } else {
+            openMessengerAbonoModal(group.key);
+        }
     };
 
     const syncClienteSelectionControls = () => {
@@ -3665,6 +3685,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            if (event.target.closest('[data-role="open-client-create-additional"]')) {
+                openClientCreateAdditionalModal();
+                return;
+            }
+
             const messengerFolderButton = event.target.closest('[data-role="open-messenger-folder"]');
             if (messengerFolderButton) {
                 state.selectedMensajeroFolderKey = messengerFolderButton.dataset.messengerKey || null;
@@ -3681,7 +3706,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (event.target.closest('[data-role="open-messenger-create-abono"]')) {
-                openMessengerCreateAbonoModal();
+                openMessengerCreateGroupModal('abono');
+                return;
+            }
+
+            if (event.target.closest('[data-role="open-messenger-create-additional"]')) {
+                openMessengerCreateGroupModal('additional');
                 return;
             }
 

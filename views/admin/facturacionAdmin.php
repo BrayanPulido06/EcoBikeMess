@@ -85,7 +85,10 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                             <span class="client-history-label">Historial de cliente</span>
                             <strong id="cliente-history-title">Cliente</strong>
                         </div>
-                        <button class="fact-btn primary" type="button" data-role="open-client-create-abono">Crear abono</button>
+                        <div class="messenger-create-actions">
+                            <button class="fact-btn primary" type="button" data-role="open-client-create-abono">Crear abono</button>
+                            <button class="fact-btn secondary" type="button" data-role="open-client-create-additional">Crear adicional</button>
+                        </div>
                     </div>
 
                     <div id="cliente-history-table" class="facturacion-table-wrap panel-hidden">
@@ -161,7 +164,10 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                             <span class="client-history-label">Historial de mensajero</span>
                             <strong id="mensajero-history-title">Mensajero</strong>
                         </div>
-                        <button class="fact-btn primary" type="button" data-role="open-messenger-create-abono">Crear abono</button>
+                        <div class="messenger-create-actions">
+                            <button class="fact-btn primary" type="button" data-role="open-messenger-create-abono">Crear abono</button>
+                            <button class="fact-btn secondary" type="button" data-role="open-messenger-create-additional">Crear adicional</button>
+                        </div>
                     </div>
 
                     <div id="mensajero-history-table" class="facturacion-table-wrap panel-hidden">
