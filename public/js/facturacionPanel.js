@@ -911,8 +911,54 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        getClienteAdicionales().forEach((adicional) => {
+            const clientId = Number(adicional.cliente_id || 0);
+            const dateKey = String(adicional.fecha_grupo || '').slice(0, 10);
+            if (!clientId || !dateKey) return;
+
+            const meta = clientMetaById.get(clientId) || {};
+            const existingGroup = Array.from(groupsMap.values()).find((group) => Number(group.clienteId) === clientId);
+            const displayName = existingGroup?.clienteNombre || meta.clienteNombre || 'Cliente';
+            const filter = state.filters.cliente || {};
+            const haystack = `${displayName} adicional ${getPositiveAdditionalDescription(adicional)} ${getNegativeAdditionalDescription(adicional)}`.toLowerCase();
+            if (filter.q && !haystack.includes(normalizeText(filter.q))) return;
+            if ((filter.desde && dateKey < filter.desde) || (filter.hasta && dateKey > filter.hasta)) return;
+
+            const clientKey = existingGroup?.clientKey || meta.clientKey || `cliente:${clientId}`;
+            const groupKey = `${dateKey}__${clientKey}`;
+            if (groupsMap.has(groupKey)) return;
+
+            groupsMap.set(groupKey, {
+                key: groupKey,
+                dateKey,
+                clientKey,
+                fechaLabel: shortDate(dateKey),
+                clienteNombre: displayName,
+                clienteId,
+                cuentaBancariaPrincipal: meta.cuentaBancariaPrincipal || '',
+                cuentaBancariaOpcional1: meta.cuentaBancariaOpcional1 || '',
+                cuentaBancariaOpcional2: meta.cuentaBancariaOpcional2 || '',
+                cuentaBancariaOpcional3: meta.cuentaBancariaOpcional3 || '',
+                paquetesEntregados: 0,
+                totalServicio: 0,
+                subtotalServicio: 0,
+                totalAdicionalesPaquetes: 0,
+                adicionalGeneral: adicional,
+                totalAdicionales: 0,
+                adicionalObservacion: '',
+                totalRecaudado: 0,
+                abono: 0,
+                saldo: 0,
+                balance: 0,
+                totalAcumulado: 0,
+                packages: [],
+                statuses: new Set(),
+                isAbonoOnly: true
+            });
+        });
+
         const groups = Array.from(groupsMap.values())
-            .filter((group) => group.paquetesEntregados > 0 || getGroupAbonos(group.clienteId, group.dateKey).length > 0)
+            .filter((group) => group.paquetesEntregados > 0 || getGroupAbonos(group.clienteId, group.dateKey).length > 0 || getClienteGroupAdicional(group.clienteId, group.dateKey))
             .map((group) => {
                 const abonos = getGroupAbonos(group.clienteId, group.dateKey);
                 const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
@@ -2220,6 +2266,22 @@ document.addEventListener('DOMContentLoaded', () => {
         openClientAbonoModal(group.key);
     };
 
+    const openClientCreateAdditionalModal = () => {
+        const folder = state.clienteFolders.find((item) => item.key === state.selectedClienteFolderKey);
+        if (!folder) return;
+
+        const dateKey = todayDateKey();
+        let group = state.clienteGroups.find((item) => item.clientKey === folder.key && item.dateKey === dateKey);
+        if (!group) {
+            group = createEmptyClientAbonoGroup(folder, dateKey);
+            group.isAbonoOnly = false;
+            state.clienteGroups.push(group);
+        }
+
+        state.selectedClienteGroupKey = group.key;
+        openClientAdditionalModal(group.key);
+    };
+
     const createEmptyMessengerGroup = (sourceGroup, dateKey) => ({
         key: `${dateKey}__${sourceGroup.messengerKey}`,
         dateKey,
@@ -3065,7 +3127,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             ` : ''}
             ${renderClienteBankInfo(group)}
-            <h3 class="package-list-title">${group.isAbonoOnly ? 'Detalle del abono' : 'Detalle de paquetes facturados'}</h3>
+            <h3 class="package-list-title">${group.isAbonoOnly ? (group.abonos?.length ? 'Detalle del abono' : 'Detalle del adicional') : 'Detalle de paquetes facturados'}</h3>
             ${group.isAbonoOnly ? renderAbonoHistory(group) : renderClientPackagesTable(group.packages)}
         `;
 
@@ -3647,6 +3709,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (event.target.closest('[data-role="open-client-create-abono"]')) {
                 openClientCreateAbonoModal();
+                return;
+            }
+
+            if (event.target.closest('[data-role="open-client-create-additional"]')) {
+                openClientCreateAdditionalModal();
                 return;
             }
 
