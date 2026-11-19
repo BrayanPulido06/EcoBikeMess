@@ -917,14 +917,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!clientId || !dateKey) return;
 
             const meta = clientMetaById.get(clientId) || {};
-            const existingGroup = Array.from(groupsMap.values()).find((group) => Number(group.clienteId) === clientId);
-            const displayName = existingGroup?.clienteNombre || meta.clienteNombre || 'Cliente';
+            const displayName = meta.clienteNombre || 'Cliente';
             const filter = state.filters.cliente || {};
             const haystack = `${displayName} adicional ${getPositiveAdditionalDescription(adicional)} ${getNegativeAdditionalDescription(adicional)}`.toLowerCase();
             if (filter.q && !haystack.includes(normalizeText(filter.q))) return;
             if ((filter.desde && dateKey < filter.desde) || (filter.hasta && dateKey > filter.hasta)) return;
 
-            const clientKey = existingGroup?.clientKey || meta.clientKey || `cliente:${clientId}`;
+            const clientKey = meta.clientKey || `cliente:${clientId}`;
             const groupKey = `${dateKey}__${clientKey}`;
             if (groupsMap.has(groupKey)) return;
 
@@ -1022,6 +1021,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const buildMensajeroGroups = (items) => {
         const filtered = items.filter((item) => matchesFilter(item, 'mensajero'));
         const groupsMap = new Map();
+        const messengerMetaById = new Map();
+        (state.rawData?.mensajero?.items || items).forEach((item) => {
+            const messengerId = Number(item.mensajero_id || 0);
+            if (messengerId > 0 && !messengerMetaById.has(messengerId)) {
+                messengerMetaById.set(messengerId, item);
+            }
+        });
 
         filtered.forEach((item) => {
             const baseDate = item.fecha_entrega || item.fecha_ingreso;
@@ -1079,7 +1085,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const filter = state.filters.mensajero || {};
             if ((filter.desde && dateKey < filter.desde) || (filter.hasta && dateKey > filter.hasta)) return;
 
-            const sourceItem = (state.rawData?.mensajero?.items || []).find((item) => Number(item.mensajero_id || 0) === messengerId);
+            const sourceItem = messengerMetaById.get(messengerId);
             const messengerName = String(sourceItem?.mensajero_nombre || 'Mensajero').trim() || 'Mensajero';
             if (filter.q && !normalizeText(messengerName).includes(normalizeText(filter.q))) return;
 
