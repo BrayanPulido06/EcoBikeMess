@@ -852,6 +852,14 @@ document.addEventListener('DOMContentLoaded', () => {
             group.statuses.add(item.estado || 'pendiente');
         });
 
+        const firstClientGroupById = new Map();
+        groupsMap.forEach((group) => {
+            const clientId = Number(group.clienteId || 0);
+            if (clientId > 0 && !firstClientGroupById.has(clientId)) {
+                firstClientGroupById.set(clientId, group);
+            }
+        });
+
         getClienteAbonosForDisplay().forEach((abono) => {
             const clientId = Number(abono.cliente_id || 0);
             const dateKey = String(abono.fecha_movimiento || '');
@@ -859,7 +867,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const existingGroup = Array.from(groupsMap.values()).find((group) => Number(group.clienteId) === clientId);
+            const existingGroup = firstClientGroupById.get(clientId);
             const meta = clientMetaById.get(clientId) || {};
             const displayName = existingGroup?.clienteNombre || meta.clienteNombre || 'Cliente';
             const filter = state.filters.cliente || {};
@@ -881,7 +889,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const groupKey = `${dateKey}__${clientKey}`;
 
             if (!groupsMap.has(groupKey)) {
-                groupsMap.set(groupKey, {
+                const abonoGroup = {
                     key: groupKey,
                     dateKey,
                     clientKey,
@@ -907,7 +915,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     packages: [],
                     statuses: new Set(),
                     isAbonoOnly: true
-                });
+                };
+                groupsMap.set(groupKey, abonoGroup);
+                if (!firstClientGroupById.has(clientId)) {
+                    firstClientGroupById.set(clientId, abonoGroup);
+                }
             }
         });
 
@@ -976,6 +988,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const buildMensajeroGroups = (items) => {
         const filtered = items.filter((item) => matchesFilter(item, 'mensajero'));
         const groupsMap = new Map();
+        const messengerMetaById = new Map();
+        (state.rawData?.mensajero?.items || []).forEach((item) => {
+            const messengerId = Number(item.mensajero_id || 0);
+            if (messengerId > 0 && !messengerMetaById.has(messengerId)) {
+                messengerMetaById.set(messengerId, item);
+            }
+        });
 
         filtered.forEach((item) => {
             const baseDate = item.fecha_entrega || item.fecha_ingreso;
@@ -1033,7 +1052,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const filter = state.filters.mensajero || {};
             if ((filter.desde && dateKey < filter.desde) || (filter.hasta && dateKey > filter.hasta)) return;
 
-            const sourceItem = (state.rawData?.mensajero?.items || []).find((item) => Number(item.mensajero_id || 0) === messengerId);
+            const sourceItem = messengerMetaById.get(messengerId);
             const messengerName = String(sourceItem?.mensajero_nombre || 'Mensajero').trim() || 'Mensajero';
             if (filter.q && !normalizeText(messengerName).includes(normalizeText(filter.q))) return;
 
@@ -2220,22 +2239,6 @@ document.addEventListener('DOMContentLoaded', () => {
         openClientAbonoModal(group.key);
     };
 
-    const openClientCreateAdditionalModal = () => {
-        const folder = state.clienteFolders.find((item) => item.key === state.selectedClienteFolderKey);
-        if (!folder) return;
-
-        const dateKey = todayDateKey();
-        let group = state.clienteGroups.find((item) => item.clientKey === folder.key && item.dateKey === dateKey);
-        if (!group) {
-            group = createEmptyClientAbonoGroup(folder, dateKey);
-            group.isAbonoOnly = false;
-            state.clienteGroups.push(group);
-        }
-
-        state.selectedClienteGroupKey = group.key;
-        openClientAdditionalModal(group.key);
-    };
-
     const createEmptyMessengerGroup = (sourceGroup, dateKey) => ({
         key: `${dateKey}__${sourceGroup.messengerKey}`,
         dateKey,
@@ -2263,7 +2266,7 @@ document.addEventListener('DOMContentLoaded', () => {
         hasFinancialRecords: true
     });
 
-    const openMessengerCreateGroupModal = (view) => {
+    const openMessengerCreateAbonoModal = () => {
         const sourceGroup = state.mensajeroGroups.find((group) => group.messengerKey === state.selectedMensajeroFolderKey);
         if (!sourceGroup) return;
 
@@ -2275,11 +2278,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         state.selectedMensajeroGroupKey = group.key;
-        if (view === 'additional') {
-            openMessengerAdditionalModal(group.key);
-        } else {
-            openMessengerAbonoModal(group.key);
-        }
+        openMessengerAbonoModal(group.key);
     };
 
     const syncClienteSelectionControls = () => {
@@ -3666,11 +3665,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            if (event.target.closest('[data-role="open-client-create-additional"]')) {
-                openClientCreateAdditionalModal();
-                return;
-            }
-
             const messengerFolderButton = event.target.closest('[data-role="open-messenger-folder"]');
             if (messengerFolderButton) {
                 state.selectedMensajeroFolderKey = messengerFolderButton.dataset.messengerKey || null;
@@ -3687,12 +3681,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (event.target.closest('[data-role="open-messenger-create-abono"]')) {
-                openMessengerCreateGroupModal('abono');
-                return;
-            }
-
-            if (event.target.closest('[data-role="open-messenger-create-additional"]')) {
-                openMessengerCreateGroupModal('additional');
+                openMessengerCreateAbonoModal();
                 return;
             }
 
