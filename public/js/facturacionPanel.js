@@ -1025,8 +1025,52 @@ document.addEventListener('DOMContentLoaded', () => {
             group.statuses.add(item.estado || 'pendiente');
         });
 
+        const ensureFinancialGroup = (record) => {
+            const messengerId = Number(record.mensajero_id || 0);
+            const dateKey = String(record.fecha_grupo || '').slice(0, 10);
+            if (messengerId <= 0 || !dateKey) return;
+
+            const filter = state.filters.mensajero || {};
+            if ((filter.desde && dateKey < filter.desde) || (filter.hasta && dateKey > filter.hasta)) return;
+
+            const sourceItem = (state.rawData?.mensajero?.items || []).find((item) => Number(item.mensajero_id || 0) === messengerId);
+            const messengerName = String(sourceItem?.mensajero_nombre || 'Mensajero').trim() || 'Mensajero';
+            if (filter.q && !normalizeText(messengerName).includes(normalizeText(filter.q))) return;
+
+            const messengerKey = `id-${messengerId}`;
+            const groupKey = `${dateKey}__${messengerKey}`;
+            if (groupsMap.has(groupKey)) return;
+
+            groupsMap.set(groupKey, {
+                key: groupKey,
+                dateKey,
+                messengerKey,
+                fechaLabel: shortDate(dateKey),
+                mensajeroId: messengerId,
+                mensajeroNombre: messengerName,
+                entregas: 0,
+                totalPago: 0,
+                totalPagoBase: 0,
+                totalAdicionalesPaquetes: 0,
+                adicionalGeneral: null,
+                totalAdicionales: 0,
+                adicionalObservacion: '',
+                totalRecaudado: 0,
+                abono: 0,
+                saldo: 0,
+                balance: 0,
+                totalAcumulado: 0,
+                packages: [],
+                statuses: new Set(),
+                hasFinancialRecords: true
+            });
+        };
+
+        getMensajeroAbonos().forEach(ensureFinancialGroup);
+        getMensajeroAdicionales().forEach(ensureFinancialGroup);
+
         const groups = Array.from(groupsMap.values())
-            .filter((group) => group.entregas > 0)
+            .filter((group) => group.entregas > 0 || group.hasFinancialRecords)
             .map((group) => {
                 const abonos = getMensajeroGroupAbonos(group.mensajeroId, group.dateKey);
                 const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
@@ -2174,6 +2218,52 @@ document.addEventListener('DOMContentLoaded', () => {
         const group = createEmptyClientAbonoGroup(folder, dateKey);
         state.clienteGroups.push(group);
         openClientAbonoModal(group.key);
+    };
+
+    const createEmptyMessengerGroup = (sourceGroup, dateKey) => ({
+        key: `${dateKey}__${sourceGroup.messengerKey}`,
+        dateKey,
+        messengerKey: sourceGroup.messengerKey,
+        fechaLabel: shortDate(dateKey),
+        mensajeroId: sourceGroup.mensajeroId,
+        mensajeroNombre: sourceGroup.mensajeroNombre,
+        entregas: 0,
+        totalPago: 0,
+        totalPagoBase: 0,
+        totalAdicionalesPaquetes: 0,
+        adicionalGeneral: null,
+        totalAdicionales: 0,
+        adicionalObservacion: '',
+        totalRecaudado: 0,
+        abonos: [],
+        abono: 0,
+        saldo: 0,
+        saldoCalculado: 0,
+        balance: 0,
+        totalAcumulado: Number(sourceGroup.totalAcumulado || 0),
+        packages: [],
+        statuses: new Set(),
+        estado: 'pendiente',
+        hasFinancialRecords: true
+    });
+
+    const openMessengerCreateGroupModal = (view) => {
+        const sourceGroup = state.mensajeroGroups.find((group) => group.messengerKey === state.selectedMensajeroFolderKey);
+        if (!sourceGroup) return;
+
+        const dateKey = todayDateKey();
+        let group = state.mensajeroGroups.find((item) => item.messengerKey === sourceGroup.messengerKey && item.dateKey === dateKey);
+        if (!group) {
+            group = createEmptyMessengerGroup(sourceGroup, dateKey);
+            state.mensajeroGroups.push(group);
+        }
+
+        state.selectedMensajeroGroupKey = group.key;
+        if (view === 'additional') {
+            openMessengerAdditionalModal(group.key);
+        } else {
+            openMessengerAbonoModal(group.key);
+        }
     };
 
     const syncClienteSelectionControls = () => {
@@ -3572,6 +3662,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.selectedMensajeroFolderKey = null;
                 state.selectedMensajeroGroups.clear();
                 render();
+                return;
+            }
+
+            if (event.target.closest('[data-role="open-messenger-create-abono"]')) {
+                openMessengerCreateGroupModal('abono');
+                return;
+            }
+
+            if (event.target.closest('[data-role="open-messenger-create-additional"]')) {
+                openMessengerCreateGroupModal('additional');
                 return;
             }
 
