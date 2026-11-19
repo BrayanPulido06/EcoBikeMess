@@ -566,7 +566,7 @@ body.sidebar-collapsed .facturacion-shell,
     background: #f9fbf9;
 }
 
-.facturacion-create-actions {
+.messenger-create-actions {
     display: flex;
     align-items: center;
     gap: 0.75rem;
