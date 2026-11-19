@@ -1341,6 +1341,15 @@ class FacturacionModels
             c.id
         )";
         $clienteMatchCondition = $this->clientRemitenteMatchSql('c_match', 'p.remitente_nombre');
+        $remitenteManualSinCliente = "(
+            c_match.id IS NULL
+            AND TRIM(COALESCE(p.remitente_nombre, '')) NOT IN ('', '-', 'Pendiente por definir')
+            AND (
+                COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
+                OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
+                OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
+            )
+        )";
 
         if ($clienteId !== null) {
             $conditions[] = "{$clienteFacturacionExpr} = :cliente_id";
@@ -1371,19 +1380,25 @@ class FacturacionModels
                     COALESCE(f.costo_adicional_servicio, 0) AS costo_adicional_servicio,
                     COALESCE(f.observaciones_admin, '') AS observaciones_admin,
                     {$clienteFacturacionExpr} AS cliente_id,
-                    COALESCE(
-                        NULLIF(c_facturacion.nombre_emprendimiento, ''),
-                        NULLIF(NULLIF(TRIM(p.remitente_nombre), 'Pendiente por definir'), '-'),
-                        NULLIF(c.nombre_emprendimiento, '')
-                    ) AS cliente_nombre,
+                    CASE
+                        WHEN {$remitenteManualSinCliente} THEN TRIM(p.remitente_nombre)
+                        ELSE COALESCE(
+                            NULLIF(c_facturacion.nombre_emprendimiento, ''),
+                            NULLIF(NULLIF(TRIM(p.remitente_nombre), 'Pendiente por definir'), '-'),
+                            NULLIF(c.nombre_emprendimiento, '')
+                        )
+                    END AS cliente_nombre,
                     COALESCE(c_facturacion.cuenta_bancaria_principal, c.cuenta_bancaria_principal) AS cuenta_bancaria_principal,
                     COALESCE(c_facturacion.cuenta_bancaria_opcional_1, c.cuenta_bancaria_opcional_1) AS cuenta_bancaria_opcional_1,
                     COALESCE(c_facturacion.cuenta_bancaria_opcional_2, c.cuenta_bancaria_opcional_2) AS cuenta_bancaria_opcional_2,
                     COALESCE(c_facturacion.cuenta_bancaria_opcional_3, c.cuenta_bancaria_opcional_3) AS cuenta_bancaria_opcional_3,
-                    COALESCE(
-                        NULLIF(TRIM(CONCAT(COALESCE(uc_facturacion.nombres, ''), ' ', COALESCE(uc_facturacion.apellidos, ''))), ''),
-                        NULLIF(TRIM(CONCAT(COALESCE(uc.nombres, ''), ' ', COALESCE(uc.apellidos, ''))), '')
-                    ) AS cliente_contacto
+                    CASE
+                        WHEN {$remitenteManualSinCliente} THEN ''
+                        ELSE COALESCE(
+                            NULLIF(TRIM(CONCAT(COALESCE(uc_facturacion.nombres, ''), ' ', COALESCE(uc_facturacion.apellidos, ''))), ''),
+                            NULLIF(TRIM(CONCAT(COALESCE(uc.nombres, ''), ' ', COALESCE(uc.apellidos, ''))), '')
+                        )
+                    END AS cliente_contacto
                 FROM paquetes p
                 INNER JOIN clientes c ON c.id = p.cliente_id
                 LEFT JOIN usuarios uc ON uc.id = c.usuario_id
