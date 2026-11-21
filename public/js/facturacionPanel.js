@@ -1310,8 +1310,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const groupStatusFromBalance = (value) => Math.round(Number(value || 0)) === 0 ? 'pagado' : 'pendiente';
 
-    const clienteTableColspan = () => mode === 'admin' ? 12 : 10;
-    const mensajeroTableColspan = () => mode === 'admin' ? 13 : 11;
+    const clienteTableColspan = () => mode === 'admin' ? 11 : 9;
+    const mensajeroTableColspan = () => mode === 'admin' ? 12 : 10;
     const ecobikemessTableColspan = () => 8;
 
     const renderClienteTable = (items) => {
@@ -1369,7 +1369,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         )}</td>
                         <td>${money(group.totalServicio)}</td>
                         <td>${money(group.totalRecaudado)}</td>
-                        <td>${money(group.abono)}</td>
                         <td>${clientGroupStatusBadge(group.estado)}</td>
                         <td class="amount-cell ${balanceCellClass(group.saldo)}">${moneyAbs(group.saldo)}</td>
                         <td class="amount-cell ${balanceCellClass(group.totalAcumulado)}">${moneyAbs(group.totalAcumulado)}</td>
@@ -1409,7 +1408,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     )}</td>
                     <td>${money(group.totalServicio)}</td>
                     <td>${money(group.totalRecaudado)}</td>
-                    <td>${money(group.abono)}</td>
                     <td>${clientGroupStatusSelect(group)}</td>
                     <td class="amount-cell ${balanceCellClass(group.saldo)}">${moneyAbs(group.saldo)}</td>
                     <td class="amount-cell ${balanceCellClass(group.totalAcumulado)}">${moneyAbs(group.totalAcumulado)}</td>
@@ -1479,7 +1477,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="currency-cell">${money(group.gananciasMensajero)}</td>
                     <td class="currency-cell">${money(group.totalPago)}</td>
                     <td>${money(group.totalRecaudado)}</td>
-                    <td>${money(group.abono)}</td>
                     <td>${clientGroupStatusBadge(group.estado)}</td>
                     <td class="amount-cell ${balanceCellClass(group.saldo)}">${moneyAbs(group.saldo)}</td>
                     <td class="amount-cell ${balanceCellClass(group.totalAcumulado)}">${moneyAbs(group.totalAcumulado)}</td>
@@ -1548,7 +1545,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="currency-cell">${money(group.gananciasMensajero)}</td>
                     <td class="currency-cell">${money(group.totalPago)}</td>
                     <td>${money(group.totalRecaudado)}</td>
-                    <td>${money(group.abono)}</td>
                     <td>${messengerGroupStatusSelect(group)}</td>
                     <td class="amount-cell ${balanceCellClass(group.saldo)}">${moneyAbs(group.saldo)}</td>
                     <td class="amount-cell ${balanceCellClass(group.totalAcumulado)}">${moneyAbs(group.totalAcumulado)}</td>
@@ -3081,8 +3077,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="hidden" name="mensajero_id" value="${group.mensajeroId}">
                 <div class="facturacion-abono-grid">
                     <label class="facturacion-field">
-                        <span>Fecha del adicional</span>
-                        <input type="date" name="fecha_grupo" value="${escapeHtml(group.dateKey)}" required ${adicional.id ? 'readonly' : ''}>
+                        <span>Metodo de pago</span>
+                        <select name="metodo_pago" required>
+                            <option value="efectivo" ${(adicional.metodo_pago || 'efectivo') === 'efectivo' ? 'selected' : ''}>Efectivo</option>
+                            <option value="transferencia" ${adicional.metodo_pago === 'transferencia' ? 'selected' : ''}>Transferencia</option>
+                        </select>
                     </label>
                     <label class="facturacion-field">
                         <span>Adicional positivo</span>
@@ -3095,11 +3094,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <input type="text" name="monto_negativo_display" inputmode="numeric" autocomplete="off" placeholder="$ 4.000" value="${montoNegativo > 0 ? money(montoNegativo) : ''}">
                     </label>
                     <label class="facturacion-field">
-                        <span>Metodo de pago</span>
-                        <select name="metodo_pago" required>
-                            <option value="efectivo" ${(adicional.metodo_pago || 'efectivo') === 'efectivo' ? 'selected' : ''}>Efectivo</option>
-                            <option value="transferencia" ${adicional.metodo_pago === 'transferencia' ? 'selected' : ''}>Transferencia</option>
-                        </select>
+                        <span>Fecha del adicional</span>
+                        <input type="date" name="fecha_grupo" value="${escapeHtml(group.dateKey)}" required ${adicional.id ? 'readonly' : ''}>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Observacion adicional positivo</span>
@@ -3291,8 +3287,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="hidden" name="cliente_id" value="${group.clienteId}">
                 <div class="facturacion-abono-grid">
                     <label class="facturacion-field">
-                        <span>Fecha del adicional</span>
-                        <input type="date" name="fecha_grupo" value="${escapeHtml(group.dateKey)}" required ${adicional.id ? 'readonly' : ''}>
+                        <span>Metodo de pago</span>
+                        <select name="metodo_pago" required>
+                            <option value="efectivo" ${(adicional.metodo_pago || 'efectivo') === 'efectivo' ? 'selected' : ''}>Efectivo</option>
+                            <option value="transferencia" ${adicional.metodo_pago === 'transferencia' ? 'selected' : ''}>Transferencia</option>
+                        </select>
                     </label>
                     <label class="facturacion-field">
                         <span>Adicional positivo</span>
@@ -3305,11 +3304,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <input type="text" name="monto_negativo_display" inputmode="numeric" autocomplete="off" placeholder="$ 2.000" value="${montoNegativo > 0 ? money(montoNegativo) : ''}">
                     </label>
                     <label class="facturacion-field">
-                        <span>Metodo de pago</span>
-                        <select name="metodo_pago" required>
-                            <option value="efectivo" ${(adicional.metodo_pago || 'efectivo') === 'efectivo' ? 'selected' : ''}>Efectivo</option>
-                            <option value="transferencia" ${adicional.metodo_pago === 'transferencia' ? 'selected' : ''}>Transferencia</option>
-                        </select>
+                        <span>Fecha del adicional</span>
+                        <input type="date" name="fecha_grupo" value="${escapeHtml(group.dateKey)}" required ${adicional.id ? 'readonly' : ''}>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Observacion adicional positivo</span>

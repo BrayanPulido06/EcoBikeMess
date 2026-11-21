@@ -103,7 +103,6 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                                     <th>Adicionales</th>
                                     <th>Total servicio</th>
                                     <th>Total recaudado</th>
-                                    <th>Abono</th>
                                     <th>Estado</th>
                                     <th>Saldo del dia</th>
                                     <th>Total acumulado</th>
@@ -111,7 +110,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                                 </tr>
                             </thead>
                             <tbody id="table-body-cliente" data-loading>
-                                <tr><td colspan="12" class="loading-state">Cargando informacion...</td></tr>
+                                <tr><td colspan="11" class="loading-state">Cargando informacion...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -182,7 +181,6 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                                     <th>Ganancia por entregas</th>
                                     <th>Total pago</th>
                                     <th>Total recaudado</th>
-                                    <th>Abono</th>
                                     <th>Estado</th>
                                     <th>Saldo del dia</th>
                                     <th>Total acumulado</th>
@@ -190,7 +188,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                                 </tr>
                             </thead>
                             <tbody id="table-body-mensajero" data-loading>
-                                <tr><td colspan="13" class="loading-state">Cargando informacion...</td></tr>
+                                <tr><td colspan="12" class="loading-state">Cargando informacion...</td></tr>
                             </tbody>
                         </table>
                     </div>
