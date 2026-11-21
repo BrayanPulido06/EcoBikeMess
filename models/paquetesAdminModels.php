@@ -407,6 +407,8 @@ class PaquetesAdminModel {
                                 OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
                                 OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
                            THEN COALESCE(NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''), '-')
+                           WHEN COALESCE(p.observaciones_recoleccion, '') = 'ENTREGA_SIN_ROTULO_ADMIN'
+                           THEN COALESCE(NULLIF(NULLIF(TRIM(p.remitente_nombre), 'Pendiente por definir'), ''), '-')
                            WHEN COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero - %'
                            THEN COALESCE(
                                NULLIF(TRIM(CONCAT(COALESCE(uc.nombres, ''), ' ', COALESCE(uc.apellidos, ''))), ''),
