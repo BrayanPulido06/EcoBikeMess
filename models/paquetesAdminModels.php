@@ -414,7 +414,12 @@ class PaquetesAdminModel {
                                NULLIF(NULLIF(p.remitente_nombre, 'Pendiente por definir'), ''),
                                '-'
                            )
-                           ELSE COALESCE(NULLIF(c.nombre_emprendimiento, ''), CONCAT(uc.nombres, ' ', uc.apellidos), '-')
+                           ELSE COALESCE(
+                               NULLIF(NULLIF(TRIM(p.remitente_nombre), ''), '-'),
+                               NULLIF(c.nombre_emprendimiento, ''),
+                               NULLIF(TRIM(CONCAT(COALESCE(uc.nombres, ''), ' ', COALESCE(uc.apellidos, ''))), ''),
+                               '-'
+                           )
                        END as remitente,
                        CASE
                            WHEN COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
@@ -1092,6 +1097,11 @@ class PaquetesAdminModel {
             ]);
 
             $paqueteId = (int) $this->conn->lastInsertId();
+
+            // Estas entregas ya nacen en estado entregado. Crear la fila de
+            // facturación dentro del mismo flujo evita que dependan de que
+            // alguien abra primero el panel de facturación para sincronizarlas.
+            $this->sincronizarFacturacionPaquete($paqueteId);
 
             $stmtEntrega = $this->conn->prepare(
                 "INSERT INTO entregas (
