@@ -2221,24 +2221,6 @@ document.addEventListener('DOMContentLoaded', () => {
         isAbonoOnly: true
     });
 
-    const openClientCreateAbonoModal = () => {
-        const folder = state.clienteFolders.find((item) => item.key === state.selectedClienteFolderKey);
-        if (!folder) {
-            return;
-        }
-
-        const dateKey = todayDateKey();
-        const existingGroup = state.clienteGroups.find((group) => group.clientKey === folder.key && group.dateKey === dateKey);
-        if (existingGroup) {
-            openClientAbonoModal(existingGroup.key);
-            return;
-        }
-
-        const group = createEmptyClientAbonoGroup(folder, dateKey);
-        state.clienteGroups.push(group);
-        openClientAbonoModal(group.key);
-    };
-
     const openClientCreateAdditionalModal = () => {
         const folder = state.clienteFolders.find((item) => item.key === state.selectedClienteFolderKey);
         if (!folder) return;
@@ -2282,7 +2264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         hasFinancialRecords: true
     });
 
-    const openMessengerCreateGroupModal = (view) => {
+    const openMessengerCreateAdditionalModal = () => {
         const sourceGroup = state.mensajeroGroups.find((group) => group.messengerKey === state.selectedMensajeroFolderKey);
         if (!sourceGroup) return;
 
@@ -2294,11 +2276,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         state.selectedMensajeroGroupKey = group.key;
-        if (view === 'additional') {
-            openMessengerAdditionalModal(group.key);
-        } else {
-            openMessengerAbonoModal(group.key);
-        }
+        openMessengerAdditionalModal(group.key);
     };
 
     const syncClienteSelectionControls = () => {
@@ -3680,11 +3658,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            if (event.target.closest('[data-role="open-client-create-abono"]')) {
-                openClientCreateAbonoModal();
-                return;
-            }
-
             if (event.target.closest('[data-role="open-client-create-additional"]')) {
                 openClientCreateAdditionalModal();
                 return;
@@ -3705,13 +3678,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            if (event.target.closest('[data-role="open-messenger-create-abono"]')) {
-                openMessengerCreateGroupModal('abono');
-                return;
-            }
-
             if (event.target.closest('[data-role="open-messenger-create-additional"]')) {
-                openMessengerCreateGroupModal('additional');
+                openMessengerCreateAdditionalModal();
                 return;
             }
 

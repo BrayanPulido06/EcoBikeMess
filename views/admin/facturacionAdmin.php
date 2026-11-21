@@ -86,8 +86,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                             <strong id="cliente-history-title">Cliente</strong>
                         </div>
                         <div class="messenger-create-actions">
-                            <button class="fact-btn primary" type="button" data-role="open-client-create-abono">Crear abono</button>
-                            <button class="fact-btn secondary" type="button" data-role="open-client-create-additional">Crear adicional</button>
+                            <button class="fact-btn primary" type="button" data-role="open-client-create-additional">Crear adicional</button>
                         </div>
                     </div>
 
@@ -165,8 +164,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                             <strong id="mensajero-history-title">Mensajero</strong>
                         </div>
                         <div class="messenger-create-actions">
-                            <button class="fact-btn primary" type="button" data-role="open-messenger-create-abono">Crear abono</button>
-                            <button class="fact-btn secondary" type="button" data-role="open-messenger-create-additional">Crear adicional</button>
+                            <button class="fact-btn primary" type="button" data-role="open-messenger-create-additional">Crear adicional</button>
                         </div>
                     </div>
 
