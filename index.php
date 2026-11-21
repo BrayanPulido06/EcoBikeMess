@@ -1,4 +1,54 @@
-<?php require_once __DIR__ . '/includes/paths.php'; ?>
+<?php
+require_once __DIR__ . '/includes/paths.php';
+
+$guiaConsultada = '';
+$rastreoEstado = null;
+$rastreoError = '';
+$estadoEtiquetas = [
+    'pendiente' => 'Pendiente',
+    'asignado' => 'Asignado a un mensajero',
+    'en_transito' => 'En tránsito',
+    'en_ruta' => 'En ruta de entrega',
+    'entregado' => 'Entregado',
+    'cancelado' => 'Cancelado',
+    'devuelto' => 'Devuelto',
+];
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && array_key_exists('guia', $_GET)) {
+    $guiaEntrada = $_GET['guia'];
+    $guiaConsultada = is_string($guiaEntrada) ? strtoupper(trim($guiaEntrada)) : '';
+
+    if ($guiaConsultada === '' || strlen($guiaConsultada) > 20) {
+        $rastreoError = 'Escribe un número de guía válido para consultar tu envío.';
+    } else {
+        try {
+            require_once __DIR__ . '/models/conexionGlobal.php';
+            $db = conexionDB();
+            $consulta = $db->prepare(
+                'SELECT estado, fecha_creacion, fecha_entrega FROM paquetes WHERE numero_guia = :numero_guia LIMIT 1'
+            );
+            $consulta->execute(['numero_guia' => $guiaConsultada]);
+            $rastreoEstado = $consulta->fetch(PDO::FETCH_ASSOC) ?: null;
+
+            if ($rastreoEstado === null) {
+                $rastreoError = 'No encontramos un envío con ese número de guía. Revisa el número e inténtalo de nuevo.';
+            }
+        } catch (Throwable $error) {
+            error_log('[public-tracking] No fue posible consultar la guía.');
+            $rastreoError = 'En este momento no podemos consultar el envío. Inténtalo de nuevo más tarde.';
+        }
+    }
+}
+
+$estadoActual = is_array($rastreoEstado) ? (string) ($rastreoEstado['estado'] ?? '') : '';
+$estadoTitulo = $estadoEtiquetas[$estadoActual] ?? 'Estado actualizado';
+$fechaCreacion = is_array($rastreoEstado) && !empty($rastreoEstado['fecha_creacion'])
+    ? date('d/m/Y', strtotime((string) $rastreoEstado['fecha_creacion']))
+    : '';
+$fechaEntrega = is_array($rastreoEstado) && !empty($rastreoEstado['fecha_entrega'])
+    ? date('d/m/Y · H:i', strtotime((string) $rastreoEstado['fecha_entrega']))
+    : '';
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -101,6 +151,7 @@
             </div>
             <div class="nav-links">
                 <a href="#inicio">Inicio</a>
+                <a href="#rastreo">Rastrear envío</a>
                 <a href="<?php echo htmlspecialchars(route_url('about'), ENT_QUOTES, 'UTF-8'); ?>">Nosotros</a>
                 <a href="#services">Servicios</a>
                 <a href="#pricing">Cobertura</a>
@@ -117,6 +168,55 @@
                 <h2>Mensajería Rápida y Ecológica</h2>
                 <p>Entregas sostenibles en bicicleta por toda Bogotá</p>
             </div>
+        </section>
+
+        <section class="tracking-section" id="rastreo" aria-labelledby="tracking-title">
+            <div class="tracking-card">
+                <div class="tracking-copy">
+                    <span class="tracking-eyebrow">Sigue tu envío</span>
+                    <h2 id="tracking-title">¿Dónde está tu paquete?</h2>
+                    <p>Ingresa el número de guía para consultar el estado de tu envío.</p>
+                </div>
+                <form class="tracking-form" method="get" action="<?php echo htmlspecialchars(route_url('home'), ENT_QUOTES, 'UTF-8'); ?>">
+                    <label for="numero-guia">Número de guía</label>
+                    <div class="tracking-input-row">
+                        <input
+                            type="text"
+                            id="numero-guia"
+                            name="guia"
+                            maxlength="20"
+                            placeholder="Ej. EBM-2026-00001"
+                            value="<?php echo htmlspecialchars($guiaConsultada, ENT_QUOTES, 'UTF-8'); ?>"
+                            autocomplete="off"
+                            required
+                        >
+                        <button type="submit">Consultar</button>
+                    </div>
+                </form>
+            </div>
+
+            <?php if ($rastreoError !== ''): ?>
+                <div class="tracking-result tracking-result-error" role="status">
+                    <?php echo htmlspecialchars($rastreoError, ENT_QUOTES, 'UTF-8'); ?>
+                </div>
+            <?php elseif ($rastreoEstado !== null): ?>
+                <div class="tracking-result" role="status" aria-live="polite">
+                    <div>
+                        <span class="tracking-result-label">Estado del envío</span>
+                        <strong class="tracking-status tracking-status-<?php echo htmlspecialchars($estadoActual, ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php echo htmlspecialchars($estadoTitulo, ENT_QUOTES, 'UTF-8'); ?>
+                        </strong>
+                    </div>
+                    <div class="tracking-result-meta">
+                        <span>Guía: <strong><?php echo htmlspecialchars($guiaConsultada, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                        <?php if ($estadoActual === 'entregado' && $fechaEntrega !== ''): ?>
+                            <span>Fecha de entrega: <strong><?php echo htmlspecialchars($fechaEntrega, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                        <?php elseif ($fechaCreacion !== ''): ?>
+                            <span>Registrado el: <strong><?php echo htmlspecialchars($fechaCreacion, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
         </section>
 
         <!-- Información de EcoBikeMess -->

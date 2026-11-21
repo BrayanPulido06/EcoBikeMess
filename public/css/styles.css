@@ -558,6 +558,132 @@ footer p {
 }
 
 /* Responsive */
+.tracking-section {
+    background: #f8fdf9;
+    padding: 54px 20px;
+}
+
+.tracking-card,
+.tracking-result {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #dcefe4;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(45, 62, 80, 0.08);
+    display: flex;
+    gap: 32px;
+    justify-content: space-between;
+    margin: 0 auto;
+    max-width: 960px;
+    padding: 30px 34px;
+}
+
+.tracking-eyebrow,
+.tracking-result-label {
+    color: #4cae4c;
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.tracking-copy h2 {
+    color: #2d3e50;
+    font-size: 1.65rem;
+    margin-bottom: 5px;
+}
+
+.tracking-copy p {
+    color: #5a6c7d;
+    margin: 0;
+}
+
+.tracking-form {
+    flex: 0 1 420px;
+}
+
+.tracking-form label {
+    color: #2d3e50;
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 7px;
+}
+
+.tracking-input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.tracking-input-row input {
+    border: 1px solid #cbd8d0;
+    border-radius: 8px;
+    flex: 1;
+    font: inherit;
+    min-width: 0;
+    padding: 12px 14px;
+    text-transform: uppercase;
+}
+
+.tracking-input-row input:focus {
+    border-color: #5cb85c;
+    box-shadow: 0 0 0 3px rgba(92, 184, 92, 0.15);
+    outline: none;
+}
+
+.tracking-input-row button {
+    background: #5cb85c;
+    border: 0;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 0 20px;
+    transition: background 0.2s ease;
+}
+
+.tracking-input-row button:hover {
+    background: #449d44;
+}
+
+.tracking-result {
+    align-items: flex-start;
+    border-left: 5px solid #5cb85c;
+    margin-top: 16px;
+    padding: 20px 26px;
+}
+
+.tracking-result-error {
+    border-left-color: #dc3545;
+    color: #842029;
+    display: block;
+}
+
+.tracking-status {
+    color: #2d3e50;
+    display: block;
+    font-size: 1.25rem;
+}
+
+.tracking-status-entregado { color: #218838; }
+.tracking-status-cancelado,
+.tracking-status-devuelto { color: #b02a37; }
+
+.tracking-result-meta {
+    color: #5a6c7d;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: right;
+}
+
+.tracking-result-meta strong {
+    color: #2d3e50;
+}
+
 @media (max-width: 768px) {
     .navbar {
         flex-direction: column;
@@ -594,5 +720,29 @@ footer p {
     
     .contact-grid {
         grid-template-columns: 1fr;
+    }
+
+    .tracking-card,
+    .tracking-result {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 20px;
+        padding: 24px 20px;
+    }
+
+    .tracking-form {
+        flex-basis: auto;
+    }
+
+    .tracking-input-row {
+        flex-direction: column;
+    }
+
+    .tracking-input-row button {
+        min-height: 46px;
+    }
+
+    .tracking-result-meta {
+        text-align: left;
     }
 }
