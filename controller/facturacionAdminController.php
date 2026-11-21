@@ -299,6 +299,8 @@ try {
         $descripcionPositiva = trim((string) ($_POST['descripcion_positiva'] ?? ''));
         $montoNegativo = parseMoneyInput($_POST['monto_negativo'] ?? 0);
         $descripcionNegativa = trim((string) ($_POST['descripcion_negativa'] ?? ''));
+        $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
+        $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
         $registradoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
         if ($clienteId <= 0) {
@@ -307,6 +309,10 @@ try {
 
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
             throw new InvalidArgumentException('La fecha del adicional no es valida.');
+        }
+
+        if (!in_array($metodoPago, ['efectivo', 'transferencia'], true)) {
+            throw new InvalidArgumentException('Metodo de pago invalido.');
         }
 
         if ($montoPositivo < 0 || $montoNegativo < 0) {
@@ -328,6 +334,8 @@ try {
             $montoPositivo > 0 ? $descripcionPositiva : null,
             $montoNegativo,
             $montoNegativo > 0 ? $descripcionNegativa : null,
+            $metodoPago,
+            $observaciones !== '' ? $observaciones : null,
             $registradoPor
         )) {
             throw new RuntimeException('No se pudieron guardar los montos y descripciones del adicional del cliente.');
@@ -438,6 +446,8 @@ try {
         $descripcionPositiva = trim((string) ($_POST['descripcion_positiva'] ?? ''));
         $montoNegativo = parseMoneyInput($_POST['monto_negativo'] ?? 0);
         $descripcionNegativa = trim((string) ($_POST['descripcion_negativa'] ?? ''));
+        $metodoPago = trim((string) ($_POST['metodo_pago'] ?? ''));
+        $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
         $registradoPor = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
         if ($mensajeroId <= 0) {
@@ -446,6 +456,10 @@ try {
 
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
             throw new InvalidArgumentException('La fecha del adicional no es valida.');
+        }
+
+        if (!in_array($metodoPago, ['efectivo', 'transferencia'], true)) {
+            throw new InvalidArgumentException('Metodo de pago invalido.');
         }
 
         if ($montoPositivo < 0 || $montoNegativo < 0) {
@@ -467,6 +481,8 @@ try {
             $montoPositivo > 0 ? $descripcionPositiva : null,
             $montoNegativo,
             $montoNegativo > 0 ? $descripcionNegativa : null,
+            $metodoPago,
+            $observaciones !== '' ? $observaciones : null,
             $registradoPor
         )) {
             throw new RuntimeException('No se pudieron guardar los montos y descripciones del adicional del mensajero.');

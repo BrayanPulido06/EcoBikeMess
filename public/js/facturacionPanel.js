@@ -923,8 +923,70 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        getClienteAdicionales().forEach((adicional) => {
+            const clientId = Number(adicional.cliente_id || 0);
+            const dateKey = String(adicional.fecha_grupo || '').slice(0, 10);
+            if (!clientId || !dateKey) return;
+
+            const existingGroup = Array.from(groupsMap.values()).find((group) =>
+                Number(group.clienteId) === clientId && group.dateKey === dateKey
+            ) || firstClientGroupById.get(clientId);
+            const meta = clientMetaById.get(clientId) || {};
+            const displayName = existingGroup?.clienteNombre || meta.clienteNombre || 'Cliente';
+            const filter = state.filters.cliente || {};
+            const haystack = `${displayName} adicional ${adicional.descripcion || ''} ${adicional.observaciones || ''} ${getPositiveAdditionalDescription(adicional)} ${getNegativeAdditionalDescription(adicional)}`.toLowerCase();
+            if (filter.q && !haystack.includes(normalizeText(filter.q))) return;
+            if (mode !== 'admin' && filter.estado && filter.estado !== 'pendiente') return;
+            if (filter.desde && dateKey < filter.desde) return;
+            if (filter.hasta && dateKey > filter.hasta) return;
+
+            const clientKey = existingGroup?.clientKey || meta.clientKey || `cliente:${clientId}`;
+            const groupKey = `${dateKey}__${clientKey}`;
+            let group = groupsMap.get(groupKey);
+            if (!group) {
+                group = {
+                    key: groupKey,
+                    dateKey,
+                    clientKey,
+                    fechaLabel: shortDate(dateKey),
+                    clienteNombre: displayName,
+                    clienteId: clientId,
+                    cuentaBancariaPrincipal: existingGroup?.cuentaBancariaPrincipal || meta.cuentaBancariaPrincipal || '',
+                    cuentaBancariaOpcional1: existingGroup?.cuentaBancariaOpcional1 || meta.cuentaBancariaOpcional1 || '',
+                    cuentaBancariaOpcional2: existingGroup?.cuentaBancariaOpcional2 || meta.cuentaBancariaOpcional2 || '',
+                    cuentaBancariaOpcional3: existingGroup?.cuentaBancariaOpcional3 || meta.cuentaBancariaOpcional3 || '',
+                    paquetesEntregados: 0,
+                    totalServicio: 0,
+                    subtotalServicio: 0,
+                    totalAdicionalesPaquetes: 0,
+                    adicionalGeneral: null,
+                    totalAdicionales: 0,
+                    adicionalObservacion: '',
+                    totalRecaudado: 0,
+                    abono: 0,
+                    saldo: 0,
+                    balance: 0,
+                    totalAcumulado: 0,
+                    packages: [],
+                    statuses: new Set(),
+                    isAdditionalOnly: true,
+                    hasFinancialRecords: true
+                };
+                groupsMap.set(groupKey, group);
+                if (!firstClientGroupById.has(clientId)) {
+                    firstClientGroupById.set(clientId, group);
+                }
+            } else {
+                group.isAbonoOnly = false;
+                group.isAdditionalOnly = group.paquetesEntregados === 0 && getGroupAbonos(clientId, dateKey).length === 0;
+                group.hasFinancialRecords = true;
+            }
+        });
+
         const groups = Array.from(groupsMap.values())
-            .filter((group) => group.paquetesEntregados > 0 || getGroupAbonos(group.clienteId, group.dateKey).length > 0)
+            .filter((group) => group.paquetesEntregados > 0
+                || getGroupAbonos(group.clienteId, group.dateKey).length > 0
+                || Boolean(getClienteGroupAdicional(group.clienteId, group.dateKey)))
             .map((group) => {
                 const abonos = getGroupAbonos(group.clienteId, group.dateKey);
                 const abono = abonos.reduce((sum, item) => sum + Number(item.monto || 0), 0);
@@ -950,6 +1012,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     totalAdicionales,
                     totalServicio,
                     adicionalObservacion: descripcionAdicionalGeneralPositiva || descripcionAdicionalGeneralNegativa || packageAdditionalSummary(group.packages, 'observaciones_admin'),
+                    isAdditionalOnly: group.isAdditionalOnly || (group.paquetesEntregados === 0 && abonos.length === 0 && Boolean(adicionalGeneral)),
                     abonos,
                     abono,
                     balance,
@@ -1317,7 +1380,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 data-role="open-client-detail"
                                 data-group-key="${escapeHtml(group.key)}"
                             >
-                                ${group.isAbonoOnly ? 'Ver abono' : 'Ver paquetes'}
+                                ${group.isAdditionalOnly ? 'Ver adicional' : group.isAbonoOnly ? 'Ver abono' : 'Ver paquetes'}
                             </button>
                         </td>
                     </tr>
@@ -1358,7 +1421,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 data-role="open-client-detail"
                                 data-group-key="${escapeHtml(group.key)}"
                             >
-                                ${group.isAbonoOnly ? 'Ver abono' : 'Ver paquetes'}
+                                ${group.isAdditionalOnly ? 'Ver adicional' : group.isAbonoOnly ? 'Ver abono' : 'Ver paquetes'}
                             </button>
                             <button
                                 type="button"
@@ -1936,6 +1999,8 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('action', 'guardar_adicional_cliente_grupo');
         formData.append('cliente_id', form.cliente_id.value);
         formData.append('fecha_grupo', form.fecha_grupo.value);
+        formData.append('metodo_pago', form.metodo_pago.value);
+        formData.append('observaciones', getFormFieldValue(form, 'observaciones'));
         formData.append('monto_positivo', form.monto_positivo.value || '0');
         formData.append('descripcion_positiva', getFormFieldValue(form, 'descripcion_positiva'));
         formData.append('monto_negativo', form.monto_negativo.value || '0');
@@ -1954,8 +2019,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         state.rawData = result.data;
         render();
-        if (state.selectedClienteGroupKey) {
-            openClientAdditionalModal(state.selectedClienteGroupKey);
+        const updatedGroup = state.clienteGroups.find((group) =>
+            Number(group.clienteId) === Number(form.cliente_id.value)
+            && group.dateKey === form.fecha_grupo.value
+        );
+        if (updatedGroup) {
+            state.selectedClienteGroupKey = updatedGroup.key;
+            openClientAdditionalModal(updatedGroup.key);
         }
     };
 
@@ -1998,6 +2068,8 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('action', 'guardar_adicional_mensajero_grupo');
         formData.append('mensajero_id', form.mensajero_id.value);
         formData.append('fecha_grupo', form.fecha_grupo.value);
+        formData.append('metodo_pago', form.metodo_pago.value);
+        formData.append('observaciones', getFormFieldValue(form, 'observaciones'));
         formData.append('monto_positivo', form.monto_positivo.value || '0');
         formData.append('descripcion_positiva', getFormFieldValue(form, 'descripcion_positiva'));
         formData.append('monto_negativo', form.monto_negativo.value || '0');
@@ -2016,8 +2088,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         state.rawData = result.data;
         render();
-        if (state.selectedMensajeroGroupKey) {
-            openMessengerAdditionalModal(state.selectedMensajeroGroupKey);
+        const updatedGroup = state.mensajeroGroups.find((group) =>
+            Number(group.mensajeroId) === Number(form.mensajero_id.value)
+            && group.dateKey === form.fecha_grupo.value
+        );
+        if (updatedGroup) {
+            state.selectedMensajeroGroupKey = updatedGroup.key;
+            openMessengerAdditionalModal(updatedGroup.key);
         }
     };
 
@@ -2989,7 +3066,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         state.selectedMensajeroGroupKey = groupKey;
         state.activeMensajeroModalView = 'additional';
-        title.textContent = `Adicionales - ${group.mensajeroNombre}`;
+        title.textContent = adicional.id ? `Adicionales - ${group.mensajeroNombre}` : `Crear adicional - ${group.mensajeroNombre}`;
         subtitle.textContent = `Fecha ${group.fechaLabel} | Positivo ${money(montoPositivo)} | Negativo ${money(montoNegativo)} | Total pago ${money(group.totalPago)}`;
 
         body.innerHTML = `
@@ -3000,10 +3077,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><span>Adicionales por paquete</span><strong>${money(Number(group.totalAdicionalesPaquetes || 0))}</strong></div>
                 <div><span>Total pago</span><strong>${money(group.totalPago)}</strong></div>
             </div>
-            <form id="mensajeroAdicionalGrupoForm" class="facturacion-abono-form">
+            <form id="mensajeroAdicionalGrupoForm" class="facturacion-abono-form" data-has-additional="${adicional.id ? '1' : '0'}">
                 <input type="hidden" name="mensajero_id" value="${group.mensajeroId}">
-                <input type="hidden" name="fecha_grupo" value="${escapeHtml(group.dateKey)}">
                 <div class="facturacion-abono-grid">
+                    <label class="facturacion-field">
+                        <span>Fecha del adicional</span>
+                        <input type="date" name="fecha_grupo" value="${escapeHtml(group.dateKey)}" required ${adicional.id ? 'readonly' : ''}>
+                    </label>
                     <label class="facturacion-field">
                         <span>Adicional positivo</span>
                         <input type="hidden" name="monto_positivo" value="${montoPositivo > 0 ? montoPositivo : ''}">
@@ -3014,13 +3094,24 @@ document.addEventListener('DOMContentLoaded', () => {
                         <input type="hidden" name="monto_negativo" value="${montoNegativo > 0 ? montoNegativo : ''}">
                         <input type="text" name="monto_negativo_display" inputmode="numeric" autocomplete="off" placeholder="$ 4.000" value="${montoNegativo > 0 ? money(montoNegativo) : ''}">
                     </label>
+                    <label class="facturacion-field">
+                        <span>Metodo de pago</span>
+                        <select name="metodo_pago" required>
+                            <option value="efectivo" ${(adicional.metodo_pago || 'efectivo') === 'efectivo' ? 'selected' : ''}>Efectivo</option>
+                            <option value="transferencia" ${adicional.metodo_pago === 'transferencia' ? 'selected' : ''}>Transferencia</option>
+                        </select>
+                    </label>
                     <label class="facturacion-field facturacion-field-full">
-                        <span>Descripcion adicional positivo</span>
+                        <span>Observacion adicional positivo</span>
                         <textarea name="descripcion_positiva" rows="2" placeholder="en contra de eco: describe el motivo del adicional">${escapeHtml(getPositiveAdditionalDescription(adicional))}</textarea>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
-                        <span>Descripcion adicional negativo</span>
+                        <span>Observacion adicional negativo</span>
                         <textarea name="descripcion_negativa" rows="2" placeholder="a favor de eco: describe el motivo del descuento">${escapeHtml(getNegativeAdditionalDescription(adicional))}</textarea>
+                    </label>
+                    <label class="facturacion-field facturacion-field-full">
+                        <span>Observaciones</span>
+                        <textarea name="observaciones" rows="3" placeholder="Detalle del adicional">${escapeHtml(adicional.observaciones || '')}</textarea>
                     </label>
                 </div>
                 <div class="facturacion-abono-actions">
@@ -3078,8 +3169,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             ` : ''}
             ${renderClienteBankInfo(group)}
-            <h3 class="package-list-title">${group.isAbonoOnly ? 'Detalle del abono' : 'Detalle de paquetes facturados'}</h3>
-            ${group.isAbonoOnly ? renderAbonoHistory(group) : renderClientPackagesTable(group.packages)}
+            <h3 class="package-list-title">${group.isAdditionalOnly ? 'Detalle del adicional' : group.isAbonoOnly ? 'Detalle del abono' : 'Detalle de paquetes facturados'}</h3>
+            ${group.isAdditionalOnly
+                ? `<div class="detail-summary-strip"><div><span>Adicional positivo</span><strong>${money(group.adicionalGeneralPositivo || 0)}</strong></div><div><span>Adicional negativo</span><strong>${money(group.adicionalGeneralNegativo || 0)}</strong></div><div><span>Metodo de pago</span><strong>${escapeHtml(group.adicionalGeneral?.metodo_pago || 'Efectivo')}</strong></div><div><span>Observaciones</span><strong>${escapeHtml(group.adicionalGeneral?.observaciones || 'Sin observaciones')}</strong></div></div>`
+                : group.isAbonoOnly ? renderAbonoHistory(group) : renderClientPackagesTable(group.packages)}
         `;
 
         modal.classList.remove('modal-hidden');
@@ -3182,7 +3275,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         state.selectedClienteGroupKey = groupKey;
         state.activeClientModalView = 'additional';
-        title.textContent = `Adicionales - ${group.clienteNombre}`;
+        title.textContent = adicional.id ? `Adicionales - ${group.clienteNombre}` : `Crear adicional - ${group.clienteNombre}`;
         subtitle.textContent = `Fecha ${group.fechaLabel} | Positivo ${money(montoPositivo)} | Negativo ${money(montoNegativo)} | Total servicio ${money(group.totalServicio)}`;
 
         body.innerHTML = `
@@ -3194,10 +3287,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><span>Total adicionales</span><strong>${money(group.totalAdicionales)}</strong></div>
                 <div><span>Total servicio</span><strong>${money(group.totalServicio)}</strong></div>
             </div>
-            <form id="clienteAdicionalGrupoForm" class="facturacion-abono-form">
+            <form id="clienteAdicionalGrupoForm" class="facturacion-abono-form" data-has-additional="${adicional.id ? '1' : '0'}">
                 <input type="hidden" name="cliente_id" value="${group.clienteId}">
-                <input type="hidden" name="fecha_grupo" value="${escapeHtml(group.dateKey)}">
                 <div class="facturacion-abono-grid">
+                    <label class="facturacion-field">
+                        <span>Fecha del adicional</span>
+                        <input type="date" name="fecha_grupo" value="${escapeHtml(group.dateKey)}" required ${adicional.id ? 'readonly' : ''}>
+                    </label>
                     <label class="facturacion-field">
                         <span>Adicional positivo</span>
                         <input type="hidden" name="monto_positivo" value="${montoPositivo > 0 ? montoPositivo : ''}">
@@ -3208,6 +3304,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         <input type="hidden" name="monto_negativo" value="${montoNegativo > 0 ? montoNegativo : ''}">
                         <input type="text" name="monto_negativo_display" inputmode="numeric" autocomplete="off" placeholder="$ 2.000" value="${montoNegativo > 0 ? money(montoNegativo) : ''}">
                     </label>
+                    <label class="facturacion-field">
+                        <span>Metodo de pago</span>
+                        <select name="metodo_pago" required>
+                            <option value="efectivo" ${(adicional.metodo_pago || 'efectivo') === 'efectivo' ? 'selected' : ''}>Efectivo</option>
+                            <option value="transferencia" ${adicional.metodo_pago === 'transferencia' ? 'selected' : ''}>Transferencia</option>
+                        </select>
+                    </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Observacion adicional positivo</span>
                         <textarea name="descripcion_positiva" rows="2" placeholder="en contra de eco: describe el motivo del adicional">${escapeHtml(getPositiveAdditionalDescription(adicional))}</textarea>
@@ -3215,6 +3318,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <label class="facturacion-field facturacion-field-full">
                         <span>Observacion adicional negativo</span>
                         <textarea name="descripcion_negativa" rows="2" placeholder="a favor de eco: describe el motivo del descuento">${escapeHtml(getNegativeAdditionalDescription(adicional))}</textarea>
+                    </label>
+                    <label class="facturacion-field facturacion-field-full">
+                        <span>Observaciones</span>
+                        <textarea name="observaciones" rows="3" placeholder="Detalle del adicional">${escapeHtml(adicional.observaciones || '')}</textarea>
                     </label>
                 </div>
                 <div class="facturacion-abono-actions">
@@ -4088,6 +4195,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const montoPositivo = Number(form.monto_positivo.value || 0);
             const montoNegativo = Number(form.monto_negativo.value || 0);
+            if (montoPositivo <= 0 && montoNegativo <= 0 && form.dataset.hasAdditional !== '1') {
+                alert('Ingresa un monto para el adicional.');
+                return;
+            }
             if (montoPositivo > 0 && !getFormFieldValue(form, 'descripcion_positiva').trim()) {
                 alert('Ingresa la observacion del adicional positivo.');
                 return;
@@ -4125,6 +4236,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const montoPositivo = Number(form.monto_positivo.value || 0);
             const montoNegativo = Number(form.monto_negativo.value || 0);
+            if (montoPositivo <= 0 && montoNegativo <= 0 && form.dataset.hasAdditional !== '1') {
+                alert('Ingresa un monto para el adicional.');
+                return;
+            }
             if (montoPositivo > 0 && !getFormFieldValue(form, 'descripcion_positiva').trim()) {
                 alert('Ingresa la observacion del adicional positivo.');
                 return;

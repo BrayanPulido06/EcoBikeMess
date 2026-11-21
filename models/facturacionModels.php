@@ -316,6 +316,8 @@ class FacturacionModels
                     descripcion_positiva TEXT NULL,
                     monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                     descripcion_negativa TEXT NULL,
+                    metodo_pago ENUM('efectivo', 'transferencia') NOT NULL DEFAULT 'efectivo',
+                    observaciones TEXT NULL,
                     registrado_por INT NULL,
                     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -329,6 +331,8 @@ class FacturacionModels
         $this->ensureColumn('facturacion_adicionales_cliente', 'descripcion_positiva', "ALTER TABLE facturacion_adicionales_cliente ADD COLUMN descripcion_positiva TEXT NULL AFTER monto_positivo");
         $this->ensureColumn('facturacion_adicionales_cliente', 'monto_negativo', "ALTER TABLE facturacion_adicionales_cliente ADD COLUMN monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER descripcion_positiva");
         $this->ensureColumn('facturacion_adicionales_cliente', 'descripcion_negativa', "ALTER TABLE facturacion_adicionales_cliente ADD COLUMN descripcion_negativa TEXT NULL AFTER monto_negativo");
+        $this->ensureColumn('facturacion_adicionales_cliente', 'metodo_pago', "ALTER TABLE facturacion_adicionales_cliente ADD COLUMN metodo_pago ENUM('efectivo', 'transferencia') NOT NULL DEFAULT 'efectivo' AFTER descripcion_negativa");
+        $this->ensureColumn('facturacion_adicionales_cliente', 'observaciones', "ALTER TABLE facturacion_adicionales_cliente ADD COLUMN observaciones TEXT NULL AFTER metodo_pago");
     }
 
     private function ensureHiddenMessengerGroupsTable(): void
@@ -404,6 +408,8 @@ class FacturacionModels
                     descripcion_positiva TEXT NULL,
                     monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                     descripcion_negativa TEXT NULL,
+                    metodo_pago ENUM('efectivo', 'transferencia') NOT NULL DEFAULT 'efectivo',
+                    observaciones TEXT NULL,
                     registrado_por INT NULL,
                     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -417,6 +423,8 @@ class FacturacionModels
         $this->ensureColumn('facturacion_adicionales_mensajero', 'descripcion_positiva', "ALTER TABLE facturacion_adicionales_mensajero ADD COLUMN descripcion_positiva TEXT NULL AFTER monto_positivo");
         $this->ensureColumn('facturacion_adicionales_mensajero', 'monto_negativo', "ALTER TABLE facturacion_adicionales_mensajero ADD COLUMN monto_negativo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER descripcion_positiva");
         $this->ensureColumn('facturacion_adicionales_mensajero', 'descripcion_negativa', "ALTER TABLE facturacion_adicionales_mensajero ADD COLUMN descripcion_negativa TEXT NULL AFTER monto_negativo");
+        $this->ensureColumn('facturacion_adicionales_mensajero', 'metodo_pago', "ALTER TABLE facturacion_adicionales_mensajero ADD COLUMN metodo_pago ENUM('efectivo', 'transferencia') NOT NULL DEFAULT 'efectivo' AFTER descripcion_negativa");
+        $this->ensureColumn('facturacion_adicionales_mensajero', 'observaciones', "ALTER TABLE facturacion_adicionales_mensajero ADD COLUMN observaciones TEXT NULL AFTER metodo_pago");
     }
 
     private function ensureMessengerGroupStatusTable(): void
@@ -720,6 +728,8 @@ class FacturacionModels
         ?string $descripcionPositiva,
         float $montoNegativo,
         ?string $descripcionNegativa,
+        string $metodoPago,
+        ?string $observaciones,
         ?int $registradoPor
     ): bool {
         if ($montoPositivo <= 0 && $montoNegativo <= 0) {
@@ -733,11 +743,11 @@ class FacturacionModels
         $sql = "INSERT INTO facturacion_adicionales_cliente (
                     cliente_id, fecha_grupo, monto, descripcion,
                     monto_positivo, descripcion_positiva, monto_negativo, descripcion_negativa,
-                    registrado_por
+                    metodo_pago, observaciones, registrado_por
                 ) VALUES (
                     :cliente_id, :fecha_grupo, :monto, :descripcion,
                     :monto_positivo, :descripcion_positiva, :monto_negativo, :descripcion_negativa,
-                    :registrado_por
+                    :metodo_pago, :observaciones, :registrado_por
                 )
                 ON DUPLICATE KEY UPDATE
                     monto = VALUES(monto),
@@ -746,6 +756,8 @@ class FacturacionModels
                     descripcion_positiva = VALUES(descripcion_positiva),
                     monto_negativo = VALUES(monto_negativo),
                     descripcion_negativa = VALUES(descripcion_negativa),
+                    metodo_pago = VALUES(metodo_pago),
+                    observaciones = VALUES(observaciones),
                     registrado_por = VALUES(registrado_por)";
         $stmt = $this->conn->prepare($sql);
         $montoNeto = $montoPositivo - $montoNegativo;
@@ -762,6 +774,8 @@ class FacturacionModels
             ':descripcion_positiva' => $descripcionPositiva,
             ':monto_negativo' => $montoNegativo,
             ':descripcion_negativa' => $descripcionNegativa,
+            ':metodo_pago' => $metodoPago,
+            ':observaciones' => $observaciones,
             ':registrado_por' => $registradoPor,
         ]);
     }
@@ -782,6 +796,8 @@ class FacturacionModels
         ?string $descripcionPositiva,
         float $montoNegativo,
         ?string $descripcionNegativa,
+        string $metodoPago,
+        ?string $observaciones,
         ?int $registradoPor
     ): bool {
         if ($montoPositivo <= 0 && $montoNegativo <= 0) {
@@ -795,11 +811,11 @@ class FacturacionModels
         $sql = "INSERT INTO facturacion_adicionales_mensajero (
                     mensajero_id, fecha_grupo, monto, descripcion,
                     monto_positivo, descripcion_positiva, monto_negativo, descripcion_negativa,
-                    registrado_por
+                    metodo_pago, observaciones, registrado_por
                 ) VALUES (
                     :mensajero_id, :fecha_grupo, :monto, :descripcion,
                     :monto_positivo, :descripcion_positiva, :monto_negativo, :descripcion_negativa,
-                    :registrado_por
+                    :metodo_pago, :observaciones, :registrado_por
                 )
                 ON DUPLICATE KEY UPDATE
                     monto = VALUES(monto),
@@ -808,6 +824,8 @@ class FacturacionModels
                     descripcion_positiva = VALUES(descripcion_positiva),
                     monto_negativo = VALUES(monto_negativo),
                     descripcion_negativa = VALUES(descripcion_negativa),
+                    metodo_pago = VALUES(metodo_pago),
+                    observaciones = VALUES(observaciones),
                     registrado_por = VALUES(registrado_por)";
         $stmt = $this->conn->prepare($sql);
         $montoNeto = $montoPositivo - $montoNegativo;
@@ -824,6 +842,8 @@ class FacturacionModels
             ':descripcion_positiva' => $descripcionPositiva,
             ':monto_negativo' => $montoNegativo,
             ':descripcion_negativa' => $descripcionNegativa,
+            ':metodo_pago' => $metodoPago,
+            ':observaciones' => $observaciones,
             ':registrado_por' => $registradoPor,
         ]);
     }
@@ -1164,6 +1184,8 @@ class FacturacionModels
                     a.descripcion_positiva,
                     a.monto_negativo,
                     a.descripcion_negativa,
+                    a.metodo_pago,
+                    a.observaciones,
                     a.fecha_registro,
                     CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, '')) AS registrado_por_nombre
                 FROM facturacion_adicionales_cliente a
@@ -1184,6 +1206,8 @@ class FacturacionModels
                 'descripcion_positiva' => $row['descripcion_positiva'] ?? null,
                 'monto_negativo' => (float) ($row['monto_negativo'] ?? 0),
                 'descripcion_negativa' => $row['descripcion_negativa'] ?? null,
+                'metodo_pago' => $row['metodo_pago'] ?? 'efectivo',
+                'observaciones' => $row['observaciones'] ?? null,
                 'fecha_registro' => $row['fecha_registro'],
                 'registrado_por_nombre' => trim((string) $row['registrado_por_nombre']),
             ];
@@ -1283,6 +1307,8 @@ class FacturacionModels
                     a.descripcion_positiva,
                     a.monto_negativo,
                     a.descripcion_negativa,
+                    a.metodo_pago,
+                    a.observaciones,
                     a.fecha_registro,
                     CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, '')) AS registrado_por_nombre
                 FROM facturacion_adicionales_mensajero a
@@ -1303,6 +1329,8 @@ class FacturacionModels
                 'descripcion_positiva' => $row['descripcion_positiva'] ?? null,
                 'monto_negativo' => (float) ($row['monto_negativo'] ?? 0),
                 'descripcion_negativa' => $row['descripcion_negativa'] ?? null,
+                'metodo_pago' => $row['metodo_pago'] ?? 'efectivo',
+                'observaciones' => $row['observaciones'] ?? null,
                 'fecha_registro' => $row['fecha_registro'],
                 'registrado_por_nombre' => trim((string) $row['registrado_por_nombre']),
             ];
