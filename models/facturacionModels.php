@@ -1313,7 +1313,12 @@ class FacturacionModels
     {
         $params = [];
         $conditions = ["p.estado = 'entregado'"];
+        $esEntregaSinRotulo = "COALESCE(p.observaciones_recoleccion, '') = 'ENTREGA_SIN_ROTULO_ADMIN'";
         $clienteFacturacionExpr = "COALESCE(
+            CASE
+                WHEN {$esEntregaSinRotulo} THEN c_match.id
+                ELSE NULL
+            END,
             CASE
                 WHEN EXISTS (
                     SELECT 1
@@ -1348,6 +1353,7 @@ class FacturacionModels
                 COALESCE(p.observaciones_recoleccion, '') LIKE 'ENTREGA_MANUAL_MENSAJERO%'
                 OR COALESCE(p.observaciones_recoleccion, '') LIKE 'Entrega registrada manualmente por mensajero%'
                 OR COALESCE(p.descripcion_contenido, '') = 'Entrega creada desde mis paquetes'
+                OR {$esEntregaSinRotulo}
             )
         )";
 
@@ -1388,10 +1394,10 @@ class FacturacionModels
                             NULLIF(c.nombre_emprendimiento, '')
                         )
                     END AS cliente_nombre,
-                    COALESCE(c_facturacion.cuenta_bancaria_principal, c.cuenta_bancaria_principal) AS cuenta_bancaria_principal,
-                    COALESCE(c_facturacion.cuenta_bancaria_opcional_1, c.cuenta_bancaria_opcional_1) AS cuenta_bancaria_opcional_1,
-                    COALESCE(c_facturacion.cuenta_bancaria_opcional_2, c.cuenta_bancaria_opcional_2) AS cuenta_bancaria_opcional_2,
-                    COALESCE(c_facturacion.cuenta_bancaria_opcional_3, c.cuenta_bancaria_opcional_3) AS cuenta_bancaria_opcional_3,
+                    CASE WHEN {$remitenteManualSinCliente} THEN '' ELSE COALESCE(c_facturacion.cuenta_bancaria_principal, c.cuenta_bancaria_principal) END AS cuenta_bancaria_principal,
+                    CASE WHEN {$remitenteManualSinCliente} THEN '' ELSE COALESCE(c_facturacion.cuenta_bancaria_opcional_1, c.cuenta_bancaria_opcional_1) END AS cuenta_bancaria_opcional_1,
+                    CASE WHEN {$remitenteManualSinCliente} THEN '' ELSE COALESCE(c_facturacion.cuenta_bancaria_opcional_2, c.cuenta_bancaria_opcional_2) END AS cuenta_bancaria_opcional_2,
+                    CASE WHEN {$remitenteManualSinCliente} THEN '' ELSE COALESCE(c_facturacion.cuenta_bancaria_opcional_3, c.cuenta_bancaria_opcional_3) END AS cuenta_bancaria_opcional_3,
                     CASE
                         WHEN {$remitenteManualSinCliente} THEN ''
                         ELSE COALESCE(
@@ -1425,7 +1431,10 @@ class FacturacionModels
                 LEFT JOIN clientes c_match
                     ON {$clienteMatchCondition}
                    AND c_match.id <> p.cliente_id
-                   AND COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero%'
+                   AND (
+                       COALESCE(NULLIF(c.nombre_emprendimiento, ''), '') LIKE 'Operativo Mensajero%'
+                       OR {$esEntregaSinRotulo}
+                   )
                 LEFT JOIN clientes c_facturacion ON c_facturacion.id = {$clienteFacturacionExpr}
                 LEFT JOIN usuarios uc_facturacion ON uc_facturacion.id = c_facturacion.usuario_id
                 LEFT JOIN entregas e ON e.paquete_id = p.id
