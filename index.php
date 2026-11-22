@@ -78,7 +78,7 @@ $fechaEntrega = is_array($rastreoEstado) && !empty($rastreoEstado['fecha_entrega
     </script>
     <title>EcoBikeMess - Mensajería Ecológica en Bicicleta</title>
     <link rel="icon" href="public/img/Logo_Negro_Transparente.png" type="image/png">
-    <link rel="stylesheet" href="public/css/styles.css?v=3">
+    <link rel="stylesheet" href="public/css/styles.css?v=4">
     <style>
         /* Aumentamos el límite de altura para que no se corte el texto al desplegar */
         .service-details.show {
