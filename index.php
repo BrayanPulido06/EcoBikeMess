@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/paths.php';
+require_once __DIR__ . '/includes/auth.php';
+ensureSessionStarted();
 
 $guiaConsultada = '';
 $rastreoEstado = null;
@@ -14,8 +16,8 @@ $estadoEtiquetas = [
     'devuelto' => 'Devuelto',
 ];
 
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && array_key_exists('guia', $_GET)) {
-    $guiaEntrada = $_GET['guia'];
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['guia'])) {
+    $guiaEntrada = $_POST['guia'];
     $guiaConsultada = is_string($guiaEntrada) ? strtoupper(trim($guiaEntrada)) : '';
 
     if ($guiaConsultada === '' || strlen($guiaConsultada) > 20) {
@@ -38,6 +40,22 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && array_key_exists('guia', 
             $rastreoError = 'En este momento no podemos consultar el envío. Inténtalo de nuevo más tarde.';
         }
     }
+
+    $_SESSION['rastreo_flash'] = [
+        'guia' => $guiaConsultada,
+        'estado' => $rastreoEstado,
+        'error' => $rastreoError,
+    ];
+    header('Location: ' . route_url('home') . '#rastreo', true, 303);
+    exit;
+}
+
+$rastreoFlash = $_SESSION['rastreo_flash'] ?? null;
+unset($_SESSION['rastreo_flash']);
+if (is_array($rastreoFlash)) {
+    $guiaConsultada = (string) ($rastreoFlash['guia'] ?? '');
+    $rastreoEstado = is_array($rastreoFlash['estado'] ?? null) ? $rastreoFlash['estado'] : null;
+    $rastreoError = (string) ($rastreoFlash['error'] ?? '');
 }
 
 $estadoActual = is_array($rastreoEstado) ? (string) ($rastreoEstado['estado'] ?? '') : '';
@@ -60,7 +78,7 @@ $fechaEntrega = is_array($rastreoEstado) && !empty($rastreoEstado['fecha_entrega
     </script>
     <title>EcoBikeMess - Mensajería Ecológica en Bicicleta</title>
     <link rel="icon" href="public/img/Logo_Negro_Transparente.png" type="image/png">
-    <link rel="stylesheet" href="public/css/styles.css?v=2">
+    <link rel="stylesheet" href="public/css/styles.css?v=3">
     <style>
         /* Aumentamos el límite de altura para que no se corte el texto al desplegar */
         .service-details.show {
@@ -170,54 +188,7 @@ $fechaEntrega = is_array($rastreoEstado) && !empty($rastreoEstado['fecha_entrega
             </div>
         </section>
 
-        <section class="tracking-section" id="rastreo" aria-labelledby="tracking-title">
-            <div class="tracking-card">
-                <div class="tracking-copy">
-                    <span class="tracking-eyebrow">Sigue tu envío</span>
-                    <h2 id="tracking-title">¿Dónde está tu paquete?</h2>
-                    <p>Ingresa el número de guía para consultar el estado de tu envío.</p>
-                </div>
-                <form class="tracking-form" method="get" action="<?php echo htmlspecialchars(route_url('home'), ENT_QUOTES, 'UTF-8'); ?>">
-                    <label for="numero-guia">Número de guía</label>
-                    <div class="tracking-input-row">
-                        <input
-                            type="text"
-                            id="numero-guia"
-                            name="guia"
-                            maxlength="20"
-                            placeholder="Ej. EBM-2026-00001"
-                            value="<?php echo htmlspecialchars($guiaConsultada, ENT_QUOTES, 'UTF-8'); ?>"
-                            autocomplete="off"
-                            required
-                        >
-                        <button type="submit">Consultar</button>
-                    </div>
-                </form>
-            </div>
 
-            <?php if ($rastreoError !== ''): ?>
-                <div class="tracking-result tracking-result-error" role="status">
-                    <?php echo htmlspecialchars($rastreoError, ENT_QUOTES, 'UTF-8'); ?>
-                </div>
-            <?php elseif ($rastreoEstado !== null): ?>
-                <div class="tracking-result" role="status" aria-live="polite">
-                    <div>
-                        <span class="tracking-result-label">Estado del envío</span>
-                        <strong class="tracking-status tracking-status-<?php echo htmlspecialchars($estadoActual, ENT_QUOTES, 'UTF-8'); ?>">
-                            <?php echo htmlspecialchars($estadoTitulo, ENT_QUOTES, 'UTF-8'); ?>
-                        </strong>
-                    </div>
-                    <div class="tracking-result-meta">
-                        <span>Guía: <strong><?php echo htmlspecialchars($guiaConsultada, ENT_QUOTES, 'UTF-8'); ?></strong></span>
-                        <?php if ($estadoActual === 'entregado' && $fechaEntrega !== ''): ?>
-                            <span>Fecha de entrega: <strong><?php echo htmlspecialchars($fechaEntrega, ENT_QUOTES, 'UTF-8'); ?></strong></span>
-                        <?php elseif ($fechaCreacion !== ''): ?>
-                            <span>Registrado el: <strong><?php echo htmlspecialchars($fechaCreacion, ENT_QUOTES, 'UTF-8'); ?></strong></span>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            <?php endif; ?>
-        </section>
 
         <!-- Información de EcoBikeMess -->
         <section class="about" id="about">
@@ -471,6 +442,55 @@ $fechaEntrega = is_array($rastreoEstado) && !empty($rastreoEstado['fecha_entrega
                         <p>En los sectores que no están demarcados en el mapa no tenemos cobertura al ser zonas catalogadas como zonas rojas en temas de seguridad (Como son Altos de Cazuca, Ciudadela Sucre, Altos de la Florida, etc.)</p>
                     </div>
             </div>
+        </section>
+
+        <section class="tracking-section" id="rastreo" aria-labelledby="tracking-title">
+            <div class="tracking-card">
+                <div class="tracking-copy">
+                    <span class="tracking-eyebrow">Sigue tu envío</span>
+                    <h2 id="tracking-title">¿Dónde está tu paquete?</h2>
+                    <p>Ingresa el número de guía para consultar el estado de tu envío.</p>
+                </div>
+                <form class="tracking-form" method="post" action="<?php echo htmlspecialchars(route_url('home'), ENT_QUOTES, 'UTF-8'); ?>#rastreo">
+                    <label for="numero-guia">Número de guía</label>
+                    <div class="tracking-input-row">
+                        <input
+                            type="text"
+                            id="numero-guia"
+                            name="guia"
+                            maxlength="20"
+                            placeholder="Ej. EBM-2026-00001"
+                            value="<?php echo htmlspecialchars($guiaConsultada, ENT_QUOTES, 'UTF-8'); ?>"
+                            autocomplete="off"
+                            required
+                        >
+                        <button type="submit">Consultar</button>
+                    </div>
+                </form>
+            </div>
+
+            <?php if ($rastreoError !== ''): ?>
+                <div class="tracking-result tracking-result-error" role="status">
+                    <?php echo htmlspecialchars($rastreoError, ENT_QUOTES, 'UTF-8'); ?>
+                </div>
+            <?php elseif ($rastreoEstado !== null): ?>
+                <div class="tracking-result" role="status" aria-live="polite">
+                    <div>
+                        <span class="tracking-result-label">Estado del envío</span>
+                        <strong class="tracking-status tracking-status-<?php echo htmlspecialchars($estadoActual, ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php echo htmlspecialchars($estadoTitulo, ENT_QUOTES, 'UTF-8'); ?>
+                        </strong>
+                    </div>
+                    <div class="tracking-result-meta">
+                        <span>Guía: <strong><?php echo htmlspecialchars($guiaConsultada, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                        <?php if ($estadoActual === 'entregado' && $fechaEntrega !== ''): ?>
+                            <span>Fecha de entrega: <strong><?php echo htmlspecialchars($fechaEntrega, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                        <?php elseif ($fechaCreacion !== ''): ?>
+                            <span>Registrado el: <strong><?php echo htmlspecialchars($fechaCreacion, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
         </section>
 
         <!-- Contacto -->
