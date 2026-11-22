@@ -169,10 +169,10 @@ $fechaEntrega = is_array($rastreoEstado) && !empty($rastreoEstado['fecha_entrega
             </div>
             <div class="nav-links">
                 <a href="#inicio">Inicio</a>
-                <a href="#rastreo">Rastrear envío</a>
                 <a href="<?php echo htmlspecialchars(route_url('about'), ENT_QUOTES, 'UTF-8'); ?>">Nosotros</a>
                 <a href="#services">Servicios</a>
                 <a href="#pricing">Cobertura</a>
+                <a href="#rastreo">Rastrear envío</a>
                 <a href="#contact">Contacto</a>
             </div>
             <a href="<?php echo htmlspecialchars(route_url('login'), ENT_QUOTES, 'UTF-8'); ?>" class="btn-login" id="btnLogin">Iniciar Sesión</a>
