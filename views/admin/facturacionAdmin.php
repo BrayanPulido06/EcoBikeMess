@@ -101,6 +101,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                                     <th>Fecha</th>
                                     <th>Paquetes entregados</th>
                                     <th>Adicionales</th>
+                                    <th>Valor por entregas</th>
                                     <th>Total servicio</th>
                                     <th>Total recaudado</th>
                                     <th>Estado</th>
@@ -110,7 +111,7 @@ $facturacionPanelJsVersion = @filemtime(__DIR__ . '/../../public/js/facturacionP
                                 </tr>
                             </thead>
                             <tbody id="table-body-cliente" data-loading>
-                                <tr><td colspan="11" class="loading-state">Cargando informacion...</td></tr>
+                                <tr><td colspan="12" class="loading-state">Cargando informacion...</td></tr>
                             </tbody>
                         </table>
                     </div>

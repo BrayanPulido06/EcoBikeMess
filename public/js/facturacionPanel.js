@@ -1310,7 +1310,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const groupStatusFromBalance = (value) => Math.round(Number(value || 0)) === 0 ? 'pagado' : 'pendiente';
 
-    const clienteTableColspan = () => mode === 'admin' ? 11 : 9;
+    const clienteTableColspan = () => mode === 'admin' ? 12 : 10;
     const mensajeroTableColspan = () => mode === 'admin' ? 12 : 10;
     const ecobikemessTableColspan = () => 8;
 
@@ -1367,6 +1367,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             group.adicionalGeneralNegativo,
                             group.adicionalGeneralDescripcionNegativa
                         )}</td>
+                        <td>${money(group.subtotalServicio)}</td>
                         <td>${money(group.totalServicio)}</td>
                         <td>${money(group.totalRecaudado)}</td>
                         <td>${clientGroupStatusBadge(group.estado)}</td>
@@ -1406,6 +1407,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         group.adicionalGeneralNegativo,
                         group.adicionalGeneralDescripcionNegativa
                     )}</td>
+                    <td>${money(group.subtotalServicio)}</td>
                     <td>${money(group.totalServicio)}</td>
                     <td>${money(group.totalRecaudado)}</td>
                     <td>${clientGroupStatusSelect(group)}</td>
