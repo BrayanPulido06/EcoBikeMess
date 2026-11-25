@@ -442,6 +442,7 @@ try {
     if ($method === 'POST' && $action === 'guardar_adicional_mensajero_grupo') {
         $mensajeroId = (int) ($_POST['mensajero_id'] ?? 0);
         $fechaGrupo = trim((string) ($_POST['fecha_grupo'] ?? ''));
+        $fechaGrupoOriginal = trim((string) ($_POST['fecha_grupo_original'] ?? ''));
         $montoPositivo = parseMoneyInput($_POST['monto_positivo'] ?? 0);
         $descripcionPositiva = trim((string) ($_POST['descripcion_positiva'] ?? ''));
         $montoNegativo = parseMoneyInput($_POST['monto_negativo'] ?? 0);
@@ -456,6 +457,10 @@ try {
 
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupo)) {
             throw new InvalidArgumentException('La fecha del adicional no es valida.');
+        }
+
+        if ($fechaGrupoOriginal !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaGrupoOriginal)) {
+            throw new InvalidArgumentException('La fecha original del adicional no es valida.');
         }
 
         if (!in_array($metodoPago, ['efectivo', 'transferencia'], true)) {
@@ -483,7 +488,8 @@ try {
             $montoNegativo > 0 ? $descripcionNegativa : null,
             $metodoPago,
             $observaciones !== '' ? $observaciones : null,
-            $registradoPor
+            $registradoPor,
+            $fechaGrupoOriginal !== '' ? $fechaGrupoOriginal : null
         )) {
             throw new RuntimeException('No se pudieron guardar los montos y descripciones del adicional del mensajero.');
         }

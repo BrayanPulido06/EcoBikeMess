@@ -2064,6 +2064,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('action', 'guardar_adicional_mensajero_grupo');
         formData.append('mensajero_id', form.mensajero_id.value);
         formData.append('fecha_grupo', form.fecha_grupo.value);
+        formData.append('fecha_grupo_original', getFormFieldValue(form, 'fecha_grupo_original'));
         formData.append('metodo_pago', form.metodo_pago.value);
         formData.append('observaciones', getFormFieldValue(form, 'observaciones'));
         formData.append('monto_positivo', form.monto_positivo.value || '0');
@@ -3075,6 +3076,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <form id="mensajeroAdicionalGrupoForm" class="facturacion-abono-form" data-has-additional="${adicional.id ? '1' : '0'}">
                 <input type="hidden" name="mensajero_id" value="${group.mensajeroId}">
+                <input type="hidden" name="fecha_grupo_original" value="${adicional.id ? escapeHtml(group.dateKey) : ''}">
                 <div class="facturacion-abono-grid">
                     <label class="facturacion-field">
                         <span>Metodo de pago</span>
@@ -3095,7 +3097,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </label>
                     <label class="facturacion-field">
                         <span>Fecha del adicional</span>
-                        <input type="date" name="fecha_grupo" value="${escapeHtml(group.dateKey)}" required ${adicional.id ? 'readonly' : ''}>
+                        <input type="date" name="fecha_grupo" value="${escapeHtml(group.dateKey)}" required>
                     </label>
                     <label class="facturacion-field facturacion-field-full">
                         <span>Observacion adicional positivo</span>

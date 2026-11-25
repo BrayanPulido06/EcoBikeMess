@@ -798,14 +798,53 @@ class FacturacionModels
         ?string $descripcionNegativa,
         string $metodoPago,
         ?string $observaciones,
-        ?int $registradoPor
+        ?int $registradoPor,
+        ?string $fechaGrupoOriginal = null
     ): bool {
+        $fechaOrigen = $fechaGrupoOriginal ?: $fechaGrupo;
+
         if ($montoPositivo <= 0 && $montoNegativo <= 0) {
             $stmt = $this->conn->prepare("DELETE FROM facturacion_adicionales_mensajero WHERE mensajero_id = :mensajero_id AND fecha_grupo = :fecha_grupo");
             return $stmt->execute([
                 ':mensajero_id' => $mensajeroId,
-                ':fecha_grupo' => $fechaGrupo,
+                ':fecha_grupo' => $fechaOrigen,
             ]);
+        }
+
+        $montoNeto = $montoPositivo - $montoNegativo;
+        $descripcion = trim(implode(' | ', array_filter([
+            $descripcionPositiva ? 'Positivo: ' . $descripcionPositiva : '',
+            $descripcionNegativa ? 'Negativo: ' . $descripcionNegativa : '',
+        ])));
+        $params = [
+            ':mensajero_id' => $mensajeroId,
+            ':fecha_grupo' => $fechaGrupo,
+            ':monto' => $montoNeto,
+            ':descripcion' => $descripcion !== '' ? $descripcion : null,
+            ':monto_positivo' => $montoPositivo,
+            ':descripcion_positiva' => $descripcionPositiva,
+            ':monto_negativo' => $montoNegativo,
+            ':descripcion_negativa' => $descripcionNegativa,
+            ':metodo_pago' => $metodoPago,
+            ':observaciones' => $observaciones,
+            ':registrado_por' => $registradoPor,
+        ];
+
+        if ($fechaOrigen !== $fechaGrupo) {
+            $check = $this->conn->prepare("SELECT 1 FROM facturacion_adicionales_mensajero WHERE mensajero_id = :mensajero_id AND fecha_grupo = :fecha_grupo LIMIT 1");
+            $check->execute([':mensajero_id' => $mensajeroId, ':fecha_grupo' => $fechaGrupo]);
+            if ($check->fetchColumn()) {
+                throw new RuntimeException('Ya existe un adicional para este mensajero en la fecha seleccionada.');
+            }
+
+            $update = $this->conn->prepare("UPDATE facturacion_adicionales_mensajero SET
+                    fecha_grupo = :fecha_grupo, monto = :monto, descripcion = :descripcion,
+                    monto_positivo = :monto_positivo, descripcion_positiva = :descripcion_positiva,
+                    monto_negativo = :monto_negativo, descripcion_negativa = :descripcion_negativa,
+                    metodo_pago = :metodo_pago, observaciones = :observaciones, registrado_por = :registrado_por
+                WHERE mensajero_id = :mensajero_id AND fecha_grupo = :fecha_grupo_original");
+            $params[':fecha_grupo_original'] = $fechaOrigen;
+            return $update->execute($params) && $update->rowCount() > 0;
         }
 
         $sql = "INSERT INTO facturacion_adicionales_mensajero (
@@ -828,24 +867,7 @@ class FacturacionModels
                     observaciones = VALUES(observaciones),
                     registrado_por = VALUES(registrado_por)";
         $stmt = $this->conn->prepare($sql);
-        $montoNeto = $montoPositivo - $montoNegativo;
-        $descripcion = trim(implode(' | ', array_filter([
-            $descripcionPositiva ? 'Positivo: ' . $descripcionPositiva : '',
-            $descripcionNegativa ? 'Negativo: ' . $descripcionNegativa : '',
-        ])));
-        return $stmt->execute([
-            ':mensajero_id' => $mensajeroId,
-            ':fecha_grupo' => $fechaGrupo,
-            ':monto' => $montoNeto,
-            ':descripcion' => $descripcion !== '' ? $descripcion : null,
-            ':monto_positivo' => $montoPositivo,
-            ':descripcion_positiva' => $descripcionPositiva,
-            ':monto_negativo' => $montoNegativo,
-            ':descripcion_negativa' => $descripcionNegativa,
-            ':metodo_pago' => $metodoPago,
-            ':observaciones' => $observaciones,
-            ':registrado_por' => $registradoPor,
-        ]);
+        return $stmt->execute($params);
     }
 
     public function eliminarAdicionalMensajeroGrupo(int $mensajeroId, string $fechaGrupo): bool
