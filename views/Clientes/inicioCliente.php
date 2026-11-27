@@ -52,7 +52,7 @@ $showServiceNotice = $bogotaToday < new DateTimeImmutable('2026-11-29', new Date
     <link rel="icon" href="../../public/img/Logo_Negro_Transparente.png" type="image/png">
     <link rel="stylesheet" href="../../public/css/clienteSidebar.css">
     <link rel="stylesheet" href="../../public/css/clienteNavbar.css">
-    <link rel="stylesheet" href="../../public/css/inicioCliente.css">
+    <link rel="stylesheet" href="../../public/css/inicioCliente.css?v=20261127-notice">
     <link rel="stylesheet" href="../../public/css/responsive.css">
     <link rel="stylesheet" href="../../public/css/clientesTheme.css">
     <style>
