@@ -43,9 +43,9 @@ body {
 
 .notice-image-link {
     display: flex;
-    flex: 0 0 138px;
-    width: 138px;
-    height: 245px;
+    flex: 0 0 160px;
+    width: 160px;
+    height: 284px;
     align-items: center;
     justify-content: center;
     overflow: hidden;
@@ -510,9 +510,9 @@ body {
     }
 
     .notice-image-link {
-        flex: 0 0 76px;
-        width: 76px;
-        height: 135px;
+        flex: 0 0 88px;
+        width: 88px;
+        height: 156px;
     }
 
     .notice-label {
