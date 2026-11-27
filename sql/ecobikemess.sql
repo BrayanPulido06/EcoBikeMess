@@ -175,6 +175,19 @@ CREATE TABLE IF NOT EXISTS paquetes (
     FOREIGN KEY (creado_por) REFERENCES usuarios(id)
 );
 
+CREATE TABLE IF NOT EXISTS api_client_keys (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cliente_id INT NOT NULL,
+    key_hash CHAR(64) NOT NULL UNIQUE,
+    key_prefix VARCHAR(24) NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    estado ENUM('activo', 'inactivo') NOT NULL DEFAULT 'activo',
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ultimo_uso TIMESTAMP NULL,
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+    INDEX idx_api_client_keys_cliente_estado (cliente_id, estado)
+);
+
 CREATE TABLE IF NOT EXISTS entregas (
     id INT PRIMARY KEY AUTO_INCREMENT,
     paquete_id INT UNIQUE NOT NULL,

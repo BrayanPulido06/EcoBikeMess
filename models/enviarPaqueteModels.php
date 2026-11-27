@@ -20,6 +20,17 @@ class EnvioModel {
         }
     }
 
+    private function indexExists(string $table, string $index): bool
+    {
+        try {
+            $stmt = $this->conn->prepare('SELECT 1 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = :table_name AND index_name = :index_name LIMIT 1');
+            $stmt->execute([':table_name' => $table, ':index_name' => $index]);
+            return (bool) $stmt->fetchColumn();
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
     private function ensureAdditionalColumns(): void
     {
         $columns = [
@@ -28,7 +39,8 @@ class EnvioModel {
             'recoger_cambios' => "ALTER TABLE paquetes ADD COLUMN recoger_cambios TINYINT(1) NOT NULL DEFAULT 0 AFTER zona_periferica",
             'embalaje' => "ALTER TABLE paquetes ADD COLUMN embalaje TINYINT(1) NOT NULL DEFAULT 0 AFTER recoger_cambios",
             'observaciones_recoleccion' => "ALTER TABLE paquetes ADD COLUMN observaciones_recoleccion TEXT NULL AFTER direccion_origen",
-            'fecha_programada_recoleccion' => "ALTER TABLE paquetes ADD COLUMN fecha_programada_recoleccion DATE NULL AFTER observaciones_recoleccion"
+            'fecha_programada_recoleccion' => "ALTER TABLE paquetes ADD COLUMN fecha_programada_recoleccion DATE NULL AFTER observaciones_recoleccion",
+            'external_order_id' => "ALTER TABLE paquetes ADD COLUMN external_order_id VARCHAR(100) NULL AFTER cliente_id"
         ];
 
         foreach ($columns as $column => $sql) {
@@ -38,6 +50,14 @@ class EnvioModel {
                 } catch (Throwable $e) {
                     // No bloqueamos el registro si la alteración falla.
                 }
+            }
+        }
+
+        if (!$this->indexExists('paquetes', 'uq_paquetes_cliente_external_order')) {
+            try {
+                $this->conn->exec("CREATE UNIQUE INDEX uq_paquetes_cliente_external_order ON paquetes (cliente_id, external_order_id)");
+            } catch (Throwable $e) {
+                // Another request may have created the index concurrently.
             }
         }
     }
@@ -79,6 +99,7 @@ class EnvioModel {
         try {
             $sql = "INSERT INTO paquetes (
                         cliente_id, 
+                        external_order_id,
                         creado_por,
                         numero_guia, 
                         remitente_nombre, 
@@ -103,7 +124,8 @@ class EnvioModel {
                         estado,
                         fecha_creacion
                     ) VALUES (
-                        :cliente_id, 
+                        :cliente_id,
+                        :external_order_id,
                         :creado_por,
                         :numero_guia,
                         :remitente_nombre, :remitente_telefono, :remitente_direccion, :observaciones_recoleccion, :fecha_programada_recoleccion,
@@ -116,6 +138,7 @@ class EnvioModel {
             
             return $stmt->execute([
                 ':cliente_id' => $datos['cliente_id'],
+                ':external_order_id' => $datos['external_order_id'] ?? null,
                 ':creado_por' => $datos['creado_por'],
                 ':numero_guia' => $datos['numero_guia'],
                 ':remitente_nombre' => $datos['remitente_nombre'],

@@ -36,6 +36,8 @@ foreach ($chartDataRaw as $row) {
 }
 
 $manualClienteUrl = app_asset_url('doc/Manual%20procedimiento%20clientes.docx.pdf');
+$bogotaToday = new DateTimeImmutable('today', new DateTimeZone('America/Bogota'));
+$showServiceNotice = $bogotaToday < new DateTimeImmutable('2026-11-29', new DateTimeZone('America/Bogota'));
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -130,6 +132,26 @@ $manualClienteUrl = app_asset_url('doc/Manual%20procedimiento%20clientes.docx.pd
 
         <!-- Dashboard Content -->
         <div class="dashboard-container">
+            <?php if ($showServiceNotice): ?>
+            <section class="notice-card" aria-labelledby="serviceNoticeTitle">
+                <a class="notice-image-link js-image-lightbox"
+                   href="<?php echo htmlspecialchars(app_asset_url('img/info.jpeg'), ENT_QUOTES, 'UTF-8'); ?>"
+                   aria-label="Ampliar aviso sobre el servicio del sábado 28 de noviembre">
+                    <img src="<?php echo htmlspecialchars(app_asset_url('img/info.jpeg'), ENT_QUOTES, 'UTF-8'); ?>"
+                         alt="Aviso: el sábado 28 de noviembre no tendremos servicio de mensajería. Regresamos el lunes 30 de noviembre."
+                         loading="eager">
+                </a>
+                <div class="notice-copy">
+                    <span class="notice-label">Aviso importante</span>
+                    <h2 id="serviceNoticeTitle">Ajuste en el servicio de mensajería</h2>
+                    <p>Este sábado 28 de noviembre no tendremos servicio. Regresamos con normalidad el lunes 30.</p>
+                    <a class="notice-expand js-image-lightbox"
+                       href="<?php echo htmlspecialchars(app_asset_url('img/info.jpeg'), ENT_QUOTES, 'UTF-8'); ?>"
+                       aria-label="Ver aviso completo">Ver aviso completo</a>
+                </div>
+            </section>
+            <?php endif; ?>
+
             <!-- Stats Cards -->
             <div class="stats-grid">
                 <!-- Tarjeta de Información Importante -->
@@ -275,6 +297,7 @@ $manualClienteUrl = app_asset_url('doc/Manual%20procedimiento%20clientes.docx.pd
             }
         });
     </script>
+    <script src="../../public/js/imageLightbox.js"></script>
     <script src="../../public/js/inicioCliente.js"></script>
 </body>
 </html>

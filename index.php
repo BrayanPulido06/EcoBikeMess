@@ -16,8 +16,10 @@ $estadoEtiquetas = [
     'devuelto' => 'Devuelto',
 ];
 
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['guia'])) {
-    $guiaEntrada = $_POST['guia'];
+if ((($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['guia']))
+    || (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_GET['guia']))) {
+    $isTrackingFormPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
+    $guiaEntrada = $isTrackingFormPost ? $_POST['guia'] : $_GET['guia'];
     $guiaConsultada = is_string($guiaEntrada) ? strtoupper(trim($guiaEntrada)) : '';
 
     if ($guiaConsultada === '' || strlen($guiaConsultada) > 20) {
@@ -41,13 +43,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['guia'])) {
         }
     }
 
-    $_SESSION['rastreo_flash'] = [
-        'guia' => $guiaConsultada,
-        'estado' => $rastreoEstado,
-        'error' => $rastreoError,
-    ];
-    header('Location: ' . route_url('home') . '#rastreo', true, 303);
-    exit;
+    if ($isTrackingFormPost) {
+        $_SESSION['rastreo_flash'] = [
+            'guia' => $guiaConsultada,
+            'estado' => $rastreoEstado,
+            'error' => $rastreoError,
+        ];
+        header('Location: ' . route_url('home') . '#rastreo', true, 303);
+        exit;
+    }
 }
 
 $rastreoFlash = $_SESSION['rastreo_flash'] ?? null;

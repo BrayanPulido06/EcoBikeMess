@@ -62,6 +62,32 @@ if ($rol === 'cliente') {
     $stmtExtra->execute([':id' => $user_id]);
     $datos_extra = $stmtExtra->fetch(PDO::FETCH_ASSOC);
 }
+
+$apiKeyActive = null;
+$apiKeyCreatedOnce = null;
+$apiKeysCsrf = '';
+if ($rol === 'cliente') {
+    $conn->exec("CREATE TABLE IF NOT EXISTS api_client_keys (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        cliente_id INT NOT NULL,
+        key_hash CHAR(64) NOT NULL UNIQUE,
+        key_prefix VARCHAR(24) NOT NULL,
+        nombre VARCHAR(100) NOT NULL,
+        estado ENUM('activo', 'inactivo') NOT NULL DEFAULT 'activo',
+        fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        ultimo_uso TIMESTAMP NULL,
+        FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+        INDEX idx_api_client_keys_cliente_estado (cliente_id, estado)
+    )");
+    $apiClientId = (int) ($datos_extra['id'] ?? 0);
+    $apiKeyStmt = $conn->prepare("SELECT key_prefix, fecha_creacion, ultimo_uso FROM api_client_keys
+        WHERE cliente_id = :cliente_id AND estado = 'activo' ORDER BY id DESC LIMIT 1");
+    $apiKeyStmt->execute([':cliente_id' => $apiClientId]);
+    $apiKeyActive = $apiKeyStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    $apiKeysCsrf = $_SESSION['api_keys_csrf'] ??= bin2hex(random_bytes(32));
+    $apiKeyCreatedOnce = $_SESSION['api_key_created_once'] ?? null;
+    unset($_SESSION['api_key_created_once']);
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -243,6 +269,39 @@ if ($rol === 'cliente') {
 
                 <button type="submit" class="btn-save">Guardar Cambios</button>
             </form>
+
+            <?php if ($rol === 'cliente'): ?>
+            <section class="profile-card" aria-labelledby="api-access-title">
+                <h3 class="form-section-title" id="api-access-title">Integración con la API</h3>
+                <p>Conecta tu tienda para que los pedidos se registren automáticamente en EcoBike. El remitente se toma del nombre, teléfono y dirección principal de este perfil.</p>
+                <p><strong>Endpoint:</strong> <code>POST /api/v1/shipments.php</code></p>
+                <?php if ($apiKeyActive): ?>
+                    <p>Clave activa: <code><?php echo htmlspecialchars($apiKeyActive['key_prefix'], ENT_QUOTES, 'UTF-8'); ?>…</code></p>
+                    <p>Último uso: <?php echo htmlspecialchars($apiKeyActive['ultimo_uso'] ?: 'Aún no se ha usado', ENT_QUOTES, 'UTF-8'); ?></p>
+                <?php else: ?>
+                    <p>No tienes una clave API activa.</p>
+                <?php endif; ?>
+                <?php if (is_string($apiKeyCreatedOnce) && $apiKeyCreatedOnce !== ''): ?>
+                    <div class="alert alert-success" role="status">
+                        <strong>Copia la clave ahora; solo se muestra esta vez.</strong><br>
+                        <code><?php echo htmlspecialchars($apiKeyCreatedOnce, ENT_QUOTES, 'UTF-8'); ?></code>
+                    </div>
+                <?php endif; ?>
+                <form action="../../controller/apiClienteController.php" method="POST" style="display:inline-block;">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($apiKeysCsrf, ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="hidden" name="action" value="create">
+                    <button type="submit" class="btn-save">Generar / renovar clave</button>
+                </form>
+                <?php if ($apiKeyActive): ?>
+                    <form action="../../controller/apiClienteController.php" method="POST" style="display:inline-block; margin-left:10px;">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($apiKeysCsrf, ENT_QUOTES, 'UTF-8'); ?>">
+                        <input type="hidden" name="action" value="revoke">
+                        <button type="submit" class="btn-save" style="background:#b42318;">Revocar clave</button>
+                    </form>
+                <?php endif; ?>
+                <p>Al renovar la clave, la anterior deja de funcionar. Envíala solo desde el servidor de tu tienda, nunca desde el navegador.</p>
+            </section>
+            <?php endif; ?>
 
         </div>
     </main>

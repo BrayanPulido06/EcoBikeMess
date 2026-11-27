@@ -27,6 +27,79 @@ body {
     max-width: 1400px;
 }
 
+/* Aviso prioritario: visible al entrar, con la imagen completa al ampliarla. */
+.notice-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.5rem;
+    background: #fff;
+    border: 1px solid #e4eee7;
+    border-left: 5px solid #5cb85c;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.notice-image-link {
+    display: flex;
+    flex: 0 0 180px;
+    height: 320px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #f4f8f5;
+}
+
+.notice-image-link img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.notice-copy {
+    max-width: 620px;
+}
+
+.notice-label {
+    display: inline-block;
+    margin-bottom: 0.65rem;
+    color: #398b46;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.notice-copy h2 {
+    margin-bottom: 0.55rem;
+    color: #2d3e50;
+    font-size: 1.25rem;
+}
+
+.notice-copy p {
+    color: #5a6c7d;
+    line-height: 1.55;
+}
+
+.notice-expand {
+    display: inline-block;
+    margin-top: 0.9rem;
+    color: #398b46;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.notice-image-link:focus-visible,
+.notice-expand:focus-visible {
+    outline: 3px solid #398b46;
+    outline-offset: 3px;
+}
+
 /* Stats Grid */
 .stats-grid {
     display: grid;
@@ -428,6 +501,31 @@ body {
 }
 
 @media (max-width: 480px) {
+    .notice-card {
+        align-items: flex-start;
+        gap: 0.85rem;
+        padding: 0.85rem;
+    }
+
+    .notice-image-link {
+        flex-basis: 92px;
+        height: 164px;
+    }
+
+    .notice-label {
+        margin-bottom: 0.35rem;
+        font-size: 0.68rem;
+    }
+
+    .notice-copy h2 {
+        font-size: 1rem;
+    }
+
+    .notice-copy p,
+    .notice-expand {
+        font-size: 0.82rem;
+    }
+
     .stat-icon {
         width: 50px;
         height: 50px;
